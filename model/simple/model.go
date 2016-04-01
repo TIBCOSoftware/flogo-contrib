@@ -1,68 +1,80 @@
 package simple
 
 import (
-	"fmt"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/ext/model"
 	"github.com/TIBCOSoftware/flogo-lib/core/process"
+	"github.com/op/go-logging"
 )
+
+// log is the default package logger
+var log = logging.MustGetLogger("simple-model")
 
 func init() {
 	m := model.New("simple")
-	m.RegisterProcessBehavior(1, &MyProcessBehavior{})
-	m.RegisterTaskBehavior(1, &MyTaskBehavior{})
-	m.RegisterLinkBehavior(1, &MyLinkBehavior{})
+	m.RegisterProcessBehavior(1, &SimpleProcessBehavior{})
+	m.RegisterTaskBehavior(1, &SimpleTaskBehavior{})
+	m.RegisterLinkBehavior(1, &SimpleLinkBehavior{})
 
 	model.Register(m)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// MyProcessBehavior implements model.ProcessBehavior
-type MyProcessBehavior struct {
+// SimpleProcessBehavior implements model.ProcessBehavior
+type SimpleProcessBehavior struct {
 }
 
 // Start implements model.ProcessBehavior.Start
-func (pb *MyProcessBehavior) Start(context model.ProcessContext, data interface{}) (start bool, evalCode int) {
+func (pb *SimpleProcessBehavior) Start(context model.ProcessContext, data interface{}) (start bool, evalCode int) {
 	// just schedule the root task
 	return true, 0
 }
 
 // Resume implements model.ProcessBehavior.Resume
-func (pb *MyProcessBehavior) Resume(context model.ProcessContext, data interface{}) bool {
+func (pb *SimpleProcessBehavior) Resume(context model.ProcessContext, data interface{}) bool {
 	return true
 }
 
 // TasksDone implements model.ProcessBehavior.TasksDone
-func (pb *MyProcessBehavior) TasksDone(context model.ProcessContext, doneCode int) {
+func (pb *SimpleProcessBehavior) TasksDone(context model.ProcessContext, doneCode int) {
 	// all tasks are done
 }
 
 // Done implements model.ProcessBehavior.Done
-func (pb *MyProcessBehavior) Done(context model.ProcessContext) {
-	fmt.Printf("Process Done\n")
+func (pb *SimpleProcessBehavior) Done(context model.ProcessContext) {
+	log.Debugf("Process Done\n")
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// MyTaskBehavior implements model.TaskBehavior
-type MyTaskBehavior struct {
+// SimpleTaskBehavior implements model.TaskBehavior
+type SimpleTaskBehavior struct {
 }
 
 // Enter implements model.TaskBehavior.Enter
-func (tb *MyTaskBehavior) Enter(context model.TaskContext, enterCode int) (eval bool, evalCode int) {
+func (tb *SimpleTaskBehavior) Enter(context model.TaskContext, enterCode int) (eval bool, evalCode int) {
+
+	task := context.Task()
+	log.Debugf("Task Enter: %s\n", task.Name())
 
 	context.SetState(STATE_ENTERED)
+
+	//check if all predecessor links are done
+
 	linkContexts := context.FromLinks()
+
 	ready := true
 
 	if len(linkContexts) == 0 {
 		// has no predecessor links, so task is ready
 		ready = true
 	} else {
-		// check if all pedecessor links are done
+
+		log.Debugf("Num Links: %d\n", len(linkContexts))
 		for _, linkContext := range linkContexts {
 
+			log.Debugf("Task: %s, linkData: %v\n", task.Name(), linkContext)
 			if linkContext.State() != STATE_LINK_TRUE {
 				ready = false
 				break
@@ -71,18 +83,24 @@ func (tb *MyTaskBehavior) Enter(context model.TaskContext, enterCode int) (eval 
 	}
 
 	if ready {
+		log.Debugf("Task Ready\n")
 		context.SetState(STATE_READY)
+	} else {
+		log.Debugf("Task Not Ready\n")
 	}
 
 	return ready, 0
 }
 
 // Eval implements model.TaskBehavior.Eval
-func (tb *MyTaskBehavior) Eval(context model.TaskContext, evalCode int) (done bool, doneCode int) {
+func (tb *SimpleTaskBehavior) Eval(context model.TaskContext, evalCode int) (done bool, doneCode int) {
 
 	task := context.Task()
+	log.Debugf("Task Eval: %s\n", task)
 
 	if len(task.ChildTasks()) > 0 {
+		log.Debugf("Has Children\n")
+
 		//has children, so set to waiting
 		context.SetState(STATE_WAITING)
 
@@ -90,29 +108,49 @@ func (tb *MyTaskBehavior) Eval(context model.TaskContext, evalCode int) (done bo
 		context.EnterChildren(nil)
 
 		return false, 0
+
+	} else {
+
+		activity, activityContext := context.Activity()
+
+		if activity != nil {
+
+			//log.Debug("Evaluating Activity: ", activity.GetType())
+			done := activity.Eval(activityContext)
+			return done, 0
+		} else {
+
+			//no-op
+			return true, 0
+		}
 	}
-
-	activity, activityContext := context.Activity()
-
-	if activity != nil {
-		done := activity.Eval(activityContext)
-		return done, 0
-	}
-
-	// doesn't have an activity so treat as no-op
-	return true, 0
 }
 
 // PostEval implements model.TaskBehavior.PostEval
-func (tb *MyTaskBehavior) PostEval(context model.TaskContext, evalCode int, data interface{}) (done bool, doneCode int) {
-	// ignore, just mark done
-	return true, 0
+func (tb *SimpleTaskBehavior) PostEval(context model.TaskContext, evalCode int, data interface{}) (done bool, doneCode int) {
+
+	log.Debugf("Task PostEval\n")
+
+	//activity, activityContext := context.Activity()
+	activity, _ := context.Activity()
+
+	if activity != nil { //if activity is async
+
+		//done := activity.PostEval(activityContext, data)
+		done := true
+		return done, 0
+	} else {
+
+		//no-op
+		return true, 0
+	}
 }
 
 // Done implements model.TaskBehavior.Done
-func (tb *MyTaskBehavior) Done(context model.TaskContext, doneCode int) (notifyParent bool, childDoneCode int, taskEntries []*model.TaskEntry) {
+func (tb *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (notifyParent bool, childDoneCode int, taskEntries []*model.TaskEntry) {
 
 	task := context.Task()
+	log.Debugf("done task:%s\n", task.Name())
 
 	context.SetState(STATE_DONE)
 	//context.SetTaskDone() for task garbage collection
@@ -137,14 +175,17 @@ func (tb *MyTaskBehavior) Done(context model.TaskContext, doneCode int) (notifyP
 
 		//continue on to successor tasks
 		return false, 0, taskEntries
-	}
 
-	// there are no outgoing links, so just notify parent that we are done
-	return true, 0, nil
+	} else {
+		// there are no outgoing links, so just notify parent that we are done
+		return true, 0, nil
+	}
 }
 
 // ChildDone implements model.TaskBehavior.ChildDone
-func (tb *MyTaskBehavior) ChildDone(context model.TaskContext, childTask *process.Task, childDoneCode int) (done bool, doneCode int) {
+func (tb *SimpleTaskBehavior) ChildDone(context model.TaskContext, childTask *process.Task, childDoneCode int) (done bool, doneCode int) {
+
+	log.Debugf("Task ChildDone\n")
 
 	// our children are done, so just transition ourselves to done
 	return true, 0
@@ -152,12 +193,12 @@ func (tb *MyTaskBehavior) ChildDone(context model.TaskContext, childTask *proces
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// MyLinkBehavior implements model.LinkBehavior
-type MyLinkBehavior struct {
+// SimpleLinkBehavior implements model.LinkBehavior
+type SimpleLinkBehavior struct {
 }
 
 // Eval implements model.LinkBehavior.Eval
-func (lb *MyLinkBehavior) Eval(context model.LinkContext, evalCode int) {
+func (lb *SimpleLinkBehavior) Eval(context model.LinkContext, evalCode int) {
 
 	context.SetState(STATE_LINK_TRUE)
 }
