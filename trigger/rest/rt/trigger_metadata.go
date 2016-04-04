@@ -7,7 +7,7 @@ var jsonMetadata = `{
   "config":[
     {
       "name": "port",
-      "type": "number",
+      "type": "number"
     }
   ]
 }`
