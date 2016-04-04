@@ -5,7 +5,7 @@
   "config":[
     {
       "name": "port",
-      "type": "number",
+      "type": "number"
     }
   ]
 }
