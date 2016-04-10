@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/TIBCOSoftware/flogo-lib/engine/ext/trigger"
-	"github.com/TIBCOSoftware/flogo-lib/engine/starter"
-
+	"github.com/TIBCOSoftware/flogo-lib/core/ext/trigger"
+	"github.com/TIBCOSoftware/flogo-lib/core/process"
+	"github.com/TIBCOSoftware/flogo-lib/core/processinst"
 	"github.com/julienschmidt/httprouter"
 	"github.com/op/go-logging"
 )
@@ -14,10 +14,12 @@ import (
 // log is the default package logger
 var log = logging.MustGetLogger("rest-trigger")
 
+// todo: switch to use endpoint registration
+
 // RestTrigger REST trigger struct
 type RestTrigger struct {
 	metadata       *trigger.Metadata
-	processStarter starter.ProcessStarter
+	processStarter processinst.Starter
 	server         *Server
 }
 
@@ -32,19 +34,13 @@ func (t *RestTrigger) Metadata() *trigger.Metadata {
 }
 
 // Init implements ext.Trigger.Init
-func (t *RestTrigger) Init(processStarter starter.ProcessStarter, config map[string]string) {
+func (t *RestTrigger) Init(processStarter processinst.Starter, config *trigger.Config) {
 
 	router := httprouter.New()
 	router.OPTIONS("/process/start", handleOption)
 	router.POST("/process/start", t.StartProcess)
 
-	router.OPTIONS("/process/restart", handleOption)
-	router.POST("/process/restart", t.RestartProcess)
-
-	router.OPTIONS("/process/resume", handleOption)
-	router.POST("/process/resume", t.ResumeProcess)
-
-	addr := ":" + config["port"]
+	addr := ":" + config.Settings["port"]
 	t.server = NewServer(addr, router)
 
 	t.processStarter = processStarter
@@ -84,14 +80,14 @@ func (t *RestTrigger) StartProcess(w http.ResponseWriter, r *http.Request, _ htt
 
 	w.Header().Add("Access-Control-Allow-Origin", "*")
 
-	req := &starter.StartRequest{}
+	req := &StartRequest{}
 	err := json.NewDecoder(r.Body).Decode(req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	id := t.processStarter.StartProcess(req)
+	id := t.processStarter.StartProcessInstance(req.ProcessURI, req.Data, nil, nil)
 
 	// If we didn't find it, 404
 	//w.WriteHeader(http.StatusNotFound)
@@ -104,62 +100,10 @@ func (t *RestTrigger) StartProcess(w http.ResponseWriter, r *http.Request, _ htt
 	w.WriteHeader(http.StatusOK)
 }
 
-// RestartProcess restarts a Process Instance (POST "/process/restart").
-//
-// To post a restart process, try this at a shell:
-// $ curl -H "Content-Type: application/json" -X POST -d '{...}' http://localhost:8080/process/restart
-func (t *RestTrigger) RestartProcess(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-
-	w.Header().Add("Access-Control-Allow-Origin", "*")
-
-	//defer func() {
-	//	if r := recover(); r != nil {
-	//		log.Error("Unable to restart process, make sure definition registered")
-	//	}
-	//}()
-
-	req := &starter.RestartRequest{}
-	err := json.NewDecoder(r.Body).Decode(req)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	id := t.processStarter.RestartProcess(req)
-
-	// If we didn't find it, 404
-	//w.WriteHeader(http.StatusNotFound)
-
-	resp := &IDResponse{ID: id}
-
-	encoder := json.NewEncoder(w)
-	encoder.Encode(resp)
-
-	w.WriteHeader(http.StatusOK)
-}
-
-// ResumeProcess resumes a Process Instance (POST "/process/resume").
-//
-// To post a resume process, try this at a shell:
-// $ curl -H "Content-Type: application/json" -X POST -d '{...}' http://localhost:8080/process/resume
-func (t *RestTrigger) ResumeProcess(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-
-	w.Header().Add("Access-Control-Allow-Origin", "*")
-
-	defer func() {
-		if r := recover(); r != nil {
-			log.Error("Unable to resume process, make sure definition registered")
-		}
-	}()
-
-	req := &starter.ResumeRequest{}
-	err := json.NewDecoder(r.Body).Decode(req)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	t.processStarter.ResumeProcess(req)
-
-	w.WriteHeader(http.StatusOK)
+// StartRequest describes a request for starting a ProcessInstance
+type StartRequest struct {
+	ProcessURI  string               `json:"processUri"`
+	Data        map[string]string    `json:"data"`
+	Interceptor *process.Interceptor `json:"interceptor"`
+	Patch       *process.Patch       `json:"patch"`
 }

@@ -1,7 +1,6 @@
 package simple
 
 import (
-
 	"github.com/TIBCOSoftware/flogo-lib/core/ext/model"
 	"github.com/TIBCOSoftware/flogo-lib/core/process"
 	"github.com/op/go-logging"

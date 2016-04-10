@@ -3,7 +3,7 @@ package mqtt
 import (
 	"testing"
 
-	"github.com/TIBCOSoftware/flogo-lib/engine/ext/trigger"
+	"github.com/TIBCOSoftware/flogo-lib/core/ext/trigger"
 )
 
 func TestRegistered(t *testing.T) {

@@ -142,8 +142,6 @@ func (s *Server) WaitStop(timeout time.Duration) error {
 			return fmt.Errorf("WaitStop error, timeout after %s waiting for %d client(s) to finish", timeout, len(s.clientsGroup))
 		}
 	}
-
-	return s.lastError
 }
 
 type serverHandler struct {
