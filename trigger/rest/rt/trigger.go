@@ -2,15 +2,15 @@ package rest
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
+	"strings"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/ext/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/core/processinst"
 	"github.com/julienschmidt/httprouter"
 	"github.com/op/go-logging"
-	"strings"
-	"fmt"
-	"io"
 )
 
 // log is the default package logger
@@ -54,7 +54,7 @@ func (t *RestTrigger) Init(processStarter processinst.Starter, config *trigger.C
 			log.Debugf("REST Trigger: Registering endpoint [%s: %s] for Process: %s", method, path, endpoint.ProcessURI)
 
 			router.OPTIONS(path, handleOption) // for CORS
-			router.Handle(method, path, StartProcessHandler(t, endpoint.ProcessURI))
+			router.Handle(method, path, newStartProcessHandler(t, endpoint.ProcessURI))
 
 		} else {
 			panic(fmt.Sprintf("Invalid endpoint: %v", endpoint))
@@ -96,7 +96,7 @@ type IDResponse struct {
 	ID string `json:"id"`
 }
 
-func StartProcessHandler(rt *RestTrigger, processURI string) httprouter.Handle {
+func newStartProcessHandler(rt *RestTrigger, processURI string) httprouter.Handle {
 
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
@@ -131,11 +131,11 @@ func StartProcessHandler(rt *RestTrigger, processURI string) httprouter.Handle {
 		//id := rt.processStarter.StartProcessInstance(processURI, data, nil, nil)
 
 		//todo: fix StartProcessInstance to use map[string]interface{} and remove this
-		paramsJSON,_ := json.Marshal(params)
-		contentJSON,_ := json.Marshal(content)
+		paramsJSON, _ := json.Marshal(params)
+		contentJSON, _ := json.Marshal(content)
 
 		dataJSON := map[string]string{
-			"params": string(paramsJSON),
+			"params":  string(paramsJSON),
 			"content": string(contentJSON),
 		}
 

@@ -1,13 +1,13 @@
 package rest
 
 import (
+	"encoding/json"
+	"fmt"
+	"net/http"
 	"testing"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/ext/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/core/processinst"
-	"fmt"
-	"encoding/json"
-	"net/http"
 )
 
 const testConfig string = `{
@@ -28,12 +28,11 @@ const testConfig string = `{
 `
 
 type TestStarter struct {
-
 }
 
 // StartProcessInstance implements processinst.Starter.StartProcessInstance
 func (ts *TestStarter) StartProcessInstance(processURI string, startData map[string]string, replyHandler processinst.ReplyHandler, execOptions *processinst.ExecOptions) string {
-	fmt.Printf("Started Process with data: %v", startData);
+	fmt.Printf("Started Process with data: %v", startData)
 	return "dummyid"
 }
 
