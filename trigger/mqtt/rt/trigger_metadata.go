@@ -25,7 +25,7 @@ var jsonMetadata = `{
       "name": "store",
       "type": "string"
     },
-        {
+    {
       "name": "topic",
       "type": "string"
     },
@@ -37,5 +37,13 @@ var jsonMetadata = `{
       "name": "cleansess",
       "type": "boolean"
     }
-  ]
+  ],
+  "endpoint": {
+    "settings": [
+      {
+        "name": "topic",
+        "type": "string"
+      }
+    ]
+  }
 }`
