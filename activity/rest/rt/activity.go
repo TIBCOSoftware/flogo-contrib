@@ -11,7 +11,7 @@ import (
 )
 
 // log is the default package logger
-var log = logging.MustGetLogger("rest-activity")
+var log = logging.MustGetLogger("activity-tibco-rest")
 
 // RESTActivity is an Activity that is used to invoke a REST Operation
 // inputs : {method,uri,params}

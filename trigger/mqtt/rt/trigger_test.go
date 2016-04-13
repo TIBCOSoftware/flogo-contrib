@@ -1,17 +1,17 @@
 package mqtt
 
 import (
+	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/ext/trigger"
-	"encoding/json"
-	"github.com/TIBCOSoftware/flogo-lib/core/processinst"
-	"fmt"
+	"github.com/TIBCOSoftware/flogo-lib/core/flowinst"
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 )
 
 const testConfig string = `{
-  "name": "mqtt",
+  "name": "tibco-mqtt",
   "settings": {
     "topic": "flogo/#",
     "broker": "tcp://192.168.1.12:1883",
@@ -24,7 +24,7 @@ const testConfig string = `{
   },
   "endpoints": [
     {
-      "processURI": "local://testProcess",
+      "flowURI": "local://testFlow",
       "settings": {
         "topic": "test_start"
       }
@@ -35,14 +35,14 @@ const testConfig string = `{
 type TestStarter struct {
 }
 
-// StartProcessInstance implements processinst.Starter.StartProcessInstance
-func (ts *TestStarter) StartProcessInstance(processURI string, startData map[string]string, replyHandler processinst.ReplyHandler, execOptions *processinst.ExecOptions) string {
-	fmt.Printf("Started Process with data: %v", startData)
+// StartFlowInstance implements flowinst.Starter.StartFlowInstance
+func (ts *TestStarter) StartFlowInstance(flowURI string, startData map[string]string, replyHandler flowinst.ReplyHandler, execOptions *flowinst.ExecOptions) string {
+	fmt.Printf("Started Flow with data: %v", startData)
 	return "dummyid"
 }
 
 func TestRegistered(t *testing.T) {
-	act := trigger.Get("mqtt")
+	act := trigger.Get("tibco-mqtt")
 
 	if act == nil {
 		t.Error("Trigger Not Registered")
@@ -52,7 +52,7 @@ func TestRegistered(t *testing.T) {
 }
 
 func TestInit(t *testing.T) {
-	tgr := trigger.Get("mqtt")
+	tgr := trigger.Get("tibco-mqtt")
 
 	starter := &TestStarter{}
 
@@ -64,7 +64,7 @@ func TestInit(t *testing.T) {
 
 func TestEndpoint(t *testing.T) {
 
-	tgr := trigger.Get("mqtt")
+	tgr := trigger.Get("tibco-mqtt")
 
 	tgr.Start()
 	defer tgr.Stop()

@@ -10,7 +10,7 @@ import (
 )
 
 // activityLog is the default logger for the Log Activity
-var activityLog = logging.MustGetLogger("activity-log")
+var activityLog = logging.MustGetLogger("activity-tibco-log")
 
 // format is the log format for the Activity log
 var format = logging.MustStringFormatter(
@@ -27,7 +27,7 @@ func init() {
 }
 
 // LogActivity is an Activity that is used to log a message to the console
-// inputs : {message, processInfo}
+// inputs : {message, flowInfo}
 // outputs: none
 type LogActivity struct {
 	metadata *activity.Metadata
@@ -47,16 +47,16 @@ func (a *LogActivity) Metadata() *activity.Metadata {
 func (a *LogActivity) Eval(context activity.Context) bool {
 
 	message, _ := context.GetAttrValue("message")
-	processInfo, _ := context.GetAttrValue("processInfo")
+	flowInfo, _ := context.GetAttrValue("flowInfo")
 
 	msg := message
 
-	showInfo, _ := strconv.ParseBool(processInfo)
+	showInfo, _ := strconv.ParseBool(flowInfo)
 
 	if showInfo {
 
-		msg = fmt.Sprintf("%s - ProcessInstanceID [%s], Process [%s], Task [%s]", msg,
-			context.ProcessInstanceID(), context.ProcessName(), context.TaskName())
+		msg = fmt.Sprintf("%s - FlowInstanceID [%s], Flow [%s], Task [%s]", msg,
+			context.FlowInstanceID(), context.FlowName(), context.TaskName())
 	}
 
 	activityLog.Info(msg)

@@ -7,17 +7,17 @@ import (
 	"testing"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/ext/trigger"
-	"github.com/TIBCOSoftware/flogo-lib/core/processinst"
+	"github.com/TIBCOSoftware/flogo-lib/core/flowinst"
 )
 
 const testConfig string = `{
-  "name": "rest",
+  "name": "tibco-rest",
   "settings": {
     "port": "8091"
   },
   "endpoints": [
     {
-      "processURI": "local://testProcess",
+      "flowURI": "local://testFlow",
       "settings": {
         "method": "POST",
         "path": "/device/:id/reset"
@@ -30,14 +30,14 @@ const testConfig string = `{
 type TestStarter struct {
 }
 
-// StartProcessInstance implements processinst.Starter.StartProcessInstance
-func (ts *TestStarter) StartProcessInstance(processURI string, startData map[string]string, replyHandler processinst.ReplyHandler, execOptions *processinst.ExecOptions) string {
-	fmt.Printf("Started Process with data: %v", startData)
+// StartFlowInstance implements flowinst.Starter.StartFlowInstance
+func (ts *TestStarter) StartFlowInstance(flowURI string, startData map[string]string, replyHandler flowinst.ReplyHandler, execOptions *flowinst.ExecOptions) string {
+	fmt.Printf("Started Flow with data: %v", startData)
 	return "dummyid"
 }
 
 func TestRegistered(t *testing.T) {
-	tgr := trigger.Get("rest")
+	tgr := trigger.Get("tibco-rest")
 
 	if tgr == nil {
 		t.Error("Trigger Not Registered")
@@ -47,7 +47,7 @@ func TestRegistered(t *testing.T) {
 }
 
 func TestInit(t *testing.T) {
-	tgr := trigger.Get("rest")
+	tgr := trigger.Get("tibco-rest")
 
 	starter := &TestStarter{}
 
@@ -59,7 +59,7 @@ func TestInit(t *testing.T) {
 
 func TestEndpoint(t *testing.T) {
 
-	tgr := trigger.Get("rest")
+	tgr := trigger.Get("tibco-rest")
 
 	tgr.Start()
 	defer tgr.Stop()

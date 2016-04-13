@@ -7,7 +7,7 @@ import (
 )
 
 func TestRegistered(t *testing.T) {
-	act := model.Get("simple")
+	act := model.Get("tibco-simple")
 
 	if act == nil {
 		t.Error("Model Not Registered")

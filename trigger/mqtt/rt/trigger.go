@@ -7,23 +7,23 @@ import (
 	"strings"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/ext/trigger"
-	"github.com/TIBCOSoftware/flogo-lib/core/process"
-	"github.com/TIBCOSoftware/flogo-lib/core/processinst"
+	"github.com/TIBCOSoftware/flogo-lib/core/flow"
+	"github.com/TIBCOSoftware/flogo-lib/core/flowinst"
 	"github.com/eclipse/paho.mqtt.golang"
 	"github.com/op/go-logging"
 )
 
 // log is the default package logger
-var log = logging.MustGetLogger("mqtt-trigger")
+var log = logging.MustGetLogger("trigger-tibco-mqtt")
 
 // todo: switch to use endpoint registration
 
 // MqttTrigger is simple MQTT trigger
 type MqttTrigger struct {
-	metadata       *trigger.Metadata
-	processStarter processinst.Starter
-	client         mqtt.Client
-	settings       map[string]string
+	metadata    *trigger.Metadata
+	flowStarter flowinst.Starter
+	client      mqtt.Client
+	settings    map[string]string
 }
 
 func init() {
@@ -37,9 +37,9 @@ func (t *MqttTrigger) Metadata() *trigger.Metadata {
 }
 
 // Init implements ext.Trigger.Init
-func (t *MqttTrigger) Init(processStarter processinst.Starter, config *trigger.Config) {
+func (t *MqttTrigger) Init(flowStarter flowinst.Starter, config *trigger.Config) {
 
-	t.processStarter = processStarter
+	t.flowStarter = flowStarter
 	t.settings = config.Settings
 }
 
@@ -67,7 +67,7 @@ func (t *MqttTrigger) Start() {
 
 		// Match suffix of topic
 		if strings.HasSuffix(topic, "start") {
-			t.StartProcess(payload)
+			t.StartFlow(payload)
 		}
 	})
 
@@ -94,34 +94,34 @@ func (t *MqttTrigger) Stop() {
 	//unsubscribe from topic
 	if token := t.client.Unsubscribe(t.settings["topic"]); token.Wait() && token.Error() != nil {
 		fmt.Println(token.Error())
-		log.Info("Unsubcribing from topic: ", t.settings["topic"])
+		log.Debug("Unsubcribing from topic: ", t.settings["topic"])
 	}
 
 	t.client.Disconnect(250)
 }
 
-// StartProcess starts a new Process Instance
-func (t *MqttTrigger) StartProcess(payload string) {
+// StartFlow starts a new Flow Instance
+func (t *MqttTrigger) StartFlow(payload string) {
 
 	req := &StartRequest{}
 	err := json.NewDecoder(strings.NewReader(payload)).Decode(req)
 	if err != nil {
 		//http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Error("Error Starting process ", err.Error())
+		log.Error("Error Starting flow ", err.Error())
 		return
 	}
 
-	log.Info("Process URI ", req.ProcessURI)
-	log.Info("processStarter.StartProcess ", t.processStarter)
-	id := t.processStarter.StartProcessInstance(req.ProcessURI, req.Data, nil, nil)
-	log.Info("Start process id: ", id)
+	log.Debug("Flow URI ", req.FlowURI)
+	log.Debug("flowStarter.StartFlow ", t.flowStarter)
+	id := t.flowStarter.StartFlowInstance(req.FlowURI, req.Data, nil, nil)
+	log.Debug("Start flow id: ", id)
 	t.publishMessage(req.ReplyTo, id)
 }
 
 func (t *MqttTrigger) publishMessage(topic string, message string) {
 
-	log.Info("ReplyTo topic: ", topic)
-	log.Info("Publishing message: ", message)
+	log.Debug("ReplyTo topic: ", topic)
+	log.Debug("Publishing message: ", message)
 
 	qos, err := strconv.Atoi(t.settings["qos"])
 	if err != nil {
@@ -132,11 +132,11 @@ func (t *MqttTrigger) publishMessage(topic string, message string) {
 	token.Wait()
 }
 
-// StartRequest describes a request for starting a ProcessInstance
+// StartRequest describes a request for starting a FlowInstance
 type StartRequest struct {
-	ProcessURI  string               `json:"processUri"`
-	Data        map[string]string    `json:"data"`
-	Interceptor *process.Interceptor `json:"interceptor"`
-	Patch       *process.Patch       `json:"patch"`
-	ReplyTo     string               `json:"replyTo"`
+	FlowURI     string            `json:"flowUri"`
+	Data        map[string]string `json:"data"`
+	Interceptor *flow.Interceptor `json:"interceptor"`
+	Patch       *flow.Patch       `json:"patch"`
+	ReplyTo     string            `json:"replyTo"`
 }

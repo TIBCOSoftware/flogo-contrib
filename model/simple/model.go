@@ -2,16 +2,16 @@ package simple
 
 import (
 	"github.com/TIBCOSoftware/flogo-lib/core/ext/model"
-	"github.com/TIBCOSoftware/flogo-lib/core/process"
+	"github.com/TIBCOSoftware/flogo-lib/core/flow"
 	"github.com/op/go-logging"
 )
 
 // log is the default package logger
-var log = logging.MustGetLogger("simple-model")
+var log = logging.MustGetLogger("model-tibco-simple")
 
 func init() {
-	m := model.New("simple")
-	m.RegisterProcessBehavior(1, &SimpleProcessBehavior{})
+	m := model.New("tibco-simple")
+	m.RegisterFlowBehavior(1, &SimpleFlowBehavior{})
 	m.RegisterTaskBehavior(1, &SimpleTaskBehavior{})
 	m.RegisterLinkBehavior(1, &SimpleLinkBehavior{})
 
@@ -20,29 +20,29 @@ func init() {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// SimpleProcessBehavior implements model.ProcessBehavior
-type SimpleProcessBehavior struct {
+// SimpleFlowBehavior implements model.FlowBehavior
+type SimpleFlowBehavior struct {
 }
 
-// Start implements model.ProcessBehavior.Start
-func (pb *SimpleProcessBehavior) Start(context model.ProcessContext, data interface{}) (start bool, evalCode int) {
+// Start implements model.FlowBehavior.Start
+func (pb *SimpleFlowBehavior) Start(context model.FlowContext, data interface{}) (start bool, evalCode int) {
 	// just schedule the root task
 	return true, 0
 }
 
-// Resume implements model.ProcessBehavior.Resume
-func (pb *SimpleProcessBehavior) Resume(context model.ProcessContext, data interface{}) bool {
+// Resume implements model.FlowBehavior.Resume
+func (pb *SimpleFlowBehavior) Resume(context model.FlowContext, data interface{}) bool {
 	return true
 }
 
-// TasksDone implements model.ProcessBehavior.TasksDone
-func (pb *SimpleProcessBehavior) TasksDone(context model.ProcessContext, doneCode int) {
+// TasksDone implements model.FlowBehavior.TasksDone
+func (pb *SimpleFlowBehavior) TasksDone(context model.FlowContext, doneCode int) {
 	// all tasks are done
 }
 
-// Done implements model.ProcessBehavior.Done
-func (pb *SimpleProcessBehavior) Done(context model.ProcessContext) {
-	log.Debugf("Process Done\n")
+// Done implements model.FlowBehavior.Done
+func (pb *SimpleFlowBehavior) Done(context model.FlowContext) {
+	log.Debugf("Flow Done\n")
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -117,11 +117,10 @@ func (tb *SimpleTaskBehavior) Eval(context model.TaskContext, evalCode int) (don
 			//log.Debug("Evaluating Activity: ", activity.GetType())
 			done := activity.Eval(activityContext)
 			return done, 0
-		} else {
-
-			//no-op
-			return true, 0
 		}
+
+		//no-op
+		return true, 0
 	}
 }
 
@@ -138,11 +137,10 @@ func (tb *SimpleTaskBehavior) PostEval(context model.TaskContext, evalCode int, 
 		//done := activity.PostEval(activityContext, data)
 		done := true
 		return done, 0
-	} else {
-
-		//no-op
-		return true, 0
 	}
+
+	//no-op
+	return true, 0
 }
 
 // Done implements model.TaskBehavior.Done
@@ -175,14 +173,14 @@ func (tb *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (not
 		//continue on to successor tasks
 		return false, 0, taskEntries
 
-	} else {
-		// there are no outgoing links, so just notify parent that we are done
-		return true, 0, nil
 	}
+
+	// there are no outgoing links, so just notify parent that we are done
+	return true, 0, nil
 }
 
 // ChildDone implements model.TaskBehavior.ChildDone
-func (tb *SimpleTaskBehavior) ChildDone(context model.TaskContext, childTask *process.Task, childDoneCode int) (done bool, doneCode int) {
+func (tb *SimpleTaskBehavior) ChildDone(context model.TaskContext, childTask *flow.Task, childDoneCode int) (done bool, doneCode int) {
 
 	log.Debugf("Task ChildDone\n")
 

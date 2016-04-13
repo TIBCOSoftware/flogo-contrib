@@ -8,21 +8,21 @@ import (
 	"strings"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/ext/trigger"
-	"github.com/TIBCOSoftware/flogo-lib/core/processinst"
+	"github.com/TIBCOSoftware/flogo-lib/core/flowinst"
 	"github.com/julienschmidt/httprouter"
 	"github.com/op/go-logging"
 )
 
 // log is the default package logger
-var log = logging.MustGetLogger("rest-trigger")
+var log = logging.MustGetLogger("trigger-tibco-rest")
 
 var validMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE"}
 
 // RestTrigger REST trigger struct
 type RestTrigger struct {
-	metadata       *trigger.Metadata
-	processStarter processinst.Starter
-	server         *Server
+	metadata    *trigger.Metadata
+	flowStarter flowinst.Starter
+	server      *Server
 }
 
 func init() {
@@ -36,12 +36,12 @@ func (t *RestTrigger) Metadata() *trigger.Metadata {
 }
 
 // Init implements ext.Trigger.Init
-func (t *RestTrigger) Init(processStarter processinst.Starter, config *trigger.Config) {
+func (t *RestTrigger) Init(flowStarter flowinst.Starter, config *trigger.Config) {
 
 	router := httprouter.New()
 
 	addr := ":" + config.Settings["port"]
-	t.processStarter = processStarter
+	t.flowStarter = flowStarter
 
 	endpoints := config.Endpoints
 
@@ -51,10 +51,10 @@ func (t *RestTrigger) Init(processStarter processinst.Starter, config *trigger.C
 			method := strings.ToUpper(endpoint.Settings["method"])
 			path := endpoint.Settings["path"]
 
-			log.Debugf("REST Trigger: Registering endpoint [%s: %s] for Process: %s", method, path, endpoint.ProcessURI)
+			log.Debugf("REST Trigger: Registering endpoint [%s: %s] for Flow: %s", method, path, endpoint.FlowURI)
 
 			router.OPTIONS(path, handleOption) // for CORS
-			router.Handle(method, path, newStartProcessHandler(t, endpoint.ProcessURI))
+			router.Handle(method, path, newStartFlowHandler(t, endpoint.FlowURI))
 
 		} else {
 			panic(fmt.Sprintf("Invalid endpoint: %v", endpoint))
@@ -96,7 +96,7 @@ type IDResponse struct {
 	ID string `json:"id"`
 }
 
-func newStartProcessHandler(rt *RestTrigger, processURI string) httprouter.Handle {
+func newStartFlowHandler(rt *RestTrigger, flowURI string) httprouter.Handle {
 
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
@@ -128,9 +128,9 @@ func newStartProcessHandler(rt *RestTrigger, processURI string) httprouter.Handl
 		//}
 		//
 		////todo: implement reply handler?
-		//id := rt.processStarter.StartProcessInstance(processURI, data, nil, nil)
+		//id := rt.flowStarter.StartFlowInstance(flowURI, data, nil, nil)
 
-		//todo: fix StartProcessInstance to use map[string]interface{} and remove this
+		//todo: fix StartFlowInstance to use map[string]interface{} and remove this
 		paramsJSON, _ := json.Marshal(params)
 		contentJSON, _ := json.Marshal(content)
 
@@ -140,10 +140,10 @@ func newStartProcessHandler(rt *RestTrigger, processURI string) httprouter.Handl
 		}
 
 		if log.IsEnabledFor(logging.DEBUG) {
-			log.Debugf("REST Trigger: Starting Process [%s] - data: %v", processURI, dataJSON)
+			log.Debugf("REST Trigger: Starting Flow [%s] - data: %v", flowURI, dataJSON)
 		}
 
-		id := rt.processStarter.StartProcessInstance(processURI, dataJSON, nil, nil)
+		id := rt.flowStarter.StartFlowInstance(flowURI, dataJSON, nil, nil)
 
 		// If we didn't find it, 404
 		//w.WriteHeader(http.StatusNotFound)

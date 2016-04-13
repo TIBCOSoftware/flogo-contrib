@@ -8,7 +8,7 @@ import (
 )
 
 func TestRegistered(t *testing.T) {
-	act := activity.Get("log")
+	act := activity.Get("tibco-log")
 
 	if act == nil {
 		t.Error("Activity Not Registered")

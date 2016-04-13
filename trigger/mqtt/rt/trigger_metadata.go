@@ -1,7 +1,7 @@
 package mqtt
 
 var jsonMetadata = `{
-  "name": "mqtt",
+  "name": "tibco-mqtt",
   "version": "0.0.1",
   "description": "trigger description",
   "config":[
