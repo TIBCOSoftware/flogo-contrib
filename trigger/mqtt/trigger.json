@@ -1,7 +1,7 @@
 {
   "name": "tibco-mqtt",
   "version": "0.0.1",
-  "description": "trigger description",
+  "description": "Simple MQTT Trigger",
   "config":[
     {
       "name": "broker",
@@ -35,5 +35,13 @@
       "name": "cleansess",
       "type": "boolean"
     }
-  ]
+  ],
+  "endpoint": {
+    "settings": [
+      {
+        "name": "topic",
+        "type": "string"
+      }
+    ]
+  }
 }
