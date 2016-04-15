@@ -2,7 +2,6 @@ package mqtt
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/ext/trigger"
@@ -37,7 +36,7 @@ type TestStarter struct {
 
 // StartFlowInstance implements flowinst.Starter.StartFlowInstance
 func (ts *TestStarter) StartFlowInstance(flowURI string, startData map[string]string, replyHandler flowinst.ReplyHandler, execOptions *flowinst.ExecOptions) string {
-	fmt.Printf("Started Flow with data: %v", startData)
+	log.Debugf("Started Flow with data: %v", startData)
 	return "dummyid"
 }
 
@@ -58,7 +57,6 @@ func TestInit(t *testing.T) {
 
 	config := &trigger.Config{}
 	json.Unmarshal([]byte(testConfig), config)
-	fmt.Println(config)
 	tgr.Init(starter, config)
 }
 
@@ -80,25 +78,10 @@ func TestEndpoint(t *testing.T) {
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
 		panic(token.Error())
 	}
-	fmt.Println("---- doing publish ----")
-	token := client.Publish("flogo/test_start", 0, false, "Test message payload")
+	log.Debug("---- doing publish ----")
+	token := client.Publish("flogo/test_start", 0, false, "Test message payload!")
 	token.Wait()
 
 	client.Disconnect(250)
-	fmt.Println("Sample Publisher Disconnected")
-
-	//req, err := http.NewRequest("POST", uri, nil)
-	//
-	//client := &http.Client{}
-	//resp, err := client.Do(req)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//defer resp.Body.Close()
-	//
-	//log.Debug("response Status:", resp.Status)
-	//
-	//if resp.StatusCode >= 300 {
-	//	t.Fail()
-	//}
+	log.Debug("Sample Publisher Disconnected")
 }
