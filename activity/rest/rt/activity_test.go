@@ -5,7 +5,13 @@ import (
 
 	"github.com/TIBCOSoftware/flogo-lib/core/ext/activity"
 	"github.com/TIBCOSoftware/flogo-lib/test"
+	"fmt"
 )
+
+const reqPostStr string = `{
+  "name": "my pet"
+}
+`
 
 func TestRegistered(t *testing.T) {
 	act := activity.Get("tibco-rest")
@@ -17,7 +23,7 @@ func TestRegistered(t *testing.T) {
 	}
 }
 
-func TestEval(t *testing.T) {
+func TestSimpleGet(t *testing.T) {
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -26,13 +32,18 @@ func TestEval(t *testing.T) {
 		}
 	}()
 
-	md := activity.NewMetadata(jsonMetadata)
-	act := &RESTActivity{metadata: md}
-
+	act := activity.Get("tibco-rest")
 	tc := test.NewTestActivityContext()
-	//setup attrs
 
+	//setup attrs
+	//tc.SetOrAddAttrValue("method","GET")
+	//tc.SetOrAddAttrValue("uri","http://petstore.swagger.io/v2/pet/1234")
+
+	//eval
 	act.Eval(tc)
+	val,_ := tc.GetAttrValue("result")
+
+	fmt.Println("result:",val)
 
 	//check result attr
 }
