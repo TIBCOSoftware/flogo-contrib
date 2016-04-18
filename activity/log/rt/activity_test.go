@@ -19,18 +19,12 @@ func TestRegistered(t *testing.T) {
 
 func TestEval(t *testing.T) {
 
-	defer func() {
-		if r := recover(); r != nil {
-			t.Failed()
-			t.Errorf("panic during execution: %v", r)
-		}
-	}()
+	act := activity.Get("tibco-log")
+	tc := test.NewTestActivityContext(act.Metadata())
 
-	md := activity.NewMetadata(jsonMetadata)
-	act := &LogActivity{metadata: md}
-
-	tc := test.NewTestActivityContext()
 	//setup attrs
+	tc.SetInput("message", "test message")
+	tc.SetInput("flowInfo", true)
 
 	act.Eval(tc)
 

@@ -51,7 +51,7 @@ func (a *RESTActivity) Metadata() *activity.Metadata {
 }
 
 // Eval implements api.Activity.Eval - Invokes a REST Operation
-func (a *RESTActivity) Eval(context activity.Context) bool {
+func (a *RESTActivity) Eval(context activity.Context) (done bool, evalError *activity.Error) {
 
 	method := strings.ToUpper(context.GetInput(ivMethod).(string))
 	uri := context.GetInput(ivURI).(string)
@@ -106,7 +106,7 @@ func (a *RESTActivity) Eval(context activity.Context) bool {
 
 	context.SetOutput(ovResult, result)
 
-	return true
+	return true, nil
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////

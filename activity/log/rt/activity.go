@@ -45,7 +45,7 @@ func (a *LogActivity) Metadata() *activity.Metadata {
 }
 
 // Eval implements api.Activity.Eval - Logs the Message
-func (a *LogActivity) Eval(context activity.Context) bool {
+func (a *LogActivity) Eval(context activity.Context) (done bool, evalError *activity.Error) {
 
 	message := context.GetInput("message").(string)
 	flowInfo := context.GetInput("flowInfo")
@@ -69,7 +69,7 @@ func (a *LogActivity) Eval(context activity.Context) bool {
 
 	if showInfo {
 
-		msg = fmt.Sprintf("%s - FlowInstanceID [%s], Flow [%s], Task [%s]", msg,
+		msg = fmt.Sprintf("'%s' - FlowInstanceID [%s], Flow [%s], Task [%s]", msg,
 			context.FlowInstanceID(), context.FlowName(), context.TaskName())
 	}
 
@@ -77,5 +77,5 @@ func (a *LogActivity) Eval(context activity.Context) bool {
 
 	//log.Debugf("%s: %s\n", time.Now(), msg)
 
-	return true
+	return true, nil
 }
