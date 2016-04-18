@@ -3,10 +3,11 @@ package log
 import (
 	"fmt"
 	"os"
-	"strconv"
+	//"strconv"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/ext/activity"
 	"github.com/op/go-logging"
+	"strconv"
 )
 
 // activityLog is the default logger for the Log Activity
@@ -44,18 +45,31 @@ func (a *LogActivity) Metadata() *activity.Metadata {
 }
 
 // Eval implements api.Activity.Eval - Logs the Message
-func (a *LogActivity) Eval(context activity.Context) bool {
+func (a *LogActivity) Eval(context activity.Context) (done bool, evalError *activity.Error) {
 
-	message, _ := context.GetAttrValue("message")
-	flowInfo, _ := context.GetAttrValue("flowInfo")
+	message := context.GetInput("message").(string)
+	flowInfo := context.GetInput("flowInfo")
+
+	//todo clean this up!
+	showInfo, ok := flowInfo.(bool)
+	if !ok {
+		s, ok := flowInfo.(string)
+
+		if !ok {
+
+			//error out
+		}
+
+		showInfo, _ = strconv.ParseBool(s)
+
+		// the assertion failed.
+	}
 
 	msg := message
 
-	showInfo, _ := strconv.ParseBool(flowInfo)
-
 	if showInfo {
 
-		msg = fmt.Sprintf("%s - FlowInstanceID [%s], Flow [%s], Task [%s]", msg,
+		msg = fmt.Sprintf("'%s' - FlowInstanceID [%s], Flow [%s], Task [%s]", msg,
 			context.FlowInstanceID(), context.FlowName(), context.TaskName())
 	}
 
@@ -63,5 +77,5 @@ func (a *LogActivity) Eval(context activity.Context) bool {
 
 	//log.Debugf("%s: %s\n", time.Now(), msg)
 
-	return true
+	return true, nil
 }

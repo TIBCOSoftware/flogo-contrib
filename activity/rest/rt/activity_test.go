@@ -3,9 +3,19 @@ package rest
 import (
 	"testing"
 
+	"fmt"
+	"strconv"
+
 	"github.com/TIBCOSoftware/flogo-lib/core/ext/activity"
 	"github.com/TIBCOSoftware/flogo-lib/test"
 )
+
+const reqPostStr string = `{
+  "name": "my pet"
+}
+`
+
+var petID string
 
 func TestRegistered(t *testing.T) {
 	act := activity.Get("tibco-rest")
@@ -17,22 +27,61 @@ func TestRegistered(t *testing.T) {
 	}
 }
 
-func TestEval(t *testing.T) {
+func TestSimplePost(t *testing.T) {
 
-	defer func() {
-		if r := recover(); r != nil {
-			t.Failed()
-			t.Errorf("panic during execution: %v", r)
-		}
-	}()
+	act := activity.Get("tibco-rest")
+	tc := test.NewTestActivityContext(act.Metadata())
 
-	md := activity.NewMetadata(jsonMetadata)
-	act := &RESTActivity{metadata: md}
-
-	tc := test.NewTestActivityContext()
 	//setup attrs
+	tc.SetInput("method", "POST")
+	tc.SetInput("uri", "http://petstore.swagger.io/v2/pet")
+	tc.SetInput("content", reqPostStr)
 
+	//eval
+	act.Eval(tc)
+	val := tc.GetOutput("result")
+
+	fmt.Printf("result: %v\n", val)
+
+	res := val.(map[string]interface{})
+
+	petIDInt := int64(res["id"].(float64))
+	petID = strconv.FormatInt(petIDInt, 10)
+}
+
+func TestSimpleGet(t *testing.T) {
+
+	act := activity.Get("tibco-rest")
+	tc := test.NewTestActivityContext(act.Metadata())
+
+	//setup attrs
+	tc.SetInput("method", "GET")
+	tc.SetInput("uri", "http://petstore.swagger.io/v2/pet/"+petID)
+
+	//eval
 	act.Eval(tc)
 
-	//check result attr
+	val := tc.GetOutput("result")
+	fmt.Printf("result: %v\n", val)
+}
+
+func TestParamGet(t *testing.T) {
+
+	act := activity.Get("tibco-rest")
+	tc := test.NewTestActivityContext(act.Metadata())
+
+	//setup attrs
+	tc.SetInput("method", "GET")
+	tc.SetInput("uri", "http://petstore.swagger.io/v2/pet/:id")
+
+	params := map[string]string{
+		"id": petID,
+	}
+	tc.SetInput("params", params)
+
+	//eval
+	act.Eval(tc)
+
+	val := tc.GetOutput("result")
+	fmt.Printf("result: %v\n", val)
 }

@@ -25,13 +25,13 @@ type SimpleFlowBehavior struct {
 }
 
 // Start implements model.FlowBehavior.Start
-func (pb *SimpleFlowBehavior) Start(context model.FlowContext, data interface{}) (start bool, evalCode int) {
+func (pb *SimpleFlowBehavior) Start(context model.FlowContext) (start bool, evalCode int) {
 	// just schedule the root task
 	return true, 0
 }
 
 // Resume implements model.FlowBehavior.Resume
-func (pb *SimpleFlowBehavior) Resume(context model.FlowContext, data interface{}) bool {
+func (pb *SimpleFlowBehavior) Resume(context model.FlowContext) bool {
 	return true
 }
 
@@ -115,7 +115,7 @@ func (tb *SimpleTaskBehavior) Eval(context model.TaskContext, evalCode int) (don
 		if activity != nil {
 
 			//log.Debug("Evaluating Activity: ", activity.GetType())
-			done := activity.Eval(activityContext)
+			done,_ := activity.Eval(activityContext)
 			return done, 0
 		}
 

@@ -13,18 +13,17 @@ import (
 )
 
 // log is the default package logger
-var log = logging.MustGetLogger("mqtt-trigger")
+var log = logging.MustGetLogger("trigger-tibco-mqtt")
 
 // todo: switch to use endpoint registration
 
 // MqttTrigger is simple MQTT trigger
 type MqttTrigger struct {
-	metadata       *trigger.Metadata
-	flowStarter    flowinst.Starter
-	client         mqtt.Client
-	settings       map[string]string
-	config         *trigger.Config
-	flowToTopic    map[string]string
+	metadata    *trigger.Metadata
+	flowStarter flowinst.Starter
+	client      mqtt.Client
+	settings    map[string]string
+	config      *trigger.Config
 }
 
 func init() {
@@ -48,9 +47,8 @@ func (t *MqttTrigger) Init(flowStarter flowinst.Starter, config *trigger.Config)
 // Start implements ext.Trigger.Start
 func (t *MqttTrigger) Start() {
 
-	settings := t.config.Settings;
 	opts := mqtt.NewClientOptions()
-	opts.AddBroker(settings["broker"])
+	opts.AddBroker(t.settings["broker"])
 	opts.SetClientID(t.settings["id"])
 	opts.SetUsername(t.settings["user"])
 	opts.SetPassword(t.settings["password"])
@@ -68,8 +66,10 @@ func (t *MqttTrigger) Start() {
 		topic := msg.Topic()
 		payload := string(msg.Payload())
 
-		flowURI := t.flowToTopic[topic]
-		t.StartProcess(flowURI, payload)
+		// Match suffix of topic
+		if strings.HasSuffix(topic, "start") {
+			t.StartProcess(payload)
+		}
 	})
 
 	client := mqtt.NewClient(opts)
@@ -85,10 +85,7 @@ func (t *MqttTrigger) Start() {
 	}
 
 	for _, endpoint := range t.config.Endpoints {
-		t.flowToTopic = make(map[string]string)
-		log.Debugf("Topic: %s , Flow URL %s ", endpoint.Settings["topic"], endpoint.FlowURI)
 		if token := t.client.Subscribe(endpoint.Settings["topic"], byte(i), nil); token.Wait() && token.Error() != nil {
-			t.flowToTopic[endpoint.Settings["topic"]] = endpoint.Settings["topic"]
 			log.Errorf("Error subscribing to topic %s: %s", endpoint.Settings["topic"], token.Error())
 			panic(token.Error())
 		}
@@ -109,7 +106,7 @@ func (t *MqttTrigger) Stop() {
 }
 
 // StartProcess starts a new Process Instance
-func (t *MqttTrigger) StartProcess(flowURI string, payload string) {
+func (t *MqttTrigger) StartProcess(payload string) {
 
 	req := &StartRequest{}
 	err := json.NewDecoder(strings.NewReader(payload)).Decode(req)
@@ -119,9 +116,9 @@ func (t *MqttTrigger) StartProcess(flowURI string, payload string) {
 		return
 	}
 
-	log.Debug("Process URI ", flowURI)
+	log.Debug("Process URI ", req.ProcessURI)
 	log.Debug("flowStarter.StartProcess ", t.flowStarter)
-	id := t.flowStarter.StartFlowInstance(flowURI, req.Data, nil, nil)
+	id := t.flowStarter.StartFlowInstance(req.ProcessURI, req.Data, nil, nil)
 	log.Debug("Start flow id: ", id)
 	t.publishMessage(req.ReplyTo, id)
 }
@@ -142,9 +139,9 @@ func (t *MqttTrigger) publishMessage(topic string, message string) {
 
 // StartRequest describes a request for starting a ProcessInstance
 type StartRequest struct {
-	ProcessURI  string               `json:"flowUri"`
-	Data        map[string]string    `json:"data"`
-	Interceptor *flow.Interceptor `json:"interceptor"`
-	Patch       *flow.Patch       `json:"patch"`
-	ReplyTo     string               `json:"replyTo"`
+	ProcessURI  string                 `json:"flowUri"`
+	Data        map[string]interface{} `json:"data"`
+	Interceptor *flow.Interceptor      `json:"interceptor"`
+	Patch       *flow.Patch            `json:"patch"`
+	ReplyTo     string                 `json:"replyTo"`
 }

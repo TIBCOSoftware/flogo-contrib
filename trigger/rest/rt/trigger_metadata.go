@@ -13,11 +13,11 @@ var jsonMetadata = `{
   "outputs": [
     {
       "name": "params",
-      "type": "string"
+      "type": "map"
     },
     {
       "name": "content",
-      "type": "string"
+      "type": "object"
     }
   ],
   "endpoint": {
