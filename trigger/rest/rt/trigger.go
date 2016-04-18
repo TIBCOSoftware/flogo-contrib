@@ -122,28 +122,27 @@ func newStartFlowHandler(rt *RestTrigger, flowURI string) httprouter.Handle {
 			}
 		}
 
-		//data := map[string]interface{}{
-		//	"params": params,
-		//	"content": content,
-		//}
+		data := map[string]interface{}{
+			"params":  params,
+			"content": content,
+		}
+
+		//todo: implement reply handler?
+		id := rt.flowStarter.StartFlowInstance(flowURI, data, nil, nil)
+
+		// paramsJSON, _ := json.Marshal(params)
+		// contentJSON, _ := json.Marshal(content)
 		//
-		////todo: implement reply handler?
-		//id := rt.flowStarter.StartFlowInstance(flowURI, data, nil, nil)
-
-		//todo: fix StartFlowInstance to use map[string]interface{} and remove this
-		paramsJSON, _ := json.Marshal(params)
-		contentJSON, _ := json.Marshal(content)
-
-		dataJSON := map[string]string{
-			"params":  string(paramsJSON),
-			"content": string(contentJSON),
-		}
-
-		if log.IsEnabledFor(logging.DEBUG) {
-			log.Debugf("REST Trigger: Starting Flow [%s] - data: %v", flowURI, dataJSON)
-		}
-
-		id := rt.flowStarter.StartFlowInstance(flowURI, dataJSON, nil, nil)
+		// dataJSON := map[string]string{
+		// 	"params":  string(paramsJSON),
+		// 	"content": string(contentJSON),
+		// }
+		//
+		// if log.IsEnabledFor(logging.DEBUG) {
+		// 	log.Debugf("REST Trigger: Starting Flow [%s] - data: %v", flowURI, dataJSON)
+		// }
+		//
+		// id := rt.flowStarter.StartFlowInstance(flowURI, dataJSON, nil, nil)
 
 		// If we didn't find it, 404
 		//w.WriteHeader(http.StatusNotFound)

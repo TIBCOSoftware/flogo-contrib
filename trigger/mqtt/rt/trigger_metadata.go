@@ -4,7 +4,7 @@ var jsonMetadata = `{
   "name": "tibco-mqtt",
   "version": "0.0.1",
   "description": "Simple MQTT Trigger",
-  "config":[
+  "settings":[
     {
       "name": "broker",
       "type": "string"

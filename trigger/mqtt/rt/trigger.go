@@ -13,17 +13,17 @@ import (
 )
 
 // log is the default package logger
-var log = logging.MustGetLogger("mqtt-trigger")
+var log = logging.MustGetLogger("trigger-tibco-mqtt")
 
 // todo: switch to use endpoint registration
 
 // MqttTrigger is simple MQTT trigger
 type MqttTrigger struct {
-	metadata       *trigger.Metadata
-	flowStarter    flowinst.Starter
-	client         mqtt.Client
-	settings       map[string]string
-	config         *trigger.Config
+	metadata    *trigger.Metadata
+	flowStarter flowinst.Starter
+	client      mqtt.Client
+	settings    map[string]string
+	config      *trigger.Config
 }
 
 func init() {
@@ -47,9 +47,8 @@ func (t *MqttTrigger) Init(flowStarter flowinst.Starter, config *trigger.Config)
 // Start implements ext.Trigger.Start
 func (t *MqttTrigger) Start() {
 
-	settings := t.config.Settings;
 	opts := mqtt.NewClientOptions()
-	opts.AddBroker(settings["broker"])
+	opts.AddBroker(t.settings["broker"])
 	opts.SetClientID(t.settings["id"])
 	opts.SetUsername(t.settings["user"])
 	opts.SetPassword(t.settings["password"])
@@ -140,9 +139,9 @@ func (t *MqttTrigger) publishMessage(topic string, message string) {
 
 // StartRequest describes a request for starting a ProcessInstance
 type StartRequest struct {
-	ProcessURI  string               `json:"flowUri"`
-	Data        map[string]string    `json:"data"`
-	Interceptor *flow.Interceptor `json:"interceptor"`
-	Patch       *flow.Patch       `json:"patch"`
-	ReplyTo     string               `json:"replyTo"`
+	ProcessURI  string                 `json:"flowUri"`
+	Data        map[string]interface{} `json:"data"`
+	Interceptor *flow.Interceptor      `json:"interceptor"`
+	Patch       *flow.Patch            `json:"patch"`
+	ReplyTo     string                 `json:"replyTo"`
 }

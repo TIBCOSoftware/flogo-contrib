@@ -12,12 +12,20 @@ var jsonMetadata = `{
     {
       "name": "uri",
       "type": "string"
+    },
+    {
+      "name": "params",
+      "type": "map"
+    },
+    {
+      "name": "content",
+      "type": "object"
     }
   ],
   "outputs": [
     {
       "name": "result",
-      "type": "string"
+      "type": "object"
     }
   ]
 }`
