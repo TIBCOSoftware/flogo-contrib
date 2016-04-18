@@ -72,7 +72,7 @@ Configure a task in flow to get pet '1234' from the [swagger petstore](http://pe
   "attributes": [
     { "name": "method", "value": "GET" },
     { "name": "uri", "value": "http://petstore.swagger.io/v2/pet/:id" },
-    { "name": "params", "value": { "id": "1234"}
+    { "name": "params", "value": { "id": "1234"} }
   ]
 }
 ```
