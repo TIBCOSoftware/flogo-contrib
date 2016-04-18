@@ -115,7 +115,7 @@ func (tb *SimpleTaskBehavior) Eval(context model.TaskContext, evalCode int) (don
 		if activity != nil {
 
 			//log.Debug("Evaluating Activity: ", activity.GetType())
-			done := activity.Eval(activityContext)
+			done,_ := activity.Eval(activityContext)
 			return done, 0
 		}
 
