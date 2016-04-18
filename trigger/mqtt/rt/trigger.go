@@ -24,6 +24,7 @@ type MqttTrigger struct {
 	client         mqtt.Client
 	settings       map[string]string
 	config         *trigger.Config
+	flowToTopic    map[string]string
 }
 
 func init() {
@@ -67,10 +68,8 @@ func (t *MqttTrigger) Start() {
 		topic := msg.Topic()
 		payload := string(msg.Payload())
 
-		// Match suffix of topic
-		if strings.HasSuffix(topic, "start") {
-			t.StartProcess(payload)
-		}
+		flowURI := t.flowToTopic[topic]
+		t.StartProcess(flowURI, payload)
 	})
 
 	client := mqtt.NewClient(opts)
@@ -86,7 +85,10 @@ func (t *MqttTrigger) Start() {
 	}
 
 	for _, endpoint := range t.config.Endpoints {
+		t.flowToTopic = make(map[string]string)
+		log.Debugf("Topic: %s , Flow URL %s ", endpoint.Settings["topic"], endpoint.FlowURI)
 		if token := t.client.Subscribe(endpoint.Settings["topic"], byte(i), nil); token.Wait() && token.Error() != nil {
+			t.flowToTopic[endpoint.Settings["topic"]] = endpoint.Settings["topic"]
 			log.Errorf("Error subscribing to topic %s: %s", endpoint.Settings["topic"], token.Error())
 			panic(token.Error())
 		}
@@ -107,7 +109,7 @@ func (t *MqttTrigger) Stop() {
 }
 
 // StartProcess starts a new Process Instance
-func (t *MqttTrigger) StartProcess(payload string) {
+func (t *MqttTrigger) StartProcess(flowURI string, payload string) {
 
 	req := &StartRequest{}
 	err := json.NewDecoder(strings.NewReader(payload)).Decode(req)
@@ -117,9 +119,9 @@ func (t *MqttTrigger) StartProcess(payload string) {
 		return
 	}
 
-	log.Debug("Process URI ", req.ProcessURI)
+	log.Debug("Process URI ", flowURI)
 	log.Debug("flowStarter.StartProcess ", t.flowStarter)
-	id := t.flowStarter.StartFlowInstance(req.ProcessURI, req.Data, nil, nil)
+	id := t.flowStarter.StartFlowInstance(flowURI, req.Data, nil, nil)
 	log.Debug("Start flow id: ", id)
 	t.publishMessage(req.ReplyTo, id)
 }
