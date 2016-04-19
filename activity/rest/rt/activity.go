@@ -98,7 +98,12 @@ func (a *RESTActivity) Eval(context activity.Context) (done bool, evalError *act
 	respBody, _ := ioutil.ReadAll(resp.Body)
 
 	var result interface{}
-	json.Unmarshal(respBody, &result)
+
+	d := json.NewDecoder(bytes.NewReader(respBody))
+	d.UseNumber()
+	err = d.Decode(&result)
+
+	//json.Unmarshal(respBody, &result)
 
 	if log.IsEnabledFor(logging.DEBUG) {
 		log.Debug("response Body:", result)

@@ -15,7 +15,7 @@ var jsonMetadata = `{
     },
     {
       "name": "params",
-      "type": "map"
+      "type": "params"
     },
     {
       "name": "content",

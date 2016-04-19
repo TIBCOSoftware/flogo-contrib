@@ -24,7 +24,7 @@ Inputs and Outputs:
     },
     { 
       "name": "params",
-      "type": "map"
+      "type": "params"
     },
     { 
       "name": "content",
