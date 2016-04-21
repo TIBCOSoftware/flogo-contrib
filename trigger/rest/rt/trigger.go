@@ -66,13 +66,9 @@ func (t *RestTrigger) Init(flowStarter flowinst.Starter, config *trigger.Config)
 }
 
 // Start implements trigger.Trigger.Start
-func (t *RestTrigger) Start() {
+func (t *RestTrigger) Start() error {
 	err := t.server.Start()
-
-	if err != nil {
-		log.Errorf("REST Trigger: Error starting - %v", err)
-	}
-
+	return err
 }
 
 // Stop implements trigger.Trigger.Start

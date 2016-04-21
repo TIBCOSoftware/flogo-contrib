@@ -46,7 +46,7 @@ func (t *MqttTrigger) Init(flowStarter flowinst.Starter, config *trigger.Config)
 }
 
 // Start implements ext.Trigger.Start
-func (t *MqttTrigger) Start() {
+func (t *MqttTrigger) Start() error {
 
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(t.settings["broker"])
@@ -56,7 +56,7 @@ func (t *MqttTrigger) Start() {
 	b, err := strconv.ParseBool(t.settings["cleansess"])
 	if err != nil {
 		log.Error("Error converting \"cleansess\" to a boolean ", err.Error())
-		return
+		return err
 	}
 	opts.SetCleanSession(b)
 	if t.settings["store"] != ":memory:" {
@@ -85,7 +85,7 @@ func (t *MqttTrigger) Start() {
 	i, err := strconv.Atoi(t.settings["qos"])
 	if err != nil {
 		log.Error("Error converting \"qos\" to an integer ", err.Error())
-		return
+		return err
 	}
 
 	for _, endpoint := range t.config.Endpoints {
@@ -96,6 +96,8 @@ func (t *MqttTrigger) Start() {
 			panic(token.Error())
 		}
 	}
+
+	return nil
 }
 
 // Stop implements ext.Trigger.Stop
