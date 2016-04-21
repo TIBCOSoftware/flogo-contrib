@@ -7,13 +7,13 @@ var jsonMetadata = `{
   "settings": [
     {
       "name": "port",
-      "type": "number"
+      "type": "integer"
     }
   ],
   "outputs": [
     {
       "name": "params",
-      "type": "map"
+      "type": "params"
     },
     {
       "name": "content",
