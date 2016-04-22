@@ -59,7 +59,15 @@ func (a *RESTActivity) Eval(context activity.Context) (done bool, evalError *act
 	containsParam := strings.Index(uri, "/:") > -1
 
 	if containsParam {
-		params := context.GetInput(ivParams).(map[string]string)
+
+		val := context.GetInput(ivParams)
+
+		if val == nil {
+			err := activity.NewError("Params not specified, required for URI: " + uri)
+			return false, err
+		}
+
+		params := val.(map[string]string)
 		uri = BuildURI(uri, params)
 	}
 

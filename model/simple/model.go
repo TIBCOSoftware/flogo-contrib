@@ -115,7 +115,13 @@ func (tb *SimpleTaskBehavior) Eval(context model.TaskContext, evalCode int) (don
 		if activity != nil {
 
 			//log.Debug("Evaluating Activity: ", activity.GetType())
-			done,_ := activity.Eval(activityContext)
+			done, err := activity.Eval(activityContext)
+
+			// todo handle error transition and have global error handler
+			if err != nil {
+				log.Errorf("Error evaluating activity '%s' - %s", context.Task().Name(), err.Error())
+			}
+
 			return done, 0
 		}
 
