@@ -31,9 +31,9 @@ type TestStarter struct {
 }
 
 // StartFlowInstance implements flowinst.Starter.StartFlowInstance
-func (ts *TestStarter) StartFlowInstance(flowURI string, startData map[string]interface{}, replyHandler flowinst.ReplyHandler, execOptions *flowinst.ExecOptions) string {
+func (ts *TestStarter) StartFlowInstance(flowURI string, startData map[string]interface{}, replyHandler flowinst.ReplyHandler, execOptions *flowinst.ExecOptions) (instanceID string, startError error) {
 	fmt.Printf("Started Flow with data: %v", startData)
-	return "dummyid"
+	return "dummyid", nil
 }
 
 func TestRegistered(t *testing.T) {

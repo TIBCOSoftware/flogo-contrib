@@ -124,7 +124,12 @@ func newStartFlowHandler(rt *RestTrigger, flowURI string) httprouter.Handle {
 		}
 
 		//todo: implement reply handler?
-		id := rt.flowStarter.StartFlowInstance(flowURI, data, nil, nil)
+		id, err := rt.flowStarter.StartFlowInstance(flowURI, data, nil, nil)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 
 		// paramsJSON, _ := json.Marshal(params)
 		// contentJSON, _ := json.Marshal(content)

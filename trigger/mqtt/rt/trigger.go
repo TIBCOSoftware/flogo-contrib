@@ -126,7 +126,9 @@ func (t *MqttTrigger) StartProcess(flowURI string, payload string) {
 
 	log.Debug("Flow URI ", flowURI)
 	log.Debug("flowStarter.StartProcess ", t.flowStarter)
-	id := t.flowStarter.StartFlowInstance(flowURI, req.Data, nil, nil)
+	id, err := t.flowStarter.StartFlowInstance(flowURI, req.Data, nil, nil)
+	//todo handle error
+
 	log.Debug("Start flow id: ", id)
 	t.publishMessage(req.ReplyTo, id)
 }
