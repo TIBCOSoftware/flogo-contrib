@@ -1,28 +1,23 @@
 {
   "name": "tibco-rest",
-  "version": "0.1.0",
-  "description": "Query a pet's infromation",
-  "title": "TIBCO Pet Query",
-  "inputs": [
+  "version": "0.0.1",
+  "description": "REST activity",
+  "inputs":[
     {
-      "name": "petId",
-      "title": "Pet ID",
-      "value": "222",
-      "required": true,
-      "validation": "^\\d*$",
-      "validationMessage": "Pet ID Should be a valid number"
+      "name": "method",
+      "type": "string"
     },
     {
       "name": "uri",
-      "title": "URI",
-      "value": "http://petstore.swagger.io/v2/pet/{petId}",
-      "required": true
+      "type": "string"
     },
     {
-      "name": "method",
-      "title": "Method",
-      "value": "GET",
-      "required": true
+      "name": "params",
+      "type": "params"
+    },
+    {
+      "name": "content",
+      "type": "object"
     }
   ],
   "outputs": [
