@@ -5,11 +5,13 @@
   "inputs":[
     {
       "name": "message",
-      "type": "string"
+      "type": "string",
+      "value": ""
     },
     {
       "name": "flowInfo",
-      "type": "boolean"
+      "type": "boolean",
+      "value": "false"
     }
   ],
   "outputs": []
