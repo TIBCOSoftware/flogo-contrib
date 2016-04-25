@@ -123,8 +123,11 @@ func newStartFlowHandler(rt *RestTrigger, flowURI string) httprouter.Handle {
 			"content": content,
 		}
 
+		//todo handle error
+		startAttrs,_ := rt.metadata.OutputsToAttrs(data, false)
+
 		//todo: implement reply handler?
-		id, err := rt.flowStarter.StartFlowInstance(flowURI, data, nil, nil)
+		id, err := rt.flowStarter.StartFlowInstance(flowURI, startAttrs, nil, nil)
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
