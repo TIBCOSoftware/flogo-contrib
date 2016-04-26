@@ -1,7 +1,8 @@
 {
   "name": "tibco-log",
   "version": "0.0.1",
-  "description": "log activity",
+  "title": "Log Activity",
+  "description": "Simple Log Activity",
   "inputs":[
     {
       "name": "message",
