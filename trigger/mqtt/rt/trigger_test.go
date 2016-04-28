@@ -7,6 +7,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/ext/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/core/flowinst"
 	MQTT "github.com/eclipse/paho.mqtt.golang"
+	"github.com/TIBCOSoftware/flogo-lib/core/data"
 )
 
 const testConfig string = `{
@@ -35,8 +36,8 @@ type TestStarter struct {
 }
 
 // StartFlowInstance implements flowinst.Starter.StartFlowInstance
-func (ts *TestStarter) StartFlowInstance(flowURI string, startData map[string]interface{}, replyHandler flowinst.ReplyHandler, execOptions *flowinst.ExecOptions) (instanceID string, startError error) {
-	log.Debugf("Started Flow with data: %v", startData)
+func (ts *TestStarter) StartFlowInstance(flowURI string, startAttrs []*data.Attribute, replyHandler flowinst.ReplyHandler, execOptions *flowinst.ExecOptions) (instanceID string, startError error) {
+	log.Debugf("Started Flow with data: %v", startAttrs)
 	return "dummyid", nil
 }
 
