@@ -61,7 +61,7 @@ func (tb *SimpleTaskBehavior) Enter(context model.TaskContext, enterCode int) (e
 
 	//check if all predecessor links are done
 
-	linkContexts := context.FromLinks()
+	linkContexts := context.FromInstLinks()
 
 	ready := true
 
@@ -110,9 +110,7 @@ func (tb *SimpleTaskBehavior) Eval(context model.TaskContext, evalCode int) (don
 
 	} else {
 
-		activity, _ := context.Activity()
-
-		if activity != nil {
+		if context.HasActivity() {
 
 			done, err := context.EvalActivity()
 
@@ -134,10 +132,7 @@ func (tb *SimpleTaskBehavior) PostEval(context model.TaskContext, evalCode int, 
 
 	log.Debugf("Task PostEval\n")
 
-	//activity, activityContext := context.Activity()
-	activity, _ := context.Activity()
-
-	if activity != nil { //if activity is async
+	if context.HasActivity() { //if activity is async
 
 		//done := activity.PostEval(activityContext, data)
 		done := true
@@ -157,20 +152,27 @@ func (tb *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (not
 	context.SetState(STATE_DONE)
 	//context.SetTaskDone() for task garbage collection
 
-	links := task.ToLinks()
-	numLinks := len(links)
+	linkInsts := context.ToInstLinks()
+	numLinks := len(linkInsts)
 
 	// process outgoing links
 	if numLinks > 0 {
 
 		taskEntries := make([]*model.TaskEntry, 0, numLinks)
 
-		for _, link := range links {
+		for _, linkInst := range linkInsts {
 
-			linkContext := context.EvalLink(link, 0)
-			if linkContext.State() == STATE_LINK_TRUE {
+			follow := true
 
-				taskEntry := &model.TaskEntry{Task: link.ToTask(), EnterCode: 0}
+			if linkInst.Link().Type() == flow.LtExpression {
+				//todo handle error
+				follow,_ = context.EvalLink(linkInst.Link())
+			}
+
+			if follow {
+				linkInst.SetState(STATE_LINK_TRUE)
+
+				taskEntry := &model.TaskEntry{Task: linkInst.Link().ToTask(), EnterCode: 0}
 				taskEntries = append(taskEntries, taskEntry)
 			}
 		}
@@ -200,7 +202,7 @@ type SimpleLinkBehavior struct {
 }
 
 // Eval implements model.LinkBehavior.Eval
-func (lb *SimpleLinkBehavior) Eval(context model.LinkContext, evalCode int) {
+func (lb *SimpleLinkBehavior) Eval(context model.LinkInst, evalCode int) {
 
 	context.SetState(STATE_LINK_TRUE)
 }
