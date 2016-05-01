@@ -11,6 +11,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/flowinst"
 	"github.com/julienschmidt/httprouter"
 	"github.com/op/go-logging"
+	"github.com/TIBCOSoftware/flogo-lib/core/data"
 )
 
 // log is the default package logger
@@ -50,11 +51,15 @@ func (t *RestTrigger) Init(flowStarter flowinst.Starter, config *trigger.Config)
 		if endpointIsValid(endpoint) {
 			method := strings.ToUpper(endpoint.Settings["method"])
 			path := endpoint.Settings["path"]
+			autoIdReply, _ := data.CoerceToBoolean(endpoint.Settings["autoIdReply"])
 
 			log.Debugf("REST Trigger: Registering endpoint [%s: %s] for Flow: %s", method, path, endpoint.FlowURI)
+			if autoIdReply {
+				log.Debug("REST Trigger: AutoIdReply Enabled")
+			}
 
 			router.OPTIONS(path, handleOption) // for CORS
-			router.Handle(method, path, newStartFlowHandler(t, endpoint.FlowURI))
+			router.Handle(method, path, newStartFlowHandler(t, endpoint.FlowURI, autoIdReply))
 
 		} else {
 			panic(fmt.Sprintf("Invalid endpoint: %v", endpoint))
@@ -92,7 +97,7 @@ type IDResponse struct {
 	ID string `json:"id"`
 }
 
-func newStartFlowHandler(rt *RestTrigger, flowURI string) httprouter.Handle {
+func newStartFlowHandler(rt *RestTrigger, flowURI string, autoIdReply bool) httprouter.Handle {
 
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
@@ -100,9 +105,9 @@ func newStartFlowHandler(rt *RestTrigger, flowURI string) httprouter.Handle {
 
 		w.Header().Add("Access-Control-Allow-Origin", "*")
 
-		params := make(map[string]string)
+		pathParams := make(map[string]string)
 		for _, param := range ps {
-			params[param.Key] = param.Value
+			pathParams[param.Key] = param.Value
 		}
 
 		var content interface{}
@@ -118,8 +123,17 @@ func newStartFlowHandler(rt *RestTrigger, flowURI string) httprouter.Handle {
 			}
 		}
 
+		queryValues := r.URL.Query()
+		queryParams := make(map[string]string, len(queryValues))
+
+		for key, value := range queryValues {
+			queryParams[key] = strings.Join(value, ",")
+		}
+
 		data := map[string]interface{}{
-			"params":  params,
+			"params":  pathParams,
+			"pathParams" : pathParams,
+			"queryParams" : queryParams,
 			"content": content,
 		}
 
@@ -134,27 +148,12 @@ func newStartFlowHandler(rt *RestTrigger, flowURI string) httprouter.Handle {
 			return
 		}
 
-		// paramsJSON, _ := json.Marshal(params)
-		// contentJSON, _ := json.Marshal(content)
-		//
-		// dataJSON := map[string]string{
-		// 	"params":  string(paramsJSON),
-		// 	"content": string(contentJSON),
-		// }
-		//
-		// if log.IsEnabledFor(logging.DEBUG) {
-		// 	log.Debugf("REST Trigger: Starting Flow [%s] - data: %v", flowURI, dataJSON)
-		// }
-		//
-		// id := rt.flowStarter.StartFlowInstance(flowURI, dataJSON, nil, nil)
+		if autoIdReply {
+			resp := &IDResponse{ID: id}
 
-		// If we didn't find it, 404
-		//w.WriteHeader(http.StatusNotFound)
-
-		resp := &IDResponse{ID: id}
-
-		encoder := json.NewEncoder(w)
-		encoder.Encode(resp)
+			encoder := json.NewEncoder(w)
+			encoder.Encode(resp)
+		}
 
 		w.WriteHeader(http.StatusOK)
 	}

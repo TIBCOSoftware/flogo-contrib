@@ -16,6 +16,14 @@
       "type": "params"
     },
     {
+      "name": "pathParams",
+      "type": "params"
+    },
+    {
+      "name": "queryParams",
+      "type": "params"
+    },
+    {
       "name": "content",
       "type": "object"
     }
@@ -31,6 +39,10 @@
         "name": "path",
         "type": "string",
         "required" : true
+      },
+      {
+        "name": "autoIdReply",
+        "type": "boolean"
       }
     ]
   }

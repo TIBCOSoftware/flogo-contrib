@@ -16,6 +16,14 @@ var jsonMetadata = `{
       "type": "params"
     },
     {
+      "name": "pathParams",
+      "type": "params"
+    },
+    {
+      "name": "queryParams",
+      "type": "params"
+    },
+    {
       "name": "content",
       "type": "object"
     }
@@ -29,6 +37,10 @@ var jsonMetadata = `{
       {
         "name": "path",
         "type": "string"
+      },
+      {
+        "name": "autoIdReply",
+        "type": "boolean"
       }
     ]
   }
