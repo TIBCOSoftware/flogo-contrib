@@ -1,0 +1,37 @@
+{
+  "name": "tibco-timer",
+  "version": "0.0.1",
+  "title": "Timer Trigger",
+  "description": "Simple Timer Trigger",
+  "settings":[
+  ],
+  "endpoint": {
+    "settings": [
+      {
+        "name": "repeating",
+        "type": "string",
+        "required" : true
+      },
+      {
+        "name": "startDate",
+        "type": "string",
+        "required" : false
+      },
+      {
+        "name": "hours",
+        "type": "string",
+        "required" : false
+      },
+      {
+        "name": "minutes",
+        "type": "string",
+        "required" : false
+      },
+      {
+        "name": "seconds",
+        "type": "string",
+        "required" : false
+      }
+    ]
+  }
+}
