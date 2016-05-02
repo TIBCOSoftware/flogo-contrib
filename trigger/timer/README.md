@@ -1,5 +1,5 @@
 # tibco-timer
-This trigger provides your flogo application the ability to schedule a flow via REST over HTTP
+This trigger provides your flogo application the ability to schedule a flow via scheduling service
 
 ## Installation
 
@@ -77,8 +77,7 @@ Configure the Trigger to run a flow immediately
 ```
 
 ### repeating = false
-Configure the Trigger to run a flow at a certain date/time
-startDate format = "mm/dd/yyyy, hours:minutes:seconds"
+Configure the Trigger to run a flow at a certain date/time. "startDate" settings format = "mm/dd/yyyy, hours:minutes:seconds"
 
 ```json
 {
@@ -100,6 +99,7 @@ startDate format = "mm/dd/yyyy, hours:minutes:seconds"
     }
   ]
 }
+```
 
 ### repeating = true
 Configure the Trigger to run a flow immediately and repeating every hours|minutes|seconds
@@ -124,6 +124,7 @@ Configure the Trigger to run a flow immediately and repeating every hours|minute
     }
   ]
 }
+```
 
 ### repeating = true
 Configure the Trigger to run a flow at a certain date/time and repeating every hours|minutes|seconds
