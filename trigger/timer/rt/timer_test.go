@@ -10,10 +10,9 @@ import (
 	"time"
 )
 
-const testConfig string = `{
+const testConfig3 string = `{
   "name": "tibco-timer",
   "settings": {
-    "type": "once"
   },
   "endpoints": [
     {
@@ -28,7 +27,6 @@ const testConfig string = `{
 const testConfig2 string = `{
   "name": "tibco-timer",
   "settings": {
-    "type": "once"
   },
   "endpoints": [
     {
@@ -41,18 +39,17 @@ const testConfig2 string = `{
   ]
 }`
 
-const testConfig3 string = `{
+const testConfig string = `{
   "name": "tibco-timer",
   "settings": {
-    "type": "once"
   },
   "endpoints": [
     {
       "flowURI": "local://testFlow2",
       "settings": {
         "repeating": "true",
-        "startDate" : "05/01/2016, 12:25:01",
-        "seconds": "5",
+        "startDate" : "",
+        "seconds": "5"
       }
     }
   ]
@@ -61,7 +58,6 @@ const testConfig3 string = `{
 const testConfig4 string = `{
   "name": "tibco-timer",
   "settings": {
-    "type": "once"
   },
   "endpoints": [
     {
