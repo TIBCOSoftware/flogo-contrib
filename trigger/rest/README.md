@@ -20,7 +20,11 @@ Settings, Outputs and Endpoint:
   ],
   "outputs": [
     {
-      "name": "params",
+      "name": "pathParams",
+      "type": "params"
+    },
+    {
+      "name": "queryParams",
       "type": "params"
     },
     {
@@ -32,11 +36,17 @@ Settings, Outputs and Endpoint:
     "settings": [
       {
         "name": "method",
-        "type": "string"
+        "type": "string",
+        "required" : true
       },
       {
         "name": "path",
-        "type": "string"
+        "type": "string",
+        "required" : true
+      },
+      {
+        "name": "autoIdReply",
+        "type": "boolean"
       }
     ]
   }
