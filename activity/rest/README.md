@@ -39,12 +39,19 @@ Inputs and Outputs:
   ]
 }
 ```
+## Settings
+| Setting     | Description    |
+|:------------|:---------------|
+| method  | The HTTP method to invoke |         
+| uri     | The uri of the resource   |
+| params  | The path parameters |
+| content | The message content |
 Note: 
 
 * **params**: Is only required if you have params in your URI ( i.e. http://.../pet/:id )
 * **content**: Is only used in POST, PUT, PATCH
 
-## Examples
+## Configuration Examples
 ### Simple
 Configure a task in flow to get pet '1234' from the [swagger petstore](http://petstore.swagger.io):
 

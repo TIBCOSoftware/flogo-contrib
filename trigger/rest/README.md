@@ -52,6 +52,17 @@ Settings, Outputs and Endpoint:
   }
 }
 ```
+## Settings
+### Trigger:
+| Setting     | Description    |
+|:------------|:---------------|
+| port | The port to listen on |         
+### Endpoint:
+| Setting     | Description    |
+|:------------|:---------------|
+| method      | The HTTP method |         
+| path        | The resource path  |
+| autoIdReply | Automatically reply with the ID of the flow instance |
 
 ## Example Configurations
 

@@ -36,8 +36,14 @@ Inputs and Outputs:
   ]
 }
 ```
-
-## Examples
+## Settings
+| Setting     | Description    |
+|:------------|:---------------|
+| counterName | The name of the counter |         
+| increment   | Increment the counter |
+| reset       | Reset the counter |
+Note: if increment is set to true, reset is ignored
+## Configuration Examples
 ### Increment
 Configure a task to increment a 'messages' counter:
 
