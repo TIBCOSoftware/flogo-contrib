@@ -4,10 +4,10 @@ import (
 	"testing"
 
 	"fmt"
-	"strconv"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/ext/activity"
 	"github.com/TIBCOSoftware/flogo-lib/test"
+	"encoding/json"
 )
 
 const reqPostStr string = `{
@@ -45,8 +45,8 @@ func TestSimplePost(t *testing.T) {
 
 	res := val.(map[string]interface{})
 
-	petIDInt := int64(res["id"].(float64))
-	petID = strconv.FormatInt(petIDInt, 10)
+	petID = res["id"].(json.Number).String()
+	fmt.Println("petID:", petID)
 }
 
 func TestSimpleGet(t *testing.T) {
@@ -74,10 +74,31 @@ func TestParamGet(t *testing.T) {
 	tc.SetInput("method", "GET")
 	tc.SetInput("uri", "http://petstore.swagger.io/v2/pet/:id")
 
-	params := map[string]string{
+	pathParams := map[string]string{
 		"id": petID,
 	}
-	tc.SetInput("params", params)
+	tc.SetInput("pathParams", pathParams)
+
+	//eval
+	act.Eval(tc)
+
+	val := tc.GetOutput("result")
+	fmt.Printf("result: %v\n", val)
+}
+
+func TestSimpleGetQP(t *testing.T) {
+
+	act := activity.Get("tibco-rest")
+	tc := test.NewTestActivityContext(act.Metadata())
+
+	//setup attrs
+	tc.SetInput("method", "GET")
+	tc.SetInput("uri", "http://petstore.swagger.io/v2/pet/findByStatus")
+
+	queryParams := map[string]string{
+		"status": "ava",
+	}
+	tc.SetInput("queryParams", queryParams)
 
 	//eval
 	act.Eval(tc)
