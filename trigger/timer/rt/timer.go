@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"fmt"
 	"math"
+	"strings"
 )
 
 // log is the default package logger
@@ -156,15 +157,54 @@ func getInitialStartInSeconds(endpoint *trigger.EndpointConfig) (int) {
 		return 0;
 	}
 
-	//layout := "2006-01-02T15:04:05Z07:00"
-	layout := "Jan 2, 2006 at 3:04pm (MST)"
-	log.Debug("startDate: ",  endpoint.Settings["startDate"])
-	triggerDate, err := time.Parse(layout, endpoint.Settings["startDate"])
+	layout := time.RFC3339
+	startDate := endpoint.Settings["startDate"]
+	idx := strings.LastIndex(startDate, "Z")
+	timeZone := startDate[idx + 1:len(startDate)]
+	log.Debug("Time Zone: ", timeZone)
+	startDate = strings.TrimSuffix(startDate, timeZone)
+	log.Debug("startDate: ",  startDate)
+
+	// is timezone negative
+	var isNegative bool
+	isNegative = strings.HasPrefix(timeZone, "-")
+	// remove sign
+	timeZone = strings.TrimPrefix(timeZone, "-")
+
+	triggerDate, err := time.Parse(layout, startDate)
 	if err != nil {
 		log.Error("Error parsing time err: ", err.Error())
 	}
+	log.Debug("Time parsed from settings: ", triggerDate)
 
-	log.Debug("Current time: ", time.Now())
+	var hour int
+	var minutes int
+
+	sliceArray := strings.Split(timeZone, ":")
+	if(len(sliceArray) != 2) {
+		log.Error("Time zone has wrong format: ", timeZone)
+	} else {
+		hour, _ = strconv.Atoi(sliceArray[0])
+		minutes, _ = strconv.Atoi(sliceArray[1])
+
+		log.Debug("Duration hour: ", time.Duration(hour) * time.Hour)
+		log.Debug("Duration minutes: ", time.Duration(minutes) * time.Minute)
+	}
+
+	hours, _ := strconv.Atoi(timeZone)
+	log.Debug("hours: ", hours)
+	if(isNegative) {
+		log.Debug("Adding to triggerDate")
+		triggerDate = triggerDate.Add(time.Duration(hour) * time.Hour)
+		triggerDate = triggerDate.Add(time.Duration(minutes) * time.Minute)
+	} else {
+		log.Debug("Subtracting to triggerDate")
+		triggerDate = triggerDate.Add(time.Duration(hour * -1))
+		triggerDate = triggerDate.Add(time.Duration(minutes))
+	}
+
+	currentTime := time.Now().UTC()
+	log.Debug("Current time: ", currentTime)
 	log.Debug("Setting start time: ", triggerDate)
 	duration := time.Since(triggerDate)
 

@@ -33,7 +33,7 @@ const testConfig string = `{
       "flowURI": "local://testFlow2",
       "settings": {
         "repeating": "false",
-        "startDate" : "May 3, 2016 at 7:50am (EST)"
+        "startDate" : "2016-05-03T19:25:00Z-04:00"
       }
     }
   ]
