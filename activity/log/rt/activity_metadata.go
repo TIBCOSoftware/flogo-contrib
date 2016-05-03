@@ -12,7 +12,16 @@ var jsonMetadata = `{
     {
       "name": "flowInfo",
       "type": "boolean"
+    },
+    {
+      "name": "addToFlow",
+      "type": "boolean"
     }
   ],
-  "outputs": []
+  "outputs": [
+    {
+      "name": "message",
+      "type": "string"
+    }
+  ]
 }`
