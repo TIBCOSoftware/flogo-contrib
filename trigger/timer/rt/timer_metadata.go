@@ -13,6 +13,10 @@ var jsonMetadata = `{
         "type": "string"
       },
       {
+        "name": "notImmediate",
+        "type": "string"
+      },
+      {
         "name": "startDate",
         "type": "string"
       },

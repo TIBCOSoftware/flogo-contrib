@@ -29,6 +29,10 @@ Outputs and Endpoint:
         "type": "string"
       },
       {
+        "name": "notImmediate",
+        "type": "string"
+      },
+      {
         "name": "startDate",
         "type": "string"
       },
@@ -102,7 +106,7 @@ Configure the Trigger to run a flow at a certain date/time. "startDate" settings
 ```
 
 ### repeating = true
-Configure the Trigger to run a flow immediately and repeating every hours|minutes|seconds
+Configure the Trigger to run a flow immediately and repeating every hours|minutes|seconds. "notImmediate" set to true, the trigger will not fire immediately in this case the first execution will occur in 24 hours. If set to true the first execuction will will occur immediately.
 
 ```json
 {
@@ -117,6 +121,7 @@ Configure the Trigger to run a flow immediately and repeating every hours|minute
           "flowURI": "local://new_device_flow",
           "settings": {
             "repeating": "true",
+            "notImmediate": "true",
             "hours": "24"
           }
         }

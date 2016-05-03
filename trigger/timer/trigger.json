@@ -13,6 +13,11 @@
         "required" : true
       },
       {
+        "name": "notImmediate",
+        "type": "string",
+        "required" : false
+      },
+      {
         "name": "startDate",
         "type": "string",
         "required" : false
