@@ -16,35 +16,54 @@ Inputs and Outputs:
   "inputs":[
     {
       "name": "method",
-      "type": "string"
+      "type": "string",
+      "required": true
     },
     {
       "name": "uri",
-      "type": "string"
+      "type": "string",
+      "required": true
     },
-    { 
+    {
       "name": "params",
       "type": "params"
     },
-    { 
+    {
+      "name": "pathParams",
+      "type": "params"
+    },
+    {
+      "name": "queryParams",
+      "type": "params"
+    },
+    {
       "name": "content",
       "type": "object"
-    }    
+    }
   ],
   "outputs": [
     {
       "name": "result",
-      "type": "string"
+      "type": "object"
     }
   ]
 }
 ```
+## Settings
+| Setting     | Description    |
+|:------------|:---------------|
+| method      | The HTTP method to invoke |         
+| uri         | The uri of the resource   |
+| pathParams  | The path parameters |
+| queryParams | The query parameters |
+| content     | The message content |
+| params      | The path parameters (Deprecated) |
 Note: 
 
-* **params**: Is only required if you have params in your URI ( i.e. http://.../pet/:id )
+* **pathParams**: Is only required if you have params in your URI ( i.e. http://.../pet/:id )
 * **content**: Is only used in POST, PUT, PATCH
 
-## Examples
+## Configuration Examples
 ### Simple
 Configure a task in flow to get pet '1234' from the [swagger petstore](http://petstore.swagger.io):
 
@@ -60,7 +79,7 @@ Configure a task in flow to get pet '1234' from the [swagger petstore](http://pe
   ]
 }
 ```
-### Using Params
+### Using Path Params
 Configure a task in flow to get pet '1234' from the [swagger petstore](http://petstore.swagger.io) via parameters.
 
 ```json

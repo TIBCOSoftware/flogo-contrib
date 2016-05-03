@@ -4,12 +4,15 @@ Collection of Flogo activities, triggers and models.
 ## Contributions
 
 ### Activities
-* [rest](activity/rest): Simple REST invoker 
+* [counter](activity/counter): Global counter 
 * [log](activity/log): Simple flow Logger 
+* [rest](activity/rest): Simple REST invoker
+* [twilio](activity/twilio): Simple Twilio SMS sender
 
 ### Triggers
-* [rest](trigger/rest): Start flow via REST
 * [mqtt](trigger/mqtt): Start flow via MQTT
+* [rest](trigger/rest): Start flow via REST
+* [timer](trigger/timer): Start flow via Timer
  
 ### Models
 * [simple](model/simple): Basic flow model

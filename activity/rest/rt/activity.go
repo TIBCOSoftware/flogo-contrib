@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/ext/activity"
@@ -22,10 +23,12 @@ const (
 	methodPATCH  = "PATCH"
 	methodDELETE = "DELETE"
 
-	ivMethod  = "method"
-	ivURI     = "uri"
-	ivParams  = "params"
-	ivContent = "content"
+	ivMethod      = "method"
+	ivURI         = "uri"
+	ivPathParams  = "pathParams"
+	ivQueryParams = "queryParams"
+	ivContent     = "content"
+	ivParams      = "params"
 
 	ovResult = "result"
 )
@@ -60,15 +63,31 @@ func (a *RESTActivity) Eval(context activity.Context) (done bool, evalError *act
 
 	if containsParam {
 
-		val := context.GetInput(ivParams)
+		val := context.GetInput(ivPathParams)
 
 		if val == nil {
-			err := activity.NewError("Params not specified, required for URI: " + uri)
-			return false, err
+			val = context.GetInput(ivParams)
+
+			if val == nil {
+				err := activity.NewError("Params not specified, required for URI: " + uri)
+				return false, err
+			}
 		}
 
-		params := val.(map[string]string)
-		uri = BuildURI(uri, params)
+		pathParams := val.(map[string]string)
+		uri = BuildURI(uri, pathParams)
+	}
+
+	if context.GetInput(ivQueryParams) != nil {
+		queryParams := context.GetInput(ivQueryParams).(map[string]string)
+
+		qp := url.Values{}
+
+		for key, value := range queryParams {
+			qp.Set(key, value)
+		}
+
+		uri = uri + "?" + qp.Encode()
 	}
 
 	log.Debugf("REST Call: [%s] %s\n", method, uri)

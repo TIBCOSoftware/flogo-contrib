@@ -3,18 +3,29 @@ package rest
 var jsonMetadata = `{
   "name": "tibco-rest",
   "version": "0.0.1",
-  "description": "REST activity",
+  "title": "REST Activity",
+  "description": "Simple REST Activity",
   "inputs":[
     {
       "name": "method",
-      "type": "string"
+      "type": "string",
+      "required": true
     },
     {
       "name": "uri",
-      "type": "string"
+      "type": "string",
+      "required": true
     },
     {
       "name": "params",
+      "type": "params"
+    },
+    {
+      "name": "pathParams",
+      "type": "params"
+    },
+    {
+      "name": "queryParams",
       "type": "params"
     },
     {
@@ -28,4 +39,5 @@ var jsonMetadata = `{
       "type": "object"
     }
   ]
-}`
+}
+`

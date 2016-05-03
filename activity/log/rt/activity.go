@@ -22,8 +22,16 @@ var backend = logging.NewLogBackend(os.Stdout, "", 0)
 var backendFormatter = logging.NewBackendFormatter(backend, format)
 var backendLeveled = logging.AddModuleLevel(backendFormatter)
 
+const (
+	ivMessage   = "message"
+	ivFlowInfo  = "flowInfo"
+	ivAddToFlow = "addToFlow"
+
+	ovMessage = "message"
+)
+
 func init() {
-	backendLeveled.SetLevel(logging.INFO, "")
+	backendLeveled.SetLevel(logging.DEBUG, "")
 	activityLog.SetBackend(backendLeveled)
 }
 
@@ -47,27 +55,14 @@ func (a *LogActivity) Metadata() *activity.Metadata {
 // Eval implements api.Activity.Eval - Logs the Message
 func (a *LogActivity) Eval(context activity.Context) (done bool, evalError *activity.Error) {
 
-	message := context.GetInput("message").(string)
-	flowInfo := context.GetInput("flowInfo")
+	message := context.GetInput(ivMessage).(string)
 
-	//todo clean this up!
-	showInfo, ok := flowInfo.(bool)
-	if !ok {
-		s, ok := flowInfo.(string)
-
-		if !ok {
-
-			//error out
-		}
-
-		showInfo, _ = strconv.ParseBool(s)
-
-		// the assertion failed.
-	}
+	flowInfo, _ := toBool(context.GetInput(ivFlowInfo))
+	addToFlow, _ := toBool(context.GetInput(ivAddToFlow))
 
 	msg := message
 
-	if showInfo {
+	if flowInfo {
 
 		msg = fmt.Sprintf("'%s' - FlowInstanceID [%s], Flow [%s], Task [%s]", msg,
 			context.FlowInstanceID(), context.FlowName(), context.TaskName())
@@ -75,7 +70,31 @@ func (a *LogActivity) Eval(context activity.Context) (done bool, evalError *acti
 
 	activityLog.Info(msg)
 
-	//log.Debugf("%s: %s\n", time.Now(), msg)
+	if addToFlow {
+		context.SetOutput(ovMessage, msg)
+	}
 
 	return true, nil
+}
+
+
+func toBool(val interface{}) (bool, error) {
+
+	b, ok := val.(bool)
+	if !ok {
+		s, ok := val.(string)
+
+		if !ok {
+			return false, fmt.Errorf("unable to convert to boolean")
+		}
+
+		var err error
+		b, err = strconv.ParseBool(s)
+
+		if err != nil {
+			return false, err
+		}
+	}
+
+	return b, nil
 }

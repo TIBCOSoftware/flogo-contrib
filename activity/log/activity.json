@@ -13,7 +13,17 @@
       "name": "flowInfo",
       "type": "boolean",
       "value": "false"
+    },
+    {
+      "name": "addToFlow",
+      "type": "boolean",
+      "value": "false"
     }
   ],
-  "outputs": []
+  "outputs": [
+    {
+      "name": "message",
+      "type": "string"
+    }
+  ]
 }

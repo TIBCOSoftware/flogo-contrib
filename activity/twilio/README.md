@@ -38,8 +38,18 @@ Inputs and Outputs:
   "outputs": []
 }
 ```
+## Settings
+| Setting     | Description    |
+|:------------|:---------------|
+| accountSID | The Twilio account SID |         
+| authToken  | The Twilio auth token  |
+| from       | The Twilio number you are sending the SMS from |
+| to         | The number you are sending the SMS to |
+| message    | The SMS message |
+Note: 
+Phone numbers should be in the format '+15555555555'
 
-## Examples
+## Configuration Examples
 ### Simple
 Configure a task in flow to send 'my text message' to '617-555-5555' via Twilio:
 
