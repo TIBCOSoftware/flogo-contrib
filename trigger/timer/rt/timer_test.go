@@ -24,21 +24,6 @@ const testConfig3 string = `{
   ]
 }`
 
-const testConfig2 string = `{
-  "name": "tibco-timer",
-  "settings": {
-  },
-  "endpoints": [
-    {
-      "flowURI": "local://testFlow2",
-      "settings": {
-        "repeating": "true",
-        "seconds": "5"
-      }
-    }
-  ]
-}`
-
 const testConfig string = `{
   "name": "tibco-timer",
   "settings": {
@@ -47,8 +32,23 @@ const testConfig string = `{
     {
       "flowURI": "local://testFlow2",
       "settings": {
+        "repeating": "false",
+        "startDate" : "May 3, 2016 at 7:50am (EST)"
+      }
+    }
+  ]
+}`
+
+const testConfig2 string = `{
+  "name": "tibco-timer",
+  "settings": {
+  },
+  "endpoints": [
+    {
+      "flowURI": "local://testFlow2",
+      "settings": {
+      	"notImmediate": "false",
         "repeating": "true",
-        "startDate" : "",
         "seconds": "5"
       }
     }
@@ -129,9 +129,7 @@ func TestTimer(t *testing.T) {
 	tgr := trigger.Get("tibco-timer")
 
 	tgr.Start()
-	time.Sleep(time.Second * 2)
-	//tgr.Stop()
-	time.Sleep(time.Second * 30)
+	time.Sleep(time.Second * 2000)
 	defer tgr.Stop()
 
 

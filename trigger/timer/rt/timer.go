@@ -9,6 +9,7 @@ import (
 	"time"
 	"strconv"
 	"fmt"
+	"math"
 )
 
 // log is the default package logger
@@ -84,7 +85,7 @@ func (t *TimerTrigger) Stop() {
 func (t *TimerTrigger) scheduleOnce(endpoint *trigger.EndpointConfig) {
 	log.Debug("Scheduling a run one time job")
 
-	seconds := getSeconds(endpoint)
+	seconds := getInitialStartInSeconds(endpoint)
 	log.Debug("Seconds till trigger fires: ", seconds)
 	timerJob := scheduler.Every(int(seconds))
 
@@ -102,7 +103,7 @@ func (t *TimerTrigger) scheduleOnce(endpoint *trigger.EndpointConfig) {
 		timerJob.Quit <- true
 	}
 
-	timerJob, err := timerJob.Seconds().Run(fn)
+	timerJob, err := timerJob.Seconds().NotImmediately().Run(fn)
 	if err != nil {
 		log.Error("Error scheduleOnce flo err: ", err.Error())
 	}
@@ -112,6 +113,8 @@ func (t *TimerTrigger) scheduleOnce(endpoint *trigger.EndpointConfig) {
 
 func (t *TimerTrigger) scheduleRepeating(endpoint *trigger.EndpointConfig) {
 	log.Debug("Scheduling a repeating job")
+
+	seconds := getInitialStartInSeconds(endpoint)
 
 	fn2 := func() {
 		log.Debug("-- Starting \"Repeating\" (repeat) timer process")
@@ -123,91 +126,49 @@ func (t *TimerTrigger) scheduleRepeating(endpoint *trigger.EndpointConfig) {
 		log.Debug("Flow ID: " +id)
 	}
 
-	seconds := getSeconds(endpoint)
-	log.Debug("Seconds till trigger fires: ", seconds)
-	timerJob := scheduler.Every(int(seconds))
-	if timerJob == nil {
-		log.Error("timerJob is nil")
-	}
+	if(endpoint.Settings["notImmediate"] == "false") {
+		t.scheduleJobEverySecond(endpoint, fn2)
+	} else {
 
-	fn := func() {
-		log.Debug("-- Starting \"Repeating\" (first) timer process")
+		log.Debug("Seconds till trigger fires: ", seconds)
+		timerJob := scheduler.Every(seconds)
+		if timerJob == nil {
+			log.Error("timerJob is nil")
+		}
 
-		id, err := t.flowStarter.StartFlowInstance(endpoint.FlowURI, nil, nil, nil)
+		t.scheduleJobEverySecond(endpoint, fn2)
+
+		timerJob, err := timerJob.Seconds().NotImmediately().Run(fn2)
 		if err != nil {
-			log.Error("Error starting flow: ", err.Error())
+			log.Error("Error scheduleRepeating (first) flo err: ", err.Error())
+		}
+		if timerJob == nil {
+			log.Error("timerJob is nil")
 		}
 
-		log.Debug("Flow ID: " +id)
-		timerJob.Quit <- true
-
-		// schedule repeating
-		if(endpoint.Settings["hours"] != "") {
-
-			log.Debug("repeatHours: ", endpoint.Settings["hours"])
-			hours, _:= strconv.Atoi(endpoint.Settings["hours"])
-			timerJob, err := scheduler.Every(hours).Hours().Run(fn2)
-			if err != nil {
-				log.Error("Error scheduleRepeating (repeat hours) flo err: ", err.Error())
-			}
-			if timerJob == nil {
-				log.Error("timerJob is nil")
-			}
-			t.timers[endpoint.FlowURI + "_r"] = timerJob
-		} else if(endpoint.Settings["minutes"] != "") {
-
-			log.Debug("minutes: ", endpoint.Settings["minutes"])
-			minutes, _:= strconv.Atoi(endpoint.Settings["minutes"])
-			timerJob, err := scheduler.Every(minutes).Minutes().Run(fn2)
-			if err != nil {
-				log.Error("Error scheduleRepeating (repeat minutes) flo err: ", err.Error())
-			}
-			if timerJob == nil {
-				log.Error("timerJob is nil")
-			}
-			t.timers[endpoint.FlowURI + "_r"] = timerJob
-		} else if(endpoint.Settings["seconds"] != "") {
-
-			log.Debug("repeatSeconds: ", endpoint.Settings["seconds"])
-			seconds, _:= strconv.Atoi(endpoint.Settings["seconds"])
-			timerJob, err := scheduler.Every(seconds).Seconds().Run(fn2)
-			if err != nil {
-				log.Error("Error scheduleRepeating (repeat seconds) flo err: ", err.Error())
-			}
-			if timerJob == nil {
-				log.Error("timerJob is nil")
-			}
-			t.timers[endpoint.FlowURI + "_r"] = timerJob
-		}
+		t.timers[endpoint.FlowURI] = timerJob
 	}
-
-	timerJob, err := timerJob.Seconds().Run(fn)
-	if err != nil {
-		log.Error("Error scheduleRepeating (first) flo err: ", err.Error())
-	}
-	if timerJob == nil {
-		log.Error("timerJob is nil")
-	}
-
-	t.timers[endpoint.FlowURI] = timerJob
 }
 
-func getSeconds(endpoint *trigger.EndpointConfig) int64 {
+func getInitialStartInSeconds(endpoint *trigger.EndpointConfig) (int) {
 
 	if(endpoint.Settings["startDate"] == "") {
-		return 1;
+		return 0;
 	}
 
-	layout := "01/02/2006, 15:04:05"
+	//layout := "2006-01-02T15:04:05Z07:00"
+	layout := "Jan 2, 2006 at 3:04pm (MST)"
 	log.Debug("startDate: ",  endpoint.Settings["startDate"])
 	triggerDate, err := time.Parse(layout, endpoint.Settings["startDate"])
 	if err != nil {
 		log.Error("Error parsing time err: ", err.Error())
 	}
 
+	log.Debug("Current time: ", time.Now())
+	log.Debug("Setting start time: ", triggerDate)
 	duration := time.Since(triggerDate)
 
-	return int64(duration.Seconds())
+	return int(math.Abs(duration.Seconds()))
 }
 
 type PrintJob struct {
@@ -217,4 +178,32 @@ type PrintJob struct {
 func (j *PrintJob) Run() error {
 	log.Debug(j.Msg)
 	return nil
+}
+
+func (t *TimerTrigger) scheduleJobEverySecond (endpoint *trigger.EndpointConfig, fn func()) {
+
+	var interval int = 0;
+	if(endpoint.Settings["seconds"] != "") {
+		seconds, _ := strconv.Atoi(endpoint.Settings["seconds"])
+		interval = interval + seconds
+	}
+	if(endpoint.Settings["minutes"] != "") {
+		minutes, _ := strconv.Atoi(endpoint.Settings["minutes"])
+		interval = interval + minutes * 60
+	}
+	if(endpoint.Settings["hours"] != "") {
+		hours, _ := strconv.Atoi(endpoint.Settings["hours"])
+		interval = interval + hours * 3600
+	}
+
+	log.Debug("Repeating seconds: ", interval)
+	// schedule repeating
+	timerJob, err := scheduler.Every(interval).Seconds().Run(fn)
+	if err != nil {
+		log.Error("Error scheduleRepeating (repeat seconds) flo err: ", err.Error())
+	}
+	if timerJob == nil {
+		log.Error("timerJob is nil")
+	}
+	t.timers[endpoint.FlowURI + "_r"] = timerJob
 }
