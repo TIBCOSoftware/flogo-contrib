@@ -13,7 +13,6 @@ func init() {
 	m := model.New("tibco-simple")
 	m.RegisterFlowBehavior(1, &SimpleFlowBehavior{})
 	m.RegisterTaskBehavior(1, &SimpleTaskBehavior{})
-	m.RegisterLinkBehavior(1, &SimpleLinkBehavior{})
 
 	model.Register(m)
 }
@@ -193,18 +192,6 @@ func (tb *SimpleTaskBehavior) ChildDone(context model.TaskContext, childTask *fl
 
 	// our children are done, so just transition ourselves to done
 	return true, 0
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// SimpleLinkBehavior implements model.LinkBehavior
-type SimpleLinkBehavior struct {
-}
-
-// Eval implements model.LinkBehavior.Eval
-func (lb *SimpleLinkBehavior) Eval(context model.LinkInst, evalCode int) {
-
-	context.SetState(STATE_LINK_TRUE)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
