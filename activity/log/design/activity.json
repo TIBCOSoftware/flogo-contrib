@@ -1,16 +1,29 @@
 {
   "name": "tibco-log",
   "version": "0.0.1",
-  "description": "log activity",
+  "title": "Log Activity",
+  "description": "Simple Log Activity",
   "inputs":[
     {
       "name": "message",
-      "type": "string"
+      "type": "string",
+      "value": ""
     },
     {
       "name": "flowInfo",
-      "type": "boolean"
+      "type": "boolean",
+      "value": "false"
+    },
+    {
+      "name": "addToFlow",
+      "type": "boolean",
+      "value": "false"
     }
   ],
-  "outputs": []
+  "outputs": [
+    {
+      "name": "message",
+      "type": "string"
+    }
+  ]
 }

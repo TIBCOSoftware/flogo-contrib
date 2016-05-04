@@ -1,11 +1,13 @@
 {
   "name": "tibco-rest",
   "version": "0.0.1",
-  "description": "Simple REST trigger",
+  "titile": "REST Trigger",
+  "description": "Simple REST Trigger",
   "settings": [
     {
       "name": "port",
-      "type": "integer"
+      "type": "integer",
+      "required": true
     }
   ],
   "outputs": [
@@ -30,11 +32,13 @@
     "settings": [
       {
         "name": "method",
-        "type": "string"
+        "type": "string",
+        "required" : true
       },
       {
         "name": "path",
-        "type": "string"
+        "type": "string",
+        "required" : true
       },
       {
         "name": "autoIdReply",
