@@ -157,7 +157,7 @@ func (tb *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (not
 	// process outgoing links
 	if numLinks > 0 {
 
-		taskEntries := make([]*model.TaskEntry, 0, numLinks)
+		taskEntries = make([]*model.TaskEntry, 0, numLinks)
 
 		for _, linkInst := range linkInsts {
 
@@ -178,7 +178,6 @@ func (tb *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (not
 
 		//continue on to successor tasks
 		return false, 0, taskEntries
-
 	}
 
 	// there are no outgoing links, so just notify parent that we are done
@@ -188,7 +187,19 @@ func (tb *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (not
 // ChildDone implements model.TaskBehavior.ChildDone
 func (tb *SimpleTaskBehavior) ChildDone(context model.TaskContext, childTask *flow.Task, childDoneCode int) (done bool, doneCode int) {
 
-	log.Debugf("Task ChildDone\n")
+	childTasks, hasChildren := context.ChildTaskInsts()
+
+	if !hasChildren {
+		log.Debugf("Task ChildDone - No Children\n")
+		return true, 0
+	}
+
+	for _, taskInst := range childTasks {
+
+		if taskInst.State() != STATE_DONE {
+			return false, 0
+		}
+	}
 
 	// our children are done, so just transition ourselves to done
 	return true, 0
