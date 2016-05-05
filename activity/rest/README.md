@@ -1,4 +1,4 @@
-# rest
+# tibco-rest
 This activity provides your flogo application the ability to invoke a REST service.
 
 
@@ -58,7 +58,7 @@ Inputs and Outputs:
 | queryParams | The query parameters |
 | content     | The message content |
 | params      | The path parameters (Deprecated) |
-Note:
+Note: 
 
 * **pathParams**: Is only required if you have params in your URI ( i.e. http://.../pet/:id )
 * **content**: Is only used in POST, PUT, PATCH
@@ -71,7 +71,7 @@ Configure a task in flow to get pet '1234' from the [swagger petstore](http://pe
 {
   "id": 3,
   "type": 1,
-  "activityType": "rest",
+  "activityType": "tibco-rest",
   "name": "Query for pet 1234",
   "attributes": [
     { "name": "method", "value": "GET" },
@@ -86,7 +86,7 @@ Configure a task in flow to get pet '1234' from the [swagger petstore](http://pe
 {
   "id": 3,
   "type": 1,
-  "activityType": "rest",
+  "activityType": "tibco-rest",
   "name": "Query for Pet",
   "attributes": [
     { "name": "method", "value": "GET" },
@@ -102,7 +102,7 @@ Configure a task in flow to get pet from the [swagger petstore](http://petstore.
 {
   "id": 3,
   "type": 1,
-  "activityType": "rest",
+  "activityType": "tibco-rest",
   "name": "Query for Pet",
   "attributes": [
     { "name": "method", "value": "GET" },

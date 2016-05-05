@@ -14,7 +14,7 @@ import (
 )
 
 // log is the default package logger
-var log = logging.MustGetLogger("trigger-mqtt")
+var log = logging.MustGetLogger("trigger-tibco-mqtt")
 
 type TimerTrigger struct {
 	metadata    *trigger.Metadata

@@ -1,7 +1,7 @@
 package twilio
 
 var jsonMetadata = `{
-  "name": "twilio",
+  "name": "tibco-twilio",
   "version": "0.0.1",
   "description": "Simple Twilio Activity",
   "inputs":[

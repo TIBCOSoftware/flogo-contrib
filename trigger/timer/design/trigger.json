@@ -1,5 +1,5 @@
 {
-  "name": "timer",
+  "name": "tibco-timer",
   "version": "0.0.1",
   "description": "Simple Timer trigger",
   "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/trigger/timer",

@@ -1,4 +1,4 @@
-# rest
+# tibco-rest
 This trigger provides your flogo application the ability to start a flow via REST over HTTP
 
 ## Installation
@@ -75,7 +75,7 @@ Configure the Trigger to handle a POST on /device
 {
   "triggers": [
     {
-      "name": "rest",
+      "name": "tibco-rest",
       "settings": {
         "port": "8080"
       },
@@ -100,7 +100,7 @@ Configure the Trigger to handle a GET on /device/:id
 {
   "triggers": [
     {
-      "name": "rest",
+      "name": "tibco-rest",
       "settings": {
         "port": "8080"
       },

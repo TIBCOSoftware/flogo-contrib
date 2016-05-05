@@ -1,5 +1,5 @@
 {
-  "name": "mqtt",
+  "name": "tibco-mqtt",
   "version": "0.0.1",
   "title": "MQTT Trigger",
   "description": "Simple MQTT Trigger",

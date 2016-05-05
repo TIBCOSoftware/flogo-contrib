@@ -1,4 +1,4 @@
-# twilio
+# tibco-twilio
 This activity provides your flogo application the ability to send a SMS via Twilio.
 
 
@@ -46,7 +46,7 @@ Inputs and Outputs:
 | from       | The Twilio number you are sending the SMS from |
 | to         | The number you are sending the SMS to |
 | message    | The SMS message |
-Note:
+Note: 
 Phone numbers should be in the format '+15555555555'
 
 ## Configuration Examples
@@ -57,7 +57,7 @@ Configure a task in flow to send 'my text message' to '617-555-5555' via Twilio:
 {
   "id": 3,
   "type": 1,
-  "activityType": "twilio",
+  "activityType": "tibco-twilio",
   "name": "Send Text Message",
   "attributes": [
     { "name": "accountSID", "value": "A...9" },
@@ -76,7 +76,7 @@ Configure a task in flow to send 'my text message' to a number from a REST trigg
 {
   "id": 3,
   "type": 1,
-  "activityType": "twilio",
+  "activityType": "tibco-twilio",
   "name": "Send Text Message",
   "attributes": [
     { "name": "accountSID", "value": "A...9" },

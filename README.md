@@ -4,8 +4,8 @@ Collection of Flogo activities, triggers and models.
 ## Contributions
 
 ### Activities
-* [counter](activity/counter): Global counter
-* [log](activity/log): Simple flow Logger
+* [counter](activity/counter): Global counter 
+* [log](activity/log): Simple flow Logger 
 * [rest](activity/rest): Simple REST invoker
 * [twilio](activity/twilio): Simple Twilio SMS sender
 
@@ -13,7 +13,7 @@ Collection of Flogo activities, triggers and models.
 * [mqtt](trigger/mqtt): Start flow via MQTT
 * [rest](trigger/rest): Start flow via REST
 * [timer](trigger/timer): Start flow via Timer
-
+ 
 ### Models
 * [simple](model/simple): Basic flow model
 
@@ -42,7 +42,7 @@ flogo add model github.com/TIBCOSoftware/flogo-contrib/model/simple
 
 ### Contributing
 
-New activites, triggers and models are welcome. If you would like to submit one, contact us via [Slack](https://cloud.slack.com/messages/flogo-general/).  Contributions should follow these guidelines:
+New activites, triggers and models are welcome. If you would like to submit one, contact us via [Slack](https://tibco-cloud.slack.com/messages/flogo-general/).  Contributions should follow these guidelines:
 
 * Code must be [gofmt](https://golang.org/cmd/gofmt/) compliant.
 * Execute [golint](https://github.com/golang/lint) on your code.
@@ -50,4 +50,5 @@ New activites, triggers and models are welcome. If you would like to submit one,
 * Ensure that 'go test' succeeds.
 
 ### Support
-For Q&A you can post your questions on [Slack](https://cloud.slack.com/messages/flogo-general/)
+For Q&A you can post your questions on [Slack](https://tibco-cloud.slack.com/messages/flogo-general/)
+

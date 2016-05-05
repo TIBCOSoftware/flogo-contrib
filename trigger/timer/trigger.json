@@ -1,5 +1,5 @@
 {
-  "name": "timer",
+  "name": "tibco-timer",
   "version": "0.0.1",
   "title": "Timer Trigger",
   "description": "Simple Timer Trigger",

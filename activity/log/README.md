@@ -1,4 +1,4 @@
-# log
+# tibco-log
 This activity provides your flogo application with rudementary logging.
 
 
@@ -54,7 +54,7 @@ Configure a task to log a message 'test message':
 {
   "id": 3,
   "type": 1,
-  "activityType": "log",
+  "activityType": "tibco-log",
   "name": "Log Message",
   "attributes": [
     { "name": "message", "value": "test message" }
@@ -68,7 +68,7 @@ Configure a task to log a 'petId' attribute as a message:
 {
   "id": 3,
   "type": 1,
-  "activityType": "log",
+  "activityType": "tibco-log",
   "name": "Log PetId",
   "attributes": [],
   "inputMappings": [

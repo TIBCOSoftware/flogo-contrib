@@ -1,7 +1,7 @@
 package timer
 
 var jsonMetadata = `{
-  "name": "timer",
+  "name": "tibco-timer",
   "version": "0.0.1",
   "description": "Simple Timer Trigger",
   "settings":[

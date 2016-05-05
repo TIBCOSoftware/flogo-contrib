@@ -15,7 +15,7 @@ import (
 )
 
 // log is the default package logger
-var log = logging.MustGetLogger("trigger-rest")
+var log = logging.MustGetLogger("trigger-tibco-rest")
 
 var validMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE"}
 

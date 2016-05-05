@@ -1,7 +1,7 @@
 package log
 
 var jsonMetadata = `{
-  "name": "log",
+  "name": "tibco-log",
   "version": "0.0.1",
   "description": "log activity",
   "inputs":[
