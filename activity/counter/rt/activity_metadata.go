@@ -1,7 +1,7 @@
 package counter
 
 var jsonMetadata = `{
-  "name": "tibco-counter",
+  "name": "counter",
   "version": "0.0.1",
   "description": "Simple Global Counter Activity",
   "inputs":[

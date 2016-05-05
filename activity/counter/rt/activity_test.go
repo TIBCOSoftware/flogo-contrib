@@ -7,7 +7,7 @@ import (
 )
 
 func TestRegistered(t *testing.T) {
-	act := activity.Get("tibco-counter")
+	act := activity.Get("counter")
 
 	if act == nil {
 		t.Error("Activity Not Registered")
@@ -104,4 +104,3 @@ func TestReset(t *testing.T) {
 		t.Fail()
 	}
 }
-

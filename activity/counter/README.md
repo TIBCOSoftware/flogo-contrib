@@ -1,4 +1,4 @@
-# tibco-counter
+# counter
 This activity provides your flogo application the ability to use a global counter.
 
 
@@ -51,7 +51,7 @@ Configure a task to increment a 'messages' counter:
 {
   "id": 3,
   "type": 1,
-  "activityType": "tibco-counter",
+  "activityType": "counter",
   "name": "Increment Message Count",
   "attributes": [
     { "name": "counterName", "value": "messages" },
@@ -66,7 +66,7 @@ Configure a task to get the 'messages' counter:
 {
   "id": 3,
   "type": 1,
-  "activityType": "tibco-counter",
+  "activityType": "counter",
   "name": "Get Message Count",
   "attributes": [
     { "name": "counterName", "value": "messages" }
@@ -80,7 +80,7 @@ Configure a task to reset the 'messages' counter:
 {
   "id": 3,
   "type": 1,
-  "activityType": "tibco-counter",
+  "activityType": "counter",
   "name": "Reset Message Count",
   "attributes": [
     { "name": "counterName", "value": "messages" }

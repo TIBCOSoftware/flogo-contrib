@@ -14,7 +14,7 @@ import (
 )
 
 // log is the default package logger
-var log = logging.MustGetLogger("activity-tibco-rest")
+var log = logging.MustGetLogger("activity-rest")
 
 const (
 	methodGET    = "GET"

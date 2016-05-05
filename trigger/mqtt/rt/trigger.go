@@ -13,7 +13,7 @@ import (
 )
 
 // log is the default package logger
-var log = logging.MustGetLogger("trigger-tibco-mqtt")
+var log = logging.MustGetLogger("trigger-mqtt")
 
 // todo: switch to use endpoint registration
 

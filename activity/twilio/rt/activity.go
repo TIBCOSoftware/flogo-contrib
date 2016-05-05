@@ -7,7 +7,7 @@ import (
 )
 
 // log is the default package logger
-var log = logging.MustGetLogger("activity-tibco-twilio")
+var log = logging.MustGetLogger("activity-twilio")
 
 const (
 	ivAcctSID   = "accountSID"
@@ -53,6 +53,6 @@ func (a *TwilioActivity) Eval(context activity.Context) (done bool, evalError *a
 	if log.IsEnabledFor(logging.DEBUG) {
 		log.Debug("Response:", resp)
 	}
-	
+
 	return true, nil
 }

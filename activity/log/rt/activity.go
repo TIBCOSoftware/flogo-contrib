@@ -11,7 +11,7 @@ import (
 )
 
 // activityLog is the default logger for the Log Activity
-var activityLog = logging.MustGetLogger("activity-tibco-log")
+var activityLog = logging.MustGetLogger("activity-log")
 
 // format is the log format for the Activity log
 var format = logging.MustStringFormatter(

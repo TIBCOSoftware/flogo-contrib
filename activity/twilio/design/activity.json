@@ -1,5 +1,5 @@
 {
-  "name": "tibco-twilio",
+  "name": "twilio",
   "version": "0.0.1",
   "description": "Simple Twilio Activity",
   "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/twilio",

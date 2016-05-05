@@ -7,10 +7,10 @@ import (
 )
 
 // log is the default package logger
-var log = logging.MustGetLogger("model-tibco-simple")
+var log = logging.MustGetLogger("model-simple")
 
 func init() {
-	m := model.New("tibco-simple")
+	m := model.New("simple")
 	m.RegisterFlowBehavior(1, &SimpleFlowBehavior{})
 	m.RegisterTaskBehavior(1, &SimpleTaskBehavior{})
 

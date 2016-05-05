@@ -12,7 +12,7 @@ import (
 )
 
 const testConfig string = `{
-  "name": "tibco-rest",
+  "name": "rest",
   "settings": {
     "port": "8091"
   },
@@ -38,7 +38,7 @@ func (ts *TestStarter) StartFlowInstance(flowURI string, startAttrs []*data.Attr
 }
 
 func TestRegistered(t *testing.T) {
-	tgr := trigger.Get("tibco-rest")
+	tgr := trigger.Get("rest")
 
 	if tgr == nil {
 		t.Error("Trigger Not Registered")
@@ -48,7 +48,7 @@ func TestRegistered(t *testing.T) {
 }
 
 func TestInit(t *testing.T) {
-	tgr := trigger.Get("tibco-rest")
+	tgr := trigger.Get("rest")
 
 	starter := &TestStarter{}
 
@@ -60,7 +60,7 @@ func TestInit(t *testing.T) {
 
 func TestEndpoint(t *testing.T) {
 
-	tgr := trigger.Get("tibco-rest")
+	tgr := trigger.Get("rest")
 
 	tgr.Start()
 	defer tgr.Stop()

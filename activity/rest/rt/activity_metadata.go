@@ -1,7 +1,7 @@
 package rest
 
 var jsonMetadata = `{
-  "name": "tibco-rest",
+  "name": "rest",
   "version": "0.0.1",
   "title": "REST Activity",
   "description": "Simple REST Activity",

@@ -7,7 +7,7 @@ import (
 )
 
 // log is the default package logger
-var log = logging.MustGetLogger("activity-tibco-counter")
+var log = logging.MustGetLogger("activity-counter")
 
 const (
 	ivCounterName   = "counterName"

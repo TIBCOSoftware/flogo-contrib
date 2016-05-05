@@ -11,7 +11,7 @@ import (
 )
 
 const testConfig3 string = `{
-  "name": "tibco-timer",
+  "name": "timer",
   "settings": {
   },
   "endpoints": [
@@ -25,7 +25,7 @@ const testConfig3 string = `{
 }`
 
 const testConfig string = `{
-  "name": "tibco-timer",
+  "name": "timer",
   "settings": {
   },
   "endpoints": [
@@ -40,7 +40,7 @@ const testConfig string = `{
 }`
 
 const testConfig2 string = `{
-  "name": "tibco-timer",
+  "name": "timer",
   "settings": {
   },
   "endpoints": [
@@ -56,7 +56,7 @@ const testConfig2 string = `{
 }`
 
 const testConfig4 string = `{
-  "name": "tibco-timer",
+  "name": "timer",
   "settings": {
   },
   "endpoints": [
@@ -104,7 +104,7 @@ func (ts *TestStarter) StartFlowInstance(flowURI string, startAttrs []*data.Attr
 }
 
 func TestRegistered(t *testing.T) {
-	act := trigger.Get("tibco-timer")
+	act := trigger.Get("timer")
 
 	if act == nil {
 		t.Error("Timer Trigger Not Registered")
@@ -114,7 +114,7 @@ func TestRegistered(t *testing.T) {
 }
 
 func TestInit(t *testing.T) {
-	tgr := trigger.Get("tibco-timer")
+	tgr := trigger.Get("timer")
 
 	starter := &TestStarter{}
 
@@ -126,7 +126,7 @@ func TestInit(t *testing.T) {
 func TestTimer(t *testing.T) {
 
 	log.Debugf("TestTimer")
-	tgr := trigger.Get("tibco-timer")
+	tgr := trigger.Get("timer")
 
 	tgr.Start()
 	time.Sleep(time.Second * 2000)

@@ -9,7 +9,7 @@ import (
 )
 
 func TestRegistered(t *testing.T) {
-	act := activity.Get("tibco-log")
+	act := activity.Get("log")
 
 	if act == nil {
 		t.Error("Activity Not Registered")
@@ -20,7 +20,7 @@ func TestRegistered(t *testing.T) {
 
 func TestEval(t *testing.T) {
 
-	act := activity.Get("tibco-log")
+	act := activity.Get("log")
 	tc := test.NewTestActivityContext(act.Metadata())
 
 	//setup attrs
@@ -32,7 +32,7 @@ func TestEval(t *testing.T) {
 
 func TestAddToFlow(t *testing.T) {
 
-	act := activity.Get("tibco-log")
+	act := activity.Get("log")
 	tc := test.NewTestActivityContext(act.Metadata())
 
 	//setup attrs

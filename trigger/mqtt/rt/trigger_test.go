@@ -11,7 +11,7 @@ import (
 )
 
 const testConfig string = `{
-  "name": "tibco-mqtt",
+  "name": "mqtt",
   "settings": {
     "topic": "flogo/#",
     "broker": "tcp://192.168.1.12:1883",
@@ -42,7 +42,7 @@ func (ts *TestStarter) StartFlowInstance(flowURI string, startAttrs []*data.Attr
 }
 
 func TestRegistered(t *testing.T) {
-	act := trigger.Get("tibco-mqtt")
+	act := trigger.Get("mqtt")
 
 	if act == nil {
 		t.Error("Trigger Not Registered")
@@ -52,7 +52,7 @@ func TestRegistered(t *testing.T) {
 }
 
 func TestInit(t *testing.T) {
-	tgr := trigger.Get("tibco-mqtt")
+	tgr := trigger.Get("mqtt")
 
 	starter := &TestStarter{}
 
@@ -63,7 +63,7 @@ func TestInit(t *testing.T) {
 
 func TestEndpoint(t *testing.T) {
 
-	tgr := trigger.Get("tibco-mqtt")
+	tgr := trigger.Get("mqtt")
 
 	tgr.Start()
 	defer tgr.Stop()
