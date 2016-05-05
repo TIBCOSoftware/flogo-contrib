@@ -2,6 +2,7 @@
   "name": "tibco-counter",
   "version": "0.0.1",
   "description": "Simple Global Counter Activity",
+  "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/counter",
   "inputs":[
     {
       "name": "counterName",

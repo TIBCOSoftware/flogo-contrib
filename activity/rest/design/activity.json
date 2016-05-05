@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "title": "REST Activity",
   "description": "Simple REST Activity",
+  "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/rest",
   "inputs":[
     {
       "name": "method",
