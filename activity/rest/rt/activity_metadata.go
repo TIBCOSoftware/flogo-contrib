@@ -17,10 +17,6 @@ var jsonMetadata = `{
       "required": true
     },
     {
-      "name": "params",
-      "type": "params"
-    },
-    {
       "name": "pathParams",
       "type": "params"
     },
