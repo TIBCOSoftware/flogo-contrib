@@ -102,8 +102,7 @@ func (tb *SimpleTaskBehavior) Eval(context model.TaskContext, evalCode int) (don
 		//has children, so set to waiting
 		context.SetState(STATE_WAITING)
 
-		//for now enter all children (bpel style) - todo: change to enter leading chlidren
-		context.EnterChildren(nil)
+		context.EnterLeadingChildren(0)
 
 		return false, 0
 
