@@ -115,6 +115,8 @@ func (tb *SimpleTaskBehavior) Eval(context model.TaskContext, evalCode int) (don
 			// todo handle error transition and have global error handler
 			if err != nil {
 				log.Errorf("Error evaluating activity '%s'[%s] - %s", context.Task().Name(), context.Task().ActivityType(), err.Error())
+				context.SetState(STATE_FAILED)
+				context.Failed(err)
 			}
 
 			return done, 0
@@ -216,4 +218,5 @@ const (
 	STATE_READY   int = 20
 	STATE_WAITING int = 30
 	STATE_DONE    int = 40
+	STATE_FAILED  int = 100
 )
