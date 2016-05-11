@@ -153,9 +153,9 @@ func newStartFlowHandler(rt *RestTrigger, flowURI string, autoIdReply bool) http
 
 			encoder := json.NewEncoder(w)
 			encoder.Encode(resp)
+		} else {
+			w.WriteHeader(http.StatusOK)
 		}
-
-		w.WriteHeader(http.StatusOK)
 	}
 }
 
