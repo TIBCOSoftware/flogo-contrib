@@ -68,7 +68,7 @@ Configure the Trigger to handle a CoAP POST message with path /device
     {
       "name": "tibco-coap",
       "settings": {
-        "port": "7777"
+        "port": "5683"
       },
       "endpoints": [
         {

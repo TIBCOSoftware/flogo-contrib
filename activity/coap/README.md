@@ -70,9 +70,9 @@ Configure a task in flow to send a "hello world" message via CoAP:
   "id": 3,
   "type": 1,
   "activityType": "tibco-rest",
-  "name": "Query for pet 1234",
+  "name": "Send CoAP Message",
   "attributes": [
-    { "name": "address", "value": "localhost:7777" },
+    { "name": "address", "value": "localhost:5683" },
     { "name": "method", "value": "GET" },
     { "name": "type", "value": "Confirmable" },
     { "name": "messageId", "value": 12345 },
