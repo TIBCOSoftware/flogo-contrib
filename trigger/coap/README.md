@@ -15,7 +15,6 @@ Settings, Outputs and Endpoint:
   {
     "name": "port",
     "type": "integer",
-    "required": true
   }
 ],
 "outputs": [
@@ -47,12 +46,12 @@ Settings, Outputs and Endpoint:
 ### Trigger:
 | Setting     | Description    |
 |:------------|:---------------|
-| port | The port to listen on |         
+| port | Used to override the standard CoAP server port of 5683 |         
 ### Endpoint:
 | Setting     | Description    |
 |:------------|:---------------|
 | method      | The CoAP method |         
-| path        | The path  |
+| path        | The resource path  |
 | autoIdReply | Automatically reply with the ID of the flow instance |
 
 ## Example Configurations
@@ -60,22 +59,20 @@ Settings, Outputs and Endpoint:
 Triggers are configured via the triggers.json of your application. The following are some example configuration of the CoAP Trigger.
 
 ### POST
-Configure the Trigger to handle a CoAP POST message with path /device
+Configure the Trigger to handle a CoAP POST message with path /device/refresh
 
 ```json
 {
   "triggers": [
     {
       "name": "tibco-coap",
-      "settings": {
-        "port": "5683"
-      },
+      "settings": {},
       "endpoints": [
         {
           "flowURI": "embedded://coap_flow",
           "settings": {
             "method": "POST",
-            "path": "/device"
+            "path": "/device/refresh"
           }
         }
       ]
@@ -83,3 +80,8 @@ Configure the Trigger to handle a CoAP POST message with path /device
   ]
 }
 ```
+
+## Testing
+
+Do to some simple testing of the CoAP trigger, you can use the [Copper (Cu)](https://addons.mozilla.org/en-US/firefox/addon/copper-270430) plugin for Firefox.<br><br>
+Once you have the plugin installed, you can interact with the trigger by going to: [coap://localhost:5683](coap://localhost:5683) in Firefox.
