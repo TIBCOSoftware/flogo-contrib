@@ -61,6 +61,7 @@ func (t *CoapTrigger) Metadata() *trigger.Metadata {
 // Init implements ext.Trigger.Init
 func (t *CoapTrigger) Init(flowStarter flowinst.Starter, config *trigger.Config) {
 
+	t.flowStarter = flowStarter
 	t.mux = coap.NewServeMux()
 	t.mux.Handle("/.well-known/core", coap.FuncHandler(t.handleDiscovery))
 
@@ -185,10 +186,10 @@ func newStartFlowHandler(rt *CoapTrigger, resource *CoapResource) coap.Handler {
 		if !exists {
 			res := &coap.Message{
 				Type:      msg.Type,
-				Code:      coap.BadRequest,
+				Code:      coap.MethodNotAllowed,
 				MessageID: msg.MessageID,
 				Token:     msg.Token,
-				Payload:   []byte("Unknown Endpoint"),
+				Payload:   []byte("Unsupported Method: " + method),
 			}
 
 			return res
@@ -199,7 +200,19 @@ func newStartFlowHandler(rt *CoapTrigger, resource *CoapResource) coap.Handler {
 
 
 		//todo: implement reply handler?
-		id, _ := rt.flowStarter.StartFlowInstance(endpointCfg.flowURI, startAttrs, nil, nil)
+		id, err := rt.flowStarter.StartFlowInstance(endpointCfg.flowURI, startAttrs, nil, nil)
+
+		if err != nil {
+			res := &coap.Message{
+				Type:      msg.Type,
+				Code:      coap.NotFound,
+				MessageID: msg.MessageID,
+				Token:     msg.Token,
+				Payload:   []byte(fmt.Sprintf("Flow '%s' not found", endpointCfg.flowURI)),
+			}
+
+			return res
+		}
 
 		if msg.IsConfirmable() && endpointCfg.autoIdReply {
 			res := &coap.Message{
