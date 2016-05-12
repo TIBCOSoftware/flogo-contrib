@@ -76,7 +76,7 @@ func (a *CoAPActivity) Eval(context activity.Context) (done bool, evalError *act
 	req := coap.Message{
 		Type:      toCoapType(msgType),
 		Code:      toCoapCode(method),
-		MessageID: messageId,
+		MessageID: uint16(messageId),
 		Payload:   []byte(payload),
 	}
 
@@ -163,25 +163,25 @@ func toOption(name string, value string) (coap.OptionID, interface{}) {
 	//	opID = coap.IfNoneMatch
 	case "OBSERVE":
 		opID = coap.Observe
-		val = strconv.Atoi(value)
+		val,_ = strconv.Atoi(value)
 	case "URIPORT":
 		opID = coap.URIPort
-		val = strconv.Atoi(value)
+		val,_ = strconv.Atoi(value)
 	case "LOCATIONPATH":
 		opID = coap.LocationPath
 	case "URIPATH":
 		opID = coap.URIPath
 	case "CONTENTFORMAT":
 		opID = coap.ContentFormat
-		val = strconv.Atoi(value)
+		val,_ = strconv.Atoi(value)
 	case "MAXAGE":
 		opID = coap.MaxAge
-		val = strconv.Atoi(value)
+		val,_ = strconv.Atoi(value)
 	case "URIQUERY":
 		opID = coap.URIQuery
 	case "ACCEPT":
 		opID = coap.IfMatch
-		val = strconv.Atoi(value)
+		val,_ = strconv.Atoi(value)
 	case "LOCATIONQUERY":
 		opID = coap.LocationQuery
 	case "PROXYURI":
@@ -190,7 +190,7 @@ func toOption(name string, value string) (coap.OptionID, interface{}) {
 		opID = coap.ProxyScheme
 	case "SIZE1":
 		opID = coap.Size1
-		val = strconv.Atoi(value)
+		val,_ = strconv.Atoi(value)
 	default:
 		opID = 0
 		val = nil
