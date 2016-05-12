@@ -1,4 +1,4 @@
-# tibco-rest
+# tibco-coap
 This activity provides your flogo application the ability to send a CoAP message.
 
 
@@ -63,7 +63,7 @@ Inputs and Outputs:
 
 ## Configuration Examples
 ### Simple
-Configure a task in flow to get pet '1234' from the [swagger petstore](http://petstore.swagger.io):
+Configure a task in flow to send a "hello world" message via CoAP:
 
 ```json
 {

@@ -118,7 +118,7 @@ func toCoapCode(method string) coap.COAPCode {
 		code = coap.GET
 	case methodPOST:
 		code = coap.POST
-	case methodPOST:
+	case methodPUT:
 		code = coap.PUT
 	case methodDELETE:
 		code = coap.DELETE
