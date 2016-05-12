@@ -29,11 +29,10 @@ type StartFunc func(payload string) (string, bool)
 
 // CoapTrigger CoAP trigger struct
 type CoapTrigger struct {
-	addr        string
 	metadata    *trigger.Metadata
 	flowStarter flowinst.Starter
 	resources   map[string]*CoapResource
-	mux         *coap.ServeMux
+	server     *Server
 }
 
 type CoapResource struct {
@@ -62,12 +61,11 @@ func (t *CoapTrigger) Metadata() *trigger.Metadata {
 func (t *CoapTrigger) Init(flowStarter flowinst.Starter, config *trigger.Config) {
 
 	t.flowStarter = flowStarter
-	t.mux = coap.NewServeMux()
-	t.mux.Handle("/.well-known/core", coap.FuncHandler(t.handleDiscovery))
+	mux := coap.NewServeMux()
+	mux.Handle("/.well-known/core", coap.FuncHandler(t.handleDiscovery))
 
 	endpoints := config.Endpoints
 	t.resources = make(map[string]*CoapResource)
-
 
 	for _, endpoint := range endpoints {
 
@@ -90,7 +88,7 @@ func (t *CoapTrigger) Init(flowStarter flowinst.Starter, config *trigger.Config)
 
 			resource.endpoints[method] = &EndpointCfg{flowURI:endpoint.FlowURI, autoIdReply:autoIdReply}
 
-			t.mux.Handle(path, newStartFlowHandler(t, resource))
+			mux.Handle(path, newStartFlowHandler(t, resource))
 
 		} else {
 			panic(fmt.Sprintf("Invalid endpoint: %v", endpoint))
@@ -98,18 +96,19 @@ func (t *CoapTrigger) Init(flowStarter flowinst.Starter, config *trigger.Config)
 	}
 
 	log.Debugf("CoAP Trigger: Configured on port %s", config.Settings["port"])
+
+	t.server = NewServer("udp", ":5683", mux)
 }
 
 // Start implements trigger.Trigger.Start
 func (t *CoapTrigger) Start() error {
 
-	err := coap.ListenAndServe("udp", ":5683", t.mux)
-
-	return err
+	return t.server.Start()
 }
 
 // Stop implements trigger.Trigger.Start
 func (t *CoapTrigger) Stop() {
+	t.server.Stop()
 }
 
 // IDResponse id response object
@@ -203,6 +202,7 @@ func newStartFlowHandler(rt *CoapTrigger, resource *CoapResource) coap.Handler {
 		id, err := rt.flowStarter.StartFlowInstance(endpointCfg.flowURI, startAttrs, nil, nil)
 
 		if err != nil {
+			//todo determing if 404 or 500
 			res := &coap.Message{
 				Type:      msg.Type,
 				Code:      coap.NotFound,
@@ -214,13 +214,19 @@ func newStartFlowHandler(rt *CoapTrigger, resource *CoapResource) coap.Handler {
 			return res
 		}
 
-		if msg.IsConfirmable() && endpointCfg.autoIdReply {
+		var payload []byte
+
+		if endpointCfg.autoIdReply {
+			payload = []byte(id)
+		}
+
+		if msg.IsConfirmable() {
 			res := &coap.Message{
 				Type:      coap.Acknowledgement,
 				Code:      coap.Content,
 				MessageID: msg.MessageID,
 				Token:     msg.Token,
-				Payload:   []byte(id),
+				Payload:   payload,
 			}
 			res.SetOption(coap.ContentFormat, coap.TextPlain)
 
