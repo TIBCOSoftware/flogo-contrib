@@ -1,22 +1,22 @@
 package coap
 
 import (
+	"bytes"
 	"fmt"
+	"net"
 	"strings"
 
+	"github.com/dustin/go-coap"
 	"github.com/TIBCOSoftware/flogo-lib/core/ext/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/core/flowinst"
-	"github.com/op/go-logging"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
-	"net"
-	"github.com/dustin/go-coap"
-	"strconv"
+	"github.com/op/go-logging"
 )
 
 const (
-	methodGET = "GET"
-	methodPOST = "POST"
-	methodPUT = "PUT"
+	methodGET    = "GET"
+	methodPOST   = "POST"
+	methodPUT    = "PUT"
 	methodDELETE = "DELETE"
 )
 
@@ -32,7 +32,20 @@ type CoapTrigger struct {
 	addr        string
 	metadata    *trigger.Metadata
 	flowStarter flowinst.Starter
-	starters    map[string]StartFunc
+	resources   map[string]*CoapResource
+	mux         *coap.ServeMux
+}
+
+type CoapResource struct {
+	path string
+	attrs map[string]string
+	endpoints map[string]*EndpointCfg
+}
+
+type EndpointCfg struct {
+	method      string
+	flowURI     string
+	autoIdReply bool
 }
 
 func init() {
@@ -48,10 +61,12 @@ func (t *CoapTrigger) Metadata() *trigger.Metadata {
 // Init implements ext.Trigger.Init
 func (t *CoapTrigger) Init(flowStarter flowinst.Starter, config *trigger.Config) {
 
-	t.starters = make(map[string]StartFunc)
-	t.addr = ":" + config.Settings["port"]
+	t.mux = coap.NewServeMux()
+	t.mux.Handle("/.well-known/core", coap.FuncHandler(t.handleDiscovery))
 
 	endpoints := config.Endpoints
+	t.resources = make(map[string]*CoapResource)
+
 
 	for _, endpoint := range endpoints {
 
@@ -65,7 +80,16 @@ func (t *CoapTrigger) Init(flowStarter flowinst.Starter, config *trigger.Config)
 				log.Debug("CoAP Trigger: AutoIdReply Enabled")
 			}
 
-			t.starters[method + ":" + path] = newStartFlowHandler(t, endpoint.FlowURI, autoIdReply)
+			resource, exists := t.resources[path]
+
+			if !exists {
+				resource = &CoapResource{path:path, attrs:make(map[string]string), endpoints:make(map[string]*EndpointCfg)}
+				t.resources[path] = resource
+			}
+
+			resource.endpoints[method] = &EndpointCfg{flowURI:endpoint.FlowURI, autoIdReply:autoIdReply}
+
+			t.mux.Handle(path, newStartFlowHandler(t, resource))
 
 		} else {
 			panic(fmt.Sprintf("Invalid endpoint: %v", endpoint))
@@ -78,33 +102,7 @@ func (t *CoapTrigger) Init(flowStarter flowinst.Starter, config *trigger.Config)
 // Start implements trigger.Trigger.Start
 func (t *CoapTrigger) Start() error {
 
-	err := (coap.ListenAndServe("udp", t.addr,
-		coap.FuncHandler(func(l *net.UDPConn, a *net.UDPAddr, m *coap.Message) *coap.Message {
-			log.Debugf("Got message path=%q: %#v from %v", m.Path(), m, a)
-
-			starter := t.starters[toMethod(m.Code) + ":" + m.PathString()]
-
-			if starter != nil {
-
-				id, reply := starter()
-
-				if m.IsConfirmable() && reply {
-					res := &coap.Message{
-						Type:      coap.Acknowledgement,
-						Code:      coap.Content,
-						MessageID: m.MessageID,
-						Token:     m.Token,
-						Payload:   []byte(id),
-					}
-					res.SetOption(coap.ContentFormat, coap.TextPlain)
-
-					log.Debugf("Transmitting %#v", res)
-					return res
-				}
-			}
-
-			return nil
-		})))
+	err := coap.ListenAndServe("udp", ":5683", t.mux)
 
 	return err
 }
@@ -118,28 +116,107 @@ type IDResponse struct {
 	ID string `json:"id"`
 }
 
-func newStartFlowHandler(rt *CoapTrigger, flowURI string, autoIdReply bool) StartFunc {
+func (t *CoapTrigger) handleDiscovery(conn *net.UDPConn, addr *net.UDPAddr, msg *coap.Message) *coap.Message {
 
-	return func(payload string) (string, bool) {
+	//path := msg.PathString() //handle queries
+
+	//todo add filter support
+
+	var buffer bytes.Buffer
+
+	numResources := len(t.resources)
+
+	i := 0
+	for _, resource := range t.resources {
+
+		i++
+
+		buffer.WriteString("<")
+		buffer.WriteString(resource.path)
+		buffer.WriteString(">")
+
+		if len(resource.attrs) > 0 {
+			for k, v := range resource.attrs {
+				buffer.WriteString(";")
+				buffer.WriteString(k)
+				buffer.WriteString("=")
+				buffer.WriteString(v)
+			}
+		}
+
+		if i < numResources {
+			buffer.WriteString(",\n")
+		} else {
+			buffer.WriteString("\n")
+		}
+	}
+
+	payloadStr := buffer.String()
+
+	res := &coap.Message{
+		Type:      msg.Type,
+		Code:      coap.Content,
+		MessageID: msg.MessageID,
+		Token:     msg.Token,
+		Payload:   []byte(payloadStr),
+	}
+	res.SetOption(coap.ContentFormat, coap.AppLinkFormat)
+
+	log.Debugf("Transmitting %#v", res)
+
+	return res
+}
+
+
+func newStartFlowHandler(rt *CoapTrigger, resource *CoapResource) coap.Handler {
+
+	return coap.FuncHandler(func (conn *net.UDPConn, addr *net.UDPAddr, msg *coap.Message) *coap.Message {
 
 		log.Debugf("CoAP Trigger: Recieved request")
 
 		data := map[string]interface{}{
-			"payload":  payload,
+			"payload":  string(msg.Payload),
+		}
+
+		method := toMethod(msg.Code);
+
+		endpointCfg, exists := resource.endpoints[method]
+
+		if !exists {
+			res := &coap.Message{
+				Type:      msg.Type,
+				Code:      coap.BadRequest,
+				MessageID: msg.MessageID,
+				Token:     msg.Token,
+				Payload:   []byte("Unknown Endpoint"),
+			}
+
+			return res
 		}
 
 		//todo handle error
 		startAttrs, _ := rt.metadata.OutputsToAttrs(data, false)
 
-		//todo: implement reply handler?
-		id, _ := rt.flowStarter.StartFlowInstance(flowURI, startAttrs, nil, nil)
 
-		if autoIdReply {
-			return id, true
+		//todo: implement reply handler?
+		id, _ := rt.flowStarter.StartFlowInstance(endpointCfg.flowURI, startAttrs, nil, nil)
+
+		if msg.IsConfirmable() && endpointCfg.autoIdReply {
+			res := &coap.Message{
+				Type:      coap.Acknowledgement,
+				Code:      coap.Content,
+				MessageID: msg.MessageID,
+				Token:     msg.Token,
+				Payload:   []byte(id),
+			}
+			res.SetOption(coap.ContentFormat, coap.TextPlain)
+
+			log.Debugf("Transmitting %#v", res)
+			return res
 		}
 
-		return "", false
-	}
+		return nil
+	})
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
