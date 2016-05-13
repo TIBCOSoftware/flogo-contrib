@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/core/ext/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/core/flowinst"
-	"github.com/TIBCOSoftware/flogo-lib/core/data"
 )
 
 const testConfig string = `{

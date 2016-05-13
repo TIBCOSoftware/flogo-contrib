@@ -15,4 +15,3 @@ func TestRegistered(t *testing.T) {
 		return
 	}
 }
-

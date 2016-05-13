@@ -2,11 +2,11 @@ package coap
 
 import (
 	"strings"
+	"strconv"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/ext/activity"
-	"github.com/op/go-logging"
 	"github.com/dustin/go-coap"
-	"strconv"
+	"github.com/op/go-logging"
 )
 
 // log is the default package logger
@@ -27,7 +27,7 @@ const (
 	ivMethod    = "method"
 	ivType      = "type"
 	ivPayload   = "payload"
-	ivMessageId = "messageId"
+	ivMessageID = "messageId"
 	ivOptions   = "options"
 
 	ovResponse = "response"
@@ -61,7 +61,7 @@ func (a *CoAPActivity) Eval(context activity.Context) (done bool, evalError *act
 	msgType := strings.ToUpper(context.GetInput(ivType).(string))
 	address := context.GetInput(ivAddress).(string)
 	payload := context.GetInput(ivPayload).(string)
-	messageId := context.GetInput(ivMessageId).(int)
+	messageID := context.GetInput(ivMessageID).(int)
 
 	val := context.GetInput(ivOptions)
 
@@ -76,7 +76,7 @@ func (a *CoAPActivity) Eval(context activity.Context) (done bool, evalError *act
 	req := coap.Message{
 		Type:      toCoapType(msgType),
 		Code:      toCoapCode(method),
-		MessageID: uint16(messageId),
+		MessageID: uint16(messageID),
 		Payload:   []byte(payload),
 	}
 
@@ -163,25 +163,25 @@ func toOption(name string, value string) (coap.OptionID, interface{}) {
 	//	opID = coap.IfNoneMatch
 	case "OBSERVE":
 		opID = coap.Observe
-		val,_ = strconv.Atoi(value)
+		val, _ = strconv.Atoi(value)
 	case "URIPORT":
 		opID = coap.URIPort
-		val,_ = strconv.Atoi(value)
+		val, _ = strconv.Atoi(value)
 	case "LOCATIONPATH":
 		opID = coap.LocationPath
 	case "URIPATH":
 		opID = coap.URIPath
 	case "CONTENTFORMAT":
 		opID = coap.ContentFormat
-		val,_ = strconv.Atoi(value)
+		val, _ = strconv.Atoi(value)
 	case "MAXAGE":
 		opID = coap.MaxAge
-		val,_ = strconv.Atoi(value)
+		val, _ = strconv.Atoi(value)
 	case "URIQUERY":
 		opID = coap.URIQuery
 	case "ACCEPT":
 		opID = coap.IfMatch
-		val,_ = strconv.Atoi(value)
+		val, _ = strconv.Atoi(value)
 	case "LOCATIONQUERY":
 		opID = coap.LocationQuery
 	case "PROXYURI":
@@ -190,7 +190,7 @@ func toOption(name string, value string) (coap.OptionID, interface{}) {
 		opID = coap.ProxyScheme
 	case "SIZE1":
 		opID = coap.Size1
-		val,_ = strconv.Atoi(value)
+		val, _ = strconv.Atoi(value)
 	default:
 		opID = 0
 		val = nil

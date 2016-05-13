@@ -1,22 +1,22 @@
 package counter
 
 import (
+	"sync"
+
 	"github.com/TIBCOSoftware/flogo-lib/core/ext/activity"
 	"github.com/op/go-logging"
-	"sync"
 )
 
 // log is the default package logger
 var log = logging.MustGetLogger("activity-tibco-counter")
 
 const (
-	ivCounterName   = "counterName"
-	ivIncrement = "increment"
-	ivReset = "reset"
+	ivCounterName  = "counterName"
+	ivIncrement    = "increment"
+	ivReset        = "reset"
 
 	ovValue = "value"
 )
-
 
 // CounterActivity is a Counter Activity implementation
 type CounterActivity struct {
@@ -28,7 +28,7 @@ type CounterActivity struct {
 // init create & register activity
 func init() {
 	md := activity.NewMetadata(jsonMetadata)
-	activity.Register(&CounterActivity{metadata: md, counters:make(map[string]int)})
+	activity.Register(&CounterActivity{metadata: md, counters: make(map[string]int)})
 }
 
 // Metadata implements activity.Activity.Metadata
@@ -37,11 +37,11 @@ func (a *CounterActivity) Metadata() *activity.Metadata {
 }
 
 // Eval implements activity.Activity.Eval
-func (a *CounterActivity) Eval(context activity.Context) (done bool, evalError *activity.Error)  {
+func (a *CounterActivity) Eval(context activity.Context) (done bool, evalError *activity.Error) {
 
 	counterName := context.GetInput(ivCounterName).(string)
 
-	var increment,reset bool
+	var increment, reset bool
 
 	if context.GetInput(ivIncrement) != nil {
 		increment = context.GetInput(ivIncrement).(bool)
@@ -52,17 +52,17 @@ func (a *CounterActivity) Eval(context activity.Context) (done bool, evalError *
 
 	var count int
 
-	if increment {
-		count = a.incrementCounter(counterName)
-
-		if log.IsEnabledFor(logging.DEBUG) {
-			log.Debugf("Counter [%s] incremented: %d", counterName, count)
-		}
-	} else if reset {
+	if reset {
 		count = a.resetCounter(counterName)
 
 		if log.IsEnabledFor(logging.DEBUG) {
 			log.Debugf("Counter [%s] reset", counterName)
+		}
+	} else if increment {
+		count = a.incrementCounter(counterName)
+
+		if log.IsEnabledFor(logging.DEBUG) {
+			log.Debugf("Counter [%s] incremented: %d", counterName, count)
 		}
 	} else {
 		count = a.getCounter(counterName)

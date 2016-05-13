@@ -1,23 +1,21 @@
 package coap
 
 import (
-
-)
-import (
-	"net"
-	"sync"
-	"fmt"
-	"strings"
-	"time"
-	"github.com/dustin/go-coap"
 	"errors"
+	"fmt"
+	"net"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/dustin/go-coap"
 )
 
 // Graceful shutdown CoapServer derived from: https://github.com/corneldamian/httpway/blob/master/server.go
 
 // NewServer create a new server instance
 func NewServer(n, addr string, handler coap.Handler) *Server {
-	srv := &Server{n:n, Addr: addr, Handler: handler}
+	srv := &Server{n: n, Addr: addr, Handler: handler}
 	return srv
 }
 
@@ -27,10 +25,10 @@ type Server struct {
 	Addr    string
 	n       string
 
-	listener         *net.UDPConn
-	lastError        error
-	serverGroup      *sync.WaitGroup
-	clientsGroup     chan bool
+	listener     *net.UDPConn
+	lastError    error
+	serverGroup  *sync.WaitGroup
+	clientsGroup chan bool
 }
 
 // Start will start server
@@ -133,11 +131,11 @@ func (s *Server) WaitStop(timeout time.Duration) error {
 }
 
 type serverHandler struct {
-	handler          coap.Handler
-	clientsGroup     chan bool
+	handler      coap.Handler
+	clientsGroup chan bool
 }
 
-func (sh *serverHandler)  ServeCOAP(l *net.UDPConn, a *net.UDPAddr, m *coap.Message) *coap.Message {
+func (sh *serverHandler) ServeCOAP(l *net.UDPConn, a *net.UDPAddr, m *coap.Message) *coap.Message {
 	sh.clientsGroup <- true
 	defer func() {
 		<-sh.clientsGroup

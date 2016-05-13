@@ -2,6 +2,7 @@ package counter
 
 import (
 	"testing"
+
 	"github.com/TIBCOSoftware/flogo-lib/core/ext/activity"
 	"github.com/TIBCOSoftware/flogo-lib/test"
 )
@@ -26,7 +27,7 @@ func TestIncrement(t *testing.T) {
 	}()
 
 	md := activity.NewMetadata(jsonMetadata)
-	act := &CounterActivity{metadata: md, counters:make(map[string]int)}
+	act := &CounterActivity{metadata: md, counters: make(map[string]int)}
 
 	tc := test.NewTestActivityContext(md)
 
@@ -58,7 +59,7 @@ func TestGet(t *testing.T) {
 		"messages": 5,
 	}
 
-	act := &CounterActivity{metadata: md, counters:counters}
+	act := &CounterActivity{metadata: md, counters: counters}
 
 	tc := test.NewTestActivityContext(md)
 
@@ -88,7 +89,7 @@ func TestReset(t *testing.T) {
 		"messages": 3,
 	}
 
-	act := &CounterActivity{metadata: md, counters:counters}
+	act := &CounterActivity{metadata: md, counters: counters}
 
 	tc := test.NewTestActivityContext(md)
 
@@ -104,4 +105,3 @@ func TestReset(t *testing.T) {
 		t.Fail()
 	}
 }
-

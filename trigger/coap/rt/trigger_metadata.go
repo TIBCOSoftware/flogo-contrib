@@ -14,6 +14,10 @@ var jsonMetadata = `{
   ],
   "outputs": [
     {
+      "name": "queryParams",
+      "type": "params"
+    },
+    {
       "name": "payload",
       "type": "string"
     }

@@ -4,12 +4,15 @@ import (
 	"bytes"
 	"fmt"
 	"net"
+	"net/url"
 	"strings"
+	"sync"
 
-	"github.com/dustin/go-coap"
+	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/core/ext/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/core/flowinst"
-	"github.com/TIBCOSoftware/flogo-lib/core/data"
+	"github.com/TIBCOSoftware/flogo-lib/util"
+	"github.com/dustin/go-coap"
 	"github.com/op/go-logging"
 )
 
@@ -32,12 +35,12 @@ type CoapTrigger struct {
 	metadata    *trigger.Metadata
 	flowStarter flowinst.Starter
 	resources   map[string]*CoapResource
-	server     *Server
+	server      *Server
 }
 
 type CoapResource struct {
-	path string
-	attrs map[string]string
+	path      string
+	attrs     map[string]string
 	endpoints map[string]*EndpointCfg
 }
 
@@ -82,11 +85,11 @@ func (t *CoapTrigger) Init(flowStarter flowinst.Starter, config *trigger.Config)
 			resource, exists := t.resources[path]
 
 			if !exists {
-				resource = &CoapResource{path:path, attrs:make(map[string]string), endpoints:make(map[string]*EndpointCfg)}
+				resource = &CoapResource{path: path, attrs: make(map[string]string), endpoints: make(map[string]*EndpointCfg)}
 				t.resources[path] = resource
 			}
 
-			resource.endpoints[method] = &EndpointCfg{flowURI:endpoint.FlowURI, autoIdReply:autoIdReply}
+			resource.endpoints[method] = &EndpointCfg{flowURI: endpoint.FlowURI, autoIdReply: autoIdReply}
 
 			mux.Handle(path, newStartFlowHandler(t, resource))
 
@@ -167,28 +170,44 @@ func (t *CoapTrigger) handleDiscovery(conn *net.UDPConn, addr *net.UDPAddr, msg 
 	return res
 }
 
-
 func newStartFlowHandler(rt *CoapTrigger, resource *CoapResource) coap.Handler {
 
-	return coap.FuncHandler(func (conn *net.UDPConn, addr *net.UDPAddr, msg *coap.Message) *coap.Message {
+	return coap.FuncHandler(func(conn *net.UDPConn, addr *net.UDPAddr, msg *coap.Message) *coap.Message {
 
 		log.Debugf("CoAP Trigger: Recieved request")
 
-		data := map[string]interface{}{
-			"payload":  string(msg.Payload),
-		}
+		method := toMethod(msg.Code)
+		uriQuery := msg.Option(coap.URIQuery)
+		var data map[string]interface{}
 
-		method := toMethod(msg.Code);
+		if uriQuery != nil {
+			//todo handle error
+			queryValues, _ := url.ParseQuery(uriQuery.(string))
+
+			queryParams := make(map[string]string, len(queryValues))
+
+			for key, value := range queryValues {
+				queryParams[key] = strings.Join(value, ",")
+			}
+
+			data = map[string]interface{}{
+				"queryParams": queryParams,
+				"payload":     string(msg.Payload),
+			}
+		} else {
+			data = map[string]interface{}{
+				"payload": string(msg.Payload),
+			}
+		}
 
 		endpointCfg, exists := resource.endpoints[method]
 
 		if !exists {
 			res := &coap.Message{
-				Type:      msg.Type,
+				Type:      coap.Reset,
 				Code:      coap.MethodNotAllowed,
 				MessageID: msg.MessageID,
 				Token:     msg.Token,
-				Payload:   []byte("Unsupported Method: " + method),
 			}
 
 			return res
@@ -197,14 +216,17 @@ func newStartFlowHandler(rt *CoapTrigger, resource *CoapResource) coap.Handler {
 		//todo handle error
 		startAttrs, _ := rt.metadata.OutputsToAttrs(data, false)
 
+		rh := &AsyncReplyHandler{addr: addr.String(), msg: msg}
+		rh.addr2 = addr
+		rh.conn = conn
 
 		//todo: implement reply handler?
-		id, err := rt.flowStarter.StartFlowInstance(endpointCfg.flowURI, startAttrs, nil, nil)
+		id, err := rt.flowStarter.StartFlowInstance(endpointCfg.flowURI, startAttrs, rh, nil)
 
 		if err != nil {
 			//todo determing if 404 or 500
 			res := &coap.Message{
-				Type:      msg.Type,
+				Type:      coap.Reset,
 				Code:      coap.NotFound,
 				MessageID: msg.MessageID,
 				Token:     msg.Token,
@@ -214,21 +236,23 @@ func newStartFlowHandler(rt *CoapTrigger, resource *CoapResource) coap.Handler {
 			return res
 		}
 
-		var payload []byte
+		log.Debugf("Started Flow: %s", id)
 
-		if endpointCfg.autoIdReply {
-			payload = []byte(id)
-		}
+		//var payload []byte
+
+		//if endpointCfg.autoIdReply {
+		//	payload = []byte(id)
+		//}
 
 		if msg.IsConfirmable() {
 			res := &coap.Message{
 				Type:      coap.Acknowledgement,
-				Code:      coap.Content,
+				Code:      0,
 				MessageID: msg.MessageID,
-				Token:     msg.Token,
-				Payload:   payload,
+				//Token:     msg.Token,
+				//Payload:   payload,
 			}
-			res.SetOption(coap.ContentFormat, coap.TextPlain)
+			//res.SetOption(coap.ContentFormat, coap.TextPlain)
 
 			log.Debugf("Transmitting %#v", res)
 			return res
@@ -236,6 +260,55 @@ func newStartFlowHandler(rt *CoapTrigger, resource *CoapResource) coap.Handler {
 
 		return nil
 	})
+}
+
+type SyncReplyHandler struct {
+	wg  sync.WaitGroup
+	msg *coap.Message
+}
+
+func (rh *SyncReplyHandler) Reply(replyData map[string]string) {
+	defer rh.wg.Done()
+
+}
+
+func (rh *SyncReplyHandler) GetReply() *coap.Message {
+	rh.wg.Wait()
+	return nil
+}
+
+type AsyncReplyHandler struct {
+	msg  *coap.Message
+	addr string
+
+	conn  *net.UDPConn
+	addr2 *net.UDPAddr
+}
+
+func (rh *AsyncReplyHandler) Reply(replyData map[string]string) {
+
+	//c, err := coap.Dial("udp", rh.addr)
+	//if err != nil {
+	//	log.Errorf("Error dialing: %v", err)
+	//	return
+	//}
+
+	res := coap.Message{
+		Type:      coap.Confirmable,
+		Code:      coap.Content,
+		MessageID: rh.msg.MessageID,
+		Token:     rh.msg.Token,
+		Payload:   []byte(replyData["payload"]),
+	}
+	res.SetOption(coap.ContentFormat, coap.TextPlain)
+
+	util.HandlePanic("CoAP Reply", nil)
+	err := coap.Transmit(rh.conn, rh.addr2, res)
+
+	//_, err = c.Send(res)
+	if err != nil {
+		log.Errorf("Error sending response: %v", err)
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
