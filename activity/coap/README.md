@@ -15,7 +15,7 @@ Inputs and Outputs:
 {
   "inputs":[
     {
-      "name": "address",
+      "name": "uri",
       "type": "string",
       "required": true
     },
@@ -23,6 +23,10 @@ Inputs and Outputs:
       "name": "method",
       "type": "string",
       "required": true
+    },
+    {
+      "name": "queryParams",
+      "type": "params"
     },
     {
       "name": "type",
@@ -40,7 +44,6 @@ Inputs and Outputs:
       "name": "payload",
       "type": "string"
     }
-
   ],
   "outputs": [
     {
@@ -53,8 +56,9 @@ Inputs and Outputs:
 ## Settings
 | Setting   | Description    |
 |:----------|:---------------|
-| address   | The CoAP address to dial |         
 | method    | The CoAP method (POST,GET,PUT,DELETE)|
+| uri   | The CoAP resource URI |         
+| queryParams | The query parameters |
 | type      | Message Type (Confirmable, NonConfirmable, Acknowledgement, Reset) |
 | messageId | ID used to detect duplicates and for optional reliability |
 | options   | CoAP options |
@@ -69,15 +73,15 @@ Configure a task in flow to send a "hello world" message via CoAP:
 {
   "id": 3,
   "type": 1,
-  "activityType": "tibco-rest",
+  "activityType": "tibco-coap",
   "name": "Send CoAP Message",
   "attributes": [
-    { "name": "address", "value": "localhost:5683" },
-    { "name": "method", "value": "GET" },
+    { "name": "method", "value": "POST" },
+    { "name": "address", "value": "coap://localhost:5683/device" },
     { "name": "type", "value": "Confirmable" },
     { "name": "messageId", "value": 12345 },
     { "name": "payload", "value": "hello world" },
-    { "name": "options", "value": {"ETag":"tag", "MaxAge":2, "URIPath":"/mypath" }
+    { "name": "options", "value": {"ETag":"tag", "MaxAge":2 }
   ]
 }
 ```

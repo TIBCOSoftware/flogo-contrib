@@ -1,12 +1,14 @@
 package coap
 
 import (
+	"net/url"
 	"strings"
 	"strconv"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/ext/activity"
 	"github.com/dustin/go-coap"
 	"github.com/op/go-logging"
+	"fmt"
 )
 
 // log is the default package logger
@@ -23,12 +25,13 @@ const (
 	typeACK = "ACKNOWLEDGEMENT"
 	typeRST = "RESET"
 
-	ivAddress   = "address"
-	ivMethod    = "method"
-	ivType      = "type"
-	ivPayload   = "payload"
-	ivMessageID = "messageId"
-	ivOptions   = "options"
+	ivMethod      = "method"
+	ivURI         = "uri"
+	ivQueryParams = "queryParams"
+	ivType        = "type"
+	ivPayload     = "payload"
+	ivMessageID   = "messageId"
+	ivOptions     = "options"
 
 	ovResponse = "response"
 )
@@ -54,54 +57,99 @@ func (a *CoAPActivity) Metadata() *activity.Metadata {
 	return a.metadata
 }
 
+//todo enhance CoAP client code
+
 // Eval implements api.Activity.Eval - Invokes a REST Operation
 func (a *CoAPActivity) Eval(context activity.Context) (done bool, evalError *activity.Error) {
 
-	method := strings.ToUpper(context.GetInput(ivMethod).(string))
-	msgType := strings.ToUpper(context.GetInput(ivType).(string))
-	address := context.GetInput(ivAddress).(string)
-	payload := context.GetInput(ivPayload).(string)
-	messageID := context.GetInput(ivMessageID).(int)
+	method, ok := getStringValue(context, ivMethod, nil, true)
 
-	val := context.GetInput(ivOptions)
-
-	var options map[string]string
-
-	if val != nil {
-		options = val.(map[string]string)
+	if !ok {
+		activity.NewError("Method not specified")
 	}
 
-	log.Debugf("CoAP Message: [%s] %s\n", method, payload)
+	uri, ok := getStringValue(context, ivURI, nil, false)
+
+	if !ok {
+		activity.NewError("URI not specified")
+	}
+
+	msgType, _ :=  getStringValue(context, ivType, typeNON, true)
+	payload, hasPayload :=  getStringValue(context, ivPayload, nil, false)
+	messageID, _ :=  getIntValue(context, ivMessageID, 0)
+
+	coapURI, err := url.Parse(uri)
+	if err != nil {
+		return false, activity.NewError(err.Error())
+	}
+
+	scheme := coapURI.Scheme
+	if scheme != "coap" {
+		return false, activity.NewError("URI scheme must be 'coap'")
+	}
 
 	req := coap.Message{
 		Type:      toCoapType(msgType),
 		Code:      toCoapCode(method),
 		MessageID: uint16(messageID),
-		Payload:   []byte(payload),
 	}
 
-	if options != nil {
+	if hasPayload {
+		req.Payload = []byte(payload)
+	}
+
+	val := context.GetInput(ivOptions)
+	if val != nil {
+		options := val.(map[string]string)
+
 		for k, v := range options {
 			op, val := toOption(k, v)
 			req.SetOption(op, val)
 		}
 	}
 
-	c, err := coap.Dial("udp", address)
-	if err != nil {
-		log.Fatalf("Error dialing: %v", err)
+	if context.GetInput(ivQueryParams) != nil {
+		queryParams := context.GetInput(ivQueryParams).(map[string]string)
+
+		qp := url.Values{}
+
+		for key, value := range queryParams {
+			qp.Set(key, value)
+		}
+
+		queryStr := qp.Encode()
+		req.SetOption(coap.URIQuery, queryStr)
+		log.Debugf("CoAP Message: [%s] %s?%s\n", method, coapURI.Path, queryStr)
+
+	} else {
+		log.Debugf("CoAP Message: [%s] %s\n", method, coapURI.Path)
 	}
+
+	req.SetPathString(coapURI.Path)
+
+	c, err := coap.Dial("udp", coapURI.Host)
+	if err != nil {
+		return false, activity.NewError(err.Error())
+	}
+
+	log.Debugf("conn: %v\n",c)
 
 	rv, err := c.Send(req)
 	if err != nil {
-		log.Fatalf("Error sending request: %v", err)
+		return false, activity.NewError(err.Error())
 	}
 
 	if rv != nil {
-		log.Debugf("Response payload: %s", rv.Payload)
-	}
 
-	context.SetOutput(ovResponse, string(rv.Payload))
+		if rv.Code > 100 {
+			return false, activity.NewError(fmt.Sprintf("CoAP Error: %s", rv.Code.String()))
+		}
+
+		if rv.Payload != nil {
+			log.Debugf("Response payload: %s", rv.Payload)
+			context.SetOutput(ovResponse, string(rv.Payload))
+		}
+	}
 
 	return true, nil
 }
@@ -215,4 +263,43 @@ func stringInList(str string, list []string) bool {
 		}
 	}
 	return false
+}
+
+
+func getStringValue(context activity.Context, attrName string, defValue interface{}, uc bool ) (string, bool) {
+
+	val := context.GetInput(attrName)
+	found := true
+
+	if val == nil {
+		found = false
+
+		if defValue == nil {
+			return "", false
+		}
+		val = defValue
+	}
+
+	if uc {
+		return strings.ToUpper(val.(string)), found
+	}
+
+	return val.(string), found
+}
+
+func getIntValue(context activity.Context, attrName string, defValue interface{}) (int, bool) {
+
+	val := context.GetInput(attrName)
+	found := true
+
+	if val == nil {
+		found = false
+
+		if defValue == nil {
+			return 0, false
+		}
+		val = defValue
+	}
+
+	return val.(int), found
 }

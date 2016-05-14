@@ -7,7 +7,7 @@ var jsonMetadata = `{
   "description": "Simple CoAP Activity",
   "inputs":[
     {
-      "name": "address",
+      "name": "uri",
       "type": "string",
       "required": true
     },
@@ -15,6 +15,10 @@ var jsonMetadata = `{
       "name": "method",
       "type": "string",
       "required": true
+    },
+    {
+      "name": "queryParams",
+      "type": "params"
     },
     {
       "name": "type",
