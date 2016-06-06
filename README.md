@@ -4,12 +4,15 @@ Collection of Flogo activities, triggers and models.
 ## Contributions
 
 ### Activities
-* [counter](activity/counter): Global counter 
+* [awsiot](activity/awsiot): Aws IOT shadow update
+* [coap](activity/coap): CoAP messaging 
+* [counter](activity/counter): Global counter  
 * [log](activity/log): Simple flow Logger 
 * [rest](activity/rest): Simple REST invoker
 * [twilio](activity/twilio): Simple Twilio SMS sender
 
 ### Triggers
+* [coap](trigger/coap): Start flow via CoAP
 * [mqtt](trigger/mqtt): Start flow via MQTT
 * [rest](trigger/rest): Start flow via REST
 * [timer](trigger/timer): Start flow via Timer
