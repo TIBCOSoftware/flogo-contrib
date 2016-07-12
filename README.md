@@ -10,6 +10,7 @@ Collection of Flogo activities, triggers and models.
 * [log](activity/log): Simple flow Logger 
 * [rest](activity/rest): Simple REST invoker
 * [twilio](activity/twilio): Simple Twilio SMS sender
+* [websocket] (activity/wsmessage): Simple Websocket Message
 
 ### Triggers
 * [coap](trigger/coap): Start flow via CoAP
