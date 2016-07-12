@@ -1,0 +1,5 @@
+{
+  "name": "sendWSMessage",
+  "version": "0.0.1",
+  "description": "This activity sends a message to a WebSocket enabled server like TIBCO eFTL"
+}
