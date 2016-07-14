@@ -106,7 +106,7 @@ Configure the Trigger to handle a GET on /device/:id
       },
       "endpoints": [
         {
-          "flowURI": "local://new_device_flow",
+          "flowURI": "embedded://new_device_flow",
           "settings": {
             "method": "GET",
             "path": "/device/:id"
