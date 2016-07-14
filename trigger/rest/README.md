@@ -81,7 +81,7 @@ Configure the Trigger to handle a POST on /device
       },
       "endpoints": [
         {
-          "flowURI": "local://new_device_flow",
+          "flowURI": "embedded://new_device_flow",
           "settings": {
             "method": "POST",
             "path": "/device"
