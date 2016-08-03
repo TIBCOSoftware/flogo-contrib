@@ -14,6 +14,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/util"
 	"github.com/dustin/go-coap"
 	"github.com/op/go-logging"
+	"encoding/json"
 )
 
 const (
@@ -285,7 +286,7 @@ type AsyncReplyHandler struct {
 	addr2 *net.UDPAddr
 }
 
-func (rh *AsyncReplyHandler) Reply(replyData map[string]string) {
+func (rh *AsyncReplyHandler) Reply(replyCode int, replyData interface{}) {
 
 	//c, err := coap.Dial("udp", rh.addr)
 	//if err != nil {
@@ -293,17 +294,24 @@ func (rh *AsyncReplyHandler) Reply(replyData map[string]string) {
 	//	return
 	//}
 
+	payload, err := json.Marshal(replyData)
+
+	if err != nil {
+		log.Errorf("Unable to marshall replyData: %v", err)
+		return
+	}
+
 	res := coap.Message{
 		Type:      coap.Confirmable,
 		Code:      coap.Content,
 		MessageID: rh.msg.MessageID,
 		Token:     rh.msg.Token,
-		Payload:   []byte(replyData["payload"]),
+		Payload:   payload,
 	}
 	res.SetOption(coap.ContentFormat, coap.TextPlain)
 
 	util.HandlePanic("CoAP Reply", nil)
-	err := coap.Transmit(rh.conn, rh.addr2, res)
+	err = coap.Transmit(rh.conn, rh.addr2, res)
 
 	//_, err = c.Send(res)
 	if err != nil {
