@@ -76,7 +76,7 @@ func (a *AwsIoT) Eval(context activity.Context) (done bool, evalError *activity.
 
 	opts := MQTT.NewClientOptions()
 	opts.AddBroker(brokerURI)
-	opts.SetClientID(context.FlowInstanceID())
+	opts.SetClientID(context.FlowDetails().ID())
 	opts.SetTLSConfig(tlsConfig)
 
 	// Start the connection

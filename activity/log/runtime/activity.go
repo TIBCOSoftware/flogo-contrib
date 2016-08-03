@@ -65,7 +65,7 @@ func (a *LogActivity) Eval(context activity.Context) (done bool, evalError *acti
 	if flowInfo {
 
 		msg = fmt.Sprintf("'%s' - FlowInstanceID [%s], Flow [%s], Task [%s]", msg,
-			context.FlowInstanceID(), context.FlowName(), context.TaskName())
+			context.FlowDetails().ID(), context.FlowDetails().Name(), context.TaskName())
 	}
 
 	activityLog.Info(msg)
