@@ -1,0 +1,19 @@
+{
+  "name": "tibco-error",
+  "version": "0.0.1",
+  "title": "REST Error Activity",
+  "description": "Simple Error Activity",
+  "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/error",
+  "inputs":[
+    {
+      "name": "message",
+      "type": "string"
+    },
+    {
+      "name": "data",
+      "type": "object"
+    }
+  ],
+  "outputs": [
+  ]
+}
