@@ -4,6 +4,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/ext/model"
 	"github.com/TIBCOSoftware/flogo-lib/core/flow"
 	"github.com/op/go-logging"
+	"github.com/TIBCOSoftware/flogo-lib/core/ext/activity"
 )
 
 // log is the default package logger
@@ -91,7 +92,7 @@ func (tb *SimpleTaskBehavior) Enter(context model.TaskContext, enterCode int) (e
 }
 
 // Eval implements model.TaskBehavior.Eval
-func (tb *SimpleTaskBehavior) Eval(context model.TaskContext, evalCode int) (done bool, doneCode int) {
+func (tb *SimpleTaskBehavior) Eval(context model.TaskContext, evalCode int) (done bool, doneCode int, activityError *activity.Error) {
 
 	task := context.Task()
 	log.Debugf("Task Eval: %s\n", task)
@@ -104,7 +105,7 @@ func (tb *SimpleTaskBehavior) Eval(context model.TaskContext, evalCode int) (don
 
 		context.EnterLeadingChildren(0)
 
-		return false, 0
+		return false, 0, nil
 
 	} else {
 
@@ -112,23 +113,25 @@ func (tb *SimpleTaskBehavior) Eval(context model.TaskContext, evalCode int) (don
 
 			done, err := context.EvalActivity()
 
-			// todo handle error transition and have global error handler
+			// todo handle error transition
 			if err != nil {
 				log.Errorf("Error evaluating activity '%s'[%s] - %s", context.Task().Name(), context.Task().ActivityType(), err.Error())
 				context.SetState(STATE_FAILED)
-				context.Failed(err)
+
+				//we don't have an error transition, so we'll return it so the global error handler can deal with it
+				return false, 0, err
 			}
 
-			return done, 0
+			return done, 0, nil
 		}
 
 		//no-op
-		return true, 0
+		return true, 0, nil
 	}
 }
 
 // PostEval implements model.TaskBehavior.PostEval
-func (tb *SimpleTaskBehavior) PostEval(context model.TaskContext, evalCode int, data interface{}) (done bool, doneCode int) {
+func (tb *SimpleTaskBehavior) PostEval(context model.TaskContext, evalCode int, data interface{}) (done bool, doneCode int, activityError *activity.Error) {
 
 	log.Debugf("Task PostEval\n")
 
@@ -136,11 +139,11 @@ func (tb *SimpleTaskBehavior) PostEval(context model.TaskContext, evalCode int, 
 
 		//done := activity.PostEval(activityContext, data)
 		done := true
-		return done, 0
+		return done, 0, nil
 	}
 
 	//no-op
-	return true, 0
+	return true, 0, nil
 }
 
 // Done implements model.TaskBehavior.Done
