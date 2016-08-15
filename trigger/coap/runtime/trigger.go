@@ -319,6 +319,10 @@ func (rh *AsyncReplyHandler) Reply(replyCode int, replyData interface{}) {
 	}
 }
 
+func (rh *AsyncReplyHandler) Release() {
+
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////
 // Utils
 

@@ -40,6 +40,10 @@
       {
         "name": "autoIdReply",
         "type": "boolean"
+      },
+      {
+        "name": "useReplyHandler",
+        "type": "boolean"
       }
     ]
   }

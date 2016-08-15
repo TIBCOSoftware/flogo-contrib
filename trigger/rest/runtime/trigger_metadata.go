@@ -41,6 +41,10 @@ var jsonMetadata = `{
       {
         "name": "autoIdReply",
         "type": "boolean"
+      },
+      {
+        "name": "useReplyHandler",
+        "type": "boolean"
       }
     ]
   }
