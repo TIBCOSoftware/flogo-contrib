@@ -1,11 +1,11 @@
 package coap
 
 import (
+	"encoding/json"
+	"fmt"
 	"testing"
 
-	"github.com/TIBCOSoftware/flogo-lib/core/ext/activity"
-	"fmt"
-	"encoding/json"
+	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
 	"github.com/TIBCOSoftware/flogo-lib/test"
 )
 

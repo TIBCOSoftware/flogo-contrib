@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/TIBCOSoftware/flogo-lib/core/ext/activity"
+	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
 	"github.com/op/go-logging"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"

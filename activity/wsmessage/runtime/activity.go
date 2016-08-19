@@ -1,10 +1,11 @@
 package sendWSMessage
 
 import (
-	"github.com/TIBCOSoftware/flogo-lib/core/ext/activity"
+	"net/url"
+
+	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
 	"github.com/gorilla/websocket"
 	"github.com/op/go-logging"
-	"net/url"
 )
 
 // log is the default package logger

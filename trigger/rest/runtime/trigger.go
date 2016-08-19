@@ -1,15 +1,15 @@
 package rest
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
 
-	"github.com/TIBCOSoftware/flogo-lib/core/data"
-	"github.com/TIBCOSoftware/flogo-lib/core/ext/trigger"
-	"github.com/TIBCOSoftware/flogo-lib/core/flowinst"
+	"github.com/TIBCOSoftware/flogo-lib/core/action"
+	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/julienschmidt/httprouter"
 	"github.com/op/go-logging"
 )
@@ -21,9 +21,9 @@ var validMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE"}
 
 // RestTrigger REST trigger struct
 type RestTrigger struct {
-	metadata    *trigger.Metadata
-	flowStarter flowinst.Starter
-	server      *Server
+	metadata *trigger.Metadata
+	runner   action.Runner
+	server   *Server
 }
 
 func init() {
@@ -37,12 +37,12 @@ func (t *RestTrigger) Metadata() *trigger.Metadata {
 }
 
 // Init implements ext.Trigger.Init
-func (t *RestTrigger) Init(flowStarter flowinst.Starter, config *trigger.Config) {
+func (t *RestTrigger) Init(config *trigger.Config, runner action.Runner) {
 
 	router := httprouter.New()
 
 	addr := ":" + config.Settings["port"]
-	t.flowStarter = flowStarter
+	t.runner = runner
 
 	endpoints := config.Endpoints
 
@@ -51,19 +51,11 @@ func (t *RestTrigger) Init(flowStarter flowinst.Starter, config *trigger.Config)
 		if endpointIsValid(endpoint) {
 			method := strings.ToUpper(endpoint.Settings["method"])
 			path := endpoint.Settings["path"]
-			autoIdReply, _ := data.CoerceToBoolean(endpoint.Settings["autoIdReply"])
-			useReplyHandler, _ := data.CoerceToBoolean(endpoint.Settings["useReplyHandler"])
 
-			log.Debugf("REST Trigger: Registering endpoint [%s: %s] for Flow: %s", method, path, endpoint.FlowURI)
-			if autoIdReply {
-				log.Debug("REST Trigger: AutoIdReply Enabled")
-			}
-			if useReplyHandler {
-				log.Debug("REST Trigger: Using Reply Handler")
-			}
+			log.Debugf("REST Trigger: Registering endpoint [%s: %s] for Action: [%s-%s]", method, path, endpoint.ActionType, endpoint.ActionURI)
 
 			router.OPTIONS(path, handleOption) // for CORS
-			router.Handle(method, path, newStartFlowHandler(t, endpoint.FlowURI, autoIdReply, useReplyHandler))
+			router.Handle(method, path, newActionHandler(t, endpoint))
 
 		} else {
 			panic(fmt.Sprintf("Invalid endpoint: %v", endpoint))
@@ -74,15 +66,14 @@ func (t *RestTrigger) Init(flowStarter flowinst.Starter, config *trigger.Config)
 	t.server = NewServer(addr, router)
 }
 
-// Start implements trigger.Trigger.Start
+// Start implements util.Managed.Start
 func (t *RestTrigger) Start() error {
-	err := t.server.Start()
-	return err
+	return t.server.Start()
 }
 
-// Stop implements trigger.Trigger.Start
-func (t *RestTrigger) Stop() {
-	t.server.Stop()
+// Stop implements util.Managed.Stop
+func (t *RestTrigger) Stop() error {
+	return t.server.Stop()
 }
 
 func handleOption(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -101,7 +92,7 @@ type IDResponse struct {
 	ID string `json:"id"`
 }
 
-func newStartFlowHandler(rt *RestTrigger, flowURI string, autoIdReply bool, useReplyHandler bool) httprouter.Handle {
+func newActionHandler(rt *RestTrigger, endpoint *trigger.EndpointConfig) httprouter.Handle {
 
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
@@ -119,8 +110,8 @@ func newStartFlowHandler(rt *RestTrigger, flowURI string, autoIdReply bool, useR
 		if err != nil {
 			switch {
 			case err == io.EOF:
-				// empty body
-				//todo should endpoint say if content is expected?
+			// empty body
+			//todo should endpoint say if content is expected?
 			case err != nil:
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
@@ -135,81 +126,39 @@ func newStartFlowHandler(rt *RestTrigger, flowURI string, autoIdReply bool, useR
 		}
 
 		data := map[string]interface{}{
-			"params":  pathParams,
-			"pathParams" : pathParams,
-			"queryParams" : queryParams,
-			"content": content,
+			"params":      pathParams,
+			"pathParams":  pathParams,
+			"queryParams": queryParams,
+			"content":     content,
 		}
 
 		//todo handle error
-		startAttrs,_ := rt.metadata.OutputsToAttrs(data, false)
+		startAttrs, _ := rt.metadata.OutputsToAttrs(data, false)
 
-		var replyHandler *RestReplyHandler
+		action := action.Get(endpoint.ActionType)
 
-		if useReplyHandler {
-			replyHandler = &RestReplyHandler{w:w,rc:make(chan bool, 1)}
-		}
-
-		//todo: implement reply handler?
-		id, err := rt.flowStarter.StartFlowInstance(flowURI, startAttrs, replyHandler, nil)
+		context := trigger.NewContext(context.Background(), startAttrs)
+		replyCode, replyData, err := rt.runner.Run(context, action, endpoint.ActionURI, nil)
 
 		if err != nil {
+			log.Debugf("REST Trigger Error: %s", err.Error())
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		if useReplyHandler {
-
-			select {
-			case <- replyHandler.rc:
-				// wait for the reply
+		if replyData != nil {
+			w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+			w.WriteHeader(replyCode)
+			if err := json.NewEncoder(w).Encode(replyData); err != nil {
+				log.Error(err)
 			}
+		}
 
+		if replyCode > 0 {
+			w.WriteHeader(replyCode)
 		} else {
-
-			if autoIdReply {
-				resp := &IDResponse{ID: id}
-
-				encoder := json.NewEncoder(w)
-				encoder.Encode(resp)
-			} else {
-				w.WriteHeader(http.StatusOK)
-			}
+			w.WriteHeader(http.StatusOK)
 		}
-	}
-}
-
-
-// RestTrigger REST trigger struct
-type RestReplyHandler struct {
-	w       http.ResponseWriter
-	rc      chan(bool)
-	replied bool
-}
-
-func (rh *RestReplyHandler) Reply(replyCode int, replyData interface{}) {
-
-	if replyData != nil {
-		rh.w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		rh.w.WriteHeader(replyCode)
-		if err := json.NewEncoder(rh.w).Encode(replyData); err != nil {
-			log.Error(err)
-		}
-	} else {
-		rh.w.WriteHeader(replyCode)
-	}
-
-	rh.replied = true
-	rh.rc <- true
-}
-
-func (rh *RestReplyHandler) Release() {
-
-	fmt.Print("RELEASE")
-
-	if !rh.replied {
-		rh.w.WriteHeader(http.StatusOK)
-		rh.rc <- true
 	}
 }
 

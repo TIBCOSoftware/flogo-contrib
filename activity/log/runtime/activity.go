@@ -3,11 +3,10 @@ package log
 import (
 	"fmt"
 	"os"
-	//"strconv"
-
-	"github.com/TIBCOSoftware/flogo-lib/core/ext/activity"
-	"github.com/op/go-logging"
 	"strconv"
+
+	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
+	"github.com/op/go-logging"
 )
 
 // activityLog is the default logger for the Log Activity
@@ -55,7 +54,8 @@ func (a *LogActivity) Metadata() *activity.Metadata {
 // Eval implements api.Activity.Eval - Logs the Message
 func (a *LogActivity) Eval(context activity.Context) (done bool, evalError *activity.Error) {
 
-	message := context.GetInput(ivMessage).(string)
+	//mv := context.GetInput(ivMessage)
+	message, _ := context.GetInput(ivMessage).(string)
 
 	flowInfo, _ := toBool(context.GetInput(ivFlowInfo))
 	addToFlow, _ := toBool(context.GetInput(ivAddToFlow))
@@ -76,7 +76,6 @@ func (a *LogActivity) Eval(context activity.Context) (done bool, evalError *acti
 
 	return true, nil
 }
-
 
 func toBool(val interface{}) (bool, error) {
 

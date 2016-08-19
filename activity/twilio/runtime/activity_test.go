@@ -2,7 +2,8 @@ package twilio
 
 import (
 	"testing"
-	"github.com/TIBCOSoftware/flogo-lib/core/ext/activity"
+
+	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
 	"github.com/TIBCOSoftware/flogo-lib/test"
 )
 

@@ -1,14 +1,14 @@
 package coap
 
 import (
+	"fmt"
 	"net/url"
-	"strings"
 	"strconv"
+	"strings"
 
-	"github.com/TIBCOSoftware/flogo-lib/core/ext/activity"
+	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
 	"github.com/dustin/go-coap"
 	"github.com/op/go-logging"
-	"fmt"
 )
 
 // log is the default package logger
@@ -74,9 +74,9 @@ func (a *CoAPActivity) Eval(context activity.Context) (done bool, evalError *act
 		activity.NewError("URI not specified")
 	}
 
-	msgType, _ :=  getStringValue(context, ivType, typeNON, true)
-	payload, hasPayload :=  getStringValue(context, ivPayload, nil, false)
-	messageID, _ :=  getIntValue(context, ivMessageID, 0)
+	msgType, _ := getStringValue(context, ivType, typeNON, true)
+	payload, hasPayload := getStringValue(context, ivPayload, nil, false)
+	messageID, _ := getIntValue(context, ivMessageID, 0)
 
 	coapURI, err := url.Parse(uri)
 	if err != nil {
@@ -132,7 +132,7 @@ func (a *CoAPActivity) Eval(context activity.Context) (done bool, evalError *act
 		return false, activity.NewError(err.Error())
 	}
 
-	log.Debugf("conn: %v\n",c)
+	log.Debugf("conn: %v\n", c)
 
 	rv, err := c.Send(req)
 	if err != nil {
@@ -265,8 +265,7 @@ func stringInList(str string, list []string) bool {
 	return false
 }
 
-
-func getStringValue(context activity.Context, attrName string, defValue interface{}, uc bool ) (string, bool) {
+func getStringValue(context activity.Context, attrName string, defValue interface{}, uc bool) (string, bool) {
 
 	val := context.GetInput(attrName)
 	found := true

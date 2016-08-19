@@ -1,13 +1,12 @@
 package rest
 
 import (
+	"encoding/json"
+	"fmt"
 	"testing"
 
-	"fmt"
-
-	"github.com/TIBCOSoftware/flogo-lib/core/ext/activity"
+	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
 	"github.com/TIBCOSoftware/flogo-lib/test"
-	"encoding/json"
 )
 
 const reqPostStr string = `{

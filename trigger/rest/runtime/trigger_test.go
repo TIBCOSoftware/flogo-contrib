@@ -1,14 +1,13 @@
 package rest
 
 import (
+	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"testing"
 
-	"github.com/TIBCOSoftware/flogo-lib/core/ext/trigger"
-	"github.com/TIBCOSoftware/flogo-lib/core/flowinst"
-	"github.com/TIBCOSoftware/flogo-lib/core/data"
+	"github.com/TIBCOSoftware/flogo-lib/core/action"
+	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 )
 
 const testConfig string = `{
@@ -28,13 +27,13 @@ const testConfig string = `{
 }
 `
 
-type TestStarter struct {
+type TestRunner struct {
 }
 
-// StartFlowInstance implements flowinst.Starter.StartFlowInstance
-func (ts *TestStarter) StartFlowInstance(flowURI string, startAttrs []*data.Attribute, replyHandler flowinst.ReplyHandler, execOptions *flowinst.ExecOptions) (instanceID string, startError error) {
-	fmt.Printf("Started Flow with data: %v", startAttrs)
-	return "dummyid", nil
+// Run implements action.Runner.Run
+func (tr *TestRunner) Run(context context.Context, action action.Action, uri string, options interface{}) (code int, data interface{}, err error) {
+	log.Debugf("Ran Action: %v", uri)
+	return 0, nil, nil
 }
 
 func TestRegistered(t *testing.T) {
@@ -50,12 +49,11 @@ func TestRegistered(t *testing.T) {
 func TestInit(t *testing.T) {
 	tgr := trigger.Get("tibco-rest")
 
-	starter := &TestStarter{}
+	runner := &TestRunner{}
 
 	config := &trigger.Config{}
 	json.Unmarshal([]byte(testConfig), config)
-
-	tgr.Init(starter, config)
+	tgr.Init(config, runner)
 }
 
 func TestEndpoint(t *testing.T) {

@@ -1,46 +1,48 @@
 package rest
 
 import (
-	"github.com/TIBCOSoftware/flogo-lib/core/ext/activity"
+	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
 	"github.com/op/go-logging"
 )
 
 // log is the default package logger
-var log = logging.MustGetLogger("activity-tibco-restreply")
+var log = logging.MustGetLogger("activity-tibco-reply")
 
 const (
 	ivCode = "code"
 	ivData = "data"
 )
 
-// RESTReplyActivity is an Activity that is used to invoke a REST Operation
+// ReplyActivity is an Activity that is used to reply via the trigger
 // inputs : {method,uri,params}
 // outputs: {result}
-type RESTReplyActivity struct {
+type ReplyActivity struct {
 	metadata *activity.Metadata
 }
 
 // init create & register activity
 func init() {
 	md := activity.NewMetadata(jsonMetadata)
-	activity.Register(&RESTReplyActivity{metadata: md})
+	activity.Register(&ReplyActivity{metadata: md})
 }
 
 // Metadata returns the activity's metadata
-func (a *RESTReplyActivity) Metadata() *activity.Metadata {
+func (a *ReplyActivity) Metadata() *activity.Metadata {
 	return a.metadata
 }
 
 // Eval implements api.Activity.Eval - Invokes a REST Operation
-func (a *RESTReplyActivity) Eval(context activity.Context) (done bool, evalError *activity.Error) {
+func (a *ReplyActivity) Eval(context activity.Context) (done bool, evalError *activity.Error) {
 
 	code := context.GetInput(ivCode).(int)
 	data := context.GetInput(ivData)
 
 	replyHandler := context.FlowDetails().ReplyHandler()
 
+	//todo support replying with error
+
 	if replyHandler != nil {
-		replyHandler.Reply(code, data)
+		replyHandler.Reply(code, data, nil)
 	}
 
 	return true, nil

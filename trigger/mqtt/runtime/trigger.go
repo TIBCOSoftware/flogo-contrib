@@ -1,13 +1,14 @@
 package mqtt
 
 import (
+	"context"
 	"encoding/json"
 	"strconv"
 	"strings"
 
-	"github.com/TIBCOSoftware/flogo-lib/core/ext/trigger"
-	"github.com/TIBCOSoftware/flogo-lib/core/flow"
-	"github.com/TIBCOSoftware/flogo-lib/core/flowinst"
+	"github.com/TIBCOSoftware/flogo-lib/core/action"
+	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
+	"github.com/TIBCOSoftware/flogo-lib/flow/support"
 	"github.com/eclipse/paho.mqtt.golang"
 	"github.com/op/go-logging"
 )
@@ -19,12 +20,13 @@ var log = logging.MustGetLogger("trigger-tibco-mqtt")
 
 // MqttTrigger is simple MQTT trigger
 type MqttTrigger struct {
-	metadata    *trigger.Metadata
-	flowStarter flowinst.Starter
-	client      mqtt.Client
-	settings    map[string]string
-	config      *trigger.Config
-	flowToTopic    map[string]string
+	metadata          *trigger.Metadata
+	runner            action.Runner
+	client            mqtt.Client
+	settings          map[string]string
+	config            *trigger.Config
+	topicToActionURI  map[string]string
+	topicToActionType map[string]string
 }
 
 func init() {
@@ -38,11 +40,11 @@ func (t *MqttTrigger) Metadata() *trigger.Metadata {
 }
 
 // Init implements ext.Trigger.Init
-func (t *MqttTrigger) Init(flowStarter flowinst.Starter, config *trigger.Config) {
+func (t *MqttTrigger) Init(config *trigger.Config, runner action.Runner) {
 
-	t.flowStarter = flowStarter
-	t.settings = config.Settings
 	t.config = config
+	t.settings = config.Settings
+	t.runner = runner
 }
 
 // Start implements ext.Trigger.Start
@@ -67,11 +69,13 @@ func (t *MqttTrigger) Start() error {
 		topic := msg.Topic()
 		payload := string(msg.Payload())
 
-		flowURI, found := t.flowToTopic[topic]
-		if(found) {
-			t.StartProcess(flowURI, payload)
+		actionType, found := t.topicToActionURI[topic]
+		actionURI, _ := t.topicToActionURI[topic]
+
+		if found {
+			t.RunAction(actionType, actionURI, payload)
 		} else {
-			log.Errorf("Topic %s not found", t.flowToTopic[topic])
+			log.Errorf("Topic %s not found", t.topicToActionURI[topic])
 		}
 
 	})
@@ -88,10 +92,13 @@ func (t *MqttTrigger) Start() error {
 		return err
 	}
 
+	t.topicToActionType = make(map[string]string)
+	t.topicToActionURI = make(map[string]string)
+
 	for _, endpoint := range t.config.Endpoints {
-		t.flowToTopic = make(map[string]string)
 		if token := t.client.Subscribe(endpoint.Settings["topic"], byte(i), nil); token.Wait() && token.Error() != nil {
-			t.flowToTopic[endpoint.Settings["topic"]] = endpoint.Settings["topic"]
+			t.topicToActionURI[endpoint.Settings["topic"]] = endpoint.ActionURI
+			t.topicToActionType[endpoint.Settings["topic"]] = endpoint.ActionType
 			log.Errorf("Error subscribing to topic %s: %s", endpoint.Settings["topic"], token.Error())
 			panic(token.Error())
 		}
@@ -101,7 +108,7 @@ func (t *MqttTrigger) Start() error {
 }
 
 // Stop implements ext.Trigger.Stop
-func (t *MqttTrigger) Stop() {
+func (t *MqttTrigger) Stop() error {
 	//unsubscribe from topic
 	log.Debug("Unsubcribing from topic: ", t.settings["topic"])
 	for _, endpoint := range t.config.Endpoints {
@@ -111,30 +118,41 @@ func (t *MqttTrigger) Stop() {
 	}
 
 	t.client.Disconnect(250)
+
+	return nil
 }
 
-// StartProcess starts a new Process Instance
-func (t *MqttTrigger) StartProcess(flowURI string, payload string) {
+// RunAction starts a new Process Instance
+func (t *MqttTrigger) RunAction(actionType string, actionURI string, payload string) {
 
 	req := &StartRequest{}
 	err := json.NewDecoder(strings.NewReader(payload)).Decode(req)
 	if err != nil {
 		//http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Error("Error Starting flow ", err.Error())
+		log.Error("Error Starting action ", err.Error())
 		return
 	}
 
-	log.Debug("Flow URI ", flowURI)
-	log.Debug("flowStarter.StartProcess ", t.flowStarter)
+	//todo handle error
+	startAttrs, _ := t.metadata.OutputsToAttrs(req.Data, false)
+
+	action := action.Get(actionType)
+
+	context := trigger.NewContext(context.Background(), startAttrs)
 
 	//todo handle error
-	startAttrs,_ := t.metadata.OutputsToAttrs(req.Data, false)
+	_, replyData, err := t.runner.Run(context, action, actionURI, nil)
 
-	//todo handle error
-	id, err := t.flowStarter.StartFlowInstance(flowURI, startAttrs, nil, nil)
+	log.Debugf("Ran action: [%s-%s]", actionType, actionURI)
 
-	log.Debug("Start flow id: ", id)
-	t.publishMessage(req.ReplyTo, id)
+	if replyData != nil {
+		data, err := json.Marshal(replyData)
+		if err != nil {
+			log.Error(err)
+		} else {
+			t.publishMessage(req.ReplyTo, string(data))
+		}
+	}
 }
 
 func (t *MqttTrigger) publishMessage(topic string, message string) {
@@ -155,7 +173,7 @@ func (t *MqttTrigger) publishMessage(topic string, message string) {
 type StartRequest struct {
 	ProcessURI  string                 `json:"flowUri"`
 	Data        map[string]interface{} `json:"data"`
-	Interceptor *flow.Interceptor      `json:"interceptor"`
-	Patch       *flow.Patch            `json:"patch"`
+	Interceptor *support.Interceptor   `json:"interceptor"`
+	Patch       *support.Patch         `json:"patch"`
 	ReplyTo     string                 `json:"replyTo"`
 }

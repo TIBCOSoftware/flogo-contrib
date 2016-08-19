@@ -1,9 +1,9 @@
 package twilio
 
 import (
-	"github.com/sfreiberg/gotwilio"
-	"github.com/TIBCOSoftware/flogo-lib/core/ext/activity"
+	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
 	"github.com/op/go-logging"
+	"github.com/sfreiberg/gotwilio"
 )
 
 // log is the default package logger
@@ -34,7 +34,7 @@ func (a *TwilioActivity) Metadata() *activity.Metadata {
 }
 
 // Eval implements activity.Activity.Eval
-func (a *TwilioActivity) Eval(context activity.Context) (done bool, evalError *activity.Error)  {
+func (a *TwilioActivity) Eval(context activity.Context) (done bool, evalError *activity.Error) {
 
 	accountSID := context.GetInput(ivAcctSID).(string)
 	authToken := context.GetInput(ivAuthToken).(string)
@@ -44,7 +44,7 @@ func (a *TwilioActivity) Eval(context activity.Context) (done bool, evalError *a
 
 	twilio := gotwilio.NewTwilioClient(accountSID, authToken)
 
-	resp, _, err :=twilio.SendSMS(from, to, message, "", "")
+	resp, _, err := twilio.SendSMS(from, to, message, "", "")
 
 	if err != nil {
 		log.Error("Error sending SMS:", err)
@@ -53,6 +53,6 @@ func (a *TwilioActivity) Eval(context activity.Context) (done bool, evalError *a
 	if log.IsEnabledFor(logging.DEBUG) {
 		log.Debug("Response:", resp)
 	}
-	
+
 	return true, nil
 }

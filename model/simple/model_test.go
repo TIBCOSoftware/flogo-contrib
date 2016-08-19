@@ -3,7 +3,7 @@ package simple
 import (
 	"testing"
 
-	"github.com/TIBCOSoftware/flogo-lib/core/ext/model"
+	"github.com/TIBCOSoftware/flogo-lib/flow/model"
 )
 
 func TestRegistered(t *testing.T) {

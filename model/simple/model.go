@@ -1,10 +1,10 @@
 package simple
 
 import (
-	"github.com/TIBCOSoftware/flogo-lib/core/ext/model"
-	"github.com/TIBCOSoftware/flogo-lib/core/flow"
+	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
+	"github.com/TIBCOSoftware/flogo-lib/flow/flowdef"
+	"github.com/TIBCOSoftware/flogo-lib/flow/model"
 	"github.com/op/go-logging"
-	"github.com/TIBCOSoftware/flogo-lib/core/ext/activity"
 )
 
 // log is the default package logger
@@ -167,9 +167,9 @@ func (tb *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (not
 
 			follow := true
 
-			if linkInst.Link().Type() == flow.LtExpression {
+			if linkInst.Link().Type() == flowdef.LtExpression {
 				//todo handle error
-				follow,_ = context.EvalLink(linkInst.Link())
+				follow, _ = context.EvalLink(linkInst.Link())
 			}
 
 			if follow {
@@ -189,7 +189,7 @@ func (tb *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (not
 }
 
 // ChildDone implements model.TaskBehavior.ChildDone
-func (tb *SimpleTaskBehavior) ChildDone(context model.TaskContext, childTask *flow.Task, childDoneCode int) (done bool, doneCode int) {
+func (tb *SimpleTaskBehavior) ChildDone(context model.TaskContext, childTask *flowdef.Task, childDoneCode int) (done bool, doneCode int) {
 
 	childTasks, hasChildren := context.ChildTaskInsts()
 

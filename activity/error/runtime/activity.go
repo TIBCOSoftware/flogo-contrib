@@ -1,7 +1,7 @@
 package rest
 
 import (
-	"github.com/TIBCOSoftware/flogo-lib/core/ext/activity"
+	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
 	"github.com/op/go-logging"
 )
 
@@ -35,7 +35,7 @@ func (a *ErrorActivity) Metadata() *activity.Metadata {
 func (a *ErrorActivity) Eval(context activity.Context) (done bool, evalError *activity.Error) {
 
 	mesg := context.GetInput(ivMessage).(string)
-	data :=context.GetInput(ivData)
+	data := context.GetInput(ivData)
 
 	return false, activity.NewErrorWithData(mesg, data)
 }

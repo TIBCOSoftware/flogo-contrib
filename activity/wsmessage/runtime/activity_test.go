@@ -1,9 +1,9 @@
 package sendWSMessage
 
 import (
-	"github.com/TIBCOSoftware/flogo-lib/core/ext/activity"
-	"github.com/TIBCOSoftware/flogo-lib/test"
 	"testing"
+
+	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
 )
 
 func TestRegistered(t *testing.T) {

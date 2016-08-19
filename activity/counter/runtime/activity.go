@@ -3,7 +3,7 @@ package counter
 import (
 	"sync"
 
-	"github.com/TIBCOSoftware/flogo-lib/core/ext/activity"
+	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
 	"github.com/op/go-logging"
 )
 
@@ -11,9 +11,9 @@ import (
 var log = logging.MustGetLogger("activity-tibco-counter")
 
 const (
-	ivCounterName  = "counterName"
-	ivIncrement    = "increment"
-	ivReset        = "reset"
+	ivCounterName = "counterName"
+	ivIncrement   = "increment"
+	ivReset       = "reset"
 
 	ovValue = "value"
 )

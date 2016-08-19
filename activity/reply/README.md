@@ -1,12 +1,10 @@
-# tibco-rest
-This activity provides your flogo application the ability to reply to a REST trigger invocation.  It is used in tandem with the REST trigger.
-
+# tibco-reply
+This activity provides your flogo application the ability to reply to a trigger invocation.
 
 ## Installation
 
 ```bash
-flogo add trigger github.com/TIBCOSoftware/flogo-contrib/trigger/rest
-flogo add activity github.com/TIBCOSoftware/flogo-contrib/activity/rest-reply
+flogo add activity github.com/TIBCOSoftware/flogo-contrib/activity/reply
 ```
 
 ## Schema
@@ -32,18 +30,18 @@ Inputs and Outputs:
 ## Settings
 | Setting     | Description    |
 |:------------|:---------------|
-| code        | The HTTP response code |         
+| code        | The response code |         
 | data        | The response data |
 
 ## Configuration Examples
 ### Simple
-Configure a activity to respone with a simple http success code.
+Configure a activity to respond with a simple http success code.
 
 ```json
 {
   "id": 3,
   "type": 1,
-  "activityType": "tibco-restreply",
+  "activityType": "tibco-reply",
   "name": "Respond OK",
   "attributes": [
     { "name": "code", "value": 200 }

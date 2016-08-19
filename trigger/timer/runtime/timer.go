@@ -1,27 +1,27 @@
 package timer
 
 import (
-
-	"github.com/TIBCOSoftware/flogo-lib/core/ext/trigger"
-    "github.com/carlescere/scheduler"
-	"github.com/op/go-logging"
-	"github.com/TIBCOSoftware/flogo-lib/core/flowinst"
-	"time"
-	"strconv"
-	"fmt"
+	"context"
 	"math"
+	"strconv"
 	"strings"
+	"time"
+
+	"github.com/TIBCOSoftware/flogo-lib/core/action"
+	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
+	"github.com/carlescere/scheduler"
+	"github.com/op/go-logging"
 )
 
 // log is the default package logger
-var log = logging.MustGetLogger("trigger-tibco-mqtt")
+var log = logging.MustGetLogger("trigger-tibco-timer")
 
 type TimerTrigger struct {
-	metadata    *trigger.Metadata
-	flowStarter flowinst.Starter
-	settings    map[string]string
-	config      *trigger.Config
-	timers      map[string]*scheduler.Job
+	metadata *trigger.Metadata
+	runner   action.Runner
+	settings map[string]string
+	config   *trigger.Config
+	timers   map[string]*scheduler.Job
 }
 
 func init() {
@@ -35,11 +35,11 @@ func (t *TimerTrigger) Metadata() *trigger.Metadata {
 }
 
 // Init implements ext.Trigger.Init
-func (t *TimerTrigger) Init(flowStarter flowinst.Starter, config *trigger.Config) {
+func (t *TimerTrigger) Init(config *trigger.Config, runner action.Runner) {
 
-	t.flowStarter = flowStarter
 	t.settings = config.Settings
 	t.config = config
+	t.runner = runner
 }
 
 // Start implements ext.Trigger.Start
@@ -53,34 +53,35 @@ func (t *TimerTrigger) Start() error {
 	for _, endpoint := range endpoints {
 
 		repeating := endpoint.Settings["repeating"]
-		log.Debug("Repeating: ", repeating);
-		if(repeating == "false") {
+		log.Debug("Repeating: ", repeating)
+		if repeating == "false" {
 			t.scheduleOnce(endpoint)
-		} else if(repeating == "true") {
+		} else if repeating == "true" {
 			t.scheduleRepeating(endpoint)
 		} else {
 			log.Error("No match for repeating: ", repeating)
 		}
 		log.Debug("Settings repeating: ", endpoint.Settings["repeating"])
-		log.Debugf("Processing endpoint: %s", endpoint.FlowURI)
+		log.Debugf("Processing endpoint: %s", endpoint.ActionURI)
 	}
 
 	return nil
 }
 
 // Stop implements ext.Trigger.Stop
-func (t *TimerTrigger) Stop() {
+func (t *TimerTrigger) Stop() error {
 
 	log.Debug("Stopping endpoints")
 	for k, v := range t.timers {
-		fmt.Println("k:", k, "v:", v)
-		if(t.timers[k].IsRunning()) {
+		if t.timers[k].IsRunning() {
 			log.Debug("Stopping timer for : ", k)
-			v.Quit <- true;
+			v.Quit <- true
 		} else {
 			log.Debugf("Timer: %s is not running", k)
 		}
 	}
+
+	return nil
 }
 
 func (t *TimerTrigger) scheduleOnce(endpoint *trigger.EndpointConfig) {
@@ -96,11 +97,13 @@ func (t *TimerTrigger) scheduleOnce(endpoint *trigger.EndpointConfig) {
 
 	fn := func() {
 		log.Debug("-- Starting \"Once\" timer process")
-		id, err := t.flowStarter.StartFlowInstance(endpoint.FlowURI, nil, nil, nil)
+
+		action := action.Get(endpoint.ActionType)
+		_, _, err := t.runner.Run(context.Background(), action, endpoint.ActionURI, nil)
+
 		if err != nil {
-			log.Error("Error starting flow: ", err.Error())
+			log.Error("Error starting action: ", err.Error())
 		}
-		log.Debug("Flow ID: " +id)
 		timerJob.Quit <- true
 	}
 
@@ -109,7 +112,7 @@ func (t *TimerTrigger) scheduleOnce(endpoint *trigger.EndpointConfig) {
 		log.Error("Error scheduleOnce flo err: ", err.Error())
 	}
 
-	t.timers[endpoint.FlowURI] = timerJob
+	t.timers[endpoint.ActionType+"-"+endpoint.ActionURI] = timerJob
 }
 
 func (t *TimerTrigger) scheduleRepeating(endpoint *trigger.EndpointConfig) {
@@ -118,16 +121,17 @@ func (t *TimerTrigger) scheduleRepeating(endpoint *trigger.EndpointConfig) {
 	seconds := getInitialStartInSeconds(endpoint)
 
 	fn2 := func() {
-		log.Debug("-- Starting \"Repeating\" (repeat) timer process")
-		id, err := t.flowStarter.StartFlowInstance(endpoint.FlowURI, nil, nil, nil)
+		log.Debug("-- Starting \"Repeating\" (repeat) timer action")
+
+		action := action.Get(endpoint.ActionType)
+		_, _, err := t.runner.Run(context.Background(), action, endpoint.ActionURI, nil)
+
 		if err != nil {
 			log.Error("Error starting flow: ", err.Error())
 		}
-
-		log.Debug("Flow ID: " +id)
 	}
 
-	if(endpoint.Settings["notImmediate"] == "false") {
+	if endpoint.Settings["notImmediate"] == "false" {
 		t.scheduleJobEverySecond(endpoint, fn2)
 	} else {
 
@@ -147,23 +151,23 @@ func (t *TimerTrigger) scheduleRepeating(endpoint *trigger.EndpointConfig) {
 			log.Error("timerJob is nil")
 		}
 
-		t.timers[endpoint.FlowURI] = timerJob
+		t.timers[endpoint.ActionType+"-"+endpoint.ActionURI] = timerJob
 	}
 }
 
-func getInitialStartInSeconds(endpoint *trigger.EndpointConfig) (int) {
+func getInitialStartInSeconds(endpoint *trigger.EndpointConfig) int {
 
-	if(endpoint.Settings["startDate"] == "") {
-		return 0;
+	if endpoint.Settings["startDate"] == "" {
+		return 0
 	}
 
 	layout := time.RFC3339
 	startDate := endpoint.Settings["startDate"]
 	idx := strings.LastIndex(startDate, "Z")
-	timeZone := startDate[idx + 1:len(startDate)]
+	timeZone := startDate[idx+1 : len(startDate)]
 	log.Debug("Time Zone: ", timeZone)
 	startDate = strings.TrimSuffix(startDate, timeZone)
-	log.Debug("startDate: ",  startDate)
+	log.Debug("startDate: ", startDate)
 
 	// is timezone negative
 	var isNegative bool
@@ -181,19 +185,19 @@ func getInitialStartInSeconds(endpoint *trigger.EndpointConfig) (int) {
 	var minutes int
 
 	sliceArray := strings.Split(timeZone, ":")
-	if(len(sliceArray) != 2) {
+	if len(sliceArray) != 2 {
 		log.Error("Time zone has wrong format: ", timeZone)
 	} else {
 		hour, _ = strconv.Atoi(sliceArray[0])
 		minutes, _ = strconv.Atoi(sliceArray[1])
 
-		log.Debug("Duration hour: ", time.Duration(hour) * time.Hour)
-		log.Debug("Duration minutes: ", time.Duration(minutes) * time.Minute)
+		log.Debug("Duration hour: ", time.Duration(hour)*time.Hour)
+		log.Debug("Duration minutes: ", time.Duration(minutes)*time.Minute)
 	}
 
 	hours, _ := strconv.Atoi(timeZone)
 	log.Debug("hours: ", hours)
-	if(isNegative) {
+	if isNegative {
 		log.Debug("Adding to triggerDate")
 		triggerDate = triggerDate.Add(time.Duration(hour) * time.Hour)
 		triggerDate = triggerDate.Add(time.Duration(minutes) * time.Minute)
@@ -220,20 +224,20 @@ func (j *PrintJob) Run() error {
 	return nil
 }
 
-func (t *TimerTrigger) scheduleJobEverySecond (endpoint *trigger.EndpointConfig, fn func()) {
+func (t *TimerTrigger) scheduleJobEverySecond(endpoint *trigger.EndpointConfig, fn func()) {
 
-	var interval int = 0;
-	if(endpoint.Settings["seconds"] != "") {
+	var interval int = 0
+	if endpoint.Settings["seconds"] != "" {
 		seconds, _ := strconv.Atoi(endpoint.Settings["seconds"])
 		interval = interval + seconds
 	}
-	if(endpoint.Settings["minutes"] != "") {
+	if endpoint.Settings["minutes"] != "" {
 		minutes, _ := strconv.Atoi(endpoint.Settings["minutes"])
-		interval = interval + minutes * 60
+		interval = interval + minutes*60
 	}
-	if(endpoint.Settings["hours"] != "") {
+	if endpoint.Settings["hours"] != "" {
 		hours, _ := strconv.Atoi(endpoint.Settings["hours"])
-		interval = interval + hours * 3600
+		interval = interval + hours*3600
 	}
 
 	log.Debug("Repeating seconds: ", interval)
@@ -245,5 +249,6 @@ func (t *TimerTrigger) scheduleJobEverySecond (endpoint *trigger.EndpointConfig,
 	if timerJob == nil {
 		log.Error("timerJob is nil")
 	}
-	t.timers[endpoint.FlowURI + "_r"] = timerJob
+
+	t.timers["r:"+endpoint.ActionType+"-"+endpoint.ActionURI] = timerJob
 }

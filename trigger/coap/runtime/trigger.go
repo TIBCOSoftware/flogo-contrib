@@ -2,19 +2,17 @@ package coap
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"net"
 	"net/url"
 	"strings"
-	"sync"
 
+	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
-	"github.com/TIBCOSoftware/flogo-lib/core/ext/trigger"
-	"github.com/TIBCOSoftware/flogo-lib/core/flowinst"
-	"github.com/TIBCOSoftware/flogo-lib/util"
+	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/dustin/go-coap"
 	"github.com/op/go-logging"
-	"encoding/json"
 )
 
 const (
@@ -33,10 +31,10 @@ type StartFunc func(payload string) (string, bool)
 
 // CoapTrigger CoAP trigger struct
 type CoapTrigger struct {
-	metadata    *trigger.Metadata
-	flowStarter flowinst.Starter
-	resources   map[string]*CoapResource
-	server      *Server
+	metadata  *trigger.Metadata
+	runner    action.Runner
+	resources map[string]*CoapResource
+	server    *Server
 }
 
 type CoapResource struct {
@@ -47,7 +45,8 @@ type CoapResource struct {
 
 type EndpointCfg struct {
 	method      string
-	flowURI     string
+	actionType  string
+	actionURI   string
 	autoIdReply bool
 }
 
@@ -62,9 +61,9 @@ func (t *CoapTrigger) Metadata() *trigger.Metadata {
 }
 
 // Init implements ext.Trigger.Init
-func (t *CoapTrigger) Init(flowStarter flowinst.Starter, config *trigger.Config) {
+func (t *CoapTrigger) Init(config *trigger.Config, actionRunner action.Runner) {
 
-	t.flowStarter = flowStarter
+	t.runner = actionRunner
 	mux := coap.NewServeMux()
 	mux.Handle("/.well-known/core", coap.FuncHandler(t.handleDiscovery))
 
@@ -78,7 +77,7 @@ func (t *CoapTrigger) Init(flowStarter flowinst.Starter, config *trigger.Config)
 			path := endpoint.Settings["path"]
 			autoIdReply, _ := data.CoerceToBoolean(endpoint.Settings["autoIdReply"])
 
-			log.Debugf("CoAP Trigger: Registering endpoint [%s: %s] for Flow: %s", method, path, endpoint.FlowURI)
+			log.Debugf("CoAP Trigger: Registering endpoint [%s: %s] for Action: [%s:%s]", method, path, endpoint.ActionType, endpoint.ActionURI)
 			if autoIdReply {
 				log.Debug("CoAP Trigger: AutoIdReply Enabled")
 			}
@@ -90,9 +89,9 @@ func (t *CoapTrigger) Init(flowStarter flowinst.Starter, config *trigger.Config)
 				t.resources[path] = resource
 			}
 
-			resource.endpoints[method] = &EndpointCfg{flowURI: endpoint.FlowURI, autoIdReply: autoIdReply}
+			resource.endpoints[method] = &EndpointCfg{actionType: endpoint.ActionType, actionURI: endpoint.ActionURI, autoIdReply: autoIdReply}
 
-			mux.Handle(path, newStartFlowHandler(t, resource))
+			mux.Handle(path, newActionHandler(t, resource))
 
 		} else {
 			panic(fmt.Sprintf("Invalid endpoint: %v", endpoint))
@@ -111,8 +110,8 @@ func (t *CoapTrigger) Start() error {
 }
 
 // Stop implements trigger.Trigger.Start
-func (t *CoapTrigger) Stop() {
-	t.server.Stop()
+func (t *CoapTrigger) Stop() error {
+	return t.server.Stop()
 }
 
 // IDResponse id response object
@@ -171,7 +170,7 @@ func (t *CoapTrigger) handleDiscovery(conn *net.UDPConn, addr *net.UDPAddr, msg 
 	return res
 }
 
-func newStartFlowHandler(rt *CoapTrigger, resource *CoapResource) coap.Handler {
+func newActionHandler(rt *CoapTrigger, resource *CoapResource) coap.Handler {
 
 	return coap.FuncHandler(func(conn *net.UDPConn, addr *net.UDPAddr, msg *coap.Message) *coap.Message {
 
@@ -217,27 +216,29 @@ func newStartFlowHandler(rt *CoapTrigger, resource *CoapResource) coap.Handler {
 		//todo handle error
 		startAttrs, _ := rt.metadata.OutputsToAttrs(data, false)
 
-		rh := &AsyncReplyHandler{addr: addr.String(), msg: msg}
-		rh.addr2 = addr
-		rh.conn = conn
+		//rh := &AsyncReplyHandler{addr: addr.String(), msg: msg}
+		//rh.addr2 = addr
+		//rh.conn = conn
 
-		//todo: implement reply handler?
-		id, err := rt.flowStarter.StartFlowInstance(endpointCfg.flowURI, startAttrs, rh, nil)
+		action := action.Get(endpointCfg.actionType)
+
+		context := trigger.NewContext(context.Background(), startAttrs)
+		_, _, err := rt.runner.Run(context, action, endpointCfg.actionURI, nil)
 
 		if err != nil {
-			//todo determing if 404 or 500
+			//todo determining if 404 or 500
 			res := &coap.Message{
 				Type:      coap.Reset,
 				Code:      coap.NotFound,
 				MessageID: msg.MessageID,
 				Token:     msg.Token,
-				Payload:   []byte(fmt.Sprintf("Flow '%s' not found", endpointCfg.flowURI)),
+				Payload:   []byte(fmt.Sprintf("Flow '%s' not found", endpointCfg.actionURI)),
 			}
 
 			return res
 		}
 
-		log.Debugf("Started Flow: %s", id)
+		log.Debugf("Ran Action: %s", endpointCfg.actionType)
 
 		//var payload []byte
 
@@ -261,66 +262,6 @@ func newStartFlowHandler(rt *CoapTrigger, resource *CoapResource) coap.Handler {
 
 		return nil
 	})
-}
-
-type SyncReplyHandler struct {
-	wg  sync.WaitGroup
-	msg *coap.Message
-}
-
-func (rh *SyncReplyHandler) Reply(replyData map[string]string) {
-	defer rh.wg.Done()
-
-}
-
-func (rh *SyncReplyHandler) GetReply() *coap.Message {
-	rh.wg.Wait()
-	return nil
-}
-
-type AsyncReplyHandler struct {
-	msg  *coap.Message
-	addr string
-
-	conn  *net.UDPConn
-	addr2 *net.UDPAddr
-}
-
-func (rh *AsyncReplyHandler) Reply(replyCode int, replyData interface{}) {
-
-	//c, err := coap.Dial("udp", rh.addr)
-	//if err != nil {
-	//	log.Errorf("Error dialing: %v", err)
-	//	return
-	//}
-
-	payload, err := json.Marshal(replyData)
-
-	if err != nil {
-		log.Errorf("Unable to marshall replyData: %v", err)
-		return
-	}
-
-	res := coap.Message{
-		Type:      coap.Confirmable,
-		Code:      coap.Content,
-		MessageID: rh.msg.MessageID,
-		Token:     rh.msg.Token,
-		Payload:   payload,
-	}
-	res.SetOption(coap.ContentFormat, coap.TextPlain)
-
-	util.HandlePanic("CoAP Reply", nil)
-	err = coap.Transmit(rh.conn, rh.addr2, res)
-
-	//_, err = c.Send(res)
-	if err != nil {
-		log.Errorf("Error sending response: %v", err)
-	}
-}
-
-func (rh *AsyncReplyHandler) Release() {
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////

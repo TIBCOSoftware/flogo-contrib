@@ -1,13 +1,12 @@
 package app
 
 import (
+	"strings"
 	"sync"
 
-	"github.com/TIBCOSoftware/flogo-lib/core/ext/activity"
-	"github.com/op/go-logging"
-	"strings"
-	"github.com/TIBCOSoftware/flogo-lib/core/app"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
+	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
+	"github.com/op/go-logging"
 )
 
 // log is the default package logger
@@ -15,9 +14,9 @@ var log = logging.MustGetLogger("activity-tibco-app")
 
 const (
 	ivAttrName = "attribute"
-	ivOp = "operation"
-	ivType  = "type"
-	ivValue = "value"
+	ivOp       = "operation"
+	ivType     = "type"
+	ivValue    = "value"
 
 	ovValue = "value"
 )
@@ -44,39 +43,38 @@ func (a *AppActivity) Eval(context activity.Context) (done bool, evalError *acti
 
 	attrName := context.GetInput(ivAttrName).(string)
 	op := strings.ToUpper(context.GetInput(ivOp).(string)) //ADD,UPDATE,GET
-	
-	
+
 	switch op {
 	case "ADD":
 		dt, ok := data.ToTypeEnum(strings.ToLower(context.GetInput(ivType).(string)))
 
 		if !ok {
-			return false,  activity.NewError("Unsupported Type: " + context.GetInput(ivType).(string))
+			return false, activity.NewError("Unsupported Type: " + context.GetInput(ivType).(string))
 		}
 
 		val := context.GetInput(ivValue)
 		//data.CoerceToValue(val, dt)
-		
-		app.GetContext().AddAttr(attrName, dt, val)
+
+		data.GetGlobalScope().AddAttr(attrName, dt, val)
 		context.SetOutput(ovValue, val)
 	case "GET":
-		val, ok := app.GetContext().GetAttrValue(attrName)
-		
+		typedVal, ok := data.GetGlobalScope().GetAttr(attrName)
+
 		if !ok {
-			return false,  activity.NewError("Attribute not defined: " + attrName)
+			return false, activity.NewError("Attribute not defined: " + attrName)
 		}
-		
-		context.SetOutput(ovValue, val)
+
+		context.SetOutput(ovValue, typedVal.Value)
 	case "UPDATE":
 
 		val := context.GetInput(ivValue)
 		//data.CoerceToValue(val, dt)
-		
-		app.GetContext().SetAttrValue(attrName, val)
+
+		data.GetGlobalScope().SetAttrValue(attrName, val)
 		context.SetOutput(ovValue, val)
 	default:
 		return false, activity.NewError("Unsupported Op: " + op)
 	}
-	
+
 	return true, nil
 }

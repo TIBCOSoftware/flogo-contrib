@@ -1,8 +1,10 @@
-{
-  "name": "tibco-restreply",
+package rest
+
+var jsonMetadata = `{
+  "name": "tibco-reply",
   "version": "0.0.1",
-  "title": "REST Reply Activity",
-  "description": "Simple REST Reply Activity",
+  "title": "Reply Activity",
+  "description": "Simple Reply Activity",
   "inputs":[
     {
       "name": "code",
@@ -17,3 +19,4 @@
   "outputs": [
   ]
 }
+`
