@@ -1,7 +1,8 @@
 FROM scratch
 
-VOLUME  /flogo/contrib
-COPY activity /flogo/contrib/
-COPY model /flogo/contrib/
-COPY trigger /flogo/contrib/
-COPY README.md /flogo/contrib/
+VOLUME  /flogo/flogo-contrib
+CMD ["/bin/true"]
+COPY README.md /flogo/flogo-contrib/
+COPY activity/ /flogo/flogo-contrib/activity
+COPY model/ /flogo/flogo-contrib/model
+COPY trigger/ /flogo/flogo-contrib/trigger
