@@ -50,4 +50,5 @@ _testmain.go
 *.prof
 
 tags
+.vscode/symbols.json
 
