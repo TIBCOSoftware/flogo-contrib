@@ -7,8 +7,8 @@ readonly SCRIPT_ROOT=$(
   pwd
 )
 source ${SCRIPT_ROOT}/init.sh
-
 # Build flogo/flogo-web docker image
 pushd ${BUILD_ROOT}
-docker::build_and_push flogo/flogo-contrib
+docker::build flogo/flogo-contrib
+# docker::copy_tag_and_push flogo/flogo-contrib pdhar/flogo-contrib
 popd
