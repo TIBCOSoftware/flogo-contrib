@@ -1,4 +1,6 @@
 sudo: required
+services:
+  - docker
 script: ./scripts/release-build.sh
 after_success:
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
