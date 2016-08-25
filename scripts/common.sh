@@ -11,7 +11,7 @@ common::envvars() {
     BUILD_TYPE_ID=${TRAVIS_BUILD_ID}
   fi
   if [ -z "${BUILD_URL}" -a -n "${TRAVIS_BUILD_ID}" ]; then
-    BUILD_URL="https://travis-ci.org/${TRAVIS_REPO_SLUG}/builds/${TRAVIS_BUILD_ID}"
+    BUILD_URL="https://travis-ci.com/${TRAVIS_REPO_SLUG}/builds/${TRAVIS_BUILD_ID}"
   fi
   if [ -z "${BUILD_GIT_COMMIT}" -a -n "${TRAVIS_COMMIT}" ]; then
     BUILD_GIT_COMMIT=${TRAVIS_COMMIT}
