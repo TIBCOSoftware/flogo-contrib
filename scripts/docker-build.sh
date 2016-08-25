@@ -5,8 +5,8 @@ docker::build_and_push() {
 
   local image_name="${1}"
   local file_name="${2:-Dockerfile}"
-  local bid="$BID"
-  local branch="${TRAVIS_BRANCH}"
+  local bid="${BUILD_NUMBER}"
+  local branch="${BUILD_BRANCH}"
 
   docker::build_file "${file_name}" "${image_name}" "${bid}" && \
   docker::push_and_tag "${image_name}" "${bid}" "${branch}"
@@ -17,22 +17,25 @@ docker::build() {
 }
 
 docker::build_file() {
+  common::envvars
+
   local file_name="$1"
   local image_name="$2"
-  local bid="$3"
-  local branch="${TRAVIS_BRANCH}"
-   
-  local buildTypeId="${TRAVIS_BUILD_ID}"
+  local bid="${3:-${BUILD_NUMBER}}"
+  local branch="${BUILD_BRANCH}"
+  local buildUrl="${BUILD_URL}" 
+  local gitUrl="${BUILD_GIT_URL}"
+  local buildTypeId="${BUILD_TYPE_ID}"
+  local gitCommit="${BUILD_GIT_COMMIT}"
 
   if [ -n "$buildTypeId" ]; then
       cp ${file_name} ${file_name}_backup
-      GIT_REPO=$(git config --get remote.origin.url)
       echo "" >> ${file_name}
       echo "LABEL com.tibco.flogo.ci.buildNumber=\"${bid}\" \\" >> ${file_name}
       echo " com.tibco.flogo.ci.buildTypeId=\"${buildTypeId}\" \\" >> ${file_name}
-      echo " com.tibco.flogo.ci.url=\"https://travis-ci.org/${TRAVIS_REPO_SLUG}/builds/${buildTypeId}\"" >> ${file_name}
+      echo " com.tibco.flogo.ci.url=\"${buildUrl}\"" >> ${file_name}
       if [ -n "${branch}" ]; then
-          echo "LABEL com.tibco.flogo.git.repo=\"$GIT_REPO\" com.tibco.flogo.git.commit=\"${TRAVIS_COMMIT}\"" >> ${file_name}
+          echo "LABEL com.tibco.flogo.git.repo=\"${gitUrl}\" com.tibco.flogo.git.commit=\"${gitCommit}\"" >> ${file_name}
       fi
   fi
 
@@ -72,9 +75,9 @@ docker::pull_and_tag() {
 docker::push_and_tag() {
   common::envvars
   local image_name="$1"
-  local bid="$2"
+  local bid="${2:-${BUILD_NUMBER}}"
   local docker_registry=$( [ -n "${DOCKER_REGISTRY}" ] && echo "${DOCKER_REGISTRY}/" || echo "" ) 
-  local branch="${TRAVIS_BRANCH}"
+  local branch="${BUILD_BRANCH}"
   local latest='latest'
   if [[ -n ${branch} && ( ${branch} != 'master' ) ]]; then
     latest="latest-${branch}"
@@ -100,9 +103,9 @@ docker::copy_tag_and_push() {
   common::envvars
   local src_image_name="$1"
   local dest_image_name="$2"
-  local bid="${3:-${BID}}"
+  local bid="${3:-${BUILD_NUMBER}}"
   local docker_registry=$( [ -n "${DOCKER_REGISTRY}" ] && echo "${DOCKER_REGISTRY}/" || echo "" ) 
-  local branch="${TRAVIS_BRANCH}"
+  local branch="${BUILD_BRANCH}"
   local latest='latest'
   # non-branch-aware TeamCity jobs won't have $IS_MASTER at all
   if [[ -n ${branch} && ( ${branch} != 'master' ) ]]; then

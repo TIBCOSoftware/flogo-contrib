@@ -3,8 +3,8 @@ services:
   - docker
 script: ./scripts/release-build.sh
 after_success:
-  - if [ "$TRAVIS_BRANCH" == "master" ]; then
+  - if [ "${TRAVIS_BRANCH}" == "master" ]; then
     docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}";
-    source ./scripts/init.sh
-    docker::copy_tag_and_push flogo/flogo-contrib pdhar/flogo-contrib
+    docker tag flogo/flogo-contrib:
+    docker push pdhar/flogo-contrib;
     fi
