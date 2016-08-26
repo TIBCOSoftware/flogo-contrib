@@ -2,7 +2,7 @@ sudo: required
 services:
   - docker
 cache:
-  bundler: true
+  bundler: false
   directories:
   - .cache          # images.txt
 script: ./release-build.sh
