@@ -89,7 +89,7 @@ docker::push_and_tag() {
     docker tag ${image_name}:${bid} ${image_name}:${latest} && \
     docker tag ${image_name}:${bid} ${docker_registry}${image_name}:${bid} && \
     docker tag ${image_name}:${bid} ${docker_registry}${image_name}:${latest} && \
-    docker images | grep ${image_name} >> images.txt && \
+    docker images | grep ${image_name} >> ${BUILD_CACHE}/images.txt && \
     docker push ${docker_registry}${image_name}:${latest} && \
     docker push ${docker_registry}${image_name}:${bid} && \
     docker rmi ${docker_registry}${image_name}:${latest} && \

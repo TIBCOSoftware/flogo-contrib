@@ -51,4 +51,5 @@ _testmain.go
 
 tags
 .vscode/symbols.json
+.build-cache
 

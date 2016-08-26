@@ -7,5 +7,5 @@ readonly BUILD_ROOT=$(
   pwd
 )
 
-source "${BUILD_ROOT}/scripts/docker-build.sh"
 source "${BUILD_ROOT}/scripts/common.sh"
+source "${BUILD_ROOT}/scripts/docker-build.sh"
