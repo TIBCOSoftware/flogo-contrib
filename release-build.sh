@@ -6,7 +6,7 @@ readonly SCRIPT_ROOT=$(
   cd "${script_root}"
   pwd
 )
-source ${SCRIPT_ROOT}/init.sh
+source ${SCRIPT_ROOT}/scripts/init.sh
 # Build flogo/flogo-web docker image
 pushd ${BUILD_ROOT}
 docker::build flogo/flogo-contrib
