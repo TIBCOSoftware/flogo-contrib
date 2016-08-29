@@ -9,7 +9,7 @@ cache:
 git:
     submodules: false
 before_install:
-  - echo -e "machine github.com\n  login ci-user\n  password ${GITHUB_USER_TOKEN}" >> ~/.netrc
+  - echo -e "machine github.com\n  login ci-user\n  password ${GITHUB_USER_TOKEN}" >> ${HOME}/.netrc
 script: "./release-build.sh"
 after_success:
   - if [ "${TRAVIS_BRANCH}" == "master" ]; then
@@ -17,3 +17,5 @@ after_success:
     source ./submodules/flogo-cicd/scripts/init.sh ;
     docker::copy_tag_and_push flogo/flogo-contrib pdhar/flogo-contrib;
     fi
+after_script:
+  - [ -f "${HOME}/.netrc" ] && rm -f ${HOME}/.netrc
