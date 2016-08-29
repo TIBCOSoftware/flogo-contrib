@@ -5,6 +5,9 @@ cache:
   bundler: false
   directories:
   - .cache          # images.txt
+# Handle git submodules yourself
+git:
+    submodules: false
 before_install:
   - echo -e "machine github.com\n  login ci-user\n  password ${GITHUB_USER_TOKEN}" >> ~/.netrc
 script: "./release-build.sh"
