@@ -8,7 +8,7 @@ readonly SCRIPT_ROOT=$(
 )
 if [ -d "${SCRIPT_ROOT}/submodules/flogo-cicd" ]; then
   rm -rf ${SCRIPT_ROOT}/submodules/flogo-cicd
-  git submodule update --init --remote -- submodules/flogo-cicd
+  git submodule update --init --remote --recursive
   source ${SCRIPT_ROOT}/submodules/flogo-cicd/scripts/init.sh
   # Build flogo/flogo-contrib docker image
   pushd ${SCRIPT_ROOT}
