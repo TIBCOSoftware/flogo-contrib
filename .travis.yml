@@ -5,7 +5,9 @@ cache:
   bundler: false
   directories:
   - .cache          # images.txt
-script: ./release-build.sh
+before_install:
+  - echo -e "machine github.com\n  login ci-user\n  password ${GITHUB_USER_TOKEN}" >> ~/.netrc
+script: "./release-build.sh"
 after_success:
   - if [ "${TRAVIS_BRANCH}" == "master" ]; then
     docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}";
