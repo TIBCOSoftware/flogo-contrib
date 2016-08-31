@@ -53,4 +53,5 @@ tags
 .vscode/symbols.json
 .build-cache
 submodules/flogo-cicd/.build-cache
+./Dockerfile
 
