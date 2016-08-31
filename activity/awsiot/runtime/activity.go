@@ -44,7 +44,7 @@ func (a *AwsIoT) Metadata() *activity.Metadata {
 }
 
 // Eval implements api.Activity.Eval - Invokes a Aws Iot Shadow Update
-func (a *AwsIoT) Eval(context activity.Context) (done bool, evalError *activity.Error) {
+func (a *AwsIoT) Eval(context activity.Context) (done bool, err error) {
 
 	thingName := context.GetInput(ivThingName).(string)
 	awsEndpoint := context.GetInput(ivAwsEndpoint).(string)

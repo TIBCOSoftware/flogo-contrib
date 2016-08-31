@@ -34,7 +34,7 @@ func (a *TwilioActivity) Metadata() *activity.Metadata {
 }
 
 // Eval implements activity.Activity.Eval
-func (a *TwilioActivity) Eval(context activity.Context) (done bool, evalError *activity.Error) {
+func (a *TwilioActivity) Eval(context activity.Context) (done bool, err error) {
 
 	accountSID := context.GetInput(ivAcctSID).(string)
 	authToken := context.GetInput(ivAuthToken).(string)

@@ -1,7 +1,6 @@
 package simple
 
 import (
-	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
 	"github.com/TIBCOSoftware/flogo-lib/flow/flowdef"
 	"github.com/TIBCOSoftware/flogo-lib/flow/model"
 	"github.com/op/go-logging"
@@ -92,7 +91,7 @@ func (tb *SimpleTaskBehavior) Enter(context model.TaskContext, enterCode int) (e
 }
 
 // Eval implements model.TaskBehavior.Eval
-func (tb *SimpleTaskBehavior) Eval(context model.TaskContext, evalCode int) (done bool, doneCode int, activityError *activity.Error) {
+func (tb *SimpleTaskBehavior) Eval(context model.TaskContext, evalCode int) (done bool, doneCode int, err error) {
 
 	task := context.Task()
 	log.Debugf("Task Eval: %s\n", task)
@@ -131,7 +130,7 @@ func (tb *SimpleTaskBehavior) Eval(context model.TaskContext, evalCode int) (don
 }
 
 // PostEval implements model.TaskBehavior.PostEval
-func (tb *SimpleTaskBehavior) PostEval(context model.TaskContext, evalCode int, data interface{}) (done bool, doneCode int, activityError *activity.Error) {
+func (tb *SimpleTaskBehavior) PostEval(context model.TaskContext, evalCode int, data interface{}) (done bool, doneCode int, err error) {
 
 	log.Debugf("Task PostEval\n")
 

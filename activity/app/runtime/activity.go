@@ -39,7 +39,7 @@ func (a *AppActivity) Metadata() *activity.Metadata {
 }
 
 // Eval implements activity.Activity.Eval
-func (a *AppActivity) Eval(context activity.Context) (done bool, evalError *activity.Error) {
+func (a *AppActivity) Eval(context activity.Context) (done bool, err error) {
 
 	attrName := context.GetInput(ivAttrName).(string)
 	op := strings.ToUpper(context.GetInput(ivOp).(string)) //ADD,UPDATE,GET

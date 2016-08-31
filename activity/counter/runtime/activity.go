@@ -37,7 +37,7 @@ func (a *CounterActivity) Metadata() *activity.Metadata {
 }
 
 // Eval implements activity.Activity.Eval
-func (a *CounterActivity) Eval(context activity.Context) (done bool, evalError *activity.Error) {
+func (a *CounterActivity) Eval(context activity.Context) (done bool, err error) {
 
 	counterName := context.GetInput(ivCounterName).(string)
 

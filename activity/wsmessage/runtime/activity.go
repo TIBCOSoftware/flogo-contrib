@@ -28,7 +28,7 @@ func (a *MyActivity) Metadata() *activity.Metadata {
 }
 
 // Eval implements activity.Activity.Eval - Sends a message to a WebSocket enabled server like TIBCO eFTL
-func (a *MyActivity) Eval(context activity.Context) (done bool, evalError *activity.Error) {
+func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 
 	// Get the activity data from the context
 	wsHost := context.GetInput("Server").(string)

@@ -32,7 +32,7 @@ func (a *ReplyActivity) Metadata() *activity.Metadata {
 }
 
 // Eval implements api.Activity.Eval - Invokes a REST Operation
-func (a *ReplyActivity) Eval(context activity.Context) (done bool, evalError *activity.Error) {
+func (a *ReplyActivity) Eval(context activity.Context) (done bool, err error) {
 
 	code := context.GetInput(ivCode).(int)
 	data := context.GetInput(ivData)

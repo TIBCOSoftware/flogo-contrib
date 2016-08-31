@@ -60,7 +60,7 @@ func (a *CoAPActivity) Metadata() *activity.Metadata {
 //todo enhance CoAP client code
 
 // Eval implements api.Activity.Eval - Invokes a REST Operation
-func (a *CoAPActivity) Eval(context activity.Context) (done bool, evalError *activity.Error) {
+func (a *CoAPActivity) Eval(context activity.Context) (done bool, err error) {
 
 	method, ok := getStringValue(context, ivMethod, nil, true)
 
