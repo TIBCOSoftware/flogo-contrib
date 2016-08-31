@@ -29,7 +29,8 @@
       {
         "name": "method",
         "type": "string",
-        "required" : true
+        "required" : true,
+        "allowed" : ["GET", "POST", "PUT", "PATCH", "DELETE"]
       },
       {
         "name": "path",
