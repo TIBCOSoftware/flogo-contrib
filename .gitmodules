@@ -1,3 +1,0 @@
-[submodule "submodules/flogo-cicd"]
-	path = submodules/flogo-cicd
-	url = https://github.com/TIBCOSoftware/flogo-cicd.git
