@@ -3,8 +3,8 @@ package awsiot
 var jsonMetadata = `{
   "name": "tibco-awsiot",
   "version": "0.0.1",
-  "title": "AWS IoT Activity",
-  "description": "Simple AWS IoT Activity",
+  "title": "AWS IoT",
+  "description": "Simple AWS IoT",
   "inputs":[
     {
       "name": "thingName",

@@ -1,7 +1,7 @@
 {
   "name": "tibco-rest",
   "version": "0.0.1",
-  "titile": "REST Trigger",
+  "titile": "REST",
   "description": "Simple REST Trigger",
   "settings": [
     {
