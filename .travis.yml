@@ -12,9 +12,13 @@ git:
 # Do a github login using token
 before_install:
   - "echo -e \"machine github.com\n  login ci-user\n  password ${GITHUB_USER_TOKEN}\" >> ${HOME}/.netrc"
-
-script: "./release-build.sh"
-
+script: 
+  - find .
+  - rm -rf *
+  - git clone https://github.com/TIBCOSoftware/flogo-cicd.git flogo-cicd
+  - pushd flogo-cicd/docker/flogo-contrib
+  - ./build-flogo-contrib.sh
+  - popd
 after_script:
   - "[ -f \"${HOME}/.netrc\" ] && rm -f ${HOME}/.netrc"
 
