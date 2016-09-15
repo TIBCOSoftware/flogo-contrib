@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
-	"github.com/TIBCOSoftware/flogo-lib/test"
+	"github.com/TIBCOSoftware/flogo-lib/flow/test"
 )
 
 const reqPostStr string = `{

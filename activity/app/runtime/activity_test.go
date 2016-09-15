@@ -6,7 +6,7 @@ import (
 
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
-	"github.com/TIBCOSoftware/flogo-lib/test"
+	"github.com/TIBCOSoftware/flogo-lib/flow/test"
 )
 
 func TestRegistered(t *testing.T) {
