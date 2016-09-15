@@ -11,7 +11,7 @@ var log = logging.MustGetLogger("model-tibco-simple")
 
 func init() {
 	m := model.New("tibco-simple")
-	m.RegisterFlowBehavior(1, &SimpleFlowBehavior{})
+	m.RegisterFlowBehavior(&SimpleFlowBehavior{})
 	m.RegisterTaskBehavior(1, &SimpleTaskBehavior{})
 
 	model.Register(m)
