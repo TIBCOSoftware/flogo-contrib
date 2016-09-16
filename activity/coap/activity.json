@@ -1,7 +1,7 @@
 {
   "name": "tibco-coap",
   "version": "0.0.1",
-  "title": "CoAP Activity",
+  "title": "Send CoAP Message",
   "description": "Simple CoAP Activity",
   "inputs":[
     {

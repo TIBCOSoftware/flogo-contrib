@@ -1,7 +1,7 @@
 {
   "name": "tibco-counter",
   "version": "0.0.1",
-  "title": "Counter",
+  "title": "Increment Counter",
   "description": "Simple Global Counter Activity",
   "inputs":[
     {
