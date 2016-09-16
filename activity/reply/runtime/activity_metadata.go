@@ -3,7 +3,7 @@ package rest
 var jsonMetadata = `{
   "name": "tibco-reply",
   "version": "0.0.1",
-  "title": "Reply Activity",
+  "title": "Reply",
   "description": "Simple Reply Activity",
   "inputs":[
     {

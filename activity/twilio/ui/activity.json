@@ -1,7 +1,7 @@
 {
   "name": "tibco-twilio",
   "version": "0.0.1",
-  "title": "Twilio Activity",
+  "title": "Twilio",
   "description": "Simple Twilio Activity",
   "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/twilio",
   "inputs":[

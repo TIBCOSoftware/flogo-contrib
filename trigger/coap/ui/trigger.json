@@ -1,7 +1,7 @@
 {
   "name": "tibco-coap",
   "version": "0.0.1",
-  "title": "CoAP Trigger",
+  "title": "CoAP",
   "description": "Simple CoAP Trigger",
   "settings": [
     {

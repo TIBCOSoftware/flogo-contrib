@@ -1,7 +1,7 @@
 {
   "name": "tibco-app",
   "version": "0.0.1",
-  "title": "App Activity",
+  "title": "App Global Attributes",
   "description": "Simple Global App Activity",
   "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/app",
   "inputs":[

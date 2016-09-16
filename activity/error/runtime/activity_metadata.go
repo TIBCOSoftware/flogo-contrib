@@ -3,7 +3,7 @@ package rest
 var jsonMetadata = `{
   "name": "tibco-error",
   "version": "0.0.1",
-  "title": "Error Activity",
+  "title": "Error",
   "description": "Simple Error Activity",
   "inputs":[
     {

@@ -3,7 +3,7 @@ package sendWSMessage
 var jsonMetadata = `{
   "name": "sendWSMessage",
   "version": "0.0.1",
-  "title": "Send a message to a WebSocket server",
+  "title": "Send WebSocket Message",
   "description": "This activity sends a message to a WebSocket enabled server like TIBCO eFTL",
   "inputs":[
     {
