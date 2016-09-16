@@ -13,7 +13,7 @@ git:
 before_install:
   - echo -e "machine github.com\n  login ${GITHUB_USER_TOKEN}" >> ~/.netrc
 script: 
-  - tar cvfz flogo-contrib.tgz .
+  - tar cvfz flogo-contrib.tgz --exclude=flogo-contrib.tgz .
   - find . -not -name "flogo-contrib.tgz" -not  -name "\." -not -name "\.\."  -print0 | xargs -0 rm -rf --
   - git clone https://github.com/TIBCOSoftware/flogo-cicd.git flogo-cicd
   - pushd flogo-cicd/docker/flogo-contrib
