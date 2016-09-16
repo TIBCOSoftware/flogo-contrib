@@ -11,7 +11,7 @@ git:
 
 # Do a github login using token
 before_install:
-  - echo -e "machine github.com\n  login ${GITHUB_USER_TOKEN}" >> ~/.netrc
+  - "echo -e \"machine github.com\n  login ${GITHUB_USER_TOKEN}\" >> ~/.netrc"
 script: 
   - touch flogo-contrib.tgz 
   - tar cvfz flogo-contrib.tgz --exclude=flogo-contrib.tgz .
