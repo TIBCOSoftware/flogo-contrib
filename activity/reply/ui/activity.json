@@ -1,7 +1,7 @@
 {
   "name": "tibco-reply",
   "version": "0.0.1",
-  "title": "Reply",
+  "title": "Reply To Trigger",
   "description": "Simple Reply Activity",
   "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/reply",
   "inputs":[

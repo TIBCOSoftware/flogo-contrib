@@ -1,7 +1,7 @@
 {
   "name": "tibco-mqtt",
   "version": "0.0.1",
-  "title": "MQTT",
+  "title": "Receive MQTT Message",
   "description": "Simple MQTT Trigger",
   "settings":[
     {

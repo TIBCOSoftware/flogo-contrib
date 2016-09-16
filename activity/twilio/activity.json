@@ -1,7 +1,7 @@
 {
   "name": "tibco-twilio",
   "version": "0.0.1",
-  "title": "Twilio",
+  "title": "Send SMS Via Twilio",
   "description": "Simple Twilio Activity",
   "inputs":[
     {

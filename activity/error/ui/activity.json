@@ -1,7 +1,7 @@
 {
   "name": "tibco-error",
   "version": "0.0.1",
-  "title": "Error",
+  "title": "Throw Error",
   "description": "Simple Error Activity",
   "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/error",
   "inputs":[

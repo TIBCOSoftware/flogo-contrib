@@ -1,7 +1,7 @@
 {
   "name": "tibco-rest",
   "version": "0.0.1",
-  "titile": "REST",
+  "titile": "Receive HTTP Message",
   "description": "Simple REST Trigger",
   "settings": [
     {

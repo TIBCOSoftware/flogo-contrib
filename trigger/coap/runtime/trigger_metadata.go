@@ -3,7 +3,7 @@ package coap
 var jsonMetadata = `{
   "name": "tibco-coap",
   "version": "0.0.1",
-  "titile": "CoAP",
+  "titile": "Receive CoAP Message",
   "description": "Simple CoAP Trigger",
   "settings": [
     {
