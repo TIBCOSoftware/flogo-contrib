@@ -25,6 +25,6 @@ after_script:
 after_success:
   - "if [ \"${TRAVIS_BRANCH}\" == \"master\" ]; then
     docker login -u=\"${DOCKER_USERNAME}\" -p=\"${DOCKER_PASSWORD}\";
-    source ./submodules/flogo-cicd/scripts/init.sh ;
-    # docker::copy_tag_and_push flogo/flogo-contrib pdhar/flogo-contrib;
+    source ${TRAVIS_BUILD_DIR}/scripts/init.sh ;
+    flogo::module::postbuild flogo-contrib ;
     fi"
