@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"strconv"
-	"strings"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
@@ -68,8 +67,8 @@ func (t *MqttTrigger) Start() error {
 	opts.SetDefaultPublishHandler(func(client mqtt.Client, msg mqtt.Message) {
 		topic := msg.Topic()
 		payload := string(msg.Payload())
-
-		actionType, found := t.topicToActionURI[topic]
+		log.Debug("Received msg:", payload)
+		actionType, found := t.topicToActionType[topic]
 		actionURI, _ := t.topicToActionURI[topic]
 
 		if found {
@@ -97,10 +96,11 @@ func (t *MqttTrigger) Start() error {
 
 	for _, endpoint := range t.config.Endpoints {
 		if token := t.client.Subscribe(endpoint.Settings["topic"], byte(i), nil); token.Wait() && token.Error() != nil {
+			log.Errorf("Error subscribing to topic %s: %s", endpoint.Settings["topic"], token.Error())
+			//panic(token.Error())
+		} else {
 			t.topicToActionURI[endpoint.Settings["topic"]] = endpoint.ActionURI
 			t.topicToActionType[endpoint.Settings["topic"]] = endpoint.ActionType
-			log.Errorf("Error subscribing to topic %s: %s", endpoint.Settings["topic"], token.Error())
-			panic(token.Error())
 		}
 	}
 
@@ -125,13 +125,13 @@ func (t *MqttTrigger) Stop() error {
 // RunAction starts a new Process Instance
 func (t *MqttTrigger) RunAction(actionType string, actionURI string, payload string) {
 
-	req := &StartRequest{}
-	err := json.NewDecoder(strings.NewReader(payload)).Decode(req)
-	if err != nil {
-		//http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Error("Error Starting action ", err.Error())
-		return
-	}
+	req := t.constructStartRequest(payload)
+	//err := json.NewDecoder(strings.NewReader(payload)).Decode(req)
+	//if err != nil {
+	//	//http.Error(w, err.Error(), http.StatusBadRequest)
+	//	log.Error("Error Starting action ", err.Error())
+	//	return
+	//}
 
 	//todo handle error
 	startAttrs, _ := t.metadata.OutputsToAttrs(req.Data, false)
@@ -142,6 +142,9 @@ func (t *MqttTrigger) RunAction(actionType string, actionURI string, payload str
 
 	//todo handle error
 	_, replyData, err := t.runner.Run(context, action, actionURI, nil)
+	if err != nil {
+		log.Error(err)
+	}
 
 	log.Debugf("Ran action: [%s-%s]", actionType, actionURI)
 
@@ -167,6 +170,15 @@ func (t *MqttTrigger) publishMessage(topic string, message string) {
 	}
 	token := t.client.Publish(topic, byte(qos), false, message)
 	token.Wait()
+}
+
+func (t *MqttTrigger) constructStartRequest(message string) *StartRequest {
+	//TODO how to handle reply to, reply feature
+	req := &StartRequest{}
+	data := make(map[string]interface{})
+	data["mqtt.message"] = message
+	req.Data = data
+	return req
 }
 
 // StartRequest describes a request for starting a ProcessInstance
