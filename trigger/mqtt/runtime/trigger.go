@@ -97,7 +97,7 @@ func (t *MqttTrigger) Start() error {
 	for _, endpoint := range t.config.Endpoints {
 		if token := t.client.Subscribe(endpoint.Settings["topic"], byte(i), nil); token.Wait() && token.Error() != nil {
 			log.Errorf("Error subscribing to topic %s: %s", endpoint.Settings["topic"], token.Error())
-			//panic(token.Error())
+			panic(token.Error())
 		} else {
 			t.topicToActionURI[endpoint.Settings["topic"]] = endpoint.ActionURI
 			t.topicToActionType[endpoint.Settings["topic"]] = endpoint.ActionType
