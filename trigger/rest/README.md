@@ -43,10 +43,6 @@ Settings, Outputs and Endpoint:
         "name": "path",
         "type": "string",
         "required" : true
-      },
-      {
-        "name": "autoIdReply",
-        "type": "boolean"
       }
     ]
   }
@@ -62,7 +58,7 @@ Settings, Outputs and Endpoint:
 |:------------|:---------------|
 | method      | The HTTP method |         
 | path        | The resource path  |
-| autoIdReply | Automatically reply with the ID of the flow instance |
+
 
 ## Example Configurations
 
@@ -81,7 +77,8 @@ Configure the Trigger to handle a POST on /device
       },
       "endpoints": [
         {
-          "flowURI": "embedded://new_device_flow",
+          "actionType": "flow",
+          "actionURI": "embedded://new_device_flow",
           "settings": {
             "method": "POST",
             "path": "/device"
@@ -106,7 +103,8 @@ Configure the Trigger to handle a GET on /device/:id
       },
       "endpoints": [
         {
-          "flowURI": "embedded://new_device_flow",
+          "actionType": "flow",
+          "actionURI": "embedded://get_device_flow",
           "settings": {
             "method": "GET",
             "path": "/device/:id"

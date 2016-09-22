@@ -57,7 +57,7 @@ Outputs and Endpoint:
 
 Triggers are configured via the triggers.json of your application. The following are some example configuration of the Timer Trigger.
 
-### repeating = false
+### Only once and immediate
 Configure the Trigger to run a flow immediately
 
 ```json
@@ -69,7 +69,8 @@ Configure the Trigger to run a flow immediately
       },
       "endpoints": [
         {
-          "flowURI": "local://new_device_flow",
+          "actionType": "flow",
+          "actionURI": "embedded://myflow",
           "settings": {
             "repeating": "false"
           }
@@ -80,7 +81,7 @@ Configure the Trigger to run a flow immediately
 }
 ```
 
-### repeating = false
+### Only once at schedule time
 Configure the Trigger to run a flow at a certain date/time. "startDate" settings format = "mm/dd/yyyy, hours:minutes:seconds"
 
 ```json
@@ -93,7 +94,8 @@ Configure the Trigger to run a flow at a certain date/time. "startDate" settings
       },
       "endpoints": [
         {
-          "flowURI": "local://new_device_flow",
+          "actionType": "flow",
+          "actionURI": "embedded://myflow",
           "settings": {
             "repeating": "false",
             "startDate" : "05/01/2016, 12:25:01"
@@ -105,8 +107,8 @@ Configure the Trigger to run a flow at a certain date/time. "startDate" settings
 }
 ```
 
-### repeating = true
-Configure the Trigger to run a flow immediately and repeating every hours|minutes|seconds. "notImmediate" set to true, the trigger will not fire immediately in this case the first execution will occur in 24 hours. If set to true the first execuction will will occur immediately.
+### Repeating
+Configure the Trigger to run a flow repeating every hours|minutes|seconds. If "notImmediate" set to true, the trigger will not fire immediately.  In this case the first execution will occur in 24 hours. If set to false the first execuction will will occur immediately.
 
 ```json
 {
@@ -118,7 +120,8 @@ Configure the Trigger to run a flow immediately and repeating every hours|minute
       },
       "endpoints": [
         {
-          "flowURI": "local://new_device_flow",
+          "actionType": "flow",
+          "actionURI": "embedded://myflow",
           "settings": {
             "repeating": "true",
             "notImmediate": "true",
@@ -131,7 +134,7 @@ Configure the Trigger to run a flow immediately and repeating every hours|minute
 }
 ```
 
-### repeating = true
+### Repeating with start date
 Configure the Trigger to run a flow at a certain date/time and repeating every hours|minutes|seconds
 
 ```json
@@ -144,7 +147,8 @@ Configure the Trigger to run a flow at a certain date/time and repeating every h
       },
       "endpoints": [
         {
-          "flowURI": "local://new_device_flow",
+          "actionType": "flow",
+          "actionURI": "embedded://myflow",
           "settings": {
             "repeating": "true",
             "startDate" : "05/01/2016, 12:25:01",

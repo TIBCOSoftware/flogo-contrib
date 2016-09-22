@@ -2,6 +2,7 @@
   "name": "tibco-timer",
   "version": "0.0.1",
   "title": "Timer",
+  "author": "Michael Register <mregiste@tibco.com>",
   "description": "Simple Timer Trigger",
   "settings":[
   ],

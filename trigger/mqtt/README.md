@@ -62,8 +62,8 @@ Settings, Outputs and Endpoint:
 
 Triggers are configured via the triggers.json of your application. The following are some example configuration of the MQTT Trigger.
 
-### Start flow
-Configure the Trigger to handle a start flow. "settings" "topic" is the topic it uses to listen for incoming messages. So in this case the "endpoints" "settings" "topic" is "test_start" will start the "flowURI". The incoming message payload has to define "replyTo" which is the the topic used to return the flow ID.
+### Start a flow
+Configure the Trigger to start "myflow". "settings" "topic" is the topic it uses to listen for incoming messages. So in this case the "endpoints" "settings" "topic" is "test_start" will start "myflow" flow. The incoming message payload has to define "replyTo" which is the the topic used to reply on.
 
 ```json
 {
@@ -73,7 +73,7 @@ Configure the Trigger to handle a start flow. "settings" "topic" is the topic it
       "settings": {
         "topic": "flogo/#",
         "broker": "tcp://192.168.1.12:1883",
-        "id": "flogoEngine",
+        "id": "flogo",
         "user": "",
         "password": "",
         "store": "",
@@ -82,7 +82,8 @@ Configure the Trigger to handle a start flow. "settings" "topic" is the topic it
       },
       "endpoints": [
         {
-          "flowURI": "local://testFlow",
+          "actionType": "flow",
+          "actionURI": "embedded://myflow",
           "settings": {
             "topic": "test_start"
           }

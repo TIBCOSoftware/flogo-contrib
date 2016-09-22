@@ -34,10 +34,6 @@ Settings, Outputs and Endpoint:
       "name": "path",
       "type": "string",
       "required" : true
-    },
-    {
-      "name": "autoIdReply",
-      "type": "boolean"
     }
   ]
 }
@@ -52,7 +48,7 @@ Settings, Outputs and Endpoint:
 |:------------|:---------------|
 | method      | The CoAP method |         
 | path        | The resource path  |
-| autoIdReply | Automatically reply with the ID of the flow instance |
+
 
 ## Example Configurations
 
@@ -69,7 +65,8 @@ Configure the Trigger to handle a CoAP POST message with path /device/refresh
       "settings": {},
       "endpoints": [
         {
-          "flowURI": "embedded://coap_flow",
+          "actionType": "flow",
+          "actionURI": "embedded://myflow",
           "settings": {
             "method": "POST",
             "path": "/device/refresh"
