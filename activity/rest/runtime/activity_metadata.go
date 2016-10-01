@@ -32,7 +32,7 @@ var jsonMetadata = `{
   "outputs": [
     {
       "name": "result",
-      "type": "object"
+      "type": "any"
     }
   ]
 }
