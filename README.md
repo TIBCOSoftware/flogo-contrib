@@ -53,6 +53,9 @@ New activites, triggers and models are welcome. If you would like to submit one,
 * Document all funcs, structs and types.
 * Ensure that 'go test' succeeds.
 
+## License
+flogo-contrib is licensed under a BSD-type license. See TIBCO LICENSE.txt for license text.
+
 ### Support
 For Q&A you can post your questions on [Slack](https://tibco-cloud.slack.com/messages/flogo-general/)
 
