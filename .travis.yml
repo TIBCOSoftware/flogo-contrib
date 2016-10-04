@@ -34,5 +34,5 @@ after_success:
   - "if [ \"${TRAVIS_BRANCH}\" == \"master\" ]; then
     docker login -u=\"${DOCKER_USERNAME}\" -p=\"${DOCKER_PASSWORD}\";
     source ${TRAVIS_BUILD_DIR}/flogo-cicd/scripts/init.sh ;
-    flogo::module::postbuild flogo-contrib ;
+    flogo::module::postbuild flogo-contrib flogo-contrib;
     fi"
