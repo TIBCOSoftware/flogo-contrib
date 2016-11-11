@@ -110,7 +110,8 @@ func (a *GPIOActivity) Eval(context activity.Context) (done bool, err error) {
 		log.Debugf("Read pin %d state..", pin)
 		state := pin.Read()
 		log.Debugf("Read state and state: %s", state)
-		context.SetOutput(result, state)
+		context.SetOutput(result, int(state))
+		return true, nil
 	case pull:
 		ivPull, ok := context.GetInput(pull).(string)
 		if !ok {
@@ -132,6 +133,6 @@ func (a *GPIOActivity) Eval(context activity.Context) (done bool, err error) {
 		return true, errors.New("Cannot found method %s " + ivmethod)
 	}
 
-	context.SetOutput(result, "done")
+	context.SetOutput(result, 0)
 	return true, nil
 }

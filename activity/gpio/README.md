@@ -62,7 +62,7 @@ Inputs and Outputs:
 ## Configuration Examples
 ### Get pin state
 Get specific pin 23's state
-```
+```json
   "attributes": [
           {
             "name": "method",
@@ -78,7 +78,7 @@ Get specific pin 23's state
 ```
 ### Set pin state
 Set pin state to High
-```
+```json
   "attributes": [
           {
             "name": "method",
@@ -99,7 +99,7 @@ Set pin state to High
 ```
 ### Change pin's direction
 Change pin's direction to Output
-```
+```json
   "attributes": [
           {
             "name": "method",

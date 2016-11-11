@@ -39,7 +39,7 @@ var jsonMetadata = `{
   "outputs": [
     {
       "name": "result",
-      "type": "string"
+      "type": "integer"
     }
   ]
 }
