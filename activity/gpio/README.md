@@ -60,5 +60,61 @@ Inputs and Outputs:
 
 
 ## Configuration Examples
-### Simple
-Configure a task in flow to get pet '1234' from the [swagger petstore](http://petstore.swagger.io):
+### Get pin state
+Get specific pin 23's state
+```
+  "attributes": [
+          {
+            "name": "method",
+            "value": "Read State",
+            "type": "string"
+          },
+          {
+            "name": "pinNumber",
+            "value": "23",
+            "type": "integer"
+          }
+        ]
+```
+### Set pin state
+Set pin state to High
+```
+  "attributes": [
+          {
+            "name": "method",
+            "value": "Set State",
+            "type": "string"
+          },
+          {
+            "name": "pinNumber",
+            "value": "23",
+            "type": "integer"
+          },
+          {
+            "name": "state",
+            "value": "High",
+            "type": "string"
+          }
+        ]
+```
+### Change pin's direction
+Change pin's direction to Output
+```
+  "attributes": [
+          {
+            "name": "method",
+            "value": "Direction",
+            "type": "string"
+          },
+          {
+            "name": "pinNumber",
+            "value": "23",
+            "type": "integer"
+          },
+          {
+            "name": "direction",
+            "value": "Output",
+            "type": "string"
+          }
+        ]
+```
