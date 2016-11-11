@@ -3,7 +3,7 @@ package salesforce
 var jsonMetadata = `{
   "name": "tibco-gpio",
   "version": "0.0.1",
-  "title": "Control gpio",
+  "title": "tibco-gpio",
   "description": "Control raspberry gpio",
   "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/gpio",
 
@@ -15,7 +15,7 @@ var jsonMetadata = `{
       "allowed" : ["Direction", "Set State", "Read State", "Pull"]
     },
     {
-      "name": "pin number",
+      "name": "pinNumber",
       "type": "int",
       "required": true
     },

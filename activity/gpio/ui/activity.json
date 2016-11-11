@@ -13,7 +13,7 @@
       "allowed" : ["Direction", "Set State", "Read State", "Pull"]
     },
     {
-      "name": "pin number",
+      "name": "pinNumber",
       "type": "int",
       "required": true
     },

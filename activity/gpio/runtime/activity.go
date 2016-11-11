@@ -23,18 +23,18 @@ const (
 	pull = "Pull"
 
 	input = "Input"
-	output = "Output"
+	//output = "Output"
 
 	high = "High"
-	low = "Low"
+	//low = "Low"
 
 	up = "Up"
 	down = "Down"
-	off = "off"
+	//off = "off"
 
 	//ouput
 
-	reust = "result"
+	result = "result"
 )
 
 type GPIOActivity struct {
@@ -43,7 +43,6 @@ type GPIOActivity struct {
 
 // init create & register activity
 func init() {
-	log.Info("Init and start init activities")
 	md := activity.NewMetadata(jsonMetadata)
 	activity.Register(&GPIOActivity{metadata: md})
 }
@@ -56,78 +55,76 @@ func (a *GPIOActivity) Metadata() *activity.Metadata {
 // Eval implements api.Activity.Eval - Invokes a REST Operation
 func (a *GPIOActivity) Eval(context activity.Context) (done bool, err error) {
 	//getmethod
+	log.Debug("Running gpio activity.")
 	methodInput := context.GetInput(method)
 
-	if methodInput == nil {
+	ivmethod, ok := methodInput.(string)
+	if !ok {
 		return true, errors.New("Method field not set.")
 	}
 
 	//get pinNumber
-	pinNumberInput := context.GetInput(pinNumber)
+	ivPinNumber, ok := context.GetInput(pinNumber).(int)
 
-	if pinNumberInput == nil {
+	if !ok {
 		return true, errors.New("Pin number must exist")
 	}
 
-	ivPinNumber := pinNumberInput.(int)
-
 	log.Debugf("Method '%s' and pin number '%d'", methodInput, ivPinNumber)
 	//Open pin
-	openerr := rpio.Open()
-	if openerr != nil {
-		return true, errors.New("Open RPIO error: "+ openerr.Error())
+	openErr := rpio.Open()
+	if openErr != nil {
+		log.Errorf("Open RPIO error: %+v", openErr.Error())
+		return true, errors.New("Open RPIO error: " + openErr.Error())
 	}
 
 	pin := rpio.Pin(ivPinNumber)
 
-	ivmethod := methodInput.(string)
-
 	switch ivmethod {
 	case direction:
-		directionStateInput := context.GetInput(directionState)
-		if directionStateInput == nil {
+		ivDirectionField, ok := context.GetInput(directionState).(string)
+		if !ok {
 			return true, errors.New("Direction field not set.")
 		}
-
-		ivDirectionField := directionStateInput.(string)
-
 		if strings.EqualFold(input, ivDirectionField) {
+			log.Debugf("Set pin %d direction to input", pin)
 			pin.Input()
-		}else {
+		} else {
+			log.Debugf("Set pin %d direction to output", pin)
 			pin.Output()
 		}
 	case setState:
-		stateInput := context.GetInput(state)
-		if stateInput == nil {
+		ivState, ok := context.GetInput(state).(string)
+		if !ok {
 			return true, errors.New("State field not set.")
 		}
 
-		ivstate := stateInput.(string)
-
-		if strings.EqualFold(high, ivstate) {
+		if strings.EqualFold(high, ivState) {
+			log.Debugf("Set pin %d state to High", pin)
 			pin.High()
-		}else {
+		} else {
+			log.Debugf("Set pin %d state to low", pin)
 			pin.Low()
 		}
 	case readState:
-		log.Debugf("Read state and state: %s", readState)
-
-		readState := pin.Read()
-		log.Debugf("Read state and state: %s", readState)
-		context.SetOutput("result", readState)
+		log.Debugf("Read pin %d state..", pin)
+		state := pin.Read()
+		log.Debugf("Read state and state: %s", state)
+		context.SetOutput(result, state)
 	case pull:
-		pullInput := context.GetInput(pull)
-		if pullInput == nil {
+		ivPull, ok := context.GetInput(pull).(string)
+		if !ok {
 			return true, errors.New("Pull field not set.")
 		}
 
-		ivpull := pullInput.(string)
-
-		if strings.EqualFold(up, ivpull) {
+		if strings.EqualFold(up, ivPull) {
+			log.Debugf("Pull pin %d  to Up", pin)
 			pin.PullUp()
-		}else if strings.EqualFold(down, ivpull) {
+		} else if strings.EqualFold(down, ivPull) {
+			log.Debugf("Pull pin %d to Down", pin)
 			pin.PullDown()
-		}else {
+		} else {
+			log.Debugf("Pull pin %d to Up", pin)
 			pin.PullOff()
 		}
 	default:
@@ -135,6 +132,6 @@ func (a *GPIOActivity) Eval(context activity.Context) (done bool, err error) {
 		return true, errors.New("Cannot found method %s " + ivmethod)
 	}
 
-	context.SetOutput("result", "done")
+	context.SetOutput(result, "done")
 	return true, nil
 }
