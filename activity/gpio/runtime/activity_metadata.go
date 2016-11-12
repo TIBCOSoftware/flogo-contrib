@@ -3,7 +3,7 @@ package salesforce
 var jsonMetadata = `{
   "name": "tibco-gpio",
   "version": "0.0.1",
-  "title": "tibco-gpio",
+  "title": "Control GPIO",
   "description": "Control raspberry gpio",
   "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/gpio",
 
