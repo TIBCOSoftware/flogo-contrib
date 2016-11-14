@@ -14,7 +14,7 @@
     },
     {
       "name": "pinNumber",
-      "type": "int",
+      "type": "integer",
       "required": true
     },
     {
