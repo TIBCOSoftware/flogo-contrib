@@ -16,7 +16,7 @@ var jsonMetadata = `{
     },
     {
       "name": "pinNumber",
-      "type": "int",
+      "type": "integer",
       "required": true
     },
     {
