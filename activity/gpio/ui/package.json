@@ -1,0 +1,5 @@
+{
+  "name": "tibco-gpio",
+  "version": "0.0.1",
+  "description": "Control raspberry gpio"
+}
