@@ -66,6 +66,7 @@ func (t *MqttTrigger) Start() error {
 
 	opts.SetDefaultPublishHandler(func(client mqtt.Client, msg mqtt.Message) {
 		topic := msg.Topic()
+		//TODO we should handle other types, since mqtt message format are data-agnostic
 		payload := string(msg.Payload())
 		log.Debug("Received msg:", payload)
 		actionType, found := t.topicToActionType[topic]
@@ -176,7 +177,7 @@ func (t *MqttTrigger) constructStartRequest(message string) *StartRequest {
 	//TODO how to handle reply to, reply feature
 	req := &StartRequest{}
 	data := make(map[string]interface{})
-	data["mqtt.message"] = message
+	data["message"] = message
 	req.Data = data
 	return req
 }

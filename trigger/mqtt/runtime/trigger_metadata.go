@@ -38,6 +38,12 @@ var jsonMetadata = `{
       "type": "boolean"
     }
   ],
+  "outputs": [
+    {
+      "name": "message",
+      "type": "string"
+    }
+  ],
   "endpoint": {
     "settings": [
       {
