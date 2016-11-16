@@ -20,8 +20,8 @@ Inputs and Outputs:
       "allowed" : ["Direction", "Set State", "Read State", "Pull"]
     },
     {
-      "name": "pin number",
-      "type": "int",
+      "name": "pinNumber",
+      "type": "integer",
       "required": true
     },
     {
@@ -44,7 +44,7 @@ Inputs and Outputs:
   "outputs": [
     {
       "name": "result",
-      "type": "string"
+      "type": "integer"
     }
   ]
 }
