@@ -1,0 +1,195 @@
+#include <SPI.h>
+#include <WiFi101.h>
+#include <PubSubClient.h>
+
+int status = WL_IDLE_STATUS;
+
+// following values are generated
+
+char ssid[] = "{{setting . "device:ssid"}}";
+const char *password = "{{setting . "device:wifi_password"}}";
+
+const char *mqtt_server = "{{setting . "mqtt_server"}}";
+const char *mqtt_user = "{{setting . "mqtt_user"}}";
+const char *mqtt_pass = "{{setting . "mqtt_pass"}}";
+const char *mqtt_pubTopic = "flogo/{{setting . "device:name"}}/out";
+const char *mqtt_subTopic = "flogo/{{setting . "device:name"}}/in";
+
+const char *mqtt_readyMsg = "{\"status\": \"READY\"}";
+
+String endpointId = "0";
+
+uint8_t InPin = {{epsetting . 0 "device:pin" | getPinNum }};
+uint8_t OutPin = {{epsetting . 0 "device:response_pin" | getPinNum }};
+
+bool digitalIn = {{epsetting . 0 "device:pin" | isDigital }};
+bool digitalOut = {{epsetting . 0 "device:response_pin" | isDigital }};
+
+unsigned long lastDebounceTime = 0;
+unsigned long debounceDelay = 50;
+
+//////////////////////
+
+WiFiClient wifiClient;
+PubSubClient client(wifiClient);
+
+char in_msg_buff[100];
+char out_msg_buff[100];
+
+bool lastCondition = false;
+
+void setup_wifi() {
+
+    //Configure pins for Adafruit ATWINC1500 Feather
+    WiFi.setPins(8,7,4,2);
+
+    // check for the presence of the shield:
+    if (WiFi.status() == WL_NO_SHIELD) {
+        Serial.println("WiFi shield not present");
+        // don't continue:
+        while (true);
+    }
+
+    delay(10);
+
+    Serial.println();
+    Serial.print("Connecting to ");
+    Serial.println(ssid);
+
+    WiFi.begin(ssid, password);
+
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        Serial.print(".");
+    }
+
+    //WiFi.lowPowerMode();
+
+    randomSeed(micros());
+
+    Serial.println("");
+    Serial.println("WiFi connected");
+    Serial.println("IP address: ");
+    Serial.println(WiFi.localIP());
+}
+
+void reconnect() {
+    // Loop until we're reconnected
+    while (!client.connected()) {
+        Serial.print("Attempting MQTT connection...");
+        // Create a random client ID
+        String clientId = "device-{{setting . "device:name"}}-";
+        clientId += String(random(0xffff), HEX);
+        // Attempt to connect
+        if (client.connect(clientId.c_str(), mqtt_user, mqtt_pass)) {
+            Serial.println("connected");
+            client.publish(mqtt_pubTopic, mqtt_readyMsg);
+            client.subscribe(mqtt_subTopic);
+        } else {
+            Serial.print("failed, rc=");
+            Serial.print(client.state());
+            Serial.println(" try again in 5 seconds");
+            // Wait 5 seconds before retrying
+            delay(5000);
+        }
+    }
+}
+
+// generated
+bool evalCondition(int value) {
+    return value {{epsetting . 0 "device:condition"}};
+}
+
+String fireTrigger() {
+    int value;
+
+    if (digitalIn) {
+        value = digitalRead(InPin);
+    } else {
+        value = analogRead(InPin);
+    }
+
+    bool condition = evalCondition(value);
+
+    String ret = "";
+
+    if (condition && !lastCondition) {
+
+        if ((millis() - lastDebounceTime) > debounceDelay) {
+
+            Serial.print("fire endpoint message");
+
+            //value changed so publish trigger event
+            ret = "{\"ep\":\"" + endpointId +  "\", \"value\": \"" + String(value) + "\"}";
+        }
+
+        lastDebounceTime = millis();
+    }
+
+    lastCondition = condition;
+
+    return ret;
+}
+
+void setup() {
+    Serial.begin(115200);
+
+    while (!Serial) {
+        delay(10);
+    }
+
+    setup_wifi();
+
+    pinMode(InPin, INPUT);
+    pinMode(OutPin, OUTPUT);
+
+    client.setServer(mqtt_server, 1883);
+    client.setCallback(callback);
+}
+
+void loop() {
+
+    if (!client.connected()) {
+        reconnect();
+    }
+
+    // MQTT client loop processing
+    client.loop();
+
+    String payload = fireTrigger();
+
+    if (payload.length() > 0) {
+
+        payload.toCharArray(out_msg_buff, payload.length() + 1);
+        client.publish(mqtt_pubTopic, out_msg_buff);
+    }
+}
+
+void callback(char *topic, byte *payload, unsigned int length) {
+    Serial.print("Message arrived [");
+    Serial.print(topic);
+    Serial.print("] ");
+    for (int i=0; i < length; i++) {
+        Serial.print((char) payload[i]);
+    }
+    Serial.println();
+
+    if (digitalOut) {
+        if ((char) payload[0] == '1') {
+            digitalWrite(OutPin, HIGH);
+        } else {
+            digitalWrite(OutPin, LOW);
+        }
+    } else {
+        int i=0;
+
+        for(i=0; i<length; i++) {
+            in_msg_buff[i] = payload[i];
+        }
+        in_msg_buff[i] = '\0';
+
+        int value = atoi(in_msg_buff);
+
+        analogWrite(OutPin, value);
+    }
+}

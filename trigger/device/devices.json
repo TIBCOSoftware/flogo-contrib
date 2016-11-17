@@ -1,0 +1,10 @@
+{
+    "devices": [
+      {"type": "feather_m0_wifi", "board":"adafruit_feather_m0_usb", "template":"device-tpl/arduino.tmpl", "source":"arduino.ino" }
+    ],
+
+    "libs" : [
+      {"name": "PubSubClient", "id":89},
+      {"name": "WiFi101", "id":299}
+    ]
+}
