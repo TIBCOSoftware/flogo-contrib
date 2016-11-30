@@ -8,16 +8,21 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/TIBCOSoftware/flogo-contrib/trigger/rest/runtime/cors"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/julienschmidt/httprouter"
 	"github.com/op/go-logging"
 )
 
+const (
+	REST_CORS_PREFIX = "REST_TRIGGER"
+)
+
 // log is the default package logger
 var log = logging.MustGetLogger("trigger-tibco-rest")
 
-var validMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE"}
+var validMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
 
 // RestTrigger REST trigger struct
 type RestTrigger struct {
@@ -54,7 +59,7 @@ func (t *RestTrigger) Init(config *trigger.Config, runner action.Runner) {
 
 			log.Debugf("REST Trigger: Registering endpoint [%s: %s] for Action: [%s-%s]", method, path, endpoint.ActionType, endpoint.ActionURI)
 
-			router.OPTIONS(path, handleOption) // for CORS
+			router.OPTIONS(path, handleCorsPreflight) // for CORS
 			router.Handle(method, path, newActionHandler(t, endpoint))
 
 		} else {
@@ -76,15 +81,13 @@ func (t *RestTrigger) Stop() error {
 	return t.server.Stop()
 }
 
-func handleOption(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	w.Header().Add("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "*")
-	w.Header().Add("Access-Control-Allow-Headers", "Content-Type")
-	w.Header().Add("Access-Control-Allow-Headers", "Origin")
-	w.Header().Add("Access-Control-Allow-Headers", "X-Requested-With")
-	w.Header().Add("Access-Control-Allow-Headers", "Accept")
-	w.Header().Add("Access-Control-Allow-Headers", "Accept-Language")
-	w.Header().Set("Content-Type", "application/json")
+// Handles the cors preflight request
+func handleCorsPreflight(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+
+	log.Infof("Received [OPTIONS] request to CorsPreFlight: %+v", r)
+
+	c := cors.New(REST_CORS_PREFIX, log)
+	c.HandlePreflight(w, r)
 }
 
 // IDResponse id response object
@@ -96,9 +99,10 @@ func newActionHandler(rt *RestTrigger, endpoint *trigger.EndpointConfig) httprou
 
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
-		log.Debugf("REST Trigger: Recieved request")
+		log.Debugf("REST Trigger: Received request")
 
-		w.Header().Add("Access-Control-Allow-Origin", "*")
+		c := cors.New(REST_CORS_PREFIX, log)
+		c.WriteCorsActualRequestHeaders(w)
 
 		pathParams := make(map[string]string)
 		for _, param := range ps {
