@@ -18,6 +18,7 @@ import (
 
 const (
 	REST_CORS_PREFIX = "REST_TRIGGER"
+	TRIGGER_REF      = "github.com/TIBCOSoftware/flogo-contrib/incubator/rest/runtime"
 )
 
 // log is the default package logger
@@ -35,13 +36,14 @@ type RestTrigger struct {
 	myId   string
 }
 
+type RestFactory struct{}
+
 func init() {
-	//	trigger.Register(&RestTrigger{Md: md})
-	trigger.GetRegistry().Add(&RestTrigger{Md: md})
+	trigger.GetRegistry().RegisterFactory(TRIGGER_REF, &RestFactory{})
 }
 
 //New Creates a new trigger instance for a given id
-func (t *RestTrigger) New(id string) trigger.Trigger2 {
+func (t *RestFactory) New(id string) trigger.Trigger2 {
 	return &RestTrigger{Md: md, myId: id}
 }
 
@@ -59,11 +61,11 @@ func (t *RestTrigger) Init(config types.TriggerConfig, runner action.Runner) {
 		panic(err.Error())
 	}
 	//	triggerConfig := config.Data.(trigger.Config)
-	t.Init2(&triggerConfig, runner)
+	t.InitEndpoints(&triggerConfig, runner)
 }
 
-// Init implements ext.Trigger.Init
-func (t *RestTrigger) Init2(config *trigger.Config, runner action.Runner) {
+// Initialize the endpoints
+func (t *RestTrigger) InitEndpoints(config *trigger.Config, runner action.Runner) {
 
 	router := httprouter.New()
 
@@ -167,8 +169,7 @@ func newActionHandler(rt *RestTrigger, endpoint *trigger.EndpointConfig) httprou
 		startAttrs, _ := rt.Md.OutputsToAttrs(data, false)
 
 		action := action.GetRegistry().GetAction(endpoint.ActionId)
-		log.Infof("Found action' %+x'",action) 
-		
+		log.Infof("Found action' %+x'", action)
 
 		context := trigger.NewContext(context.Background(), startAttrs)
 		replyCode, replyData, err := rt.runner.Run(context, action, endpoint.ActionURI, nil)
