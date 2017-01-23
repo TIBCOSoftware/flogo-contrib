@@ -39,7 +39,7 @@ type RestTrigger struct {
 type RestFactory struct{}
 
 func init() {
-	trigger.GetRegistry().RegisterFactory(TRIGGER_REF, &RestFactory{})
+	trigger.RegisterFactory(TRIGGER_REF, &RestFactory{})
 }
 
 //New Creates a new trigger instance for a given id
@@ -53,7 +53,7 @@ func (t *RestTrigger) Metadata() *trigger.Metadata {
 }
 
 func (t *RestTrigger) Init(config types.TriggerConfig, runner action.Runner) {
-	log.Infof("In init, id '%s', Metadata: '%+v', Config: '%+v'", t.myId, t.Md, config)
+	log.Infof("In init, id '%s'", t.myId)
 	// Parse to trigger.Config
 	var triggerConfig trigger.Config
 	err := json.Unmarshal(config.Data, &triggerConfig)
@@ -168,7 +168,7 @@ func newActionHandler(rt *RestTrigger, endpoint *trigger.EndpointConfig) httprou
 		//todo handle error
 		startAttrs, _ := rt.Md.OutputsToAttrs(data, false)
 
-		action := action.GetRegistry().GetAction(endpoint.ActionId)
+		action := action.Get2(endpoint.ActionId)
 		log.Infof("Found action' %+x'", action)
 
 		context := trigger.NewContext(context.Background(), startAttrs)
