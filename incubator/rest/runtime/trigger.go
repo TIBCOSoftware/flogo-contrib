@@ -80,7 +80,7 @@ func (t *RestTrigger) InitEndpoints(config *trigger.Config, runner action.Runner
 			method := strings.ToUpper(endpoint.Settings["method"])
 			path := endpoint.Settings["path"]
 
-			log.Infof("REST Trigger: Registering endpoint [%s: %s] for Action: [%s-%s]", method, path, endpoint.ActionType, endpoint.ActionURI)
+			log.Infof("REST Trigger: Registering endpoint [%s: %s] for Action: [%s-%s]", method, path, endpoint.ActionType, endpoint.ActionId)
 
 			router.OPTIONS(path, handleCorsPreflight) // for CORS
 			router.Handle(method, path, newActionHandler(t, endpoint))
@@ -172,7 +172,7 @@ func newActionHandler(rt *RestTrigger, endpoint *trigger.EndpointConfig) httprou
 		log.Infof("Found action' %+x'", action)
 
 		context := trigger.NewContext(context.Background(), startAttrs)
-		replyCode, replyData, err := rt.runner.Run(context, action, endpoint.ActionURI, nil)
+		replyCode, replyData, err := rt.runner.Run(context, action, endpoint.ActionId, nil)
 
 		if err != nil {
 			log.Debugf("REST Trigger Error: %s", err.Error())
