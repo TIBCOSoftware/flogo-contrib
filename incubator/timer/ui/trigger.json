@@ -1,0 +1,43 @@
+{
+  "name": "tibco-timer",
+  "version": "0.0.1",
+  "title": "Timer",
+  "description": "Simple Timer trigger",
+  "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/trigger/timer",
+  "settings": [
+  ],
+  "outputs": [
+    {
+      "name": "params",
+      "type": "params"
+    },
+    {
+      "name": "content",
+      "type": "object"
+    }
+  ],
+  "endpoint": {
+    "settings": [
+      {
+        "name": "repeating",
+        "type": "string"
+      },
+      {
+        "name": "startDate",
+        "type": "string"
+      },
+      {
+        "name": "hours",
+        "type": "string"
+      },
+      {
+        "name": "minutes",
+        "type": "string"
+      },
+      {
+        "name": "seconds",
+        "type": "string"
+      }
+    ]
+  }
+}
