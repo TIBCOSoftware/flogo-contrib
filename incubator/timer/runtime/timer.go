@@ -49,7 +49,7 @@ func (t *TimerFactory) New(id string) trigger.Trigger2 {
 
 // Init implements ext.Trigger.Init
 func (t *TimerTrigger) Init(config types.TriggerConfig, runner action.Runner) {
-	log.Infof("In init, id '%s', Metadata: '%+v', Config: '%+v'", t.myId, t.metadata, config)
+	log.Infof("In init, id: '%s', Metadata: '%+v', Config: '%+v'", t.myId, t.metadata, config)
 	var triggerConfig trigger.Config
 	err := json.Unmarshal(config.Data, &triggerConfig)
 	if err != nil {
@@ -103,7 +103,7 @@ func (t *TimerTrigger) Stop() error {
 }
 
 func (t *TimerTrigger) scheduleOnce(endpoint *trigger.EndpointConfig) {
-	log.Debug("Scheduling a run one time job")
+	log.Info("Scheduling a run one time job")
 
 	seconds := getInitialStartInSeconds(endpoint)
 	log.Debug("Seconds till trigger fires: ", seconds)
@@ -117,8 +117,9 @@ func (t *TimerTrigger) scheduleOnce(endpoint *trigger.EndpointConfig) {
 		log.Debug("-- Starting \"Once\" timer process")
 
 		action := action.Get2(endpoint.ActionId)
-		log.Infof("Found action' %+x'", action)
-		_, _, err := t.runner.Run(context.Background(), action, endpoint.ActionURI, nil)
+		log.Infof("Found action: '%+x'", action)
+		log.Infof("ActionID: '%s'", endpoint.ActionId)
+		_, _, err := t.runner.Run(context.Background(), action, endpoint.ActionId, nil)
 
 		if err != nil {
 			log.Error("Error starting action: ", err.Error())
@@ -135,7 +136,7 @@ func (t *TimerTrigger) scheduleOnce(endpoint *trigger.EndpointConfig) {
 }
 
 func (t *TimerTrigger) scheduleRepeating(endpoint *trigger.EndpointConfig) {
-	log.Debug("Scheduling a repeating job")
+	log.Info("Scheduling a repeating job")
 
 	seconds := getInitialStartInSeconds(endpoint)
 
@@ -143,8 +144,9 @@ func (t *TimerTrigger) scheduleRepeating(endpoint *trigger.EndpointConfig) {
 		log.Debug("-- Starting \"Repeating\" (repeat) timer action")
 
 		action := action.Get2(endpoint.ActionId)
-		log.Infof("Found action' %+x'", action)
-		_, _, err := t.runner.Run(context.Background(), action, endpoint.ActionURI, nil)
+		log.Infof("Found action: '%+x'", action)
+		log.Infof("ActionID: '%s'", endpoint.ActionId)
+		_, _, err := t.runner.Run(context.Background(), action, endpoint.ActionId, nil)
 
 		if err != nil {
 			log.Error("Error starting flow: ", err.Error())
