@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/TIBCOSoftware/flogo-contrib/trigger/rest/runtime/cors"
+	"github.com/TIBCOSoftware/flogo-contrib/incubator/rest/runtime/cors"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/types"

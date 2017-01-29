@@ -2,18 +2,13 @@ package flow
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
-	//"encoding/json"
 
-	//flow_types "github.com/TIBCOSoftware/flogo-contrib/incubator/flow/types"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
-	"github.com/TIBCOSoftware/flogo-lib/flow/flowdef"
 	"github.com/TIBCOSoftware/flogo-lib/flow/flowinst"
-	"github.com/TIBCOSoftware/flogo-lib/flow/service/flowprovider"
-	"github.com/TIBCOSoftware/flogo-lib/flow/service/staterecorder"
-	"github.com/TIBCOSoftware/flogo-lib/flow/support"
 	"github.com/TIBCOSoftware/flogo-lib/types"
 	"github.com/TIBCOSoftware/flogo-lib/util"
 	"github.com/op/go-logging"
@@ -27,49 +22,45 @@ var log = logging.MustGetLogger("flow")
 
 type FlowAction struct {
 	stateRecorder flowinst.StateRecorder
-	flowProvider  flowdef.Provider
+	flowProvider  Provider
 	idGenerator   *util.Generator
 	actionOptions *flowinst.ActionOptions
 }
+
+var flowAction *FlowAction
 
 type FlowFactory struct{}
 
 func init() {
 	action.RegisterFactory(FLOW_REF, &FlowFactory{})
+	flowAction = NewFlowAction()
 }
 
 func (fa *FlowFactory) New(id string) action.Action2 {
-	return &FlowAction{}
+	return flowAction
 }
 
-func (fa *FlowAction) Init(config types.ActionConfig, serviceManager *util.ServiceManager) {
-	log.Infof("In Flow Init")
+// NewFlowAction creates a new FlowAction
+func NewFlowAction() *FlowAction {
 
-	embeddedJSONFlows := make(map[string]string)
-	embeddedJSONFlows["embedded://"+config.Id] = string(config.Data[:])
-	embeddedFlowMgr := support.NewEmbeddedFlowManager(false, embeddedJSONFlows)
+	fa := &FlowAction{}
+	fa.flowProvider = NewRemoteFlowProvider()
 
-	// TODO extract this to contribution
-	fpConfig := &util.ServiceConfig{Name: "flowProvider", Enabled: true}
-	flowProvider := flowprovider.NewRemoteFlowProvider(fpConfig, embeddedFlowMgr)
-	serviceManager.RegisterService(flowProvider)
-	fa.flowProvider = flowProvider
+	// TODO add state recorder
+	//	srSettings := make(map[string]string, 2)
+	//	srSettings["host"] = ""
+	//	srSettings["port"] = ""
+	//	srConfig := &util.ServiceConfig{Name: "stateRecorder", Enabled: false, Settings: srSettings}
+	//	sr := staterecorder.NewRemoteStateRecorder(srConfig)
+	//	serviceManager.RegisterService(sr)
+	//	fa.stateRecorder = sr
 
-	// TODO extract this to contribution
-	srSettings := make(map[string]string, 2)
-	srSettings["host"] = ""
-	srSettings["port"] = ""
-	srConfig := &util.ServiceConfig{Name: "stateRecorder", Enabled: false, Settings: srSettings}
-	sr := staterecorder.NewRemoteStateRecorder(srConfig)
-	serviceManager.RegisterService(sr)
-	fa.stateRecorder = sr
-
-	// TODO extract this to contribution
+	// TODO add engine tester
 	//	etConfig := &util.ServiceConfig{Name: "engineTester", Enabled: false}
 	//	engineTester := tester.NewRestEngineTester(etConfig)
 	//	serviceManager.RegisterService(engineTester)
 
-	options := &flowinst.ActionOptions{Record: sr.Enabled()}
+	options := &flowinst.ActionOptions{Record: false}
 
 	fa.idGenerator, _ = util.NewGenerator()
 
@@ -78,6 +69,54 @@ func (fa *FlowAction) Init(config types.ActionConfig, serviceManager *util.Servi
 	}
 
 	fa.actionOptions = options
+	return fa
+}
+
+func (fa *FlowAction) Init(config types.ActionConfig) {
+	log.Infof("Initializing flow '%s'", config.Id)
+
+	// Parse to flowdef.DefinitionRep
+	var flavor Flavor
+	err := json.Unmarshal(config.Data, &flavor)
+	if err != nil {
+		errorMsg := fmt.Sprintf("Error while loading flow '%s' error '%s'", config.Id, err.Error())
+		log.Errorf(errorMsg)
+		panic(errorMsg)
+	}
+
+	if len(flavor.flow) > 0 {
+		// It is an uncompressed and embedded flow
+		err := fa.flowProvider.AddUncompressedFlow(config.Id, flavor.flow)
+		if err != nil {
+			errorMsg := fmt.Sprintf("Error while loading uncompressed flow '%s' error '%s'", config.Id, err.Error())
+			log.Errorf(errorMsg)
+			panic(errorMsg)
+		}
+		return
+	}
+
+	if len(flavor.flowCompressed) > 0 {
+		// It is a compressed and embedded flow
+		err := fa.flowProvider.AddCompressedFlow(config.Id, flavor.flowCompressed)
+		if err != nil {
+			errorMsg := fmt.Sprintf("Error while loading compressed flow '%s' error '%s'", config.Id, err.Error())
+			log.Errorf(errorMsg)
+			panic(errorMsg)
+		}
+		return
+	}
+
+	if len(flavor.flowURI) > 0 {
+		// It is a URI flow
+		err := fa.flowProvider.AddFlowURI(config.Id, flavor.flowURI)
+		if err != nil {
+			errorMsg := fmt.Sprintf("Error while loading flow URI '%s' error '%s'", config.Id, err.Error())
+			log.Errorf(errorMsg)
+			panic(errorMsg)
+		}
+		return
+	}
+
 }
 
 // RunOptions the options when running a FlowAction
@@ -109,10 +148,8 @@ func (fa *FlowAction) Run(context context.Context, uri string, options interface
 
 	switch op {
 	case flowinst.AoStart:
-		flow := fa.flowProvider.GetFlow("embedded://" + uri)
-
-		if flow == nil {
-			err := fmt.Errorf("Flow [%s] not found", uri)
+		flow, err := fa.flowProvider.GetFlow(uri)
+		if err != nil {
 			return err
 		}
 
