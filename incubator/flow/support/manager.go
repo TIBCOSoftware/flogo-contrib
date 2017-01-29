@@ -37,7 +37,7 @@ type FlowEntry struct {
 
 // NewFlowManager creates a new FlowManager
 func NewFlowManager() *FlowManager {
-	return &FlowManager{}
+	return &FlowManager{mu: &sync.Mutex{}, flows: make(map[string]*FlowEntry)}
 }
 
 // AddCompressed adds a compressed flow to the map of flow entries
@@ -53,6 +53,7 @@ func (mgr *FlowManager) AddCompressed(id string, newFlow string) error {
 	}
 	// Add the flow
 	mgr.flows[id] = &FlowEntry{compressed: newFlow}
+	log.Debugf("Compressed flow with id '%s' added", id)
 	return nil
 }
 
@@ -69,6 +70,7 @@ func (mgr *FlowManager) AddUncompressed(id string, newFlow []byte) error {
 	}
 	// Add the flow
 	mgr.flows[id] = &FlowEntry{uncompressed: newFlow}
+	log.Debugf("Uncompressed flow with id '%s' added", id)
 	return nil
 }
 
@@ -85,6 +87,7 @@ func (mgr *FlowManager) AddURI(id string, newUri string) error {
 	}
 	// Add the flow
 	mgr.flows[id] = &FlowEntry{uri: newUri}
+	log.Debugf("URI flow with id '%s' added", id)
 	return nil
 }
 

@@ -7,11 +7,11 @@ import (
 
 type Flavor struct {
 	// The flow is embedded and uncompressed
-	flow json.RawMessage `json:"flow"`
+	Flow json.RawMessage `json:"flow"`
 	// The flow is a URI
-	flowCompressed string `json:"flowCompressed"`
+	FlowCompressed json.RawMessage `json:"flowCompressed"`
 	// The flow is a URI
-	flowURI string `json:"flowURI"`
+	FlowURI json.RawMessage `json:"flowURI"`
 }
 
 type FlowConfig struct {

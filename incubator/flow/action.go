@@ -73,9 +73,8 @@ func NewFlowAction() *FlowAction {
 }
 
 func (fa *FlowAction) Init(config types.ActionConfig) {
-	log.Infof("Initializing flow '%s'", config.Id)
+	log.Debugf("Initializing flow '%s'", config.Id)
 
-	// Parse to flowdef.DefinitionRep
 	var flavor Flavor
 	err := json.Unmarshal(config.Data, &flavor)
 	if err != nil {
@@ -84,9 +83,9 @@ func (fa *FlowAction) Init(config types.ActionConfig) {
 		panic(errorMsg)
 	}
 
-	if len(flavor.flow) > 0 {
+	if len(flavor.Flow) > 0 {
 		// It is an uncompressed and embedded flow
-		err := fa.flowProvider.AddUncompressedFlow(config.Id, flavor.flow)
+		err := fa.flowProvider.AddUncompressedFlow(config.Id, flavor.Flow)
 		if err != nil {
 			errorMsg := fmt.Sprintf("Error while loading uncompressed flow '%s' error '%s'", config.Id, err.Error())
 			log.Errorf(errorMsg)
@@ -95,9 +94,9 @@ func (fa *FlowAction) Init(config types.ActionConfig) {
 		return
 	}
 
-	if len(flavor.flowCompressed) > 0 {
+	if len(flavor.FlowCompressed) > 0 {
 		// It is a compressed and embedded flow
-		err := fa.flowProvider.AddCompressedFlow(config.Id, flavor.flowCompressed)
+		err := fa.flowProvider.AddCompressedFlow(config.Id, string(flavor.FlowCompressed[:]))
 		if err != nil {
 			errorMsg := fmt.Sprintf("Error while loading compressed flow '%s' error '%s'", config.Id, err.Error())
 			log.Errorf(errorMsg)
@@ -106,9 +105,9 @@ func (fa *FlowAction) Init(config types.ActionConfig) {
 		return
 	}
 
-	if len(flavor.flowURI) > 0 {
+	if len(flavor.FlowURI) > 0 {
 		// It is a URI flow
-		err := fa.flowProvider.AddFlowURI(config.Id, flavor.flowURI)
+		err := fa.flowProvider.AddFlowURI(config.Id, string(flavor.FlowURI[:]))
 		if err != nil {
 			errorMsg := fmt.Sprintf("Error while loading flow URI '%s' error '%s'", config.Id, err.Error())
 			log.Errorf(errorMsg)
@@ -116,6 +115,10 @@ func (fa *FlowAction) Init(config types.ActionConfig) {
 		}
 		return
 	}
+
+	errorMsg := fmt.Sprintf("No flow found in action data for id '%s'", config.Id)
+	log.Errorf(errorMsg)
+	panic(errorMsg)
 
 }
 
