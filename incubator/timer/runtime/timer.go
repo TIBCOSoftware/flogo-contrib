@@ -6,7 +6,6 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/types"
 	"github.com/carlescere/scheduler"
-	"encoding/json"
 	"github.com/op/go-logging"
 	"math"
 	"strconv"
@@ -25,8 +24,7 @@ var md = trigger.NewMetadata(jsonMetadata)
 type TimerTrigger struct {
 	metadata *trigger.Metadata
 	runner   action.Runner
-	settings map[string]string
-	config   trigger.Config
+	config   types.TriggerConfig
 	timers   map[string]*scheduler.Job
 	myId     string
 }
@@ -50,13 +48,7 @@ func (t *TimerFactory) New(id string) trigger.Trigger2 {
 // Init implements ext.Trigger.Init
 func (t *TimerTrigger) Init(config types.TriggerConfig, runner action.Runner) {
 	log.Infof("In init, id: '%s', Metadata: '%+v', Config: '%+v'", t.myId, t.metadata, config)
-	var triggerConfig trigger.Config
-	err := json.Unmarshal(config.Data, &triggerConfig)
-	if err != nil {
-		panic(err.Error())
-	}
-	t.settings = triggerConfig.Settings
-	t.config = triggerConfig
+	t.config = config
 	t.runner = runner
 }
 
@@ -65,7 +57,7 @@ func (t *TimerTrigger) Start() error {
 
 	log.Debug("Start")
 	t.timers = make(map[string]*scheduler.Job)
-	endpoints := t.config.Endpoints
+	endpoints := t.config.Handlers
 
 	log.Debug("Processing endpoints")
 	for _, endpoint := range endpoints {
@@ -80,7 +72,7 @@ func (t *TimerTrigger) Start() error {
 			log.Error("No match for repeating: ", repeating)
 		}
 		log.Debug("Settings repeating: ", endpoint.Settings["repeating"])
-		log.Debugf("Processing endpoint: %s", endpoint.ActionURI)
+		log.Debugf("Processing Handler: %s", endpoint.ActionId)
 	}
 
 	return nil
@@ -102,7 +94,7 @@ func (t *TimerTrigger) Stop() error {
 	return nil
 }
 
-func (t *TimerTrigger) scheduleOnce(endpoint *trigger.EndpointConfig) {
+func (t *TimerTrigger) scheduleOnce(endpoint *types.TriggerHandler) {
 	log.Info("Scheduling a run one time job")
 
 	seconds := getInitialStartInSeconds(endpoint)
@@ -135,7 +127,7 @@ func (t *TimerTrigger) scheduleOnce(endpoint *trigger.EndpointConfig) {
 	t.timers[endpoint.ActionId] = timerJob
 }
 
-func (t *TimerTrigger) scheduleRepeating(endpoint *trigger.EndpointConfig) {
+func (t *TimerTrigger) scheduleRepeating(endpoint *types.TriggerHandler) {
 	log.Info("Scheduling a repeating job")
 
 	seconds := getInitialStartInSeconds(endpoint)
@@ -177,14 +169,14 @@ func (t *TimerTrigger) scheduleRepeating(endpoint *trigger.EndpointConfig) {
 	}
 }
 
-func getInitialStartInSeconds(endpoint *trigger.EndpointConfig) int {
+func getInitialStartInSeconds(endpoint *types.TriggerHandler) int {
 
 	if endpoint.Settings["startDate"] == "" {
 		return 0
 	}
 
 	layout := time.RFC3339
-	startDate := endpoint.Settings["startDate"]
+	startDate := endpoint.Settings["startDate"].(string)
 	idx := strings.LastIndex(startDate, "Z")
 	timeZone := startDate[idx+1 : len(startDate)]
 	log.Debug("Time Zone: ", timeZone)
@@ -246,19 +238,19 @@ func (j *PrintJob) Run() error {
 	return nil
 }
 
-func (t *TimerTrigger) scheduleJobEverySecond(endpoint *trigger.EndpointConfig, fn func()) {
+func (t *TimerTrigger) scheduleJobEverySecond(endpoint *types.TriggerHandler, fn func()) {
 
 	var interval int = 0
-	if endpoint.Settings["seconds"] != "" {
-		seconds, _ := strconv.Atoi(endpoint.Settings["seconds"])
+	if endpoint.Settings["seconds"].(string) != "" {
+		seconds, _ := strconv.Atoi(endpoint.Settings["seconds"].(string))
 		interval = interval + seconds
 	}
-	if endpoint.Settings["minutes"] != "" {
-		minutes, _ := strconv.Atoi(endpoint.Settings["minutes"])
+	if endpoint.Settings["minutes"].(string) != "" {
+		minutes, _ := strconv.Atoi(endpoint.Settings["minutes"].(string))
 		interval = interval + minutes*60
 	}
-	if endpoint.Settings["hours"] != "" {
-		hours, _ := strconv.Atoi(endpoint.Settings["hours"])
+	if endpoint.Settings["hours"].(string) != "" {
+		hours, _ := strconv.Atoi(endpoint.Settings["hours"].(string))
 		interval = interval + hours*3600
 	}
 
