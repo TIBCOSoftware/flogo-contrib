@@ -55,48 +55,29 @@ func (t *RestTrigger) Metadata() *trigger.Metadata {
 func (t *RestTrigger) Init(config types.TriggerConfig, runner action.Runner) {
 	log.Debugf("In init, id '%s'", t.myId)
 
-	// Get Trigger Settings
-	var triggerSettings *Settings
-	err := json.Unmarshal(config.Settings, &triggerSettings)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	t.InitHandlers(triggerSettings, config.Handlers, runner)
-}
-
-// Initialize the handlers
-func (t *RestTrigger) InitHandlers(triggerSettings *Settings, handlers []*types.TriggerHandler, runner action.Runner) {
-
 	router := httprouter.New()
 
-	addr := ":" + triggerSettings.Port
+	addr := ":" + config.Settings["port"].(string)
 	t.runner = runner
 
-	for _, handler := range handlers {
+	// Init handlers
+	for _, handler := range config.Handlers {
 
-		// Get Handler Settings
-		var handlerSettings *HandlerSettings
-		err := json.Unmarshal(handler.Settings, &handlerSettings)
-		if err != nil {
-			panic(err.Error())
-		}
-
-		if handlerIsValid(handlerSettings) {
-			method := strings.ToUpper(handlerSettings.Method)
-			path := handlerSettings.Path
+		if handlerIsValid(handler) {
+			method := strings.ToUpper(handler.Settings["method"].(string))
+			path := handler.Settings["path"].(string)
 
 			log.Infof("REST Trigger: Registering handler [%s: %s] for Action Id: [%s]", method, path, handler.ActionId)
 
 			router.OPTIONS(path, handleCorsPreflight) // for CORS
-			router.Handle(method, path, newActionHandler(t, handler.ActionId, handlerSettings))
+			router.Handle(method, path, newActionHandler(t, handler.ActionId, handler.Settings))
 
 		} else {
-			panic(fmt.Sprintf("Invalid handler: %v", handlerSettings))
+			panic(fmt.Sprintf("Invalid handler: %v", handler.Settings))
 		}
 	}
 
-	log.Debugf("REST Trigger: Configured on port %s", triggerSettings.Port)
+	log.Debugf("REST Trigger: Configured on port %s", config.Settings["port"].(string))
 	t.server = NewServer(addr, router)
 }
 
@@ -130,7 +111,7 @@ type IDResponse struct {
 	ID string `json:"id"`
 }
 
-func newActionHandler(rt *RestTrigger, actionId string, handlerSettings *HandlerSettings) httprouter.Handle {
+func newActionHandler(rt *RestTrigger, actionId string, handlerSettings map[string]interface{}) httprouter.Handle {
 
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
@@ -205,9 +186,9 @@ func newActionHandler(rt *RestTrigger, actionId string, handlerSettings *Handler
 ////////////////////////////////////////////////////////////////////////////////////////
 // Utils
 
-func handlerIsValid(handlerSettings *HandlerSettings) bool {
+func handlerIsValid(handler *types.TriggerHandler) bool {
 
-	if !stringInList(strings.ToUpper(handlerSettings.Method), validMethods) {
+	if !stringInList(strings.ToUpper(handler.Settings["method"].(string)), validMethods) {
 		return false
 	}
 
