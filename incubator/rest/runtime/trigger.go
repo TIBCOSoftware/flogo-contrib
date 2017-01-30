@@ -53,44 +53,50 @@ func (t *RestTrigger) Metadata() *trigger.Metadata {
 }
 
 func (t *RestTrigger) Init(config types.TriggerConfig, runner action.Runner) {
-	log.Infof("In init, id '%s'", t.myId)
-	// Parse to trigger.Config
-	var triggerConfig trigger.Config
-	err := json.Unmarshal(config.Data, &triggerConfig)
+	log.Debugf("In init, id '%s'", t.myId)
+
+	// Get Trigger Settings
+	var triggerSettings *Settings
+	err := json.Unmarshal(config.Settings, &triggerSettings)
 	if err != nil {
 		panic(err.Error())
 	}
-	//	triggerConfig := config.Data.(trigger.Config)
-	t.InitEndpoints(&triggerConfig, runner)
+
+	t.InitHandlers(triggerSettings, config.Handlers, runner)
 }
 
-// Initialize the endpoints
-func (t *RestTrigger) InitEndpoints(config *trigger.Config, runner action.Runner) {
+// Initialize the handlers
+func (t *RestTrigger) InitHandlers(triggerSettings *Settings, handlers []*types.TriggerHandler, runner action.Runner) {
 
 	router := httprouter.New()
 
-	addr := ":" + config.Settings["port"]
+	addr := ":" + triggerSettings.Port
 	t.runner = runner
 
-	endpoints := config.Endpoints
+	for _, handler := range handlers {
 
-	for _, endpoint := range endpoints {
+		// Get Handler Settings
+		var handlerSettings *HandlerSettings
+		err := json.Unmarshal(handler.Settings, &handlerSettings)
+		if err != nil {
+			panic(err.Error())
+		}
 
-		if endpointIsValid(endpoint) {
-			method := strings.ToUpper(endpoint.Settings["method"])
-			path := endpoint.Settings["path"]
+		if handlerIsValid(handlerSettings) {
+			method := strings.ToUpper(handlerSettings.Method)
+			path := handlerSettings.Path
 
-			log.Infof("REST Trigger: Registering endpoint [%s: %s] for Action: [%s-%s]", method, path, endpoint.ActionType, endpoint.ActionId)
+			log.Infof("REST Trigger: Registering handler [%s: %s] for Action Id: [%s]", method, path, handler.ActionId)
 
 			router.OPTIONS(path, handleCorsPreflight) // for CORS
-			router.Handle(method, path, newActionHandler(t, endpoint))
+			router.Handle(method, path, newActionHandler(t, handler.ActionId, handlerSettings))
 
 		} else {
-			panic(fmt.Sprintf("Invalid endpoint: %v", endpoint))
+			panic(fmt.Sprintf("Invalid handler: %v", handlerSettings))
 		}
 	}
 
-	log.Debugf("REST Trigger: Configured on port %s", config.Settings["port"])
+	log.Debugf("REST Trigger: Configured on port %s", triggerSettings.Port)
 	t.server = NewServer(addr, router)
 }
 
@@ -124,7 +130,7 @@ type IDResponse struct {
 	ID string `json:"id"`
 }
 
-func newActionHandler(rt *RestTrigger, endpoint *trigger.EndpointConfig) httprouter.Handle {
+func newActionHandler(rt *RestTrigger, actionId string, handlerSettings *HandlerSettings) httprouter.Handle {
 
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
@@ -144,7 +150,7 @@ func newActionHandler(rt *RestTrigger, endpoint *trigger.EndpointConfig) httprou
 			switch {
 			case err == io.EOF:
 			// empty body
-			//todo should endpoint say if content is expected?
+			//todo should handler say if content is expected?
 			case err != nil:
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
@@ -168,11 +174,11 @@ func newActionHandler(rt *RestTrigger, endpoint *trigger.EndpointConfig) httprou
 		//todo handle error
 		startAttrs, _ := rt.Md.OutputsToAttrs(data, false)
 
-		action := action.Get2(endpoint.ActionId)
-		log.Infof("Found action' %+x'", action)
+		action := action.Get2(actionId)
+		log.Debugf("Found action' %+x'", action)
 
 		context := trigger.NewContext(context.Background(), startAttrs)
-		replyCode, replyData, err := rt.runner.Run(context, action, endpoint.ActionId, nil)
+		replyCode, replyData, err := rt.runner.Run(context, action, actionId, nil)
 
 		if err != nil {
 			log.Debugf("REST Trigger Error: %s", err.Error())
@@ -199,9 +205,9 @@ func newActionHandler(rt *RestTrigger, endpoint *trigger.EndpointConfig) httprou
 ////////////////////////////////////////////////////////////////////////////////////////
 // Utils
 
-func endpointIsValid(endpoint *trigger.EndpointConfig) bool {
+func handlerIsValid(handlerSettings *HandlerSettings) bool {
 
-	if !stringInList(strings.ToUpper(endpoint.Settings["method"]), validMethods) {
+	if !stringInList(strings.ToUpper(handlerSettings.Method), validMethods) {
 		return false
 	}
 
