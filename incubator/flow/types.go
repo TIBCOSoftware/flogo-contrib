@@ -1,8 +1,18 @@
-package types
+package flow
 
 import (
+	"encoding/json"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 )
+
+type Flavor struct {
+	// The flow is embedded and uncompressed
+	Flow json.RawMessage `json:"flow"`
+	// The flow is a URI
+	FlowCompressed json.RawMessage `json:"flowCompressed"`
+	// The flow is a URI
+	FlowURI json.RawMessage `json:"flowURI"`
+}
 
 type FlowConfig struct {
 	Attrs    []*data.Attribute `json:"attributes"`

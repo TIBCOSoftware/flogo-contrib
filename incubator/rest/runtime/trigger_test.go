@@ -7,17 +7,18 @@ import (
 	"testing"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
-	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
+	"github.com/TIBCOSoftware/flogo-lib/types"
 )
 
 const testConfig string = `{
-  "name": "tibco-rest",
+  "id": "tibco-rest",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/incubator/rest/runtime",
   "settings": {
     "port": "8091"
   },
-  "endpoints": [
+  "handlers": [
     {
-      "flowURI": "local://testFlow",
+      "actionId": "my_test_flow",
       "settings": {
         "method": "POST",
         "path": "/device/:id/reset"
@@ -36,29 +37,29 @@ func (tr *TestRunner) Run(context context.Context, action action.Action, uri str
 	return 0, nil, nil
 }
 
-func TestRegistered(t *testing.T) {
-	tgr := trigger.Get("tibco-rest")
-
-	if tgr == nil {
-		t.Error("Trigger Not Registered")
-		t.Fail()
-		return
-	}
-}
-
-func TestInit(t *testing.T) {
-	tgr := trigger.Get("tibco-rest")
+func TestInitOk(t *testing.T) {
+	// New  factory
+	f := &RestFactory{}
+	tgr := f.New("tibco-rest")
 
 	runner := &TestRunner{}
 
-	config := &trigger.Config{}
-	json.Unmarshal([]byte(testConfig), config)
+	config := types.TriggerConfig{}
+	json.Unmarshal([]byte(testConfig), &config)
 	tgr.Init(config, runner)
 }
 
-func TestEndpoint(t *testing.T) {
+func TestHandlerOk(t *testing.T) {
 
-	tgr := trigger.Get("tibco-rest")
+	// New  factory
+	f := &RestFactory{}
+	tgr := f.New("tibco-rest")
+
+	runner := &TestRunner{}
+
+	config := types.TriggerConfig{}
+	json.Unmarshal([]byte(testConfig), &config)
+	tgr.Init(config, runner)
 
 	tgr.Start()
 	defer tgr.Stop()

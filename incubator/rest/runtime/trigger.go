@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/TIBCOSoftware/flogo-contrib/trigger/rest/runtime/cors"
+	"github.com/TIBCOSoftware/flogo-contrib/incubator/rest/runtime/cors"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/types"
@@ -53,44 +53,39 @@ func (t *RestTrigger) Metadata() *trigger.Metadata {
 }
 
 func (t *RestTrigger) Init(config types.TriggerConfig, runner action.Runner) {
-	log.Infof("In init, id '%s'", t.myId)
-	// Parse to trigger.Config
-	var triggerConfig trigger.Config
-	err := json.Unmarshal(config.Data, &triggerConfig)
-	if err != nil {
-		panic(err.Error())
-	}
-	//	triggerConfig := config.Data.(trigger.Config)
-	t.InitEndpoints(&triggerConfig, runner)
-}
-
-// Initialize the endpoints
-func (t *RestTrigger) InitEndpoints(config *trigger.Config, runner action.Runner) {
+	log.Debugf("In init, id '%s'", t.myId)
 
 	router := httprouter.New()
 
-	addr := ":" + config.Settings["port"]
+	if config.Settings == nil {
+		panic(fmt.Sprintf("No Settings found for trigger '%s'", t.myId))
+	}
+
+	if port := config.Settings["port"]; port == nil {
+		panic(fmt.Sprintf("No Port found for trigger '%s' in settings", t.myId))
+	}
+
+	addr := ":" + config.Settings["port"].(string)
 	t.runner = runner
 
-	endpoints := config.Endpoints
+	// Init handlers
+	for _, handler := range config.Handlers {
 
-	for _, endpoint := range endpoints {
+		if handlerIsValid(handler) {
+			method := strings.ToUpper(handler.Settings["method"].(string))
+			path := handler.Settings["path"].(string)
 
-		if endpointIsValid(endpoint) {
-			method := strings.ToUpper(endpoint.Settings["method"])
-			path := endpoint.Settings["path"]
-
-			log.Infof("REST Trigger: Registering endpoint [%s: %s] for Action: [%s-%s]", method, path, endpoint.ActionType, endpoint.ActionId)
+			log.Debugf("REST Trigger: Registering handler [%s: %s] for Action Id: [%s]", method, path, handler.ActionId)
 
 			router.OPTIONS(path, handleCorsPreflight) // for CORS
-			router.Handle(method, path, newActionHandler(t, endpoint))
+			router.Handle(method, path, newActionHandler(t, handler.ActionId, handler.Settings))
 
 		} else {
-			panic(fmt.Sprintf("Invalid endpoint: %v", endpoint))
+			panic(fmt.Sprintf("Invalid handler: %v", handler))
 		}
 	}
 
-	log.Debugf("REST Trigger: Configured on port %s", config.Settings["port"])
+	log.Debugf("REST Trigger: Configured on port %s", config.Settings["port"].(string))
 	t.server = NewServer(addr, router)
 }
 
@@ -124,7 +119,7 @@ type IDResponse struct {
 	ID string `json:"id"`
 }
 
-func newActionHandler(rt *RestTrigger, endpoint *trigger.EndpointConfig) httprouter.Handle {
+func newActionHandler(rt *RestTrigger, actionId string, handlerSettings map[string]interface{}) httprouter.Handle {
 
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
@@ -144,7 +139,7 @@ func newActionHandler(rt *RestTrigger, endpoint *trigger.EndpointConfig) httprou
 			switch {
 			case err == io.EOF:
 			// empty body
-			//todo should endpoint say if content is expected?
+			//todo should handler say if content is expected?
 			case err != nil:
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
@@ -168,11 +163,11 @@ func newActionHandler(rt *RestTrigger, endpoint *trigger.EndpointConfig) httprou
 		//todo handle error
 		startAttrs, _ := rt.Md.OutputsToAttrs(data, false)
 
-		action := action.Get2(endpoint.ActionId)
-		log.Infof("Found action' %+x'", action)
+		action := action.Get2(actionId)
+		log.Debugf("Found action' %+x'", action)
 
 		context := trigger.NewContext(context.Background(), startAttrs)
-		replyCode, replyData, err := rt.runner.Run(context, action, endpoint.ActionId, nil)
+		replyCode, replyData, err := rt.runner.Run(context, action, actionId, nil)
 
 		if err != nil {
 			log.Debugf("REST Trigger Error: %s", err.Error())
@@ -199,9 +194,16 @@ func newActionHandler(rt *RestTrigger, endpoint *trigger.EndpointConfig) httprou
 ////////////////////////////////////////////////////////////////////////////////////////
 // Utils
 
-func endpointIsValid(endpoint *trigger.EndpointConfig) bool {
+func handlerIsValid(handler *types.TriggerHandler) bool {
+	if handler.Settings == nil {
+		return false
+	}
 
-	if !stringInList(strings.ToUpper(endpoint.Settings["method"]), validMethods) {
+	if handler.Settings["method"] == nil {
+		return false
+	}
+
+	if !stringInList(strings.ToUpper(handler.Settings["method"].(string)), validMethods) {
 		return false
 	}
 
