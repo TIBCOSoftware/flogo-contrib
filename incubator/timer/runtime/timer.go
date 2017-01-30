@@ -171,7 +171,7 @@ func (t *TimerTrigger) scheduleRepeating(endpoint *types.TriggerHandler) {
 
 func getInitialStartInSeconds(endpoint *types.TriggerHandler) int {
 
-	if endpoint.Settings["startDate"] == "" {
+	if startDate := endpoint.Settings["startDate"]; startDate == nil {
 		return 0
 	}
 
@@ -241,16 +241,16 @@ func (j *PrintJob) Run() error {
 func (t *TimerTrigger) scheduleJobEverySecond(endpoint *types.TriggerHandler, fn func()) {
 
 	var interval int = 0
-	if endpoint.Settings["seconds"].(string) != "" {
-		seconds, _ := strconv.Atoi(endpoint.Settings["seconds"].(string))
+	if seconds := endpoint.Settings["seconds"]; seconds != nil {
+		seconds, _ := strconv.Atoi(seconds.(string))
 		interval = interval + seconds
 	}
-	if endpoint.Settings["minutes"].(string) != "" {
-		minutes, _ := strconv.Atoi(endpoint.Settings["minutes"].(string))
+	if minutes := endpoint.Settings["minutes"]; minutes != nil {
+		minutes, _ := strconv.Atoi(minutes.(string))
 		interval = interval + minutes*60
 	}
-	if endpoint.Settings["hours"].(string) != "" {
-		hours, _ := strconv.Atoi(endpoint.Settings["hours"].(string))
+	if hours := endpoint.Settings["hours"]; hours != nil {
+		hours, _ := strconv.Atoi(hours.(string))
 		interval = interval + hours*3600
 	}
 
