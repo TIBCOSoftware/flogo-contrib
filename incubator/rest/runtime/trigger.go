@@ -57,6 +57,14 @@ func (t *RestTrigger) Init(config types.TriggerConfig, runner action.Runner) {
 
 	router := httprouter.New()
 
+	if config.Settings == nil {
+		panic(fmt.Sprintf("No Settings found for trigger '%s'", t.myId))
+	}
+
+	if port := config.Settings["port"]; port == nil {
+		panic(fmt.Sprintf("No Port found for trigger '%s' in settings", t.myId))
+	}
+
 	addr := ":" + config.Settings["port"].(string)
 	t.runner = runner
 
@@ -67,13 +75,13 @@ func (t *RestTrigger) Init(config types.TriggerConfig, runner action.Runner) {
 			method := strings.ToUpper(handler.Settings["method"].(string))
 			path := handler.Settings["path"].(string)
 
-			log.Infof("REST Trigger: Registering handler [%s: %s] for Action Id: [%s]", method, path, handler.ActionId)
+			log.Debugf("REST Trigger: Registering handler [%s: %s] for Action Id: [%s]", method, path, handler.ActionId)
 
 			router.OPTIONS(path, handleCorsPreflight) // for CORS
 			router.Handle(method, path, newActionHandler(t, handler.ActionId, handler.Settings))
 
 		} else {
-			panic(fmt.Sprintf("Invalid handler: %v", handler.Settings))
+			panic(fmt.Sprintf("Invalid handler: %v", handler))
 		}
 	}
 
@@ -187,6 +195,13 @@ func newActionHandler(rt *RestTrigger, actionId string, handlerSettings map[stri
 // Utils
 
 func handlerIsValid(handler *types.TriggerHandler) bool {
+	if handler.Settings == nil {
+		return false
+	}
+
+	if handler.Settings["method"] == nil {
+		return false
+	}
 
 	if !stringInList(strings.ToUpper(handler.Settings["method"].(string)), validMethods) {
 		return false
