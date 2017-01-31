@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	TRIGGER_REF = "github.com/TIBCOSoftware/flogo-contrib/incubator/mqtt/runtime"
+	TRIGGER_REF = "git.tibco.com/git/product/ipaas/wi-contrib.git/trigger/mqtt/runtime"
 )
 
 // log is the default package logger
@@ -28,8 +28,7 @@ type MqttTrigger struct {
 	metadata          *trigger.Metadata
 	runner            action.Runner
 	client            mqtt.Client
-	settings          map[string]string
-	config            trigger.Config
+	config            types.TriggerConfig
 	topicToActionURI  map[string]string
 	topicToActionType map[string]string
 	myId              string
@@ -42,7 +41,6 @@ func (t *MQTTFactory) New(id string) trigger.Trigger2 {
 	return &MqttTrigger{metadata: md, myId: id}
 }
 func init() {
-
 	trigger.RegisterFactory(TRIGGER_REF, &MQTTFactory{})
 }
 
@@ -53,13 +51,7 @@ func (t *MqttTrigger) Metadata() *trigger.Metadata {
 
 // Init implements ext.Trigger.Init
 func (t *MqttTrigger) Init(config types.TriggerConfig, runner action.Runner) {
-	var triggerConfig trigger.Config
-	err := json.Unmarshal(config.Data, &triggerConfig)
-	if err != nil {
-		panic(err.Error())
-	}
-	t.config = triggerConfig
-	t.settings = triggerConfig.Settings
+	t.config = config
 	t.runner = runner
 }
 
@@ -67,18 +59,18 @@ func (t *MqttTrigger) Init(config types.TriggerConfig, runner action.Runner) {
 func (t *MqttTrigger) Start() error {
 
 	opts := mqtt.NewClientOptions()
-	opts.AddBroker(t.settings["broker"])
-	opts.SetClientID(t.settings["id"])
-	opts.SetUsername(t.settings["user"])
-	opts.SetPassword(t.settings["password"])
-	b, err := strconv.ParseBool(t.settings["cleansess"])
+	opts.AddBroker(t.config.Settings["broker"].(string))
+	opts.SetClientID(t.config.Settings["id"].(string))
+	opts.SetUsername(t.config.Settings["user"].(string))
+	opts.SetPassword(t.config.Settings["password"].(string))
+	b, err := strconv.ParseBool(t.config.Settings["cleansess"].(string))
 	if err != nil {
 		log.Error("Error converting \"cleansess\" to a boolean ", err.Error())
 		return err
 	}
 	opts.SetCleanSession(b)
-	if t.settings["store"] != ":memory:" {
-		opts.SetStore(mqtt.NewFileStore(t.settings["store"]))
+	if storeType := t.config.Settings["store"].(string); storeType != ":memory:" {
+		opts.SetStore(mqtt.NewFileStore(t.config.Settings["store"].(string)))
 	}
 
 	opts.SetDefaultPublishHandler(func(client mqtt.Client, msg mqtt.Message) {
@@ -100,7 +92,7 @@ func (t *MqttTrigger) Start() error {
 		panic(token.Error())
 	}
 
-	i, err := strconv.Atoi(t.settings["qos"])
+	i, err := strconv.Atoi(t.config.Settings["qos"].(string))
 	if err != nil {
 		log.Error("Error converting \"qos\" to an integer ", err.Error())
 		return err
@@ -109,12 +101,12 @@ func (t *MqttTrigger) Start() error {
 	t.topicToActionType = make(map[string]string)
 	t.topicToActionURI = make(map[string]string)
 
-	for _, endpoint := range t.config.Endpoints {
-		if token := t.client.Subscribe(endpoint.Settings["topic"], byte(i), nil); token.Wait() && token.Error() != nil {
+	for _, endpoint := range t.config.Handlers {
+		if token := t.client.Subscribe(endpoint.Settings["topic"].(string), byte(i), nil); token.Wait() && token.Error() != nil {
 			log.Errorf("Error subscribing to topic %s: %s", endpoint.Settings["topic"], token.Error())
 			panic(token.Error())
 		} else {
-			t.topicToActionURI[endpoint.Settings["topic"]] = endpoint.ActionId
+			t.topicToActionURI[endpoint.Settings["topic"].(string)] = endpoint.ActionId
 		}
 	}
 
@@ -124,10 +116,10 @@ func (t *MqttTrigger) Start() error {
 // Stop implements ext.Trigger.Stop
 func (t *MqttTrigger) Stop() error {
 	//unsubscribe from topic
-	log.Debug("Unsubcribing from topic: ", t.settings["topic"])
-	for _, endpoint := range t.config.Endpoints {
-		if token := t.client.Unsubscribe(endpoint.Settings["topic"]); token.Wait() && token.Error() != nil {
-			log.Errorf("Error unsubscribing from topic %s: %s", endpoint.Settings["topic"], token.Error())
+	log.Debug("Unsubcribing from topic: ", t.config.Settings["topic"].(string))
+	for _, endpoint := range t.config.Handlers {
+		if token := t.client.Unsubscribe(endpoint.Settings["topic"].(string)); token.Wait() && token.Error() != nil {
+			log.Errorf("Error unsubscribing from topic %s: %s", endpoint.Settings["topic"].(string), token.Error())
 		}
 	}
 
