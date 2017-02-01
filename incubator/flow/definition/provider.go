@@ -1,4 +1,4 @@
-package flow
+package definition
 
 import (
 	"fmt"
@@ -9,7 +9,10 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/flow/script/fggos"
 	"github.com/TIBCOSoftware/flogo-lib/flow/service"
 	"github.com/TIBCOSoftware/flogo-lib/util"
+	"github.com/op/go-logging"
 )
+
+var log = logging.MustGetLogger("provider")
 
 // Provider is the interface that describes an object
 // that can provide flow definitions from a URI

@@ -6,9 +6,12 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/TIBCOSoftware/flogo-contrib/incubator/flow/definition"
+	"github.com/TIBCOSoftware/flogo-contrib/incubator/flow/extension"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/flow/flowinst"
+	"github.com/TIBCOSoftware/flogo-lib/flow/model"
 	"github.com/TIBCOSoftware/flogo-lib/types"
 	"github.com/TIBCOSoftware/flogo-lib/util"
 	"github.com/op/go-logging"
@@ -22,9 +25,17 @@ var log = logging.MustGetLogger("flow")
 
 type FlowAction struct {
 	stateRecorder flowinst.StateRecorder
-	flowProvider  Provider
+	flowProvider  definition.Provider
+	flowModel     *model.FlowModel
 	idGenerator   *util.Generator
 	actionOptions *flowinst.ActionOptions
+}
+
+// Provides the different extension points to the Flow Action
+type ExtensionProvider interface {
+	GetFlowProvider() definition.Provider
+	GetFlowModel() *model.FlowModel
+	GetStateRecorder() flowinst.StateRecorder
 }
 
 var flowAction *FlowAction
@@ -44,21 +55,18 @@ func (fa *FlowFactory) New(id string) action.Action2 {
 func NewFlowAction() *FlowAction {
 
 	fa := &FlowAction{}
-	fa.flowProvider = NewRemoteFlowProvider()
 
-	// TODO add state recorder
-	//	srSettings := make(map[string]string, 2)
-	//	srSettings["host"] = ""
-	//	srSettings["port"] = ""
-	//	srConfig := &util.ServiceConfig{Name: "stateRecorder", Enabled: false, Settings: srSettings}
-	//	sr := staterecorder.NewRemoteStateRecorder(srConfig)
-	//	serviceManager.RegisterService(sr)
-	//	fa.stateRecorder = sr
+	// Get Extension Provider
+	ep := extension.New()
 
-	// TODO add engine tester
-	//	etConfig := &util.ServiceConfig{Name: "engineTester", Enabled: false}
-	//	engineTester := tester.NewRestEngineTester(etConfig)
-	//	serviceManager.RegisterService(engineTester)
+	//	Add Flow provider
+	fa.flowProvider = ep.GetFlowProvider()
+
+	// Add Model
+	fa.flowModel = ep.GetFlowModel()
+
+	// Add state recorder
+	fa.stateRecorder = ep.GetStateRecorder()
 
 	options := &flowinst.ActionOptions{Record: false}
 
@@ -159,7 +167,7 @@ func (fa *FlowAction) Run(context context.Context, uri string, options interface
 		instanceID := fa.idGenerator.NextAsString()
 		log.Debug("Creating Instance: ", instanceID)
 
-		instance = flowinst.NewFlowInstance(instanceID, uri, flow)
+		instance = flowinst.New(instanceID, uri, flow, fa.flowModel)
 	case flowinst.AoResume:
 		if ok {
 			instance = ro.InitialState

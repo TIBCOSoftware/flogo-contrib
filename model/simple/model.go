@@ -9,15 +9,22 @@ import (
 // log is the default package logger
 var log = logging.MustGetLogger("model-tibco-simple")
 
-func init() {
-	m := model.New("tibco-simple")
-	m.RegisterFlowBehavior(&SimpleFlowBehavior{})
-	m.RegisterTaskBehavior(1, &SimpleTaskBehavior{})
+const (
+	MODEL_NAME = "tibco-simple"
+)
 
-	model.Register(m)
+func init() {
+	model.Register(New())
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+func New() *model.FlowModel {
+	m := model.New(MODEL_NAME)
+	m.RegisterFlowBehavior(&SimpleFlowBehavior{})
+	m.RegisterTaskBehavior(1, &SimpleTaskBehavior{})
+	return m
+}
 
 // SimpleFlowBehavior implements model.FlowBehavior
 type SimpleFlowBehavior struct {
