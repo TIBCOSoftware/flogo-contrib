@@ -42,7 +42,7 @@ func NewFlowManager() *FlowManager {
 
 // AddCompressed adds a compressed flow to the map of flow entries
 func (mgr *FlowManager) AddCompressed(id string, newFlow string) error {
-	if len(newFlow) == 0 {
+	if len(newFlow) < 3 {
 		return fmt.Errorf("Empty Flow with id '%s'", id)
 	}
 	mgr.mu.Lock()
@@ -57,9 +57,10 @@ func (mgr *FlowManager) AddCompressed(id string, newFlow string) error {
 	return nil
 }
 
+// TODO add schema validation for flow
 // AddUncompressed adds an uncompressed flow to the map of flow entries
 func (mgr *FlowManager) AddUncompressed(id string, newFlow []byte) error {
-	if len(newFlow) == 0 {
+	if len(newFlow) < 3 {
 		return fmt.Errorf("Empty Flow with id '%s'", id)
 	}
 	mgr.mu.Lock()
@@ -76,7 +77,7 @@ func (mgr *FlowManager) AddUncompressed(id string, newFlow []byte) error {
 
 // AddURI adds a uri flow to the map of flow entries
 func (mgr *FlowManager) AddURI(id string, newUri string) error {
-	if len(newUri) == 0 {
+	if len(newUri) < 3 {
 		return fmt.Errorf("Empty Flow URI with id '%s'", id)
 	}
 	mgr.mu.Lock()
