@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/TIBCOSoftware/flogo-contrib/incubator/rest/runtime/cors"
+	"github.com/TIBCOSoftware/flogo-contrib/incubator/rest/cors"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/types"
@@ -18,7 +18,7 @@ import (
 
 const (
 	REST_CORS_PREFIX = "REST_TRIGGER"
-	TRIGGER_REF      = "github.com/TIBCOSoftware/flogo-contrib/incubator/rest/runtime"
+	TRIGGER_REF      = "github.com/TIBCOSoftware/flogo-contrib/incubator/rest"
 )
 
 // log is the default package logger

@@ -12,7 +12,7 @@ import (
 
 const testConfig string = `{
   "id": "tibco-rest",
-  "ref": "github.com/TIBCOSoftware/flogo-contrib/incubator/rest/runtime",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/incubator/rest",
   "settings": {
     "port": "8091"
   },
