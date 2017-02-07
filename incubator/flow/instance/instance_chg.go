@@ -1,4 +1,4 @@
-package flowinst
+package instance
 
 import (
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
