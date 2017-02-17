@@ -1,4 +1,4 @@
-package salesforce
+package gpio
 
 import (
 	"testing"
