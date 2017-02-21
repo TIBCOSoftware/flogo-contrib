@@ -1,4 +1,4 @@
-package salesforce
+package gpio
 
 var jsonMetadata = `{
   "name": "tibco-gpio",
