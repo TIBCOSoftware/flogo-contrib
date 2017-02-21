@@ -3,8 +3,8 @@ package extension
 import (
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"github.com/TIBCOSoftware/flogo-contrib/model/simple"
-	"github.com/TIBCOSoftware/flogo-lib/flow/flowinst"
 	"github.com/TIBCOSoftware/flogo-lib/flow/model"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/instance"
 )
 
 //Provider is the extension provider for the flow action
@@ -23,6 +23,6 @@ func (fp *Provider) GetFlowModel() *model.FlowModel {
 	return simple.New()
 }
 
-func (fp *Provider) GetStateRecorder() flowinst.StateRecorder {
+func (fp *Provider) GetStateRecorder() instance.StateRecorder {
 	return nil
 }
