@@ -6,11 +6,11 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/instance"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/extension"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
-	"github.com/TIBCOSoftware/flogo-lib/flow/flowinst"
 	"github.com/TIBCOSoftware/flogo-lib/flow/model"
 	"github.com/TIBCOSoftware/flogo-lib/types"
 	"github.com/TIBCOSoftware/flogo-lib/util"
@@ -19,23 +19,32 @@ import (
 
 const (
 	FLOW_REF = "github.com/TIBCOSoftware/flogo-contrib/action/flow"
+	AoStart   = iota // 0
+	AoResume         // 1
+	AoRestart        // 2
 )
 
 var log = logging.MustGetLogger("flow")
 
+// ActionOptions are the options for the FlowAction
+type ActionOptions struct {
+	MaxStepCount int
+	Record       bool
+}
+
 type FlowAction struct {
-	stateRecorder flowinst.StateRecorder
+	stateRecorder instance.StateRecorder
 	flowProvider  definition.Provider
 	flowModel     *model.FlowModel
 	idGenerator   *util.Generator
-	actionOptions *flowinst.ActionOptions
+	actionOptions *ActionOptions
 }
 
 // Provides the different extension points to the Flow Action
 type ExtensionProvider interface {
 	GetFlowProvider() definition.Provider
 	GetFlowModel() *model.FlowModel
-	GetStateRecorder() flowinst.StateRecorder
+	GetStateRecorder() instance.StateRecorder
 }
 
 var flowAction *FlowAction
@@ -59,7 +68,7 @@ func NewFlowAction() *FlowAction {
 	// Get Extension Provider
 	ep := extension.New()
 
-	//	Add Flow provider
+	// Add Flow provider
 	fa.flowProvider = ep.GetFlowProvider()
 
 	// Add Model
@@ -68,7 +77,7 @@ func NewFlowAction() *FlowAction {
 	// Add state recorder
 	fa.stateRecorder = ep.GetStateRecorder()
 
-	options := &flowinst.ActionOptions{Record: false}
+	options := &ActionOptions{Record: false}
 
 	fa.idGenerator, _ = util.NewGenerator()
 
@@ -134,8 +143,8 @@ func (fa *FlowAction) Init(config types.ActionConfig) {
 type RunOptions struct {
 	Op           int
 	ReturnID     bool
-	InitialState *flowinst.Instance
-	ExecOptions  *flowinst.ExecOptions
+	InitialState *instance.Instance
+	ExecOptions  *instance.ExecOptions
 }
 
 // Run implements action.Action.Run
@@ -145,20 +154,20 @@ func (fa *FlowAction) Run(context context.Context, uri string, options interface
 	//todo: catch panic
 	//todo: consider switch to URI to dictate flow operation (ex. flow://blah/resume)
 
-	op := flowinst.AoStart
+	op := AoStart
 	retID := false
 
-	ro, ok := options.(*flowinst.RunOptions)
+	ro, ok := options.(*RunOptions)
 
 	if ok {
 		op = ro.Op
 		retID = ro.ReturnID
 	}
 
-	var instance *flowinst.Instance
+	var inst *instance.Instance
 
 	switch op {
-	case flowinst.AoStart:
+	case AoStart:
 		flow, err := fa.flowProvider.GetFlow(uri)
 		if err != nil {
 			return err
@@ -167,19 +176,19 @@ func (fa *FlowAction) Run(context context.Context, uri string, options interface
 		instanceID := fa.idGenerator.NextAsString()
 		log.Debug("Creating Instance: ", instanceID)
 
-		instance = flowinst.New(instanceID, uri, flow, fa.flowModel)
-	case flowinst.AoResume:
+		inst = instance.New(instanceID, uri, flow, fa.flowModel)
+	case AoResume:
 		if ok {
-			instance = ro.InitialState
-			log.Debug("Resuming Instance: ", instance.ID())
+			inst = ro.InitialState
+			log.Debug("Resuming Instance: ", inst.ID())
 		} else {
 			return errors.New("Unable to resume instance, resume options not provided")
 		}
-	case flowinst.AoRestart:
+	case AoRestart:
 		if ok {
-			instance = ro.InitialState
+			inst = ro.InitialState
 			instanceID := fa.idGenerator.NextAsString()
-			instance.Restart(instanceID, fa.flowProvider)
+			inst.Restart(instanceID, fa.flowProvider)
 
 			log.Debug("Restarting Instance: ", instanceID)
 		} else {
@@ -188,8 +197,8 @@ func (fa *FlowAction) Run(context context.Context, uri string, options interface
 	}
 
 	if ok && ro.ExecOptions != nil {
-		log.Debugf("Applying Exec Options to instance: %s\n", instance.ID())
-		flowinst.ApplyExecOptions(instance, ro.ExecOptions)
+		log.Debugf("Applying Exec Options to instance: %s\n", inst.ID())
+		instance.ApplyExecOptions(inst, ro.ExecOptions)
 	}
 
 	triggerAttrs, ok := trigger.FromContext(context)
@@ -203,46 +212,46 @@ func (fa *FlowAction) Run(context context.Context, uri string, options interface
 		}
 	}
 
-	if op == flowinst.AoStart {
-		instance.Start(triggerAttrs)
+	if op == AoStart {
+		inst.Start(triggerAttrs)
 	} else {
-		instance.UpdateAttrs(triggerAttrs)
+		inst.UpdateAttrs(triggerAttrs)
 	}
 
-	log.Debugf("Executing instance: %s\n", instance.ID())
+	log.Debugf("Executing instance: %s\n", inst.ID())
 
 	stepCount := 0
 	hasWork := true
 
-	instance.SetReplyHandler(&SimpleReplyHandler{resultHandler: handler})
+	inst.SetReplyHandler(&SimpleReplyHandler{resultHandler: handler})
 
 	go func() {
 
 		defer handler.Done()
 
-		if !instance.Flow.ExplicitReply() {
-			handler.HandleResult(200, &IDResponse{ID: instance.ID()}, nil)
+		if !inst.Flow.ExplicitReply() {
+			handler.HandleResult(200, &IDResponse{ID: inst.ID()}, nil)
 		}
 
-		for hasWork && instance.Status() < flowinst.StatusCompleted && stepCount < fa.actionOptions.MaxStepCount {
+		for hasWork && inst.Status() < instance.StatusCompleted && stepCount < fa.actionOptions.MaxStepCount {
 			stepCount++
 			log.Debugf("Step: %d\n", stepCount)
-			hasWork = instance.DoStep()
+			hasWork = inst.DoStep()
 
 			if fa.actionOptions.Record {
-				fa.stateRecorder.RecordSnapshot(instance)
-				fa.stateRecorder.RecordStep(instance)
+				fa.stateRecorder.RecordSnapshot(inst)
+				fa.stateRecorder.RecordStep(inst)
 			}
 		}
 
 		if retID {
-			handler.HandleResult(200, &IDResponse{ID: instance.ID()}, nil)
+			handler.HandleResult(200, &IDResponse{ID: inst.ID()}, nil)
 		}
 
-		log.Debugf("Done Executing A.instance [%s] - Status: %d\n", instance.ID(), instance.Status())
+		log.Debugf("Done Executing A.instance [%s] - Status: %d\n", inst.ID(), inst.Status())
 
-		if instance.Status() == flowinst.StatusCompleted {
-			log.Infof("Flow [%s] Completed", instance.ID())
+		if inst.Status() == instance.StatusCompleted {
+			log.Infof("Flow [%s] Completed", inst.ID())
 		}
 	}()
 
