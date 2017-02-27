@@ -1,5 +1,6 @@
 {
   "name": "tibco-log",
+  "type": "flogo:activity",
   "version": "0.0.1",
   "title": "Log Message",
   "description": "Simple Log Activity",

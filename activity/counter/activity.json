@@ -1,5 +1,6 @@
 {
   "name": "tibco-counter",
+  "type": "flogo:activity",
   "version": "0.0.1",
   "title": "Increment Counter",
   "description": "Simple Global Counter Activity",

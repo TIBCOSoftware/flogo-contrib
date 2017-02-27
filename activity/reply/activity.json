@@ -1,5 +1,6 @@
 {
   "name": "tibco-reply",
+  "type": "flogo:activity",
   "version": "0.0.1",
   "title": "Reply To Trigger",
   "description": "Simple Reply Activity",

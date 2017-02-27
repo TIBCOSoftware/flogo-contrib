@@ -1,5 +1,6 @@
 {
   "name": "tibco-twilio",
+  "type": "flogo:activity",
   "version": "0.0.1",
   "title": "Send SMS Via Twilio",
   "description": "Simple Twilio Activity",

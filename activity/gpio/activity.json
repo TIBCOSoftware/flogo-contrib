@@ -1,5 +1,6 @@
 {
   "name": "tibco-gpio",
+  "type": "flogo:activity",
   "version": "0.0.1",
   "title": "Control GPIO",
   "description": "Control raspberry gpio",

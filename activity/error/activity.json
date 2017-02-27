@@ -1,5 +1,6 @@
 {
   "name": "tibco-error",
+  "type": "flogo:activity",
   "version": "0.0.1",
   "title": "Throw Error",
   "description": "Simple Error Activity",

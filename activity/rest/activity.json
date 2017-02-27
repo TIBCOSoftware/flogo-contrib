@@ -1,5 +1,6 @@
 {
   "name": "tibco-rest",
+  "type": "flogo:activity",
   "version": "0.0.1",
   "title": "Invoke REST Service",
   "description": "Simple REST Activity",

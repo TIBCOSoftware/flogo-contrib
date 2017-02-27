@@ -1,5 +1,6 @@
 {
   "name": "tibco-coap",
+  "type": "flogo:trigger",
   "version": "0.0.1",
   "title": "Receive CoAP Message",
   "description": "Simple CoAP Trigger",

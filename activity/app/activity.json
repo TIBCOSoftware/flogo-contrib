@@ -1,5 +1,6 @@
 {
   "name": "tibco-app",
+  "type": "flogo:activity",
   "version": "0.0.1",
   "description": "Simple App Activity",
   "inputs":[
