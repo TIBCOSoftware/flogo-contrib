@@ -6,6 +6,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
 	"github.com/TIBCOSoftware/flogo-lib/flow/flowdef"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
 func applyInputMapper(pi *Instance, taskData *TaskData) {
@@ -22,7 +23,7 @@ func applyInputMapper(pi *Instance, taskData *TaskData) {
 	}
 
 	if inputMapper != nil {
-		log.Debug("Applying InputMapper")
+		logger.Debug("Applying InputMapper")
 		inputMapper.Apply(pi, taskData.InputScope())
 	}
 }
@@ -36,13 +37,13 @@ func applyInputInterceptor(pi *Instance, taskData *TaskData) bool {
 
 		if taskInterceptor != nil {
 
-			log.Debug("Applying Interceptor")
+			logger.Debug("Applying Interceptor")
 
 			if len(taskInterceptor.Inputs) > 0 {
 				// override input attributes
 				for _, attribute := range taskInterceptor.Inputs {
 
-					log.Debugf("Overriding Attr: %s = %s", attribute.Name, attribute.Value)
+					logger.Debugf("Overriding Attr: %s = %s", attribute.Name, attribute.Value)
 
 					//todo: validation
 					taskData.InputScope().SetAttrValue(attribute.Name, attribute.Value)
@@ -90,7 +91,7 @@ func applyOutputMapper(pi *Instance, taskData *TaskData) bool {
 	}
 
 	if outputMapper != nil {
-		log.Debug("Applying OutputMapper")
+		logger.Debug("Applying OutputMapper")
 		outputMapper.Apply(taskData.OutputScope(), pi)
 		return true
 	}
@@ -190,7 +191,7 @@ func (s *FixedTaskScope) SetAttrValue(attrName string, value interface{}) error 
 		s.attrs = make(map[string]*data.Attribute)
 	}
 
-	log.Debugf("SetAttr: %s = %v\n", attrName, value)
+	logger.Debugf("SetAttr: %s = %v\n", attrName, value)
 
 	attr, found := s.attrs[attrName]
 
@@ -205,8 +206,8 @@ func (s *FixedTaskScope) SetAttrValue(attrName string, value interface{}) error 
 			coercedVal, _ := data.CoerceToValue(value, attr.Type)
 			s.attrs[attrName] = data.NewAttribute(attrName, attr.Type, coercedVal)
 		} else {
-			log.Debugf("SetAttr: Attr %s ref not found\n", attrName)
-			log.Debugf("SetAttr: refs %v\n", s.refAttrs)
+			logger.Debugf("SetAttr: Attr %s ref not found\n", attrName)
+			logger.Debugf("SetAttr: refs %v\n", s.refAttrs)
 		}
 		//todo: else error
 	}
