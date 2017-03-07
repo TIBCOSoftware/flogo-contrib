@@ -1,15 +1,14 @@
 package app
 
 import (
+	"fmt"
 	"strings"
 	"sync"
-	"fmt"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
-
 
 const (
 	ivAttrName = "attribute"
@@ -64,7 +63,7 @@ func (a *AppActivity) Eval(context activity.Context) (done bool, err error) {
 		typedVal, ok := data.GetGlobalScope().GetAttr(attrName)
 
 		if !ok {
-			errorMsg := fmt.Sprintf("Attribute not defined: " + attrName)
+			errorMsg := fmt.Sprintf("Attribute not defined: '%s'", attrName)
 			logger.Error(errorMsg)
 			return false, activity.NewError(errorMsg)
 		}
@@ -78,7 +77,7 @@ func (a *AppActivity) Eval(context activity.Context) (done bool, err error) {
 		data.GetGlobalScope().SetAttrValue(attrName, val)
 		context.SetOutput(ovValue, val)
 	default:
-		errorMsg := fmt.Sprintf("Unsupported Op: " + op)
+		errorMsg := fmt.Sprintf("Unsupported Op:'%s' ", op)
 		logger.Error(errorMsg)
 		return false, activity.NewError(errorMsg)
 	}
