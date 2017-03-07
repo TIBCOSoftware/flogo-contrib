@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/op/go-logging"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -14,13 +13,13 @@ import (
 
 	"github.com/TIBCOSoftware/flogo-lib/flow/flowdef"
 	"github.com/TIBCOSoftware/flogo-lib/util"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
 const (
 	uriSchemeFile = "file://"
 )
 
-var log = logging.MustGetLogger("manager")
 
 // FlowManager is a simple manager for flows
 type FlowManager struct {
@@ -53,7 +52,7 @@ func (mgr *FlowManager) AddCompressed(id string, newFlow string) error {
 	}
 	// Add the flow
 	mgr.flows[id] = &FlowEntry{compressed: newFlow}
-	log.Debugf("Compressed flow with id '%s' added", id)
+	logger.Debugf("Compressed flow with id '%s' added", id)
 	return nil
 }
 
@@ -71,7 +70,7 @@ func (mgr *FlowManager) AddUncompressed(id string, newFlow []byte) error {
 	}
 	// Add the flow
 	mgr.flows[id] = &FlowEntry{uncompressed: newFlow}
-	log.Debugf("Uncompressed flow with id '%s' added", id)
+	logger.Debugf("Uncompressed flow with id '%s' added", id)
 	return nil
 }
 
@@ -88,7 +87,7 @@ func (mgr *FlowManager) AddURI(id string, newUri string) error {
 	}
 	// Add the flow
 	mgr.flows[id] = &FlowEntry{uri: newUri}
-	log.Debugf("URI flow with id '%s' added", id)
+	logger.Debugf("URI flow with id '%s' added", id)
 	return nil
 }
 
@@ -99,7 +98,7 @@ func (mgr *FlowManager) GetFlow(id string) (*flowdef.DefinitionRep, error) {
 
 	if !ok {
 		err := fmt.Errorf("No flow found for id '%s'", id)
-		log.Errorf(err.Error())
+		logger.Errorf(err.Error())
 		return nil, err
 	}
 
@@ -117,7 +116,7 @@ func (mgr *FlowManager) GetFlow(id string) (*flowdef.DefinitionRep, error) {
 		decodedBytes, err := decodeAndUnzip(entry.compressed)
 		if err != nil {
 			decodeErr := fmt.Errorf("Error decoding compressed flow with id '%s', %s", id, err.Error())
-			log.Errorf(decodeErr.Error())
+			logger.Errorf(decodeErr.Error())
 			return nil, decodeErr
 		}
 		flowDefBytes = decodedBytes
@@ -127,13 +126,13 @@ func (mgr *FlowManager) GetFlow(id string) (*flowdef.DefinitionRep, error) {
 	if len(entry.uri) > 0 {
 		if strings.HasPrefix(entry.uri, uriSchemeFile) {
 			// File URI
-			log.Infof("Loading Local Flow: %s\n", entry.uri)
+			logger.Infof("Loading Local Flow: %s\n", entry.uri)
 			flowFilePath, _ := util.URLStringToFilePath(entry.uri)
 
 			readBytes, err := ioutil.ReadFile(flowFilePath)
 			if err != nil {
 				readErr := fmt.Errorf("Error reading flow file with id '%s', %s", id, err.Error())
-				log.Errorf(readErr.Error())
+				logger.Errorf(readErr.Error())
 				return nil, readErr
 			}
 			flowDefBytes = readBytes
@@ -144,24 +143,24 @@ func (mgr *FlowManager) GetFlow(id string) (*flowdef.DefinitionRep, error) {
 			resp, err := client.Do(req)
 			if err != nil {
 				getErr := fmt.Errorf("Error getting flow uri with id '%s', %s", id, err.Error())
-				log.Errorf(getErr.Error())
+				logger.Errorf(getErr.Error())
 				return nil, getErr
 			}
 			defer resp.Body.Close()
 
-			log.Infof("response Status:", resp.Status)
+			logger.Infof("response Status:", resp.Status)
 
 			if resp.StatusCode >= 300 {
 				//not found
 				getErr := fmt.Errorf("Error getting flow uri with id '%s', status code %d", id, resp.StatusCode)
-				log.Errorf(getErr.Error())
+				logger.Errorf(getErr.Error())
 				return nil, getErr
 			}
 
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
 				readErr := fmt.Errorf("Error reading flow uri response body with id '%s', %s", id, err.Error())
-				log.Errorf(readErr.Error())
+				logger.Errorf(readErr.Error())
 				return nil, readErr
 			}
 			flowDefBytes = body
@@ -171,7 +170,7 @@ func (mgr *FlowManager) GetFlow(id string) (*flowdef.DefinitionRep, error) {
 	var flow *flowdef.DefinitionRep
 	err := json.Unmarshal(flowDefBytes, &flow)
 	if err != nil {
-		log.Errorf(err.Error())
+		logger.Errorf(err.Error())
 		return nil, fmt.Errorf("Error marshalling flow with id '%s', %s", id, err.Error())
 	}
 	return flow, nil

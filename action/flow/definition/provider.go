@@ -9,10 +9,9 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/flow/script/fggos"
 	"github.com/TIBCOSoftware/flogo-lib/flow/service"
 	"github.com/TIBCOSoftware/flogo-lib/util"
-	"github.com/op/go-logging"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
-var log = logging.MustGetLogger("provider")
 
 // Provider is the interface that describes an object
 // that can provide flow definitions from a URI
@@ -67,11 +66,11 @@ func (pps *RemoteFlowProvider) GetFlow(id string) (*flowdef.Definition, error) {
 
 	// todo turn pps.flowCache to real cache
 	if flow, ok := pps.flowCache[id]; ok {
-		log.Debugf("Accessing cached Flow: %s\n")
+		logger.Debugf("Accessing cached Flow: %s\n")
 		return flow, nil
 	}
 
-	log.Debugf("Getting Flow: %s\n", id)
+	logger.Debugf("Getting Flow: %s\n", id)
 
 	flowRep, err := pps.flowMgr.GetFlow(id)
 	if err != nil {
@@ -81,7 +80,7 @@ func (pps *RemoteFlowProvider) GetFlow(id string) (*flowdef.Definition, error) {
 	def, err := flowdef.NewDefinition(flowRep)
 	if err != nil {
 		errorMsg := fmt.Sprintf("Error unmarshalling flow '%s': %s", id, err.Error())
-		log.Errorf(errorMsg)
+		logger.Errorf(errorMsg)
 		return nil, fmt.Errorf(errorMsg)
 	}
 

@@ -14,7 +14,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/flow/model"
 	"github.com/TIBCOSoftware/flogo-lib/types"
 	"github.com/TIBCOSoftware/flogo-lib/util"
-	"github.com/op/go-logging"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
 const (
@@ -24,7 +24,6 @@ const (
 	AoRestart        // 2
 )
 
-var log = logging.MustGetLogger("flow")
 
 // ActionOptions are the options for the FlowAction
 type ActionOptions struct {
@@ -90,13 +89,13 @@ func NewFlowAction() *FlowAction {
 }
 
 func (fa *FlowAction) Init(config types.ActionConfig) {
-	log.Debugf("Initializing flow '%s'", config.Id)
+	logger.Debugf("Initializing flow '%s'", config.Id)
 
 	var flavor Flavor
 	err := json.Unmarshal(config.Data, &flavor)
 	if err != nil {
 		errorMsg := fmt.Sprintf("Error while loading flow '%s' error '%s'", config.Id, err.Error())
-		log.Errorf(errorMsg)
+		logger.Errorf(errorMsg)
 		panic(errorMsg)
 	}
 
@@ -105,7 +104,7 @@ func (fa *FlowAction) Init(config types.ActionConfig) {
 		err := fa.flowProvider.AddUncompressedFlow(config.Id, flavor.Flow)
 		if err != nil {
 			errorMsg := fmt.Sprintf("Error while loading uncompressed flow '%s' error '%s'", config.Id, err.Error())
-			log.Errorf(errorMsg)
+			logger.Errorf(errorMsg)
 			panic(errorMsg)
 		}
 		return
@@ -116,7 +115,7 @@ func (fa *FlowAction) Init(config types.ActionConfig) {
 		err := fa.flowProvider.AddCompressedFlow(config.Id, string(flavor.FlowCompressed[:]))
 		if err != nil {
 			errorMsg := fmt.Sprintf("Error while loading compressed flow '%s' error '%s'", config.Id, err.Error())
-			log.Errorf(errorMsg)
+			logger.Errorf(errorMsg)
 			panic(errorMsg)
 		}
 		return
@@ -127,14 +126,14 @@ func (fa *FlowAction) Init(config types.ActionConfig) {
 		err := fa.flowProvider.AddFlowURI(config.Id, string(flavor.FlowURI[:]))
 		if err != nil {
 			errorMsg := fmt.Sprintf("Error while loading flow URI '%s' error '%s'", config.Id, err.Error())
-			log.Errorf(errorMsg)
+			logger.Errorf(errorMsg)
 			panic(errorMsg)
 		}
 		return
 	}
 
 	errorMsg := fmt.Sprintf("No flow found in action data for id '%s'", config.Id)
-	log.Errorf(errorMsg)
+	logger.Errorf(errorMsg)
 	panic(errorMsg)
 
 }
@@ -150,7 +149,7 @@ type RunOptions struct {
 // Run implements action.Action.Run
 func (fa *FlowAction) Run(context context.Context, uri string, options interface{}, handler action.ResultHandler) error {
 
-	log.Infof("In Flow Run uri: '%s'", uri)
+	logger.Infof("In Flow Run uri: '%s'", uri)
 	//todo: catch panic
 	//todo: consider switch to URI to dictate flow operation (ex. flow://blah/resume)
 
@@ -174,13 +173,13 @@ func (fa *FlowAction) Run(context context.Context, uri string, options interface
 		}
 
 		instanceID := fa.idGenerator.NextAsString()
-		log.Debug("Creating Instance: ", instanceID)
+		logger.Debug("Creating Instance: ", instanceID)
 
 		inst = instance.New(instanceID, uri, flow, fa.flowModel)
 	case AoResume:
 		if ok {
 			inst = ro.InitialState
-			log.Debug("Resuming Instance: ", inst.ID())
+			logger.Debug("Resuming Instance: ", inst.ID())
 		} else {
 			return errors.New("Unable to resume instance, resume options not provided")
 		}
@@ -190,24 +189,24 @@ func (fa *FlowAction) Run(context context.Context, uri string, options interface
 			instanceID := fa.idGenerator.NextAsString()
 			inst.Restart(instanceID, fa.flowProvider)
 
-			log.Debug("Restarting Instance: ", instanceID)
+			logger.Debug("Restarting Instance: ", instanceID)
 		} else {
 			return errors.New("Unable to restart instance, restart options not provided")
 		}
 	}
 
 	if ok && ro.ExecOptions != nil {
-		log.Debugf("Applying Exec Options to instance: %s\n", inst.ID())
+		logger.Debugf("Applying Exec Options to instance: %s\n", inst.ID())
 		instance.ApplyExecOptions(inst, ro.ExecOptions)
 	}
 
 	triggerAttrs, ok := trigger.FromContext(context)
 
-	if log.IsEnabledFor(logging.DEBUG) && ok {
+	if ok {
 		if len(triggerAttrs) > 0 {
-			log.Debug("Run Attributes:")
+			logger.Debug("Run Attributes:")
 			for _, attr := range triggerAttrs {
-				log.Debugf(" Attr:%s, Type:%s, Value:%v", attr.Name, attr.Type.String(), attr.Value)
+				logger.Debugf(" Attr:%s, Type:%s, Value:%v", attr.Name, attr.Type.String(), attr.Value)
 			}
 		}
 	}
@@ -218,7 +217,7 @@ func (fa *FlowAction) Run(context context.Context, uri string, options interface
 		inst.UpdateAttrs(triggerAttrs)
 	}
 
-	log.Debugf("Executing instance: %s\n", inst.ID())
+	logger.Debugf("Executing instance: %s\n", inst.ID())
 
 	stepCount := 0
 	hasWork := true
@@ -235,7 +234,7 @@ func (fa *FlowAction) Run(context context.Context, uri string, options interface
 
 		for hasWork && inst.Status() < instance.StatusCompleted && stepCount < fa.actionOptions.MaxStepCount {
 			stepCount++
-			log.Debugf("Step: %d\n", stepCount)
+			logger.Debugf("Step: %d\n", stepCount)
 			hasWork = inst.DoStep()
 
 			if fa.actionOptions.Record {
@@ -248,10 +247,10 @@ func (fa *FlowAction) Run(context context.Context, uri string, options interface
 			handler.HandleResult(200, &IDResponse{ID: inst.ID()}, nil)
 		}
 
-		log.Debugf("Done Executing A.instance [%s] - Status: %d\n", inst.ID(), inst.Status())
+		logger.Debugf("Done Executing A.instance [%s] - Status: %d\n", inst.ID(), inst.Status())
 
 		if inst.Status() == instance.StatusCompleted {
-			log.Infof("Flow [%s] Completed", inst.ID())
+			logger.Infof("Flow [%s] Completed", inst.ID())
 		}
 	}()
 
