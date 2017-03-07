@@ -3,14 +3,13 @@ package app
 import (
 	"strings"
 	"sync"
+	"fmt"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
-	"github.com/op/go-logging"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
-// log is the default package logger
-var log = logging.MustGetLogger("activity-tibco-app")
 
 const (
 	ivAttrName = "attribute"
@@ -46,10 +45,13 @@ func (a *AppActivity) Eval(context activity.Context) (done bool, err error) {
 
 	switch op {
 	case "ADD":
+		logger.Debug("In ADD operation")
 		dt, ok := data.ToTypeEnum(strings.ToLower(context.GetInput(ivType).(string)))
 
 		if !ok {
-			return false, activity.NewError("Unsupported Type: " + context.GetInput(ivType).(string))
+			errorMsg := fmt.Sprintf("Unsupported type '%s'", context.GetInput(ivType).(string))
+			logger.Error(errorMsg)
+			return false, activity.NewError(errorMsg)
 		}
 
 		val := context.GetInput(ivValue)
@@ -58,22 +60,27 @@ func (a *AppActivity) Eval(context activity.Context) (done bool, err error) {
 		data.GetGlobalScope().AddAttr(attrName, dt, val)
 		context.SetOutput(ovValue, val)
 	case "GET":
+		logger.Debug("In GET operation")
 		typedVal, ok := data.GetGlobalScope().GetAttr(attrName)
 
 		if !ok {
-			return false, activity.NewError("Attribute not defined: " + attrName)
+			errorMsg := fmt.Sprintf("Attribute not defined: " + attrName)
+			logger.Error(errorMsg)
+			return false, activity.NewError(errorMsg)
 		}
 
 		context.SetOutput(ovValue, typedVal.Value)
 	case "UPDATE":
-
+		logger.Debug("In UPDATE operation")
 		val := context.GetInput(ivValue)
 		//data.CoerceToValue(val, dt)
 
 		data.GetGlobalScope().SetAttrValue(attrName, val)
 		context.SetOutput(ovValue, val)
 	default:
-		return false, activity.NewError("Unsupported Op: " + op)
+		errorMsg := fmt.Sprintf("Unsupported Op: " + op)
+		logger.Error(errorMsg)
+		return false, activity.NewError(errorMsg)
 	}
 
 	return true, nil
