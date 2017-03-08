@@ -10,6 +10,8 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
+var log = logger.GetLogger("activity-tibco-app")
+
 const (
 	ivAttrName = "attribute"
 	ivOp       = "operation"
@@ -44,12 +46,12 @@ func (a *AppActivity) Eval(context activity.Context) (done bool, err error) {
 
 	switch op {
 	case "ADD":
-		logger.Debug("In ADD operation")
+		log.Debug("In ADD operation")
 		dt, ok := data.ToTypeEnum(strings.ToLower(context.GetInput(ivType).(string)))
 
 		if !ok {
 			errorMsg := fmt.Sprintf("Unsupported type '%s'", context.GetInput(ivType).(string))
-			logger.Error(errorMsg)
+			log.Error(errorMsg)
 			return false, activity.NewError(errorMsg)
 		}
 
@@ -59,18 +61,18 @@ func (a *AppActivity) Eval(context activity.Context) (done bool, err error) {
 		data.GetGlobalScope().AddAttr(attrName, dt, val)
 		context.SetOutput(ovValue, val)
 	case "GET":
-		logger.Debug("In GET operation")
+		log.Debug("In GET operation")
 		typedVal, ok := data.GetGlobalScope().GetAttr(attrName)
 
 		if !ok {
 			errorMsg := fmt.Sprintf("Attribute not defined: '%s'", attrName)
-			logger.Error(errorMsg)
+			log.Error(errorMsg)
 			return false, activity.NewError(errorMsg)
 		}
 
 		context.SetOutput(ovValue, typedVal.Value)
 	case "UPDATE":
-		logger.Debug("In UPDATE operation")
+		log.Debug("In UPDATE operation")
 		val := context.GetInput(ivValue)
 		//data.CoerceToValue(val, dt)
 
@@ -78,7 +80,7 @@ func (a *AppActivity) Eval(context activity.Context) (done bool, err error) {
 		context.SetOutput(ovValue, val)
 	default:
 		errorMsg := fmt.Sprintf("Unsupported Op:'%s' ", op)
-		logger.Error(errorMsg)
+		log.Error(errorMsg)
 		return false, activity.NewError(errorMsg)
 	}
 

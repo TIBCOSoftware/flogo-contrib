@@ -5,11 +5,10 @@
 package cors
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
-	"github.com/op/go-logging"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
 const (
@@ -36,14 +35,14 @@ type cors struct {
 	// Prefix used for the CORS environment variables
 	Prefix string
 
-	log *logging.Logger
+	log logger.Logger
 }
 
 // make sure that the cors implements the Cors interface
 var _ Cors = (*cors)(nil)
 
 //Cors constructor
-func New(prefix string, log *logging.Logger) Cors {
+func New(prefix string, log logger.Logger) Cors {
 	return cors{Prefix: prefix, log: log}
 }
 
@@ -86,25 +85,25 @@ func HasOriginHeader(r *http.Request) bool {
 }
 
 // Check if the method name is valid and allowed by the environment variable
-func isValidAccessControlMethod(methodName string, prefix string, log *logging.Logger) bool {
+func isValidAccessControlMethod(methodName string, prefix string, log logger.Logger) bool {
 	if methodName == "" {
-		log.Info(fmt.Sprintf("Invalid Access Control Method for preflight request: '%s'", methodName))
+		log.Infof("Invalid Access Control Method for preflight request: '%s'", methodName)
 		return false
 	}
 	allowedMethodsEnv := GetCorsAllowMethods(prefix)
 	allowedMethods := strings.Split(allowedMethodsEnv, ",")
-	log.Debug(fmt.Sprintf("Allowed Methods '%s'", allowedMethods))
+	log.Debugf("Allowed Methods '%s'", allowedMethods)
 	for i := range allowedMethods {
 		if strings.ToLower(strings.TrimSpace(allowedMethods[i])) == strings.ToLower(strings.TrimSpace(methodName)) {
 			return true
 		}
 	}
-	log.Info(fmt.Sprintf("Invalid Access Control Method for preflight request: '%s'", methodName))
+	log.Infof("Invalid Access Control Method for preflight request: '%s'", methodName)
 	return false
 }
 
 // Check if the headers are valid and allowed by the environment variable
-func isValidAccessControlHeaders(headersStr string, prefix string, log *logging.Logger) bool {
+func isValidAccessControlHeaders(headersStr string, prefix string, log logger.Logger) bool {
 	if headersStr == "" {
 		return true
 	}
@@ -122,7 +121,7 @@ func isValidAccessControlHeaders(headersStr string, prefix string, log *logging.
 	for i := range headers {
 		_, ok := allowedHeadersMap[strings.ToLower(strings.TrimSpace(headers[i]))]
 		if ok == false {
-			log.Info(fmt.Sprintf("Invalid Access Control Header for preflight request: '%s'", strings.TrimSpace(headers[i])))
+			log.Infof("Invalid Access Control Header for preflight request: '%s'", strings.TrimSpace(headers[i]))
 			return false
 		}
 	}

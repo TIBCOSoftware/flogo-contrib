@@ -8,11 +8,11 @@ import (
 
 	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
 	"github.com/dustin/go-coap"
-	"github.com/op/go-logging"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
 // log is the default package logger
-var log = logging.MustGetLogger("activity-tibco-coap")
+var log = logger.GetLogger("activity-tibco-coap")
 
 const (
 	methodGET    = "GET"
