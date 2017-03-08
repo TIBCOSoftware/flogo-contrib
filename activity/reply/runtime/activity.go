@@ -2,11 +2,11 @@ package rest
 
 import (
 	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
-	"github.com/op/go-logging"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
 // log is the default package logger
-var log = logging.MustGetLogger("activity-tibco-reply")
+var log = logger.GetLogger("activity-tibco-reply")
 
 const (
 	ivCode = "code"
@@ -36,6 +36,8 @@ func (a *ReplyActivity) Eval(context activity.Context) (done bool, err error) {
 
 	code := context.GetInput(ivCode).(int)
 	data := context.GetInput(ivData)
+
+	log.Debugf("Code :'%d', Data: '%+v'", code, data)
 
 	replyHandler := context.FlowDetails().ReplyHandler()
 

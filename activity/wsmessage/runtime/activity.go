@@ -5,11 +5,11 @@ import (
 
 	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
 	"github.com/gorilla/websocket"
-	"github.com/op/go-logging"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
 // log is the default package logger
-var log = logging.MustGetLogger("activity-sendWSMessage")
+var log = logger.GetLogger("activity-sendWSMessage")
 
 // MyActivity is a stub for your Activity implementation
 type MyActivity struct {

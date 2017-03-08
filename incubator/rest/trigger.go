@@ -13,7 +13,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/types"
 	"github.com/julienschmidt/httprouter"
-	"github.com/op/go-logging"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
 const (
@@ -22,7 +22,7 @@ const (
 )
 
 // log is the default package logger
-var log = logging.MustGetLogger("trigger-tibco-rest")
+var log = logger.GetLogger("trigger-tibco-rest")
 
 var validMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
 

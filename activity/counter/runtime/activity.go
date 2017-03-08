@@ -4,11 +4,11 @@ import (
 	"sync"
 
 	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
-	"github.com/op/go-logging"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
 // log is the default package logger
-var log = logging.MustGetLogger("activity-tibco-counter")
+var log = logger.GetLogger("activity-tibco-counter")
 
 const (
 	ivCounterName = "counterName"
@@ -55,21 +55,15 @@ func (a *CounterActivity) Eval(context activity.Context) (done bool, err error) 
 	if reset {
 		count = a.resetCounter(counterName)
 
-		if log.IsEnabledFor(logging.DEBUG) {
-			log.Debugf("Counter [%s] reset", counterName)
-		}
+		log.Debugf("Counter [%s] reset", counterName)
 	} else if increment {
 		count = a.incrementCounter(counterName)
 
-		if log.IsEnabledFor(logging.DEBUG) {
-			log.Debugf("Counter [%s] incremented: %d", counterName, count)
-		}
+		log.Debugf("Counter [%s] incremented: %d", counterName, count)
 	} else {
 		count = a.getCounter(counterName)
 
-		if log.IsEnabledFor(logging.DEBUG) {
-			log.Debugf("Counter [%s] = %d", counterName, count)
-		}
+		log.Debugf("Counter [%s] = %d", counterName, count)
 	}
 
 	context.SetOutput(ovValue, count)

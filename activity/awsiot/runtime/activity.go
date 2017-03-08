@@ -8,13 +8,13 @@ import (
 	"io/ioutil"
 
 	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
-	"github.com/op/go-logging"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
 // log is the default package logger
-var log = logging.MustGetLogger("activity-tibco-rest")
+var log = logger.GetLogger("activity-tibco-rest")
 
 const (
 	ivThingName   = "thingName"

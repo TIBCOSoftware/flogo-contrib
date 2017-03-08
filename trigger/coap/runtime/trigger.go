@@ -12,7 +12,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/dustin/go-coap"
-	"github.com/op/go-logging"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
 const (
@@ -23,7 +23,7 @@ const (
 )
 
 // log is the default package logger
-var log = logging.MustGetLogger("trigger-tibco-coap")
+var log = logger.GetLogger("trigger-tibco-coap")
 
 var validMethods = []string{methodGET, methodPOST, methodPUT, methodDELETE}
 

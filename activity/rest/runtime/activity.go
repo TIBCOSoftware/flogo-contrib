@@ -10,11 +10,11 @@ import (
 	"strings"
 
 	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
-	"github.com/op/go-logging"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
 // log is the default package logger
-var log = logging.MustGetLogger("activity-tibco-rest")
+var log = logger.GetLogger("activity-tibco-rest")
 
 const (
 	methodGET    = "GET"
@@ -132,9 +132,7 @@ func (a *RESTActivity) Eval(context activity.Context) (done bool, err error) {
 
 	//json.Unmarshal(respBody, &result)
 
-	if log.IsEnabledFor(logging.DEBUG) {
-		log.Debug("response Body:", result)
-	}
+	log.Debug("response Body:", result)
 
 	context.SetOutput(ovResult, result)
 

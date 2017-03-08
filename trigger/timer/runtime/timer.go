@@ -10,11 +10,11 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/carlescere/scheduler"
-	"github.com/op/go-logging"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
 // log is the default package logger
-var log = logging.MustGetLogger("trigger-tibco-timer")
+var log = logger.GetLogger("trigger-tibco-timer")
 
 type TimerTrigger struct {
 	metadata *trigger.Metadata

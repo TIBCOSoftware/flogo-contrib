@@ -9,11 +9,11 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/flow/support"
 	"github.com/eclipse/paho.mqtt.golang"
-	"github.com/op/go-logging"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
 // log is the default package logger
-var log = logging.MustGetLogger("trigger-tibco-mqtt")
+var log = logger.GetLogger("trigger-tibco-mqtt")
 
 // todo: switch to use endpoint registration
 

@@ -2,24 +2,15 @@ package log
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 
 	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
-	"github.com/op/go-logging"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
 // activityLog is the default logger for the Log Activity
-var activityLog = logging.MustGetLogger("activity-tibco-log")
+var activityLog = logger.GetLogger("activity-tibco-log")
 
-// format is the log format for the Activity log
-var format = logging.MustStringFormatter(
-	`%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{color:reset} %{message}`,
-)
-
-var backend = logging.NewLogBackend(os.Stdout, "", 0)
-var backendFormatter = logging.NewBackendFormatter(backend, format)
-var backendLeveled = logging.AddModuleLevel(backendFormatter)
 
 const (
 	ivMessage   = "message"
@@ -30,8 +21,7 @@ const (
 )
 
 func init() {
-	backendLeveled.SetLevel(logging.DEBUG, "")
-	activityLog.SetBackend(backendLeveled)
+	activityLog.SetLogLevel(logger.InfoLevel)
 }
 
 // LogActivity is an Activity that is used to log a message to the console

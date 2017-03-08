@@ -2,12 +2,12 @@ package twilio
 
 import (
 	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
-	"github.com/op/go-logging"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/sfreiberg/gotwilio"
 )
 
 // log is the default package logger
-var log = logging.MustGetLogger("activity-tibco-twilio")
+var log = logger.GetLogger("activity-tibco-twilio")
 
 const (
 	ivAcctSID   = "accountSID"
@@ -50,9 +50,7 @@ func (a *TwilioActivity) Eval(context activity.Context) (done bool, err error) {
 		log.Error("Error sending SMS:", err)
 	}
 
-	if log.IsEnabledFor(logging.DEBUG) {
-		log.Debug("Response:", resp)
-	}
+	log.Debug("Response:", resp)
 
 	return true, nil
 }

@@ -4,13 +4,13 @@ import (
 	"strings"
 
 	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
-	"github.com/op/go-logging"
 	"errors"
 	"github.com/stianeikeland/go-rpio"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
 // log is the default package logger
-var log = logging.MustGetLogger("activity-tibco-rest")
+var log = logger.GetLogger("activity-tibco-rest")
 
 const (
 	method = "method"
