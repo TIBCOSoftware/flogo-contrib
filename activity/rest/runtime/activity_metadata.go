@@ -26,7 +26,7 @@ var jsonMetadata = `{
     },
     {
       "name": "content",
-      "type": "object"
+      "type": "any"
     }
   ],
   "outputs": [
