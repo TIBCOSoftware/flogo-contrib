@@ -168,7 +168,19 @@ func BuildURI(uri string, values map[string]string) string {
 	var buffer bytes.Buffer
 	buffer.Grow(len(uri))
 
-	var i int
+	addrStart := strings.Index(uri, "://")
+
+	i := addrStart + 3
+
+	for i < len(uri) {
+		if uri[i] == '/' {
+			break
+		}
+		i++
+	}
+
+	buffer.WriteString(uri[0:i])
+
 	for i < len(uri) {
 		if uri[i] == ':' {
 			j := i + 1
@@ -182,9 +194,12 @@ func BuildURI(uri string, values map[string]string) string {
 				i++
 			} else {
 
-				param := uri[i+1 : j]
+				param := uri[i+1: j]
 				value := values[param]
 				buffer.WriteString(value)
+				if j < len(uri) {
+					buffer.WriteString("/")
+				}
 				i = j + 1
 			}
 

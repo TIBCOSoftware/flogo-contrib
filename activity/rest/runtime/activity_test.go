@@ -105,3 +105,57 @@ func TestSimpleGetQP(t *testing.T) {
 	val := tc.GetOutput("result")
 	fmt.Printf("result: %v\n", val)
 }
+
+func TestBuildURI(t *testing.T) {
+
+	uri:= "http://localhost:7070/flow/:id"
+
+	params := map[string]string{
+		"id": "1234",
+	}
+
+	newURI := BuildURI(uri, params)
+
+	fmt.Println(newURI)
+}
+
+func TestBuildURI2(t *testing.T) {
+
+	uri:= "https://127.0.0.1:7070/:cmd/:id/test"
+
+	params := map[string]string{
+		"cmd": "flow",
+		"id": "1234",
+	}
+
+	newURI := BuildURI(uri, params)
+
+	fmt.Println(newURI)
+}
+
+func TestBuildURI3(t *testing.T) {
+
+	uri:= "http://localhost/flow/:id"
+
+	params := map[string]string{
+		"id": "1234",
+	}
+
+	newURI := BuildURI(uri, params)
+
+	fmt.Println(newURI)
+}
+
+func TestBuildURI4(t *testing.T) {
+
+	uri:= "https://127.0.0.1/:cmd/:id/test"
+
+	params := map[string]string{
+		"cmd": "flow",
+		"id": "1234",
+	}
+
+	newURI := BuildURI(uri, params)
+
+	fmt.Println(newURI)
+}
