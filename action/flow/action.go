@@ -11,6 +11,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/extension"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
+	"github.com/TIBCOSoftware/flogo-lib/flow/flowdef"
 	"github.com/TIBCOSoftware/flogo-lib/flow/model"
 	"github.com/TIBCOSoftware/flogo-lib/types"
 	"github.com/TIBCOSoftware/flogo-lib/util"
@@ -34,6 +35,7 @@ type ActionOptions struct {
 type FlowAction struct {
 	stateRecorder instance.StateRecorder
 	flowProvider  definition.Provider
+	mapperFactory flowdef.MapperFactory
 	flowModel     *model.FlowModel
 	idGenerator   *util.Generator
 	actionOptions *ActionOptions
@@ -44,6 +46,7 @@ type ExtensionProvider interface {
 	GetFlowProvider() definition.Provider
 	GetFlowModel() *model.FlowModel
 	GetStateRecorder() instance.StateRecorder
+	GetMapperFactory() flowdef.MapperFactory
 }
 
 var flowAction *FlowAction
@@ -52,6 +55,7 @@ type FlowFactory struct{}
 
 func init() {
 	action.RegisterFactory(FLOW_REF, &FlowFactory{})
+	//todo is this correct? isn't action getting overridden
 	flowAction = NewFlowAction()
 }
 
@@ -75,6 +79,9 @@ func NewFlowAction() *FlowAction {
 
 	// Add state recorder
 	fa.stateRecorder = ep.GetStateRecorder()
+
+	fa.mapperFactory = ep.GetMapperFactory()
+	flowdef.SetMapperFactory(fa.mapperFactory)
 
 	options := &ActionOptions{Record: false}
 

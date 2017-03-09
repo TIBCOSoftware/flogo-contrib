@@ -3,6 +3,7 @@ package extension
 import (
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"github.com/TIBCOSoftware/flogo-contrib/model/simple"
+	"github.com/TIBCOSoftware/flogo-lib/flow/flowdef"
 	"github.com/TIBCOSoftware/flogo-lib/flow/model"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/instance"
 )
@@ -24,5 +25,9 @@ func (fp *Provider) GetFlowModel() *model.FlowModel {
 }
 
 func (fp *Provider) GetStateRecorder() instance.StateRecorder {
+	return nil
+}
+
+func (fp *Provider) GetMapperFactory() flowdef.MapperFactory {
 	return nil
 }
