@@ -3,11 +3,11 @@ package simple
 import (
 	"github.com/TIBCOSoftware/flogo-lib/flow/flowdef"
 	"github.com/TIBCOSoftware/flogo-lib/flow/model"
-	"github.com/op/go-logging"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
 // log is the default package logger
-var log = logging.MustGetLogger("model-tibco-simple")
+var log = logger.GetLogger("model-tibco-simple")
 
 const (
 	MODEL_NAME = "tibco-simple"
