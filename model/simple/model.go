@@ -70,26 +70,39 @@ func (tb *SimpleTaskBehavior) Enter(context model.TaskContext, enterCode int) (e
 	linkContexts := context.FromInstLinks()
 
 	ready := true
+	skipped := false
 
 	if len(linkContexts) == 0 {
 		// has no predecessor links, so task is ready
 		ready = true
 	} else {
+		skipped = true
 
 		log.Debugf("Num Links: %d\n", len(linkContexts))
 		for _, linkContext := range linkContexts {
 
 			log.Debugf("Task: %s, linkData: %v\n", task.Name(), linkContext)
-			if linkContext.State() != STATE_LINK_TRUE {
+			if linkContext.State() < STATE_LINK_FALSE {
 				ready = false
 				break
+			} else if linkContext.State() == STATE_LINK_TRUE {
+				skipped = false
 			}
 		}
 	}
 
 	if ready {
-		log.Debugf("Task Ready\n")
-		context.SetState(STATE_READY)
+
+		if skipped {
+			log.Debugf("Task Skipped\n")
+			context.SetState(STATE_SKIPPED)
+			//todo hack, wait for explicit skip support from engine
+			return ready, -666
+		} else {
+			log.Debugf("Task Ready\n")
+			context.SetState(STATE_READY)
+		}
+
 	} else {
 		log.Debugf("Task Not Ready\n")
 	}
@@ -99,6 +112,10 @@ func (tb *SimpleTaskBehavior) Enter(context model.TaskContext, enterCode int) (e
 
 // Eval implements model.TaskBehavior.Eval
 func (tb *SimpleTaskBehavior) Eval(context model.TaskContext, evalCode int) (done bool, doneCode int, err error) {
+
+	if context.State() == STATE_SKIPPED {
+		return true, EC_SKIP, nil
+	}
 
 	task := context.Task()
 	log.Debugf("Task Eval: %s\n", task)
@@ -156,39 +173,69 @@ func (tb *SimpleTaskBehavior) PostEval(context model.TaskContext, evalCode int, 
 func (tb *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (notifyParent bool, childDoneCode int, taskEntries []*model.TaskEntry) {
 
 	task := context.Task()
-	log.Debugf("done task:%s\n", task.Name())
-
-	context.SetState(STATE_DONE)
-	//context.SetTaskDone() for task garbage collection
 
 	linkInsts := context.ToInstLinks()
 	numLinks := len(linkInsts)
 
-	// process outgoing links
-	if numLinks > 0 {
+	if context.State() == STATE_SKIPPED {
+		log.Debugf("skipped task: %s\n", task.Name())
 
-		taskEntries = make([]*model.TaskEntry, 0, numLinks)
+		// skip outgoing links
+		if numLinks > 0 {
 
-		for _, linkInst := range linkInsts {
+			taskEntries = make([]*model.TaskEntry, 0, numLinks)
+			for _, linkInst := range linkInsts {
 
-			follow := true
+				linkInst.SetState(STATE_LINK_SKIPPED)
 
-			if linkInst.Link().Type() == flowdef.LtExpression {
-				//todo handle error
-				follow, _ = context.EvalLink(linkInst.Link())
-			}
-
-			if follow {
-				linkInst.SetState(STATE_LINK_TRUE)
-
-				taskEntry := &model.TaskEntry{Task: linkInst.Link().ToTask(), EnterCode: 0}
+				//todo: engine should not eval mappings for skipped tasks, skip
+				//todo: needs to be a state/op understood by the engine
+				taskEntry := &model.TaskEntry{Task: linkInst.Link().ToTask(), EnterCode: EC_SKIP}
 				taskEntries = append(taskEntries, taskEntry)
 			}
-		}
 
-		//continue on to successor tasks
-		return false, 0, taskEntries
+			//continue on to successor tasks
+			return false, 0, taskEntries
+		}
+	} else {
+		log.Debugf("done task: %s", task.Name())
+
+		context.SetState(STATE_DONE)
+		//context.SetTaskDone() for task garbage collection
+
+		// process outgoing links
+		if numLinks > 0 {
+
+			taskEntries = make([]*model.TaskEntry, 0, numLinks)
+
+			for _, linkInst := range linkInsts {
+
+				follow := true
+
+				if linkInst.Link().Type() == flowdef.LtExpression {
+					//todo handle error
+					follow, _ = context.EvalLink(linkInst.Link())
+				}
+
+				if follow {
+					linkInst.SetState(STATE_LINK_TRUE)
+
+					taskEntry := &model.TaskEntry{Task: linkInst.Link().ToTask(), EnterCode: 0}
+					taskEntries = append(taskEntries, taskEntry)
+				} else {
+					linkInst.SetState(STATE_LINK_FALSE)
+
+					taskEntry := &model.TaskEntry{Task: linkInst.Link().ToTask(), EnterCode: EC_SKIP}
+					taskEntries = append(taskEntries, taskEntry)
+				}
+			}
+
+			//continue on to successor tasks
+			return false, 0, taskEntries
+		}
 	}
+
+	log.Debug("notifying parent that task is done")
 
 	// there are no outgoing links, so just notify parent that we are done
 	return true, 0, nil
@@ -200,16 +247,20 @@ func (tb *SimpleTaskBehavior) ChildDone(context model.TaskContext, childTask *fl
 	childTasks, hasChildren := context.ChildTaskInsts()
 
 	if !hasChildren {
-		log.Debugf("Task ChildDone - No Children\n")
+		log.Debug("Task ChildDone - No Children")
 		return true, 0
 	}
 
 	for _, taskInst := range childTasks {
 
-		if taskInst.State() != STATE_DONE {
+		if taskInst.State() < STATE_DONE {
+
+			log.Debugf("task %s not done or skipped", taskInst.Task().Name())
 			return false, 0
 		}
 	}
+
+	log.Debug("all child tasks done or skipped")
 
 	// our children are done, so just transition ourselves to done
 	return true, 0
@@ -218,14 +269,18 @@ func (tb *SimpleTaskBehavior) ChildDone(context model.TaskContext, childTask *fl
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // State
 const (
+	EC_SKIP = 1
+
 	STATE_NOT_STARTED int = 0
 
-	STATE_LINK_FALSE int = 1
-	STATE_LINK_TRUE  int = 2
+	STATE_LINK_FALSE   int = 1
+	STATE_LINK_TRUE    int = 2
+	STATE_LINK_SKIPPED int = 3
 
 	STATE_ENTERED int = 10
 	STATE_READY   int = 20
 	STATE_WAITING int = 30
 	STATE_DONE    int = 40
+	STATE_SKIPPED int = 50
 	STATE_FAILED  int = 100
 )
