@@ -890,7 +890,7 @@ func (td *TaskData) GetInput(name string) interface{} {
 	return nil
 }
 
-// GetInput implements activity.Context.GetInput
+// GetSetting implements activity.Context.GetSetting
 func (td *TaskData) GetSettings(name string) interface{} {
   val, found := td.task.Settings()[name]
 	if found {

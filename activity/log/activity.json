@@ -4,6 +4,20 @@
   "version": "0.0.1",
   "title": "Log Message",
   "description": "Simple Log Activity",
+  "settings": [
+		{
+			"name": "Log Level",
+			"type": "string",
+			"value": "INFO",
+			"allowed": [
+				"INFO",
+				"WARN",
+				"ERROR",
+				"DEBUG"
+			],
+			"required": true
+		}
+	],
   "inputs":[
     {
       "name": "message",
