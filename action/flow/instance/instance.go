@@ -890,6 +890,16 @@ func (td *TaskData) GetInput(name string) interface{} {
 	return nil
 }
 
+// GetInput implements activity.Context.GetInput
+func (td *TaskData) GetSettings(name string) interface{} {
+  val, found := td.task.Settings()[name]
+	if found {
+		return val
+	}
+
+	return nil
+}
+
 // SetOutput implements activity.Context.SetOutput
 func (td *TaskData) SetOutput(name string, value interface{}) {
 
