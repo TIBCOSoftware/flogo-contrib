@@ -151,7 +151,7 @@ func newActionHandler(rt *RestTrigger, endpoint *trigger.EndpointConfig) httprou
 		}
 
 		if replyData != nil {
-			w.Header().Set("Content-Type", GetContentType(replyData))
+			w.Header().Set("Content-Type", getContentType(replyData))
 			w.WriteHeader(replyCode)
 			if err := json.NewEncoder(w).Encode(replyData); err != nil {
 				log.Error(err)
@@ -166,13 +166,14 @@ func newActionHandler(rt *RestTrigger, endpoint *trigger.EndpointConfig) httprou
 	}
 }
 
-func GetContentType(replyData interface{}) string {
+//todo just make contentType a setting
+func getContentType(replyData interface{}) string {
 
 	contentType := "application/json; charset=UTF-8"
 
 	switch v := replyData.(type) {
 	case string:
-		if !strings.HasPrefix(v, "{") {
+		if !strings.HasPrefix(v, "{") && !strings.HasPrefix(v, "[") {
 			contentType = "text/plain; charset=UTF-8"
 		}
 	case int, int64, float64, bool, json.Number :

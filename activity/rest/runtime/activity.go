@@ -147,13 +147,14 @@ func (a *RESTActivity) Eval(context activity.Context) (done bool, err error) {
 ////////////////////////////////////////////////////////////////////////////////////////
 // Utils
 
+//todo just make contentType a setting
 func getContentType(replyData interface{}) string {
 
 	contentType := "application/json; charset=UTF-8"
 
 	switch v := replyData.(type) {
 	case string:
-		if !strings.HasPrefix(v, "{") {
+		if !strings.HasPrefix(v, "{") && !strings.HasPrefix(v, "[") {
 			contentType = "text/plain; charset=UTF-8"
 		}
 	case int, int64, float64, bool, json.Number :
