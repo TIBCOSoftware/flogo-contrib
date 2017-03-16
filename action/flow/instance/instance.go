@@ -891,10 +891,12 @@ func (td *TaskData) GetInput(name string) interface{} {
 }
 
 // GetSetting implements activity.Context.GetSetting
-func (td *TaskData) GetSettings(name string) interface{} {
-  val, found := td.task.Settings()[name]
-	if found {
-		return val
+func (td *TaskData) GetSetting(name string) interface{} {
+  if td.task.Settings() != nil {
+		val, found := td.task.Settings()[name]
+		if found {
+			return val
+		}
 	}
 
 	return nil
