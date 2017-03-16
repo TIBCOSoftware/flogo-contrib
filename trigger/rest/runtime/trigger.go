@@ -141,8 +141,8 @@ func newActionHandler(rt *RestTrigger, endpoint *trigger.EndpointConfig) httprou
 
 		action := action.Get(endpoint.ActionType)
 
-		context := trigger.NewContext(context.Background(), startAttrs)
-		replyCode, replyData, err := rt.runner.Run(context, action, endpoint.ActionURI, nil)
+		ctx := trigger.NewContext(context.Background(), startAttrs)
+		replyCode, replyData, err := rt.runner.Run(ctx, action, endpoint.ActionURI, nil)
 
 		if err != nil {
 			log.Debugf("REST Trigger Error: %s", err.Error())
@@ -151,7 +151,7 @@ func newActionHandler(rt *RestTrigger, endpoint *trigger.EndpointConfig) httprou
 		}
 
 		if replyData != nil {
-			w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+			w.Header().Set("Content-Type", GetContentType(replyData))
 			w.WriteHeader(replyCode)
 			if err := json.NewEncoder(w).Encode(replyData); err != nil {
 				log.Error(err)
@@ -165,6 +165,26 @@ func newActionHandler(rt *RestTrigger, endpoint *trigger.EndpointConfig) httprou
 		}
 	}
 }
+
+func GetContentType(replyData interface{}) string {
+
+	contentType := "application/json; charset=UTF-8"
+
+	switch v := replyData.(type) {
+	case string:
+		if !strings.HasPrefix(v, "{") {
+			contentType = "text/plain; charset=UTF-8"
+		}
+	case int, int64, float64, bool, json.Number :
+		contentType = "text/plain; charset=UTF-8"
+	default:
+		contentType = "application/json; charset=UTF-8"
+	}
+
+	return contentType
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // Utils

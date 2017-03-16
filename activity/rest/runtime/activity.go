@@ -94,10 +94,15 @@ func (a *RESTActivity) Eval(context activity.Context) (done bool, err error) {
 
 	var reqBody io.Reader
 
+	contentType := "application/json; charset=UTF-8"
+
 	if method == methodPOST || method == methodPUT || method == methodPATCH {
 
 		content := context.GetInput(ivContent)
-		if context != nil {
+
+		contentType = getContentType(content)
+
+		if content != nil {
 			if str, ok := content.(string); ok {
 				reqBody = bytes.NewBuffer([]byte(str))
 			} else {
@@ -111,7 +116,7 @@ func (a *RESTActivity) Eval(context activity.Context) (done bool, err error) {
 
 	req, err := http.NewRequest(method, uri, reqBody)
 	if reqBody != nil {
-		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Content-Type", contentType)
 	}
 
 	client := &http.Client{}
@@ -141,6 +146,24 @@ func (a *RESTActivity) Eval(context activity.Context) (done bool, err error) {
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // Utils
+
+func getContentType(replyData interface{}) string {
+
+	contentType := "application/json; charset=UTF-8"
+
+	switch v := replyData.(type) {
+	case string:
+		if !strings.HasPrefix(v, "{") {
+			contentType = "text/plain; charset=UTF-8"
+		}
+	case int, int64, float64, bool, json.Number :
+		contentType = "text/plain; charset=UTF-8"
+	default:
+		contentType = "application/json; charset=UTF-8"
+	}
+
+	return contentType
+}
 
 func methodIsValid(method string) bool {
 
