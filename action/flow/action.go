@@ -19,12 +19,11 @@ import (
 )
 
 const (
-	FLOW_REF = "github.com/TIBCOSoftware/flogo-contrib/action/flow"
+	FLOW_REF  = "github.com/TIBCOSoftware/flogo-contrib/action/flow"
 	AoStart   = iota // 0
 	AoResume         // 1
 	AoRestart        // 2
 )
-
 
 // ActionOptions are the options for the FlowAction
 type ActionOptions struct {
@@ -33,12 +32,13 @@ type ActionOptions struct {
 }
 
 type FlowAction struct {
-	stateRecorder instance.StateRecorder
-	flowProvider  definition.Provider
-	mapperFactory flowdef.MapperFactory
-	flowModel     *model.FlowModel
-	idGenerator   *util.Generator
-	actionOptions *ActionOptions
+	stateRecorder          instance.StateRecorder
+	flowProvider           definition.Provider
+	mapperFactory          flowdef.MapperFactory
+	linkExprManagerFactory flowdef.LinkExprManagerFactory
+	flowModel              *model.FlowModel
+	idGenerator            *util.Generator
+	actionOptions          *ActionOptions
 }
 
 // Provides the different extension points to the Flow Action
@@ -47,6 +47,7 @@ type ExtensionProvider interface {
 	GetFlowModel() *model.FlowModel
 	GetStateRecorder() instance.StateRecorder
 	GetMapperFactory() flowdef.MapperFactory
+	GetLinkExprManagerFactory() flowdef.LinkExprManagerFactory
 }
 
 var flowAction *FlowAction
@@ -82,6 +83,7 @@ func NewFlowAction() *FlowAction {
 
 	fa.mapperFactory = ep.GetMapperFactory()
 	flowdef.SetMapperFactory(fa.mapperFactory)
+	flowdef.SetLinkExprManagerFactory(fa.linkExprManagerFactory)
 
 	options := &ActionOptions{Record: false}
 

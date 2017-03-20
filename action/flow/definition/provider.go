@@ -84,10 +84,14 @@ func (pps *RemoteFlowProvider) GetFlow(id string) (*flowdef.Definition, error) {
 		return nil, fmt.Errorf(errorMsg)
 	}
 
-	//todo optimize this - not needed if flow doesn't have expressions
-	//todo have a registry for this?
-	def.SetLinkExprManager(fggos.NewGosLinkExprManager(def))
-	//def.SetLinkExprManager(fglua.NewLuaLinkExprManager(def))
+	//todo hack until we fully move over to new action implementation
+	factory := flowdef.GetLinkExprManagerFactory()
+
+	if factory == nil {
+		factory = &fggos.GosLinkExprManagerFactory{}
+	}
+
+	def.SetLinkExprManager(factory.NewLinkExprManager(def))
 
 	//synchronize
 	pps.mutex.Lock()
