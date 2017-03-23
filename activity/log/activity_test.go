@@ -9,8 +9,15 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/flow/test"
 )
 
-var jsonMetadataBytes, _ = ioutil.ReadFile("activity.json")
-var jsonMetadata = string(jsonMetadataBytes)
+var jsonMetadata = getJsonMetadata()
+
+func getJsonMetadata() string{
+	jsonMetadataBytes, err := ioutil.ReadFile("activity.json")
+	if err != nil{
+		panic("No Json Metadata found for activity.json path")
+	}
+	return string(jsonMetadataBytes)
+}
 
 func TestRegistered(t *testing.T) {
 	act := activity.Get("github.com/TIBCOSoftware/flogo-contrib/activity/log")
