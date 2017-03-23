@@ -5,6 +5,7 @@
   "version": "0.0.1",
   "title": "Log Message",
   "description": "Simple Log Activity",
+  "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/log",
   "inputs":[
     {
       "name": "message",
@@ -14,12 +15,12 @@
     {
       "name": "flowInfo",
       "type": "boolean",
-      "value": "false"
+      "value": "true"
     },
     {
       "name": "addToFlow",
       "type": "boolean",
-      "value": "false"
+      "value": "true"
     }
   ],
   "outputs": [
