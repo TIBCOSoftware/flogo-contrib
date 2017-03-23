@@ -1,4 +1,6 @@
-{
+package log
+
+var jsonMetadata = `{
   "name": "tibco-log",
   "type": "flogo:activity",
   "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/log",
@@ -28,4 +30,4 @@
       "type": "string"
     }
   ]
-}
+}`
