@@ -101,7 +101,7 @@ func applyOutputMapper(pi *Instance, taskData *TaskData) bool {
 
 func applyDefaultActivityOutputMappings(pi *Instance, taskData *TaskData) {
 
-	activity := activity.Get(taskData.task.ActivityType())
+	activity := activity.Get(taskData.task.ActivityRef())
 
 	attrNS := "{A" + strconv.Itoa(taskData.task.ID()) + "."
 

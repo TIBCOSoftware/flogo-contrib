@@ -612,7 +612,7 @@ func NewTaskData(taskEnv *TaskEnv, task *flowdef.Task) *TaskData {
 
 // HasAttrs indicates if the task has attributes
 func (td *TaskData) HasAttrs() bool {
-	return len(td.task.ActivityType()) > 0 || td.task.IsScope()
+	return len(td.task.ActivityRef()) > 0 || td.task.IsScope()
 }
 
 /////////////////////////////////////////
@@ -791,19 +791,19 @@ func (td *TaskData) EvalLink(link *flowdef.Link) (result bool, err error) {
 
 // HasActivity implements activity.ActivityContext.HasActivity method
 func (td *TaskData) HasActivity() bool {
-	return activity.Get(td.task.ActivityType()) != nil
+	return activity.Get(td.task.ActivityRef()) != nil
 }
 
 // EvalActivity implements activity.ActivityContext.EvalActivity method
 func (td *TaskData) EvalActivity() (done bool, evalErr error) {
 
-	act := activity.Get(td.task.ActivityType())
+	act := activity.Get(td.task.ActivityRef())
 
 	//todo: if act == nil, return TaskDoesntHaveActivity error or something like that
 
 	defer func() {
 		if r := recover(); r != nil {
-			logger.Warnf("Unhandled Error executing activity '%s'[%s] : %v\n", td.task.Name(), td.task.ActivityType(), r)
+			logger.Warnf("Unhandled Error executing activity '%s'[%s] : %v\n", td.task.Name(), td.task.ActivityRef(), r)
 
 			// todo: useful for debugging
 			logger.Debugf("StackTrace: %s", debug.Stack())
@@ -845,9 +845,9 @@ func (td *TaskData) InputScope() data.Scope {
 		return td.inScope
 	}
 
-	if len(td.task.ActivityType()) > 0 {
+	if len(td.task.ActivityRef()) > 0 {
 
-		act := activity.Get(td.task.ActivityType())
+		act := activity.Get(td.task.ActivityRef())
 		td.inScope = NewFixedTaskScope(act.Metadata().Inputs, td.task)
 
 	} else if td.task.IsScope() {
@@ -865,9 +865,9 @@ func (td *TaskData) OutputScope() data.Scope {
 		return td.outScope
 	}
 
-	if len(td.task.ActivityType()) > 0 {
+	if len(td.task.ActivityRef()) > 0 {
 
-		act := activity.Get(td.task.ActivityType())
+		act := activity.Get(td.task.ActivityRef())
 		td.outScope = NewFixedTaskScope(act.Metadata().Outputs, nil)
 
 		logger.Debugf("OutputScope: %v\n", td.outScope)
