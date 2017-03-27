@@ -1,8 +1,11 @@
 {
   "name": "tibco-app",
   "type": "flogo:activity",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/app",
   "version": "0.0.1",
-  "description": "Simple App Activity",
+  "title": "Use Global Attribute",
+  "description": "Simple Global App Activity",
+  "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/app",
   "inputs":[
     {
       "name": "attribute",

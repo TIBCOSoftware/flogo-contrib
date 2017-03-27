@@ -1,11 +1,11 @@
 {
   "name": "tibco-gpio",
   "type": "flogo:activity",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/gpio",
   "version": "0.0.1",
   "title": "Control GPIO",
   "description": "Control raspberry gpio",
   "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/gpio",
-
   "inputs":[
     {
       "name": "method",

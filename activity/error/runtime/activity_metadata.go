@@ -1,4 +1,4 @@
-package rest
+package error
 
 var jsonMetadata = `{
   "name": "tibco-error",

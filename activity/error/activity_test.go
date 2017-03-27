@@ -5,7 +5,18 @@ import (
 
 	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
 	"github.com/TIBCOSoftware/flogo-lib/flow/test"
+	"io/ioutil"
 )
+
+var jsonMetadata = getJsonMetadata()
+
+func getJsonMetadata() string{
+	jsonMetadataBytes, err := ioutil.ReadFile("activity.json")
+	if err != nil{
+		panic("No Json Metadata found for activity.json path")
+	}
+	return string(jsonMetadataBytes)
+}
 
 func TestRegistered(t *testing.T) {
 	act := activity.Get("tibco-error")
