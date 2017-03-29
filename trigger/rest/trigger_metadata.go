@@ -1,15 +1,13 @@
-{
+package rest
+
+var jsonMetadata = `{
   "name": "tibco-rest",
-  "type": "flogo:trigger",
-  "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/rest",
   "version": "0.0.1",
-  "title": "Receive HTTP Message",
-  "description": "Simple REST Trigger",
+  "description": "Simple REST trigger",
   "settings": [
     {
       "name": "port",
-      "type": "integer",
-      "required": true
+      "type": "integer"
     }
   ],
   "outputs": [
@@ -34,14 +32,11 @@
     "settings": [
       {
         "name": "method",
-        "type": "string",
-        "required" : true,
-        "allowed" : ["GET", "POST", "PUT", "PATCH", "DELETE"]
+        "type": "string"
       },
       {
         "name": "path",
-        "type": "string",
-        "required" : true
+        "type": "string"
       },
       {
         "name": "autoIdReply",
@@ -53,4 +48,4 @@
       }
     ]
   }
-}
+}`
