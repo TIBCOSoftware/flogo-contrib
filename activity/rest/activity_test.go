@@ -27,7 +27,7 @@ func getJsonMetadata() string{
 var petID string
 
 func TestRegistered(t *testing.T) {
-	act := activity.Get("tibco-rest")
+	act := activity.Get("github.com/TIBCOSoftware/flogo-contrib/activity/rest")
 
 	if act == nil {
 		t.Error("Activity Not Registered")
@@ -38,7 +38,7 @@ func TestRegistered(t *testing.T) {
 
 func TestSimplePost(t *testing.T) {
 
-	act := activity.Get("tibco-rest")
+	act := activity.Get("github.com/TIBCOSoftware/flogo-contrib/activity/rest")
 	tc := test.NewTestActivityContext(act.Metadata())
 
 	//setup attrs
@@ -60,7 +60,7 @@ func TestSimplePost(t *testing.T) {
 
 func TestSimpleGet(t *testing.T) {
 
-	act := activity.Get("tibco-rest")
+	act := activity.Get("github.com/TIBCOSoftware/flogo-contrib/activity/rest")
 	tc := test.NewTestActivityContext(act.Metadata())
 
 	//setup attrs
@@ -76,7 +76,7 @@ func TestSimpleGet(t *testing.T) {
 
 func TestParamGet(t *testing.T) {
 
-	act := activity.Get("tibco-rest")
+	act := activity.Get("github.com/TIBCOSoftware/flogo-contrib/activity/rest")
 	tc := test.NewTestActivityContext(act.Metadata())
 
 	//setup attrs
@@ -97,7 +97,7 @@ func TestParamGet(t *testing.T) {
 
 func TestSimpleGetQP(t *testing.T) {
 
-	act := activity.Get("tibco-rest")
+	act := activity.Get("github.com/TIBCOSoftware/flogo-contrib/activity/rest")
 	tc := test.NewTestActivityContext(act.Metadata())
 
 	//setup attrs

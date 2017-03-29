@@ -1,4 +1,4 @@
-package sendWSMessage
+package wsmessage
 
 import (
 	"testing"
@@ -18,7 +18,7 @@ func getJsonMetadata() string{
 }
 
 func TestRegistered(t *testing.T) {
-	act := activity.Get("sendWSMessage")
+	act := activity.Get("github.com/TIBCOSoftware/flogo-contrib/activity/wsmessage")
 
 	if act == nil {
 		t.Error("Activity Not Registered")

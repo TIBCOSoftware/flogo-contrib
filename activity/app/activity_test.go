@@ -20,7 +20,7 @@ func getJsonMetadata() string{
 }
 
 func TestRegistered(t *testing.T) {
-	act := activity.Get("tibco-app")
+	act := activity.Get("github.com/TIBCOSoftware/flogo-contrib/activity/app")
 
 	if act == nil {
 		t.Error("Activity Not Registered")
