@@ -1,5 +1,7 @@
 {
   "name": "tibco-counter",
+  "type": "flogo:activity",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/counter",
   "version": "0.0.1",
   "title": "Increment Counter",
   "description": "Simple Global Counter Activity",

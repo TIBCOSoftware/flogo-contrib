@@ -1,6 +1,7 @@
 {
   "name": "tibco-awsiot",
   "type": "flogo:activity",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/awsiot",
   "version": "0.0.1",
   "title": "Update AWS Device Shadow",
   "description": "Simple AWS IoT",

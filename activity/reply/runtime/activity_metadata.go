@@ -1,4 +1,4 @@
-package rest
+package reply
 
 var jsonMetadata = `{
   "name": "tibco-reply",

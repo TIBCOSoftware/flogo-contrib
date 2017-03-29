@@ -1,6 +1,7 @@
 {
   "name": "tibco-coap",
   "type": "flogo:activity",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/coap",
   "version": "0.0.1",
   "title": "Send CoAP Message",
   "description": "Simple CoAP Activity",

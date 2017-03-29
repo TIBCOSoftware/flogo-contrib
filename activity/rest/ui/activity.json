@@ -1,5 +1,7 @@
 {
   "name": "tibco-rest",
+  "type": "flogo:activity",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/rest",
   "version": "0.0.1",
   "title": "Invoke REST Service",
   "description": "Simple REST Activity",
@@ -26,7 +28,7 @@
     },
     {
       "name": "content",
-      "type": "object"
+      "type": "any"
     }
   ],
   "outputs": [
