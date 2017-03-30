@@ -21,7 +21,7 @@ func getJsonMetadata() string{
 }
 
 func TestRegistered(t *testing.T) {
-	act := activity.Get("tibco-coap")
+	act := activity.Get("github.com/TIBCOSoftware/flogo-contrib/activity/coap")
 
 	if act == nil {
 		t.Error("Activity Not Registered")
@@ -39,7 +39,7 @@ var petID string
 
 func TestSimplePost(t *testing.T) {
 
-	act := activity.Get("tibco-coap")
+	act := activity.Get("github.com/TIBCOSoftware/flogo-contrib/activity/coap")
 	tc := test.NewTestActivityContext(act.Metadata())
 
 	//setup attrs
@@ -68,7 +68,7 @@ func TestSimplePost(t *testing.T) {
 
 func TestSimpleGet(t *testing.T) {
 
-	act := activity.Get("tibco-coap")
+	act := activity.Get("github.com/TIBCOSoftware/flogo-contrib/activity/coap")
 	tc := test.NewTestActivityContext(act.Metadata())
 
 	//setup attrs
@@ -89,7 +89,7 @@ func TestSimpleGet(t *testing.T) {
 
 func TestSimpleGetQP(t *testing.T) {
 
-	act := activity.Get("tibco-coap")
+	act := activity.Get("github.com/TIBCOSoftware/flogo-contrib/activity/coap")
 	tc := test.NewTestActivityContext(act.Metadata())
 
 	//setup attrs

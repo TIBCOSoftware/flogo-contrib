@@ -19,7 +19,7 @@ func getJsonMetadata() string{
 }
 
 func TestRegistered(t *testing.T) {
-	act := activity.Get("tibco-error")
+	act := activity.Get("github.com/TIBCOSoftware/flogo-contrib/activity/error")
 
 	if act == nil {
 		t.Error("Activity Not Registered")
@@ -30,7 +30,7 @@ func TestRegistered(t *testing.T) {
 
 func TestSimpleError(t *testing.T) {
 
-	act := activity.Get("tibco-error")
+	act := activity.Get("github.com/TIBCOSoftware/flogo-contrib/activity/error")
 	tc := test.NewTestActivityContext(act.Metadata())
 
 	//setup attrs

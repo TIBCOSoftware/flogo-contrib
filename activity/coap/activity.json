@@ -5,6 +5,7 @@
   "version": "0.0.1",
   "title": "Send CoAP Message",
   "description": "Simple CoAP Activity",
+  "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/coap",
   "inputs":[
     {
       "name": "uri",

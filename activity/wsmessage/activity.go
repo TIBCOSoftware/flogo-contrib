@@ -1,4 +1,4 @@
-package sendWSMessage
+package wsmessage
 
 import (
 	"net/url"
