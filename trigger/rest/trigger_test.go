@@ -8,12 +8,22 @@ import (
 
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/types"
+	"io/ioutil"
 )
 
+var jsonMetadata = getJsonMetadata()
+
+func getJsonMetadata() string{
+	jsonMetadataBytes, err := ioutil.ReadFile("trigger.json")
+	if err != nil{
+		panic("No Json Metadata found for trigger.json path")
+	}
+	return string(jsonMetadataBytes)
+}
 
 const testConfig string = `{
   "id": "tibco-rest",
-  "ref": "github.com/TIBCOSoftware/flogo-contrib/incubator/rest",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/rest",
   "settings": {
     "port": "8091"
   },

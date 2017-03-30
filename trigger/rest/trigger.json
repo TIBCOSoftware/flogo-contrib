@@ -1,9 +1,11 @@
 {
   "name": "tibco-rest",
   "type": "flogo:trigger",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/rest",
   "version": "0.0.1",
   "title": "Receive HTTP Message",
   "description": "Simple REST Trigger",
+  "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/trigger/rest",
   "settings": [
     {
       "name": "port",
