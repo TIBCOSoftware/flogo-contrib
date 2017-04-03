@@ -10,21 +10,28 @@ import (
 	"io/ioutil"
 )
 
-var jsonMetadata = getJsonMetadata()
+var activityMetadata *activity.Metadata
 
-func getJsonMetadata() string{
-	jsonMetadataBytes, err := ioutil.ReadFile("activity.json")
-	if err != nil{
-		panic("No Json Metadata found for activity.json path")
+func getActivityMetadata() *activity.Metadata {
+
+	if activityMetadata == nil {
+		jsonMetadataBytes, err := ioutil.ReadFile("activity.json")
+		if err != nil{
+			panic("No Json Metadata found for activity.json path")
+		}
+
+		activityMetadata = activity.NewMetadata(string(jsonMetadataBytes))
 	}
-	return string(jsonMetadataBytes)
+
+	return activityMetadata
 }
 
-func TestRegistered(t *testing.T) {
-	act := activity.Get("github.com/TIBCOSoftware/flogo-contrib/activity/coap")
+func TestCreate(t *testing.T) {
+
+	act := NewActivity(getActivityMetadata())
 
 	if act == nil {
-		t.Error("Activity Not Registered")
+		t.Error("Activity Not Created")
 		t.Fail()
 		return
 	}
@@ -39,8 +46,8 @@ var petID string
 
 func TestSimplePost(t *testing.T) {
 
-	act := activity.Get("github.com/TIBCOSoftware/flogo-contrib/activity/coap")
-	tc := test.NewTestActivityContext(act.Metadata())
+	act := NewActivity(getActivityMetadata())
+	tc := test.NewTestActivityContext(getActivityMetadata())
 
 	//setup attrs
 	tc.SetInput("method", "POST")
@@ -68,8 +75,8 @@ func TestSimplePost(t *testing.T) {
 
 func TestSimpleGet(t *testing.T) {
 
-	act := activity.Get("github.com/TIBCOSoftware/flogo-contrib/activity/coap")
-	tc := test.NewTestActivityContext(act.Metadata())
+	act := NewActivity(getActivityMetadata())
+	tc := test.NewTestActivityContext(getActivityMetadata())
 
 	//setup attrs
 	tc.SetInput("method", "GET")
@@ -89,8 +96,8 @@ func TestSimpleGet(t *testing.T) {
 
 func TestSimpleGetQP(t *testing.T) {
 
-	act := activity.Get("github.com/TIBCOSoftware/flogo-contrib/activity/coap")
-	tc := test.NewTestActivityContext(act.Metadata())
+	act := NewActivity(getActivityMetadata())
+	tc := test.NewTestActivityContext(getActivityMetadata())
 
 	//setup attrs
 	tc.SetInput("method", "GET")

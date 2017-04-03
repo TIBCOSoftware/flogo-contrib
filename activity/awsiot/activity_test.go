@@ -1,27 +1,34 @@
 package awsiot
 
 import (
+	"io/ioutil"
 	"testing"
 
 	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
-	"io/ioutil"
 )
 
-var jsonMetadata = getJsonMetadata()
+var activityMetadata *activity.Metadata
 
-func getJsonMetadata() string{
-	jsonMetadataBytes, err := ioutil.ReadFile("activity.json")
-	if err != nil{
-		panic("No Json Metadata found for activity.json path")
+func getActivityMetadata() *activity.Metadata {
+
+	if activityMetadata == nil {
+		jsonMetadataBytes, err := ioutil.ReadFile("activity.json")
+		if err != nil{
+			panic("No Json Metadata found for activity.json path")
+		}
+
+		activityMetadata = activity.NewMetadata(string(jsonMetadataBytes))
 	}
-	return string(jsonMetadataBytes)
+
+	return activityMetadata
 }
 
-func TestRegistered(t *testing.T) {
-	act := activity.Get("github.com/TIBCOSoftware/flogo-contrib/activity/awsiot")
+func TestCreate(t *testing.T) {
+
+	act := NewActivity(getActivityMetadata())
 
 	if act == nil {
-		t.Error("Activity Not Registered")
+		t.Error("Activity Not Created")
 		t.Fail()
 		return
 	}

@@ -46,10 +46,9 @@ type CoAPActivity struct {
 	metadata *activity.Metadata
 }
 
-// init create & register activity
-func init() {
-	md := activity.NewMetadata(jsonMetadata)
-	activity.Register(&CoAPActivity{metadata: md})
+// NewActivity creates a new CoAP activity
+func NewActivity(metadata *activity.Metadata) activity.Activity {
+	return &CoAPActivity{metadata: metadata}
 }
 
 // Metadata returns the activity's metadata

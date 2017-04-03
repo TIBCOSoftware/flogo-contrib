@@ -25,10 +25,9 @@ type CounterActivity struct {
 	counters map[string]int
 }
 
-// init create & register activity
-func init() {
-	md := activity.NewMetadata(jsonMetadata)
-	activity.Register(&CounterActivity{metadata: md, counters: make(map[string]int)})
+// NewActivity creates a new CounterActivity
+func NewActivity(metadata *activity.Metadata) activity.Activity {
+	return &CounterActivity{metadata: metadata, counters: make(map[string]int)}
 }
 
 // Metadata implements activity.Activity.Metadata

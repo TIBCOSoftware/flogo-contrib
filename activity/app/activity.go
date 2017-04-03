@@ -27,10 +27,9 @@ type AppActivity struct {
 	metadata *activity.Metadata
 }
 
-// init create & register activity
-func init() {
-	md := activity.NewMetadata(jsonMetadata)
-	activity.Register(&AppActivity{metadata: md})
+// NewActivity creates a new AppActivity
+func NewActivity(metadata *activity.Metadata) activity.Activity {
+	return &AppActivity{metadata: metadata}
 }
 
 // Metadata implements activity.Activity.Metadata

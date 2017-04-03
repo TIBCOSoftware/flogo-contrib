@@ -11,24 +11,23 @@ import (
 // log is the default package logger
 var log = logger.GetLogger("activity-sendWSMessage")
 
-// MyActivity is a stub for your Activity implementation
-type MyActivity struct {
+// WsMsgActivity is a stub for your Activity implementation
+type WsMsgActivity struct {
 	metadata *activity.Metadata
 }
 
-// init create & register activity
-func init() {
-	md := activity.NewMetadata(jsonMetadata)
-	activity.Register(&MyActivity{metadata: md})
+// NewActivity creates a new WsMsgActivity
+func NewActivity(metadata *activity.Metadata) activity.Activity {
+	return &WsMsgActivity{metadata: metadata}
 }
 
 // Metadata implements activity.Activity.Metadata
-func (a *MyActivity) Metadata() *activity.Metadata {
+func (a *WsMsgActivity) Metadata() *activity.Metadata {
 	return a.metadata
 }
 
 // Eval implements activity.Activity.Eval - Sends a message to a WebSocket enabled server like TIBCO eFTL
-func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
+func (a *WsMsgActivity) Eval(context activity.Context) (done bool, err error) {
 
 	// Get the activity data from the context
 	wsHost := context.GetInput("Server").(string)

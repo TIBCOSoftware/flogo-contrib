@@ -20,10 +20,9 @@ type ReplyActivity struct {
 	metadata *activity.Metadata
 }
 
-// init create & register activity
-func init() {
-	md := activity.NewMetadata(jsonMetadata)
-	activity.Register(&ReplyActivity{metadata: md})
+// NewActivity creates a new ReplyActivity
+func NewActivity(metadata *activity.Metadata) activity.Activity {
+	return &ReplyActivity{metadata: metadata}
 }
 
 // Metadata returns the activity's metadata

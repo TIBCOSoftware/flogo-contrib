@@ -41,10 +41,9 @@ type GPIOActivity struct {
 	metadata *activity.Metadata
 }
 
-// init create & register activity
-func init() {
-	md := activity.NewMetadata(jsonMetadata)
-	activity.Register(&GPIOActivity{metadata: md})
+// NewActivity creates a new GPIOActivity
+func NewActivity(metadata *activity.Metadata) activity.Activity {
+	return &GPIOActivity{metadata: metadata}
 }
 
 // Metadata returns the activity's metadata
