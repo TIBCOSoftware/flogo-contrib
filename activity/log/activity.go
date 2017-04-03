@@ -31,9 +31,9 @@ type LogActivity struct {
 	metadata *activity.Metadata
 }
 
-func init() {
-	md := activity.NewMetadata(jsonMetadata)
-	activity.Register(&LogActivity{metadata: md})
+// NewActivity creates a new AppActivity
+func NewActivity(metadata *activity.Metadata) activity.Activity {
+	return &LogActivity{metadata: metadata}
 }
 
 // Metadata returns the activity's metadata

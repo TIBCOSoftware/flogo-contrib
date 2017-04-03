@@ -20,10 +20,9 @@ type ErrorActivity struct {
 	metadata *activity.Metadata
 }
 
-// init create & register activity
-func init() {
-	md := activity.NewMetadata(jsonMetadata)
-	activity.Register(&ErrorActivity{metadata: md})
+// NewActivity creates a new AppActivity
+func NewActivity(metadata *activity.Metadata) activity.Activity {
+	return &ErrorActivity{metadata: metadata}
 }
 
 // Metadata returns the activity's metadata

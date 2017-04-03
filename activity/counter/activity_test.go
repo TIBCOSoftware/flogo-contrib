@@ -8,21 +8,28 @@ import (
 	"io/ioutil"
 )
 
-var jsonMetadata = getJsonMetadata()
+var activityMetadata *activity.Metadata
 
-func getJsonMetadata() string{
-	jsonMetadataBytes, err := ioutil.ReadFile("activity.json")
-	if err != nil{
-		panic("No Json Metadata found for activity.json path")
+func getActivityMetadata() *activity.Metadata {
+
+	if activityMetadata == nil {
+		jsonMetadataBytes, err := ioutil.ReadFile("activity.json")
+		if err != nil{
+			panic("No Json Metadata found for activity.json path")
+		}
+
+		activityMetadata = activity.NewMetadata(string(jsonMetadataBytes))
 	}
-	return string(jsonMetadataBytes)
+
+	return activityMetadata
 }
 
-func TestRegistered(t *testing.T) {
-	act := activity.Get("github.com/TIBCOSoftware/flogo-contrib/activity/counter")
+func TestCreate(t *testing.T) {
+
+	act := NewActivity(getActivityMetadata())
 
 	if act == nil {
-		t.Error("Activity Not Registered")
+		t.Error("Activity Not Created")
 		t.Fail()
 		return
 	}
@@ -37,10 +44,8 @@ func TestIncrement(t *testing.T) {
 		}
 	}()
 
-	md := activity.NewMetadata(jsonMetadata)
-	act := &CounterActivity{metadata: md, counters: make(map[string]int)}
-
-	tc := test.NewTestActivityContext(md)
+	act := NewActivity(getActivityMetadata())
+	tc := test.NewTestActivityContext(getActivityMetadata())
 
 	//setup attrs
 	tc.SetInput(ivCounterName, "messages")
@@ -64,7 +69,7 @@ func TestGet(t *testing.T) {
 		}
 	}()
 
-	md := activity.NewMetadata(jsonMetadata)
+	md := getActivityMetadata()
 
 	counters := map[string]int{
 		"messages": 5,
@@ -95,7 +100,7 @@ func TestReset(t *testing.T) {
 		}
 	}()
 
-	md := activity.NewMetadata(jsonMetadata)
+	md := getActivityMetadata()
 	counters := map[string]int{
 		"messages": 3,
 	}

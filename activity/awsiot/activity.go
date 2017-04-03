@@ -32,10 +32,9 @@ type AwsIoT struct {
 	metadata *activity.Metadata
 }
 
-// init create & register activity
-func init() {
-	md := activity.NewMetadata(jsonMetadata)
-	activity.Register(&AwsIoT{metadata: md})
+// NewActivity creates a new AwsIoT activity
+func NewActivity(metadata *activity.Metadata) activity.Activity {
+	return &AwsIoT{metadata: metadata}
 }
 
 // Metadata returns the activity's metadata

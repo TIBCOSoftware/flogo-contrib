@@ -9,24 +9,20 @@ import (
 	"io/ioutil"
 )
 
-var jsonMetadata = getJsonMetadata()
+var activityMetadata *activity.Metadata
 
-func getJsonMetadata() string{
-	jsonMetadataBytes, err := ioutil.ReadFile("activity.json")
-	if err != nil{
-		panic("No Json Metadata found for activity.json path")
+func getActivityMetadata() *activity.Metadata {
+
+	if activityMetadata == nil {
+		jsonMetadataBytes, err := ioutil.ReadFile("activity.json")
+		if err != nil{
+			panic("No Json Metadata found for activity.json path")
+		}
+
+		activityMetadata = activity.NewMetadata(string(jsonMetadataBytes))
 	}
-	return string(jsonMetadataBytes)
-}
 
-func TestRegistered(t *testing.T) {
-	act := activity.Get("github.com/TIBCOSoftware/flogo-contrib/activity/app")
-
-	if act == nil {
-		t.Error("Activity Not Registered")
-		t.Fail()
-		return
-	}
+	return activityMetadata
 }
 
 func TestAdd(t *testing.T) {
@@ -38,10 +34,8 @@ func TestAdd(t *testing.T) {
 		}
 	}()
 
-	md := activity.NewMetadata(jsonMetadata)
-	act := &AppActivity{metadata: md}
-
-	tc := test.NewTestActivityContext(md)
+	act := NewActivity(getActivityMetadata())
+	tc := test.NewTestActivityContext(getActivityMetadata())
 
 	//setup attrs
 	tc.SetInput(ivAttrName, "myAttr")
@@ -51,7 +45,7 @@ func TestAdd(t *testing.T) {
 
 	act.Eval(tc)
 
-	value, _ := tc.GetAttrValue("myAttr")
+	value, _ := tc.GetAttrValue("value")
 
 	if value != "test" {
 		fmt.Println("Bad Value: " + value)
@@ -68,12 +62,8 @@ func TestGet(t *testing.T) {
 		}
 	}()
 
-	md := activity.NewMetadata(jsonMetadata)
-	act := &AppActivity{metadata: md}
-
-	tc := test.NewTestActivityContext(md)
-
-	//tc.AddAttr("myAttr", data.STRING, "test2")
+	act := NewActivity(getActivityMetadata())
+	tc := test.NewTestActivityContext(getActivityMetadata())
 
 	//add attribute
 	tc.SetInput(ivAttrName, "myAttr")
@@ -98,10 +88,8 @@ func TestUpdate(t *testing.T) {
 		}
 	}()
 
-	md := activity.NewMetadata(jsonMetadata)
-	act := &AppActivity{metadata: md}
-
-	tc := test.NewTestActivityContext(md)
+	act := NewActivity(getActivityMetadata())
+	tc := test.NewTestActivityContext(getActivityMetadata())
 
 	//setup attrs
 	tc.SetInput(ivAttrName, "myAttr")

@@ -22,10 +22,9 @@ type TwilioActivity struct {
 	metadata *activity.Metadata
 }
 
-// init create & register activity
-func init() {
-	md := activity.NewMetadata(jsonMetadata)
-	activity.Register(&TwilioActivity{metadata: md})
+// NewActivity creates a new TwilioActivity
+func NewActivity(metadata *activity.Metadata) activity.Activity {
+	return &TwilioActivity{metadata: metadata}
 }
 
 // Metadata implements activity.Activity.Metadata
