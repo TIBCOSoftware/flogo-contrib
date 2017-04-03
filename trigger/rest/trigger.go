@@ -32,7 +32,7 @@ type RestTrigger struct {
 	Md     *trigger.Metadata
 	runner action.Runner
 	server *Server
-	myId   string
+	instanceId   string
 }
 
 type RestFactory struct{}
@@ -43,7 +43,7 @@ func init() {
 
 //New Creates a new trigger instance for a given id
 func (t *RestFactory) New(id string) trigger.Trigger2 {
-	return &RestTrigger{Md: md, myId: id}
+	return &RestTrigger{Md: md, instanceId: id}
 }
 
 // Metadata implements trigger.Trigger.Metadata
@@ -56,11 +56,11 @@ func (t *RestTrigger) Init(config types.TriggerConfig, runner action.Runner) {
 	router := httprouter.New()
 
 	if config.Settings == nil {
-		panic(fmt.Sprintf("No Settings found for trigger '%s'", t.myId))
+		panic(fmt.Sprintf("No Settings found for trigger '%s'", t.instanceId))
 	}
 
 	if port := config.Settings["port"]; port == nil {
-		panic(fmt.Sprintf("No Port found for trigger '%s' in settings", t.myId))
+		panic(fmt.Sprintf("No Port found for trigger '%s' in settings", t.instanceId))
 	}
 
 	addr := ":" + config.Settings["port"].(string)
@@ -114,7 +114,7 @@ func newActionHandler(rt *RestTrigger, actionId string, handlerSettings map[stri
 
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
-		log.Infof("REST Trigger: Received request for id '%s'", rt.myId)
+		log.Infof("REST Trigger: Received request for id '%s'", rt.instanceId)
 
 		c := cors.New(REST_CORS_PREFIX, log)
 		c.WriteCorsActualRequestHeaders(w)
