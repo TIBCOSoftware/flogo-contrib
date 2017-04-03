@@ -304,17 +304,6 @@ func handlerIsValid(handler *types.TriggerHandler) bool {
 	return true
 }
 
-func endpointIsValid(endpoint *trigger.EndpointConfig) bool {
-
-	if !stringInList(strings.ToUpper(endpoint.Settings["method"]), validMethods) {
-		return false
-	}
-
-	//validate path
-
-	return true
-}
-
 func stringInList(str string, list []string) bool {
 	for _, value := range list {
 		if value == str {
