@@ -129,7 +129,7 @@ func TestTimer(t *testing.T) {
 	tgr := trigger.Get("tibco-timer")
 
 	tgr.Start()
-	time.Sleep(time.Second * 2000)
+	time.Sleep(time.Second * 2)
 	defer tgr.Stop()
 
 	log.Debug("Test timer done")
