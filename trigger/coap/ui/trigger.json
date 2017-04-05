@@ -1,5 +1,7 @@
 {
   "name": "tibco-coap",
+  "type": "flogo:trigger",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/coap",
   "version": "0.0.1",
   "title": "Receive CoAP Message",
   "description": "Simple CoAP Trigger",

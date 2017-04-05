@@ -7,8 +7,19 @@ import (
 	"time"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
-	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
+	"github.com/TIBCOSoftware/flogo-lib/types"
+	"io/ioutil"
 )
+
+var jsonMetadata = getJsonMetadata()
+
+func getJsonMetadata() string{
+	jsonMetadataBytes, err := ioutil.ReadFile("trigger.json")
+	if err != nil{
+		panic("No Json Metadata found for trigger.json path")
+	}
+	return string(jsonMetadataBytes)
+}
 
 const testConfig3 string = `{
   "name": "tibco-timer",
@@ -103,30 +114,23 @@ func (tr *TestRunner) Run(context context.Context, action action.Action, uri str
 	return 0, nil, nil
 }
 
-func TestRegistered(t *testing.T) {
-	act := trigger.Get("tibco-timer")
-
-	if act == nil {
-		t.Error("Timer Trigger Not Registered")
-		t.Fail()
-		return
-	}
-}
-
 func TestInit(t *testing.T) {
-	tgr := trigger.Get("tibco-timer")
+	// New  factory
+	f := &TimerFactory{}
+	tgr := f.New("tibco-timer")
 
 	runner := &TestRunner{}
 
-	config := &trigger.Config{}
-	json.Unmarshal([]byte(testConfig), config)
+	config := types.TriggerConfig{}
+	json.Unmarshal([]byte(testConfig), &config)
 	tgr.Init(config, runner)
 }
 
 func TestTimer(t *testing.T) {
 
-	log.Debugf("TestTimer")
-	tgr := trigger.Get("tibco-timer")
+	// New  factory
+	f := &TimerFactory{}
+	tgr := f.New("tibco-timer")
 
 	tgr.Start()
 	time.Sleep(time.Second * 2)

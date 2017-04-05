@@ -1,11 +1,22 @@
 {
   "name": "tibco-timer",
   "type": "flogo:trigger",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/timer",
   "version": "0.0.1",
   "title": "Timer",
-  "author": "Michael Register <mregiste@tibco.com>",
-  "description": "Simple Timer Trigger",
-  "settings":[
+  "description": "Simple Timer trigger",
+  "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/trigger/timer",
+  "settings": [
+  ],
+  "outputs": [
+    {
+      "name": "params",
+      "type": "params"
+    },
+    {
+      "name": "content",
+      "type": "object"
+    }
   ],
   "endpoint": {
     "settings": [

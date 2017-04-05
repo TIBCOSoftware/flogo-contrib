@@ -3,21 +3,23 @@ package coap
 import (
 	"context"
 	"encoding/json"
-	"net/http"
+	//"net/http"
 	"testing"
 
+	"github.com/TIBCOSoftware/flogo-lib/types"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
-	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
+	"net/http"
 )
 
 const testConfig string = `{
-  "name": "tibco-coap",
+  "id": "tibco-coap",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/coap",
   "settings": {
     "port": "5683"
   },
-  "endpoints": [
+  "handlers": [
     {
-      "flowURI": "local://testFlow",
+      "actionId": "my_test_flow",
       "settings": {
         "method": "POST",
         "path": "/device/:id/reset"
@@ -36,29 +38,32 @@ func (tr *TestRunner) Run(context context.Context, action action.Action, uri str
 	return 0, nil, nil
 }
 
-func TestRegistered(t *testing.T) {
-	tgr := trigger.Get("tibco-coap")
-
-	if tgr == nil {
-		t.Error("Trigger Not Registered")
-		t.Fail()
-		return
-	}
-}
-
 func TestInit(t *testing.T) {
-	tgr := trigger.Get("tibco-coap")
+	// New  factory
+	f := &CoapFactory{}
+	tgr := f.New("tibco-coap")
 
 	runner := &TestRunner{}
 
-	config := &trigger.Config{}
-	json.Unmarshal([]byte(testConfig), config)
+	config := types.TriggerConfig{}
+	err := json.Unmarshal([]byte(testConfig), &config)
+	if err != nil{
+		t.Error(err)
+	}
 	tgr.Init(config, runner)
 }
 
-func TestEndpoint(t *testing.T) {
+func TestHandlerOk(t *testing.T) {
 
-	tgr := trigger.Get("tibco-coap")
+	// New  factory
+	f := &CoapFactory{}
+	tgr := f.New("tibco-coap")
+
+	runner := &TestRunner{}
+
+	config := types.TriggerConfig{}
+	json.Unmarshal([]byte(testConfig), &config)
+	tgr.Init(config, runner)
 
 	tgr.Start()
 	defer tgr.Stop()
