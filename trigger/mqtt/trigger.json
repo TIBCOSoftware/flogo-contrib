@@ -1,10 +1,12 @@
 {
   "name": "tibco-mqtt",
   "type": "flogo:trigger",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/mqtt",
   "version": "0.0.1",
   "title": "Receive MQTT Message",
   "author": "Michael Register <mregiste@tibco.com>",
   "description": "Simple MQTT Trigger",
+  "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/trigger/mqtt",
   "settings":[
     {
       "name": "broker",

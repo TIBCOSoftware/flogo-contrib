@@ -8,16 +8,12 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/flow/support"
 	"github.com/TIBCOSoftware/flogo-lib/types"
 	"github.com/eclipse/paho.mqtt.golang"
-	"github.com/op/go-logging"
 	"strconv"
-)
-
-const (
-	TRIGGER_REF = "git.tibco.com/git/product/ipaas/wi-contrib.git/trigger/mqtt/runtime"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
 // log is the default package logger
-var log = logging.MustGetLogger("trigger-tibco-mqtt")
+var log = logger.GetLogger("trigger-tibco-mqtt")
 
 var md = trigger.NewMetadata(jsonMetadata)
 
@@ -31,17 +27,17 @@ type MqttTrigger struct {
 	config            types.TriggerConfig
 	topicToActionURI  map[string]string
 	topicToActionType map[string]string
-	myId              string
+	instanceId        string
 }
 
 type MQTTFactory struct {
 }
 
 func (t *MQTTFactory) New(id string) trigger.Trigger2 {
-	return &MqttTrigger{metadata: md, myId: id}
+	return &MqttTrigger{metadata: md, instanceId: id}
 }
 func init() {
-	trigger.RegisterFactory(TRIGGER_REF, &MQTTFactory{})
+	trigger.RegisterFactory(md.ID, &MQTTFactory{})
 }
 
 // Metadata implements trigger.Trigger.Metadata
@@ -143,8 +139,6 @@ func (t *MqttTrigger) RunAction(actionURI string, payload string) {
 	startAttrs, _ := t.metadata.OutputsToAttrs(req.Data, false)
 
 	action := action.Get2(actionURI)
-	log.Infof("Found action: '%+x'", action)
-	log.Infof("ActionID: '%s'", actionURI)
 	context := trigger.NewContext(context.Background(), startAttrs)
 	_, replyData, err := t.runner.Run(context, action, actionURI, nil)
 	if err != nil {
@@ -167,7 +161,7 @@ func (t *MqttTrigger) publishMessage(topic string, message string) {
 	log.Debug("ReplyTo topic: ", topic)
 	log.Debug("Publishing message: ", message)
 
-	qos, err := strconv.Atoi(t.settings["qos"])
+	qos, err := strconv.Atoi(t.config.Settings["qos"].(string))
 	if err != nil {
 		log.Error("Error converting \"qos\" to an integer ", err.Error())
 		return
