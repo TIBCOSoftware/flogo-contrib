@@ -6,9 +6,20 @@ import (
 	"testing"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
-	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
+	"github.com/TIBCOSoftware/flogo-lib/types"
 	MQTT "github.com/eclipse/paho.mqtt.golang"
+	"io/ioutil"
 )
+
+var jsonMetadata = getJsonMetadata()
+
+func getJsonMetadata() string{
+	jsonMetadataBytes, err := ioutil.ReadFile("trigger.json")
+	if err != nil{
+		panic("No Json Metadata found for trigger.json path")
+	}
+	return string(jsonMetadataBytes)
+}
 
 const testConfig string = `{
   "name": "tibco-mqtt",
@@ -41,29 +52,29 @@ func (tr *TestRunner) Run(context context.Context, action action.Action, uri str
 	return 0, nil, nil
 }
 
-func TestRegistered(t *testing.T) {
-	act := trigger.Get("tibco-mqtt")
-
-	if act == nil {
-		t.Error("Trigger Not Registered")
-		t.Fail()
-		return
-	}
-}
 
 func TestInit(t *testing.T) {
-	tgr := trigger.Get("tibco-mqtt")
+	// New  factory
+	f := &MQTTFactory{}
+	tgr := f.New("tibco-mqtt")
 
 	runner := &TestRunner{}
 
-	config := &trigger.Config{}
+	config := types.TriggerConfig{}
 	json.Unmarshal([]byte(testConfig), config)
 	tgr.Init(config, runner)
 }
 
 func TestEndpoint(t *testing.T) {
+	// New  factory
+	f := &MQTTFactory{}
+	tgr := f.New("tibco-mqtt")
 
-	tgr := trigger.Get("tibco-mqtt")
+	runner := &TestRunner{}
+
+	config := types.TriggerConfig{}
+	json.Unmarshal([]byte(testConfig), &config)
+	tgr.Init(config, runner)
 
 	tgr.Start()
 	defer tgr.Stop()
