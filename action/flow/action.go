@@ -81,6 +81,9 @@ func NewFlowAction() *FlowAction {
 
 	if strings.ToLower(testerEnabled) == "true" {
 		ep = extension.NewTester()
+
+		sm := util.GetDefaultServiceManager()
+		sm.RegisterService(ep.GetFlowTester())
 	} else {
 		ep = extension.New()
 	}
