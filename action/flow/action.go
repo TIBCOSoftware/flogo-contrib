@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/instance"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
@@ -16,6 +18,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/types"
 	"github.com/TIBCOSoftware/flogo-lib/util"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/TIBCOSoftware/flogo-lib/flow/service/tester"
 )
 
 const (
@@ -48,6 +51,7 @@ type ExtensionProvider interface {
 	GetStateRecorder() instance.StateRecorder
 	GetMapperFactory() flowdef.MapperFactory
 	GetLinkExprManagerFactory() flowdef.LinkExprManagerFactory
+	GetFlowTester() *tester.RestEngineTester
 }
 
 var flowAction *FlowAction
@@ -69,19 +73,33 @@ func NewFlowAction() *FlowAction {
 
 	fa := &FlowAction{}
 
-	// Get Extension Provider
-	ep := extension.New()
 
-	// Add Flow provider
+	testerEnabled := os.Getenv(extension.TESTER_ENABLED)
+
+	// Get Extension Provider
+	var ep ExtensionProvider
+
+	if strings.ToLower(testerEnabled) == "true" {
+		ep = extension.NewTester()
+	} else {
+		ep = extension.New()
+	}
+
+	// Set the Flow provider
 	fa.flowProvider = ep.GetFlowProvider()
 
-	// Add Model
+	// Set the Flow Model
 	fa.flowModel = ep.GetFlowModel()
 
-	// Add state recorder
+	// Set the state recorder
 	fa.stateRecorder = ep.GetStateRecorder()
 
+	// Set the Mapper Factory
 	fa.mapperFactory = ep.GetMapperFactory()
+
+	// Set the Expression Manager Factory
+	fa.linkExprManagerFactory = ep.GetLinkExprManagerFactory()
+
 	flowdef.SetMapperFactory(fa.mapperFactory)
 	flowdef.SetLinkExprManagerFactory(fa.linkExprManagerFactory)
 

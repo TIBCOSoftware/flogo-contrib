@@ -6,6 +6,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/flow/flowdef"
 	"github.com/TIBCOSoftware/flogo-lib/flow/model"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/instance"
+	"github.com/TIBCOSoftware/flogo-lib/flow/service/tester"
 )
 
 //Provider is the extension provider for the flow action
@@ -29,5 +30,13 @@ func (fp *Provider) GetStateRecorder() instance.StateRecorder {
 }
 
 func (fp *Provider) GetMapperFactory() flowdef.MapperFactory {
+	return nil
+}
+
+func (fp *Provider) GetLinkExprManagerFactory() flowdef.LinkExprManagerFactory {
+	return nil
+}
+
+func (fp *Provider) GetFlowTester() *tester.RestEngineTester {
 	return nil
 }
