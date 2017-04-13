@@ -5,10 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
+	"strings"
 
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/instance"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/extension"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/instance"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/tester"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/flow/flowdef"
@@ -20,9 +23,6 @@ import (
 
 const (
 	FLOW_REF  = "github.com/TIBCOSoftware/flogo-contrib/action/flow"
-	AoStart   = iota // 0
-	AoResume         // 1
-	AoRestart        // 2
 )
 
 // ActionOptions are the options for the FlowAction
@@ -48,6 +48,7 @@ type ExtensionProvider interface {
 	GetStateRecorder() instance.StateRecorder
 	GetMapperFactory() flowdef.MapperFactory
 	GetLinkExprManagerFactory() flowdef.LinkExprManagerFactory
+	GetFlowTester() *tester.RestEngineTester
 }
 
 var flowAction *FlowAction
@@ -68,24 +69,42 @@ func (fa *FlowFactory) New(id string) action.Action2 {
 func NewFlowAction() *FlowAction {
 
 	fa := &FlowAction{}
+	options := &ActionOptions{Record: false}
+
+	testerEnabled := os.Getenv(tester.ENV_ENABLED)
 
 	// Get Extension Provider
-	ep := extension.New()
+	var ep ExtensionProvider
 
-	// Add Flow provider
+	if strings.ToLower(testerEnabled) == "true" {
+		ep = tester.NewExtensionProvider()
+
+		sm := util.GetDefaultServiceManager()
+		sm.RegisterService(ep.GetFlowTester())
+		options.Record = true
+	} else {
+		ep = extension.New()
+	}
+
+	// Set the Flow provider
 	fa.flowProvider = ep.GetFlowProvider()
 
-	// Add Model
+	// Set the Flow Model
 	fa.flowModel = ep.GetFlowModel()
 
-	// Add state recorder
+	// Set the state recorder
 	fa.stateRecorder = ep.GetStateRecorder()
 
+	// Set the Mapper Factory
 	fa.mapperFactory = ep.GetMapperFactory()
+
+	// Set the Expression Manager Factory
+	fa.linkExprManagerFactory = ep.GetLinkExprManagerFactory()
+
 	flowdef.SetMapperFactory(fa.mapperFactory)
 	flowdef.SetLinkExprManagerFactory(fa.linkExprManagerFactory)
 
-	options := &ActionOptions{Record: false}
+
 
 	fa.idGenerator, _ = util.NewGenerator()
 
@@ -147,14 +166,6 @@ func (fa *FlowAction) Init(config types.ActionConfig) {
 
 }
 
-// RunOptions the options when running a FlowAction
-type RunOptions struct {
-	Op           int
-	ReturnID     bool
-	InitialState *instance.Instance
-	ExecOptions  *instance.ExecOptions
-}
-
 // Run implements action.Action.Run
 func (fa *FlowAction) Run(context context.Context, uri string, options interface{}, handler action.ResultHandler) error {
 
@@ -162,10 +173,10 @@ func (fa *FlowAction) Run(context context.Context, uri string, options interface
 	//todo: catch panic
 	//todo: consider switch to URI to dictate flow operation (ex. flow://blah/resume)
 
-	op := AoStart
+	op := instance.OpStart
 	retID := false
 
-	ro, ok := options.(*RunOptions)
+	ro, ok := options.(*instance.RunOptions)
 
 	if ok {
 		op = ro.Op
@@ -175,7 +186,7 @@ func (fa *FlowAction) Run(context context.Context, uri string, options interface
 	var inst *instance.Instance
 
 	switch op {
-	case AoStart:
+	case instance.OpStart:
 		flow, err := fa.flowProvider.GetFlow(uri)
 		if err != nil {
 			return err
@@ -185,14 +196,14 @@ func (fa *FlowAction) Run(context context.Context, uri string, options interface
 		logger.Debug("Creating Instance: ", instanceID)
 
 		inst = instance.New(instanceID, uri, flow, fa.flowModel)
-	case AoResume:
+	case instance.OpResume:
 		if ok {
 			inst = ro.InitialState
 			logger.Debug("Resuming Instance: ", inst.ID())
 		} else {
 			return errors.New("Unable to resume instance, resume options not provided")
 		}
-	case AoRestart:
+	case instance.OpRestart:
 		if ok {
 			inst = ro.InitialState
 			instanceID := fa.idGenerator.NextAsString()
@@ -220,7 +231,7 @@ func (fa *FlowAction) Run(context context.Context, uri string, options interface
 		}
 	}
 
-	if op == AoStart {
+	if op == instance.OpStart {
 		inst.Start(triggerAttrs)
 	} else {
 		inst.UpdateAttrs(triggerAttrs)
@@ -238,7 +249,7 @@ func (fa *FlowAction) Run(context context.Context, uri string, options interface
 		defer handler.Done()
 
 		if !inst.Flow.ExplicitReply() {
-			handler.HandleResult(200, &IDResponse{ID: inst.ID()}, nil)
+			handler.HandleResult(200, &instance.IDResponse{ID: inst.ID()}, nil)
 		}
 
 		for hasWork && inst.Status() < instance.StatusCompleted && stepCount < fa.actionOptions.MaxStepCount {
@@ -253,7 +264,7 @@ func (fa *FlowAction) Run(context context.Context, uri string, options interface
 		}
 
 		if retID {
-			handler.HandleResult(200, &IDResponse{ID: inst.ID()}, nil)
+			handler.HandleResult(200, &instance.IDResponse{ID: inst.ID()}, nil)
 		}
 
 		logger.Debugf("Done Executing A.instance [%s] - Status: %d\n", inst.ID(), inst.Status())
@@ -277,7 +288,3 @@ func (rh *SimpleReplyHandler) Reply(replyCode int, replyData interface{}, err er
 	rh.resultHandler.HandleResult(replyCode, replyData, err)
 }
 
-// IDResponse is a response object consists of an ID
-type IDResponse struct {
-	ID string `json:"id"`
-}
