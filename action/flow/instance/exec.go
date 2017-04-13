@@ -5,6 +5,20 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
+const (
+	OpStart   = iota // 0
+	OpResume         // 1
+	OpRestart        // 2
+)
+
+// RunOptions the options when running a FlowAction
+type RunOptions struct {
+	Op           int
+	ReturnID     bool
+	InitialState *Instance
+	ExecOptions  *ExecOptions
+}
+
 // ExecOptions are optional Patch & Interceptor to be used during instance execution
 type ExecOptions struct {
 	Patch       *support.Patch
