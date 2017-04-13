@@ -100,7 +100,8 @@ func (mgr *FlowManager) GetFlow(id string) (*flowdef.DefinitionRep, error) {
 	if !ok {
 		//temporary fix for tester (dynamic uri)
 		if strings.HasPrefix(id, uriSchemeHttp) {
-			mgr.flows[id] = &FlowEntry{uri: id}
+			entry = &FlowEntry{uri: id}
+			mgr.flows[id] = entry
 		} else {
 			err := fmt.Errorf("No flow found for id '%s'", id)
 			logger.Errorf(err.Error())
