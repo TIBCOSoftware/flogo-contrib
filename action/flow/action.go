@@ -69,7 +69,7 @@ func (fa *FlowFactory) New(id string) action.Action2 {
 func NewFlowAction() *FlowAction {
 
 	fa := &FlowAction{}
-
+	options := &ActionOptions{Record: false}
 
 	testerEnabled := os.Getenv(tester.ENV_ENABLED)
 
@@ -81,6 +81,7 @@ func NewFlowAction() *FlowAction {
 
 		sm := util.GetDefaultServiceManager()
 		sm.RegisterService(ep.GetFlowTester())
+		options.Record = true
 	} else {
 		ep = extension.New()
 	}
@@ -103,7 +104,7 @@ func NewFlowAction() *FlowAction {
 	flowdef.SetMapperFactory(fa.mapperFactory)
 	flowdef.SetLinkExprManagerFactory(fa.linkExprManagerFactory)
 
-	options := &ActionOptions{Record: false}
+
 
 	fa.idGenerator, _ = util.NewGenerator()
 
