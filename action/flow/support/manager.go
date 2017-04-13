@@ -18,6 +18,7 @@ import (
 
 const (
 	uriSchemeFile = "file://"
+	uriSchemeHttp = "http://"
 )
 
 
@@ -97,9 +98,14 @@ func (mgr *FlowManager) GetFlow(id string) (*flowdef.DefinitionRep, error) {
 	entry, ok := mgr.flows[id]
 
 	if !ok {
-		err := fmt.Errorf("No flow found for id '%s'", id)
-		logger.Errorf(err.Error())
-		return nil, err
+		//temporary fix for tester (dynamic uri)
+		if strings.HasPrefix(id, uriSchemeHttp) {
+			mgr.flows[id] = &FlowEntry{uri: id}
+		} else {
+			err := fmt.Errorf("No flow found for id '%s'", id)
+			logger.Errorf(err.Error())
+			return nil, err
+		}
 	}
 
 	var flowDefBytes []byte
