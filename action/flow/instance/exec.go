@@ -50,3 +50,8 @@ func ApplyExecOptions(instance *Instance, execOptions *ExecOptions) {
 		}
 	}
 }
+
+// IDResponse is a response object consists of an ID
+type IDResponse struct {
+	ID string `json:"id"`
+}

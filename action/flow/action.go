@@ -248,7 +248,7 @@ func (fa *FlowAction) Run(context context.Context, uri string, options interface
 		defer handler.Done()
 
 		if !inst.Flow.ExplicitReply() {
-			handler.HandleResult(200, &IDResponse{ID: inst.ID()}, nil)
+			handler.HandleResult(200, &instance.IDResponse{ID: inst.ID()}, nil)
 		}
 
 		for hasWork && inst.Status() < instance.StatusCompleted && stepCount < fa.actionOptions.MaxStepCount {
@@ -263,7 +263,7 @@ func (fa *FlowAction) Run(context context.Context, uri string, options interface
 		}
 
 		if retID {
-			handler.HandleResult(200, &IDResponse{ID: inst.ID()}, nil)
+			handler.HandleResult(200, &instance.IDResponse{ID: inst.ID()}, nil)
 		}
 
 		logger.Debugf("Done Executing A.instance [%s] - Status: %d\n", inst.ID(), inst.Status())
@@ -287,7 +287,3 @@ func (rh *SimpleReplyHandler) Reply(replyCode int, replyData interface{}, err er
 	rh.resultHandler.HandleResult(replyCode, replyData, err)
 }
 
-// IDResponse is a response object consists of an ID
-type IDResponse struct {
-	ID string `json:"id"`
-}

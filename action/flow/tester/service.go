@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/TIBCOSoftware/flogo-lib/flow/flowinst"
-	"github.com/TIBCOSoftware/flogo-lib/flow/service"
-	"github.com/TIBCOSoftware/flogo-lib/util"
 	"github.com/julienschmidt/httprouter"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/instance"
+	"github.com/TIBCOSoftware/flogo-lib/flow/service"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/TIBCOSoftware/flogo-lib/util"
 )
 
 // RestEngineTester is default REST implementation of the EngineTester
@@ -99,7 +99,7 @@ func (et *RestEngineTester) StartFlow(w http.ResponseWriter, r *http.Request, _ 
 	}
 
 	if data != nil {
-		idResponse := data.(*flowinst.IDResponse)
+		idResponse := data.(*instance.IDResponse)
 
 		logger.Debugf("Started Instance [ID:%s] for %s", idResponse.ID, req.FlowURI)
 
@@ -139,7 +139,7 @@ func (et *RestEngineTester) RestartFlow(w http.ResponseWriter, r *http.Request, 
 	}
 
 	if data != nil {
-		idResponse := data.(*flowinst.IDResponse)
+		idResponse := data.(*instance.IDResponse)
 
 		logger.Debugf("Restarted Instance [ID:%s] for %s", idResponse.ID, req.InitialState.FlowURI)
 
@@ -179,7 +179,7 @@ func (et *RestEngineTester) ResumeFlow(w http.ResponseWriter, r *http.Request, _
 	}
 
 	if data != nil {
-		idResponse := data.(*flowinst.IDResponse)
+		idResponse := data.(*instance.IDResponse)
 
 		logger.Debugf("Resumed Instance [ID:%s] for %s", idResponse.ID, req.State.FlowURI)
 
