@@ -1,11 +1,11 @@
 package gpio
 
 import (
+	"errors"
 	"strings"
 
-	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
-	"errors"
 	"github.com/stianeikeland/go-rpio"
+	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 

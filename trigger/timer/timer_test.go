@@ -121,7 +121,7 @@ func TestInit(t *testing.T) {
 
 	runner := &TestRunner{}
 
-	config := types.TriggerConfig{}
+	config := trigger.Config{}
 	json.Unmarshal([]byte(testConfig), &config)
 	tgr.Init(config, runner)
 }

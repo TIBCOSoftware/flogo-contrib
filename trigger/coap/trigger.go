@@ -8,11 +8,10 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/dustin/go-coap"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
-	"github.com/TIBCOSoftware/flogo-lib/types"
-	"github.com/dustin/go-coap"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
@@ -36,7 +35,7 @@ type CoapTrigger struct {
 	runner    action.Runner
 	resources map[string]*CoapResource
 	server    *Server
-	instanceId string
+	config    *trigger.Config
 }
 
 type CoapResource struct {
@@ -50,18 +49,19 @@ type HandlerCfg struct{
 	autoIdReply bool
 }
 
-type CoapFactory struct{}
+//NewFactory create a new Trigger factory
+func NewFactory(md *trigger.Metadata) trigger.Factory {
+	return &CoapFactory{metadata:md}
+}
 
-var md = trigger.NewMetadata(jsonMetadata)
-
-func init() {
-	//trigger.Register(&CoapTrigger{metadata: md})
-	trigger.RegisterFactory(md.ID, &CoapFactory{})
+//CoapFactory Coap Trigger factory
+type CoapFactory struct{
+	metadata *trigger.Metadata
 }
 
 //New Creates a new trigger instance for a given id
-func (f *CoapFactory) New(id string) trigger.Trigger2 {
-	return &CoapTrigger{metadata: md, instanceId: id}
+func (f *CoapFactory) New(config *trigger.Config) trigger.Trigger {
+	return &CoapTrigger{metadata: f.metadata, config: config}
 }
 
 // Metadata implements trigger.Trigger.Metadata
@@ -69,16 +69,16 @@ func (t *CoapTrigger) Metadata() *trigger.Metadata {
 	return t.metadata
 }
 
-func (t *CoapTrigger) Init(config types.TriggerConfig, runner action.Runner) {
+func (t *CoapTrigger) Init(runner action.Runner) {
 
-	if config.Settings == nil {
-		panic(fmt.Sprintf("No Settings found for trigger '%s'", t.instanceId))
+	if t.config.Settings == nil {
+		panic(fmt.Sprintf("No Settings found for trigger '%s'", t.config.Id))
 	}
 
-	port := config.Settings["port"]
+	port := t.config.Settings["port"]
 
-	if port == nil {
-		panic(fmt.Sprintf("No Port found for trigger '%s' in settings", t.instanceId))
+	if port == "" {
+		panic(fmt.Sprintf("No Port found for trigger '%s' in settings",  t.config.Id))
 	}
 
 	t.runner = runner
@@ -88,11 +88,11 @@ func (t *CoapTrigger) Init(config types.TriggerConfig, runner action.Runner) {
 	t.resources = make(map[string]*CoapResource)
 
 	// Init handlers
-	for _, handler := range config.Handlers {
+	for _, handler := range t.config.Handlers {
 
 		if handlerIsValid(handler) {
-			method := strings.ToUpper(handler.Settings["method"].(string))
-			path := handler.Settings["path"].(string)
+			method := strings.ToUpper(handler.Settings["method"])
+			path := handler.Settings["path"]
 			autoIdReply, _ := data.CoerceToBoolean(handler.Settings["autoIdReply"])
 
 			log.Debugf("COAP Trigger: Registering handler [%s: %s] for Action Id: [%s]", method, path, handler.ActionId)
@@ -239,7 +239,7 @@ func newActionHandler(rt *CoapTrigger, resource *CoapResource) coap.Handler {
 		//rh.addr2 = addr
 		//rh.conn = conn
 
-		action := action.Get2(handlerCfg.actionId)
+		action := action.Get(handlerCfg.actionId)
 
 		context := trigger.NewContext(context.Background(), startAttrs)
 		_, _, err := rt.runner.Run(context, action, handlerCfg.actionId, nil)
@@ -286,16 +286,16 @@ func newActionHandler(rt *CoapTrigger, resource *CoapResource) coap.Handler {
 ////////////////////////////////////////////////////////////////////////////////////////
 // Utils
 
-func handlerIsValid(handler *types.TriggerHandler) bool {
+func handlerIsValid(handler *trigger.HandlerConfig) bool {
 	if handler.Settings == nil {
 		return false
 	}
 
-	if handler.Settings["method"] == nil {
+	if handler.Settings["method"] == "" {
 		return false
 	}
 
-	if !stringInList(strings.ToUpper(handler.Settings["method"].(string)), validMethods) {
+	if !stringInList(strings.ToUpper(handler.Settings["method"]), validMethods) {
 		return false
 	}
 

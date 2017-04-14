@@ -8,11 +8,10 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/julienschmidt/httprouter"
 	"github.com/TIBCOSoftware/flogo-contrib/trigger/rest/cors"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
-	"github.com/TIBCOSoftware/flogo-lib/types"
-	"github.com/julienschmidt/httprouter"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
@@ -25,53 +24,56 @@ var log = logger.GetLogger("trigger-tibco-rest")
 
 var validMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
 
-var md = trigger.NewMetadata(jsonMetadata)
 
 // RestTrigger REST trigger struct
 type RestTrigger struct {
-	Md     *trigger.Metadata
+	metadata     *trigger.Metadata
 	runner action.Runner
 	server *Server
-	instanceId   string
+	config *trigger.Config
 }
 
-type RestFactory struct{}
+//NewFactory create a new Trigger factory
+func NewFactory(md *trigger.Metadata) trigger.Factory {
+	return &RestFactory{metadata:md}
+}
 
-func init() {
-	trigger.RegisterFactory(md.ID, &RestFactory{})
+// RestFactory REST Trigger factory
+type RestFactory struct{
+	metadata *trigger.Metadata
 }
 
 //New Creates a new trigger instance for a given id
-func (t *RestFactory) New(id string) trigger.Trigger2 {
-	return &RestTrigger{Md: md, instanceId: id}
+func (t *RestFactory) New(config *trigger.Config) trigger.Trigger {
+	return &RestTrigger{metadata: t.metadata, config:config}
 }
 
 // Metadata implements trigger.Trigger.Metadata
 func (t *RestTrigger) Metadata() *trigger.Metadata {
-	return t.Md
+	return t.metadata
 }
 
-func (t *RestTrigger) Init(config types.TriggerConfig, runner action.Runner) {
+func (t *RestTrigger) Init(runner action.Runner) {
 
 	router := httprouter.New()
 
-	if config.Settings == nil {
-		panic(fmt.Sprintf("No Settings found for trigger '%s'", t.instanceId))
+	if t.config.Settings == nil {
+		panic(fmt.Sprintf("No Settings found for trigger '%s'", t.config.Id))
 	}
 
-	if port := config.Settings["port"]; port == nil {
-		panic(fmt.Sprintf("No Port found for trigger '%s' in settings", t.instanceId))
+	if _,ok := t.config.Settings["port"]; !ok {
+		panic(fmt.Sprintf("No Port found for trigger '%s' in settings", t.config.Id))
 	}
 
-	addr := ":" + config.Settings["port"].(string)
+	addr := ":" + t.config.Settings["port"]
 	t.runner = runner
 
 	// Init handlers
-	for _, handler := range config.Handlers {
+	for _, handler := range t.config.Handlers {
 
 		if handlerIsValid(handler) {
-			method := strings.ToUpper(handler.Settings["method"].(string))
-			path := handler.Settings["path"].(string)
+			method := strings.ToUpper(handler.Settings["method"])
+			path := handler.Settings["path"]
 
 			log.Debugf("REST Trigger: Registering handler [%s: %s] for Action Id: [%s]", method, path, handler.ActionId)
 
@@ -83,7 +85,7 @@ func (t *RestTrigger) Init(config types.TriggerConfig, runner action.Runner) {
 		}
 	}
 
-	log.Debugf("REST Trigger: Configured on port %s", config.Settings["port"].(string))
+	log.Debugf("REST Trigger: Configured on port %s", t.config.Settings["port"])
 	t.server = NewServer(addr, router)
 }
 
@@ -110,11 +112,11 @@ type IDResponse struct {
 	ID string `json:"id"`
 }
 
-func newActionHandler(rt *RestTrigger, actionId string, handlerSettings map[string]interface{}) httprouter.Handle {
+func newActionHandler(rt *RestTrigger, actionId string, handlerSettings map[string]string) httprouter.Handle {
 
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
-		log.Infof("REST Trigger: Received request for id '%s'", rt.instanceId)
+		log.Infof("REST Trigger: Received request for id '%s'", rt.config.Id)
 
 		c := cors.New(REST_CORS_PREFIX, log)
 		c.WriteCorsActualRequestHeaders(w)
@@ -152,9 +154,9 @@ func newActionHandler(rt *RestTrigger, actionId string, handlerSettings map[stri
 		}
 
 		//todo handle error
-		startAttrs, _ := rt.Md.OutputsToAttrs(data, false)
+		startAttrs, _ := rt.metadata.OutputsToAttrs(data, false)
 
-		action := action.Get2(actionId)
+		action := action.Get(actionId)
 		log.Debugf("Found action' %+x'", action)
 
 		context := trigger.NewContext(context.Background(), startAttrs)
@@ -185,16 +187,16 @@ func newActionHandler(rt *RestTrigger, actionId string, handlerSettings map[stri
 ////////////////////////////////////////////////////////////////////////////////////////
 // Utils
 
-func handlerIsValid(handler *types.TriggerHandler) bool {
+func handlerIsValid(handler *trigger.HandlerConfig) bool {
 	if handler.Settings == nil {
 		return false
 	}
 
-	if handler.Settings["method"] == nil {
+	if handler.Settings["method"] == "" {
 		return false
 	}
 
-	if !stringInList(strings.ToUpper(handler.Settings["method"].(string)), validMethods) {
+	if !stringInList(strings.ToUpper(handler.Settings["method"]), validMethods) {
 		return false
 	}
 
