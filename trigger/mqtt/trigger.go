@@ -3,41 +3,41 @@ package mqtt
 import (
 	"context"
 	"encoding/json"
+	"strconv"
+
+	"github.com/eclipse/paho.mqtt.golang"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/flow/support"
-	"github.com/TIBCOSoftware/flogo-lib/types"
-	"github.com/eclipse/paho.mqtt.golang"
-	"strconv"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
 // log is the default package logger
 var log = logger.GetLogger("trigger-tibco-mqtt")
 
-var md = trigger.NewMetadata(jsonMetadata)
-
-// todo: switch to use endpoint registration
-
 // MqttTrigger is simple MQTT trigger
 type MqttTrigger struct {
 	metadata          *trigger.Metadata
 	runner            action.Runner
 	client            mqtt.Client
-	config            types.TriggerConfig
+	config            *trigger.Config
 	topicToActionURI  map[string]string
 	topicToActionType map[string]string
-	instanceId        string
 }
 
+//NewFactory create a new Trigger factory
+func NewFactory(md *trigger.Metadata) trigger.Factory {
+	return &MQTTFactory{metadata:md}
+}
+
+// MQTTFactory MQTT Trigger factory
 type MQTTFactory struct {
+	metadata *trigger.Metadata
 }
 
-func (t *MQTTFactory) New(id string) trigger.Trigger2 {
-	return &MqttTrigger{metadata: md, instanceId: id}
-}
-func init() {
-	trigger.RegisterFactory(md.ID, &MQTTFactory{})
+//New Creates a new trigger instance for a given id
+func (t *MQTTFactory) New(config *trigger.Config) trigger.Trigger {
+	return &MqttTrigger{metadata: t.metadata, config: config}
 }
 
 // Metadata implements trigger.Trigger.Metadata
@@ -46,8 +46,7 @@ func (t *MqttTrigger) Metadata() *trigger.Metadata {
 }
 
 // Init implements ext.Trigger.Init
-func (t *MqttTrigger) Init(config types.TriggerConfig, runner action.Runner) {
-	t.config = config
+func (t *MqttTrigger) Init(runner action.Runner) {
 	t.runner = runner
 }
 
@@ -55,18 +54,18 @@ func (t *MqttTrigger) Init(config types.TriggerConfig, runner action.Runner) {
 func (t *MqttTrigger) Start() error {
 
 	opts := mqtt.NewClientOptions()
-	opts.AddBroker(t.config.Settings["broker"].(string))
-	opts.SetClientID(t.config.Settings["id"].(string))
-	opts.SetUsername(t.config.Settings["user"].(string))
-	opts.SetPassword(t.config.Settings["password"].(string))
-	b, err := strconv.ParseBool(t.config.Settings["cleansess"].(string))
+	opts.AddBroker(t.config.Settings["broker"])
+	opts.SetClientID(t.config.Settings["id"])
+	opts.SetUsername(t.config.Settings["user"])
+	opts.SetPassword(t.config.Settings["password"])
+	b, err := strconv.ParseBool(t.config.Settings["cleansess"])
 	if err != nil {
 		log.Error("Error converting \"cleansess\" to a boolean ", err.Error())
 		return err
 	}
 	opts.SetCleanSession(b)
-	if storeType := t.config.Settings["store"].(string); storeType != ":memory:" {
-		opts.SetStore(mqtt.NewFileStore(t.config.Settings["store"].(string)))
+	if storeType := t.config.Settings["store"]; storeType != ":memory:" {
+		opts.SetStore(mqtt.NewFileStore(t.config.Settings["store"]))
 	}
 
 	opts.SetDefaultPublishHandler(func(client mqtt.Client, msg mqtt.Message) {
@@ -88,7 +87,7 @@ func (t *MqttTrigger) Start() error {
 		panic(token.Error())
 	}
 
-	i, err := strconv.Atoi(t.config.Settings["qos"].(string))
+	i, err := strconv.Atoi(t.config.Settings["qos"])
 	if err != nil {
 		log.Error("Error converting \"qos\" to an integer ", err.Error())
 		return err
@@ -98,11 +97,11 @@ func (t *MqttTrigger) Start() error {
 	t.topicToActionURI = make(map[string]string)
 
 	for _, endpoint := range t.config.Handlers {
-		if token := t.client.Subscribe(endpoint.Settings["topic"].(string), byte(i), nil); token.Wait() && token.Error() != nil {
+		if token := t.client.Subscribe(endpoint.Settings["topic"], byte(i), nil); token.Wait() && token.Error() != nil {
 			log.Errorf("Error subscribing to topic %s: %s", endpoint.Settings["topic"], token.Error())
 			panic(token.Error())
 		} else {
-			t.topicToActionURI[endpoint.Settings["topic"].(string)] = endpoint.ActionId
+			t.topicToActionURI[endpoint.Settings["topic"]] = endpoint.ActionId
 		}
 	}
 
@@ -112,10 +111,10 @@ func (t *MqttTrigger) Start() error {
 // Stop implements ext.Trigger.Stop
 func (t *MqttTrigger) Stop() error {
 	//unsubscribe from topic
-	log.Debug("Unsubcribing from topic: ", t.config.Settings["topic"].(string))
+	log.Debug("Unsubcribing from topic: ", t.config.Settings["topic"])
 	for _, endpoint := range t.config.Handlers {
-		if token := t.client.Unsubscribe(endpoint.Settings["topic"].(string)); token.Wait() && token.Error() != nil {
-			log.Errorf("Error unsubscribing from topic %s: %s", endpoint.Settings["topic"].(string), token.Error())
+		if token := t.client.Unsubscribe(endpoint.Settings["topic"]); token.Wait() && token.Error() != nil {
+			log.Errorf("Error unsubscribing from topic %s: %s", endpoint.Settings["topic"], token.Error())
 		}
 	}
 
@@ -138,7 +137,7 @@ func (t *MqttTrigger) RunAction(actionURI string, payload string) {
 	//todo handle error
 	startAttrs, _ := t.metadata.OutputsToAttrs(req.Data, false)
 
-	action := action.Get2(actionURI)
+	action := action.Get(actionURI)
 	context := trigger.NewContext(context.Background(), startAttrs)
 	_, replyData, err := t.runner.Run(context, action, actionURI, nil)
 	if err != nil {
@@ -161,7 +160,7 @@ func (t *MqttTrigger) publishMessage(topic string, message string) {
 	log.Debug("ReplyTo topic: ", topic)
 	log.Debug("Publishing message: ", message)
 
-	qos, err := strconv.Atoi(t.config.Settings["qos"].(string))
+	qos, err := strconv.Atoi(t.config.Settings["qos"])
 	if err != nil {
 		log.Error("Error converting \"qos\" to an integer ", err.Error())
 		return

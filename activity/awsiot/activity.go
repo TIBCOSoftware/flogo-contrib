@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
+	"github.com/TIBCOSoftware/flogo-lib/core/activity"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
-	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
 // log is the default package logger

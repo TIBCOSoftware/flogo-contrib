@@ -45,7 +45,7 @@ func TestInit(t *testing.T) {
 
 	runner := &TestRunner{}
 
-	config := types.TriggerConfig{}
+	config := trigger.Config{}
 	err := json.Unmarshal([]byte(testConfig), &config)
 	if err != nil{
 		t.Error(err)
@@ -61,7 +61,7 @@ func TestHandlerOk(t *testing.T) {
 
 	runner := &TestRunner{}
 
-	config := types.TriggerConfig{}
+	config := trigger.Config{}
 	json.Unmarshal([]byte(testConfig), &config)
 	tgr.Init(config, runner)
 

@@ -47,7 +47,7 @@
       "type": "string"
     }
   ],
-  "endpoint": {
+  "handler": {
     "settings": [
       {
         "name": "topic",

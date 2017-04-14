@@ -2,35 +2,41 @@ package timer
 
 import (
 	"context"
-	"github.com/TIBCOSoftware/flogo-lib/core/action"
-	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
-	"github.com/TIBCOSoftware/flogo-lib/types"
-	"github.com/carlescere/scheduler"
-	"github.com/op/go-logging"
 	"math"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/carlescere/scheduler"
+	"github.com/op/go-logging"
+	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
+	"github.com/TIBCOSoftware/flogo-lib/core/action"
 )
 
 
 // log is the default package logger
 var log = logging.MustGetLogger("trigger-tibco-timer")
-var md = trigger.NewMetadata(jsonMetadata)
 
 type TimerTrigger struct {
 	metadata   *trigger.Metadata
 	runner     action.Runner
-	config     types.TriggerConfig
+	config     *trigger.Config
 	timers     map[string]*scheduler.Job
-	instanceId string
 }
 
+//NewFactory create a new Trigger factory
+func NewFactory(md *trigger.Metadata) trigger.Factory {
+	return &TimerFactory{metadata:md}
+}
+
+// TimerFactory Timer Trigger factory
 type TimerFactory struct {
+	metadata *trigger.Metadata
 }
 
-func init() {
-	trigger.RegisterFactory(md.ID, &TimerFactory{})
+//New Creates a new trigger instance for a given id
+func (t *TimerFactory) New(config *trigger.Config) trigger.Trigger {
+	return &TimerTrigger{metadata: t.metadata, config:config}
 }
 
 // Metadata implements trigger.Trigger.Metadata
@@ -38,15 +44,10 @@ func (t *TimerTrigger) Metadata() *trigger.Metadata {
 	return t.metadata
 }
 
-func (t *TimerFactory) New(id string) trigger.Trigger2 {
-	return &TimerTrigger{metadata: md, instanceId: id}
-}
-
 // Init implements ext.Trigger.Init
-func (t *TimerTrigger) Init(config types.TriggerConfig, runner action.Runner) {
-	log.Infof("In init, id: '%s', Metadata: '%+v', Config: '%+v'", t.instanceId, t.metadata, config)
-	t.config = config
+func (t *TimerTrigger) Init(runner action.Runner) {
 	t.runner = runner
+	log.Infof("In init, id: '%s', Metadata: '%+v', Config: '%+v'", t.config.Id, t.metadata, t.config)
 }
 
 // Start implements ext.Trigger.Start
@@ -91,7 +92,7 @@ func (t *TimerTrigger) Stop() error {
 	return nil
 }
 
-func (t *TimerTrigger) scheduleOnce(endpoint *types.TriggerHandler) {
+func (t *TimerTrigger) scheduleOnce(endpoint *trigger.HandlerConfig) {
 	log.Info("Scheduling a run one time job")
 
 	seconds := getInitialStartInSeconds(endpoint)
@@ -105,10 +106,10 @@ func (t *TimerTrigger) scheduleOnce(endpoint *types.TriggerHandler) {
 	fn := func() {
 		log.Debug("-- Starting \"Once\" timer process")
 
-		action := action.Get2(endpoint.ActionId)
-		log.Debugf("Found action: '%+x'", action)
+		act := action.Get(endpoint.ActionId)
+		log.Debugf("Found action: '%+x'", act)
 		log.Debugf("ActionID: '%s'", endpoint.ActionId)
-		_, _, err := t.runner.Run(context.Background(), action, endpoint.ActionId, nil)
+		_, _, err := t.runner.Run(context.Background(), act, endpoint.ActionId, nil)
 
 		if err != nil {
 			log.Error("Error starting action: ", err.Error())
@@ -124,7 +125,7 @@ func (t *TimerTrigger) scheduleOnce(endpoint *types.TriggerHandler) {
 	t.timers[endpoint.ActionId] = timerJob
 }
 
-func (t *TimerTrigger) scheduleRepeating(endpoint *types.TriggerHandler) {
+func (t *TimerTrigger) scheduleRepeating(endpoint *trigger.HandlerConfig) {
 	log.Info("Scheduling a repeating job")
 
 	seconds := getInitialStartInSeconds(endpoint)
@@ -132,7 +133,7 @@ func (t *TimerTrigger) scheduleRepeating(endpoint *types.TriggerHandler) {
 	fn2 := func() {
 		log.Debug("-- Starting \"Repeating\" (repeat) timer action")
 
-		action := action.Get2(endpoint.ActionId)
+		action := action.Get(endpoint.ActionId)
 		log.Debugf("Found action: '%+x'", action)
 		log.Debugf("ActionID: '%s'", endpoint.ActionId)
 		_, _, err := t.runner.Run(context.Background(), action, endpoint.ActionId, nil)
@@ -166,14 +167,14 @@ func (t *TimerTrigger) scheduleRepeating(endpoint *types.TriggerHandler) {
 	}
 }
 
-func getInitialStartInSeconds(endpoint *types.TriggerHandler) int {
+func getInitialStartInSeconds(endpoint *trigger.HandlerConfig) int {
 
-	if startDate := endpoint.Settings["startDate"]; startDate == nil {
+	if _,ok := endpoint.Settings["startDate"]; !ok {
 		return 0
 	}
 
 	layout := time.RFC3339
-	startDate := endpoint.Settings["startDate"].(string)
+	startDate := endpoint.Settings["startDate"]
 	idx := strings.LastIndex(startDate, "Z")
 	timeZone := startDate[idx+1 : len(startDate)]
 	log.Debug("Time Zone: ", timeZone)
@@ -235,19 +236,19 @@ func (j *PrintJob) Run() error {
 	return nil
 }
 
-func (t *TimerTrigger) scheduleJobEverySecond(endpoint *types.TriggerHandler, fn func()) {
+func (t *TimerTrigger) scheduleJobEverySecond(endpoint *trigger.HandlerConfig, fn func()) {
 
 	var interval int = 0
-	if seconds := endpoint.Settings["seconds"]; seconds != nil {
-		seconds, _ := strconv.Atoi(seconds.(string))
+	if seconds := endpoint.Settings["seconds"]; seconds != "" {
+		seconds, _ := strconv.Atoi(seconds)
 		interval = interval + seconds
 	}
-	if minutes := endpoint.Settings["minutes"]; minutes != nil {
-		minutes, _ := strconv.Atoi(minutes.(string))
+	if minutes := endpoint.Settings["minutes"]; minutes != "" {
+		minutes, _ := strconv.Atoi(minutes)
 		interval = interval + minutes*60
 	}
-	if hours := endpoint.Settings["hours"]; hours != nil {
-		hours, _ := strconv.Atoi(hours.(string))
+	if hours := endpoint.Settings["hours"]; hours != "" {
+		hours, _ := strconv.Atoi(hours)
 		interval = interval + hours*3600
 	}
 

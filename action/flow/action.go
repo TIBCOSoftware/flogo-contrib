@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/extension"
@@ -16,7 +17,6 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/flow/flowdef"
 	"github.com/TIBCOSoftware/flogo-lib/flow/model"
-	"github.com/TIBCOSoftware/flogo-lib/types"
 	"github.com/TIBCOSoftware/flogo-lib/util"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
@@ -32,11 +32,6 @@ type ActionOptions struct {
 }
 
 type FlowAction struct {
-	stateRecorder          instance.StateRecorder
-	flowProvider           definition.Provider
-	mapperFactory          flowdef.MapperFactory
-	linkExprManagerFactory flowdef.LinkExprManagerFactory
-	flowModel              *model.FlowModel
 	idGenerator            *util.Generator
 	actionOptions          *ActionOptions
 }
@@ -51,73 +46,61 @@ type ExtensionProvider interface {
 	GetFlowTester() *tester.RestEngineTester
 }
 
+var actionMu  sync.Mutex
+var ep ExtensionProvider
 var flowAction *FlowAction
 
-type FlowFactory struct{}
 
 func init() {
 	action.RegisterFactory(FLOW_REF, &FlowFactory{})
-	//todo is this correct? isn't action getting overridden
-	flowAction = NewFlowAction()
 }
 
-func (fa *FlowFactory) New(id string) action.Action2 {
-	return flowAction
+func SetExtensionProvider(provider ExtensionProvider) {
+	actionMu.Lock()
+	defer actionMu.Unlock()
+
+	ep = provider
 }
 
-// NewFlowAction creates a new FlowAction
-func NewFlowAction() *FlowAction {
+type FlowFactory struct{}
 
-	fa := &FlowAction{}
-	options := &ActionOptions{Record: false}
+func (ff *FlowFactory) New(config *action.Config) action.Action {
 
-	testerEnabled := os.Getenv(tester.ENV_ENABLED)
+	actionMu.Lock()
+	defer actionMu.Unlock()
 
-	// Get Extension Provider
-	var ep ExtensionProvider
+	if ep == nil {
+		options := &ActionOptions{Record: false}
 
-	if strings.ToLower(testerEnabled) == "true" {
-		ep = tester.NewExtensionProvider()
+		testerEnabled := os.Getenv(tester.ENV_ENABLED)
 
-		sm := util.GetDefaultServiceManager()
-		sm.RegisterService(ep.GetFlowTester())
-		options.Record = true
-	} else {
-		ep = extension.New()
+		if strings.ToLower(testerEnabled) == "true" {
+			ep = tester.NewExtensionProvider()
+
+			sm := util.GetDefaultServiceManager()
+			sm.RegisterService(ep.GetFlowTester())
+			options.Record = true
+		} else {
+			ep = extension.New()
+		}
+
+		flowdef.SetMapperFactory(ep.GetMapperFactory())
+		flowdef.SetLinkExprManagerFactory(ep.GetLinkExprManagerFactory())
+
+		if options.MaxStepCount < 1 {
+			options.MaxStepCount = int(^uint16(0))
+		}
+
+		flowAction := &FlowAction{}
+
+		flowAction.actionOptions = options
+		flowAction.idGenerator, _ = util.NewGenerator()
 	}
 
-	// Set the Flow provider
-	fa.flowProvider = ep.GetFlowProvider()
-
-	// Set the Flow Model
-	fa.flowModel = ep.GetFlowModel()
-
-	// Set the state recorder
-	fa.stateRecorder = ep.GetStateRecorder()
-
-	// Set the Mapper Factory
-	fa.mapperFactory = ep.GetMapperFactory()
-
-	// Set the Expression Manager Factory
-	fa.linkExprManagerFactory = ep.GetLinkExprManagerFactory()
-
-	flowdef.SetMapperFactory(fa.mapperFactory)
-	flowdef.SetLinkExprManagerFactory(fa.linkExprManagerFactory)
-
-
-
-	fa.idGenerator, _ = util.NewGenerator()
-
-	if options.MaxStepCount < 1 {
-		options.MaxStepCount = int(^uint16(0))
+	//temporary hack to support dynamic process running by tester
+	if config.Data == nil {
+		return flowAction
 	}
-
-	fa.actionOptions = options
-	return fa
-}
-
-func (fa *FlowAction) Init(config types.ActionConfig) {
-	logger.Debugf("Initializing flow '%s'", config.Id)
 
 	var flavor Flavor
 	err := json.Unmarshal(config.Data, &flavor)
@@ -129,41 +112,42 @@ func (fa *FlowAction) Init(config types.ActionConfig) {
 
 	if len(flavor.Flow) > 0 {
 		// It is an uncompressed and embedded flow
-		err := fa.flowProvider.AddUncompressedFlow(config.Id, flavor.Flow)
+		err := ep.GetFlowProvider().AddUncompressedFlow(config.Id, flavor.Flow)
 		if err != nil {
 			errorMsg := fmt.Sprintf("Error while loading uncompressed flow '%s' error '%s'", config.Id, err.Error())
 			logger.Errorf(errorMsg)
 			panic(errorMsg)
 		}
-		return
+		return flowAction
 	}
 
 	if len(flavor.FlowCompressed) > 0 {
 		// It is a compressed and embedded flow
-		err := fa.flowProvider.AddCompressedFlow(config.Id, string(flavor.FlowCompressed[:]))
+		err := ep.GetFlowProvider().AddCompressedFlow(config.Id, string(flavor.FlowCompressed[:]))
 		if err != nil {
 			errorMsg := fmt.Sprintf("Error while loading compressed flow '%s' error '%s'", config.Id, err.Error())
 			logger.Errorf(errorMsg)
 			panic(errorMsg)
 		}
-		return
+		return flowAction
 	}
 
 	if len(flavor.FlowURI) > 0 {
 		// It is a URI flow
-		err := fa.flowProvider.AddFlowURI(config.Id, string(flavor.FlowURI[:]))
+		err := ep.GetFlowProvider().AddFlowURI(config.Id, string(flavor.FlowURI[:]))
 		if err != nil {
 			errorMsg := fmt.Sprintf("Error while loading flow URI '%s' error '%s'", config.Id, err.Error())
 			logger.Errorf(errorMsg)
 			panic(errorMsg)
 		}
-		return
+		return flowAction
 	}
 
 	errorMsg := fmt.Sprintf("No flow found in action data for id '%s'", config.Id)
 	logger.Errorf(errorMsg)
 	panic(errorMsg)
 
+	return flowAction
 }
 
 // Run implements action.Action.Run
@@ -187,7 +171,7 @@ func (fa *FlowAction) Run(context context.Context, uri string, options interface
 
 	switch op {
 	case instance.OpStart:
-		flow, err := fa.flowProvider.GetFlow(uri)
+		flow, err := ep.GetFlowProvider().GetFlow(uri)
 		if err != nil {
 			return err
 		}
@@ -195,7 +179,7 @@ func (fa *FlowAction) Run(context context.Context, uri string, options interface
 		instanceID := fa.idGenerator.NextAsString()
 		logger.Debug("Creating Instance: ", instanceID)
 
-		inst = instance.New(instanceID, uri, flow, fa.flowModel)
+		inst = instance.New(instanceID, uri, flow, ep.GetFlowModel())
 	case instance.OpResume:
 		if ok {
 			inst = ro.InitialState
@@ -207,7 +191,7 @@ func (fa *FlowAction) Run(context context.Context, uri string, options interface
 		if ok {
 			inst = ro.InitialState
 			instanceID := fa.idGenerator.NextAsString()
-			inst.Restart(instanceID, fa.flowProvider)
+			inst.Restart(instanceID, ep.GetFlowProvider())
 
 			logger.Debug("Restarting Instance: ", instanceID)
 		} else {
@@ -258,8 +242,8 @@ func (fa *FlowAction) Run(context context.Context, uri string, options interface
 			hasWork = inst.DoStep()
 
 			if fa.actionOptions.Record {
-				fa.stateRecorder.RecordSnapshot(inst)
-				fa.stateRecorder.RecordStep(inst)
+				ep.GetStateRecorder().RecordSnapshot(inst)
+				ep.GetStateRecorder().RecordStep(inst)
 			}
 		}
 

@@ -55,7 +55,7 @@ func (rp *RequestProcessor) StartFlow(startRequest *StartRequest) (code int, ret
 	}
 
 	factory := action.GetFactory(FLOW_REF)
-	act := factory.New("flow")
+	act := factory.New(&action.Config{Id:"flow"})
 
 	ctx := trigger.NewContext(context.Background(), attrs)
 
@@ -84,7 +84,7 @@ func (rp *RequestProcessor) RestartFlow(restartRequest *RestartRequest) (code in
 	}
 
 	factory := action.GetFactory(FLOW_REF)
-	act := factory.New("flow")
+	act := factory.New(&action.Config{Id:"flow"})
 
 	ro := &instance.RunOptions{Op: instance.OpRestart, ReturnID: true, InitialState: restartRequest.InitialState, ExecOptions: execOptions}
 	return rp.runner.Run(ctx, act, restartRequest.InitialState.FlowURI, ro)
@@ -111,7 +111,7 @@ func (rp *RequestProcessor) ResumeFlow(resumeRequest *ResumeRequest) (code int, 
 	}
 
 	factory := action.GetFactory(FLOW_REF)
-	act := factory.New("flow")
+	act := factory.New(&action.Config{Id:"flow"})
 
 	ro := &instance.RunOptions{Op: instance.OpResume, ReturnID: true, InitialState: resumeRequest.State, ExecOptions: execOptions}
 	return rp.runner.Run(ctx, act, resumeRequest.State.FlowURI, ro)
