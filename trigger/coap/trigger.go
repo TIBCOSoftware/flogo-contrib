@@ -91,8 +91,8 @@ func (t *CoapTrigger) Init(runner action.Runner) {
 	for _, handler := range t.config.Handlers {
 
 		if handlerIsValid(handler) {
-			method := strings.ToUpper(handler.Settings["method"])
-			path := handler.Settings["path"]
+			method := strings.ToUpper(handler.GetSetting("method"))
+			path := handler.GetSetting("path")
 			autoIdReply, _ := data.CoerceToBoolean(handler.Settings["autoIdReply"])
 
 			log.Debugf("COAP Trigger: Registering handler [%s: %s] for Action Id: [%s]", method, path, handler.ActionId)
@@ -295,7 +295,7 @@ func handlerIsValid(handler *trigger.HandlerConfig) bool {
 		return false
 	}
 
-	if !stringInList(strings.ToUpper(handler.Settings["method"]), validMethods) {
+	if !stringInList(strings.ToUpper(handler.GetSetting("method")), validMethods) {
 		return false
 	}
 

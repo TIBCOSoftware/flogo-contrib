@@ -46,7 +46,7 @@ func (t *RestTrigger) Init(config *trigger.Config, runner action.Runner) {
 
 	router := httprouter.New()
 
-	addr := ":" + string(config.Settings["port"])
+	addr := ":" + config.GetSetting("port")
 	t.runner = runner
 
 	endpoints := config.Endpoints

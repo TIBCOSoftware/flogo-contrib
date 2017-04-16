@@ -54,18 +54,18 @@ func (t *MqttTrigger) Init(runner action.Runner) {
 func (t *MqttTrigger) Start() error {
 
 	opts := mqtt.NewClientOptions()
-	opts.AddBroker(t.config.Settings["broker"])
-	opts.SetClientID(t.config.Settings["id"])
-	opts.SetUsername(t.config.Settings["user"])
-	opts.SetPassword(t.config.Settings["password"])
-	b, err := strconv.ParseBool(t.config.Settings["cleansess"])
+	opts.AddBroker(t.config.GetSetting("broker"))
+	opts.SetClientID(t.config.GetSetting("id"))
+	opts.SetUsername(t.config.GetSetting("user"))
+	opts.SetPassword(t.config.GetSetting("password"))
+	b, err := strconv.ParseBool(t.config.GetSetting("cleansess"))
 	if err != nil {
 		log.Error("Error converting \"cleansess\" to a boolean ", err.Error())
 		return err
 	}
 	opts.SetCleanSession(b)
 	if storeType := t.config.Settings["store"]; storeType != ":memory:" {
-		opts.SetStore(mqtt.NewFileStore(t.config.Settings["store"]))
+		opts.SetStore(mqtt.NewFileStore(t.config.GetSetting("store")))
 	}
 
 	opts.SetDefaultPublishHandler(func(client mqtt.Client, msg mqtt.Message) {
@@ -87,7 +87,7 @@ func (t *MqttTrigger) Start() error {
 		panic(token.Error())
 	}
 
-	i, err := strconv.Atoi(t.config.Settings["qos"])
+	i, err := strconv.Atoi(t.config.GetSetting("qos"))
 	if err != nil {
 		log.Error("Error converting \"qos\" to an integer ", err.Error())
 		return err
@@ -96,12 +96,12 @@ func (t *MqttTrigger) Start() error {
 	t.topicToActionType = make(map[string]string)
 	t.topicToActionURI = make(map[string]string)
 
-	for _, endpoint := range t.config.Handlers {
-		if token := t.client.Subscribe(endpoint.Settings["topic"], byte(i), nil); token.Wait() && token.Error() != nil {
-			log.Errorf("Error subscribing to topic %s: %s", endpoint.Settings["topic"], token.Error())
+	for _, handlerCfg := range t.config.Handlers {
+		if token := t.client.Subscribe(handlerCfg.GetSetting("topic"), byte(i), nil); token.Wait() && token.Error() != nil {
+			log.Errorf("Error subscribing to topic %s: %s", handlerCfg.Settings["topic"], token.Error())
 			panic(token.Error())
 		} else {
-			t.topicToActionURI[endpoint.Settings["topic"]] = endpoint.ActionId
+			t.topicToActionURI[handlerCfg.GetSetting("topic")] = handlerCfg.ActionId
 		}
 	}
 
@@ -112,9 +112,9 @@ func (t *MqttTrigger) Start() error {
 func (t *MqttTrigger) Stop() error {
 	//unsubscribe from topic
 	log.Debug("Unsubcribing from topic: ", t.config.Settings["topic"])
-	for _, endpoint := range t.config.Handlers {
-		if token := t.client.Unsubscribe(endpoint.Settings["topic"]); token.Wait() && token.Error() != nil {
-			log.Errorf("Error unsubscribing from topic %s: %s", endpoint.Settings["topic"], token.Error())
+	for _, handlerCfg := range t.config.Handlers {
+		if token := t.client.Unsubscribe(handlerCfg.GetSetting("topic")); token.Wait() && token.Error() != nil {
+			log.Errorf("Error unsubscribing from topic %s: %s", handlerCfg.Settings["topic"], token.Error())
 		}
 	}
 
@@ -160,7 +160,7 @@ func (t *MqttTrigger) publishMessage(topic string, message string) {
 	log.Debug("ReplyTo topic: ", topic)
 	log.Debug("Publishing message: ", message)
 
-	qos, err := strconv.Atoi(t.config.Settings["qos"])
+	qos, err := strconv.Atoi(t.config.GetSetting("qos"))
 	if err != nil {
 		log.Error("Error converting \"qos\" to an integer ", err.Error())
 		return

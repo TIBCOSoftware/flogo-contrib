@@ -167,14 +167,14 @@ func (t *TimerTrigger) scheduleRepeating(endpoint *trigger.HandlerConfig) {
 	}
 }
 
-func getInitialStartInSeconds(endpoint *trigger.HandlerConfig) int {
+func getInitialStartInSeconds(handlerCfg *trigger.HandlerConfig) int {
 
-	if _,ok := endpoint.Settings["startDate"]; !ok {
+	if _,ok := handlerCfg.Settings["startDate"]; !ok {
 		return 0
 	}
 
 	layout := time.RFC3339
-	startDate := endpoint.Settings["startDate"]
+	startDate := handlerCfg.GetSetting("startDate")
 	idx := strings.LastIndex(startDate, "Z")
 	timeZone := startDate[idx+1 : len(startDate)]
 	log.Debug("Time Zone: ", timeZone)
@@ -236,18 +236,18 @@ func (j *PrintJob) Run() error {
 	return nil
 }
 
-func (t *TimerTrigger) scheduleJobEverySecond(endpoint *trigger.HandlerConfig, fn func()) {
+func (t *TimerTrigger) scheduleJobEverySecond(handlerCfg *trigger.HandlerConfig, fn func()) {
 
 	var interval int = 0
-	if seconds := endpoint.Settings["seconds"]; seconds != "" {
+	if seconds := handlerCfg.GetSetting("seconds"); seconds != "" {
 		seconds, _ := strconv.Atoi(seconds)
 		interval = interval + seconds
 	}
-	if minutes := endpoint.Settings["minutes"]; minutes != "" {
+	if minutes := handlerCfg.GetSetting("minutes"); minutes != "" {
 		minutes, _ := strconv.Atoi(minutes)
 		interval = interval + minutes*60
 	}
-	if hours := endpoint.Settings["hours"]; hours != "" {
+	if hours := handlerCfg.GetSetting("hours"); hours != "" {
 		hours, _ := strconv.Atoi(hours)
 		interval = interval + hours*3600
 	}
@@ -262,5 +262,5 @@ func (t *TimerTrigger) scheduleJobEverySecond(endpoint *trigger.HandlerConfig, f
 		log.Error("timerJob is nil")
 	}
 
-	t.timers["r:"+endpoint.ActionId] = timerJob
+	t.timers["r:"+handlerCfg.ActionId] = timerJob
 }

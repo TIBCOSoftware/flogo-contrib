@@ -65,23 +65,23 @@ func (t *RestTrigger) Init(runner action.Runner) {
 		panic(fmt.Sprintf("No Port found for trigger '%s' in settings", t.config.Id))
 	}
 
-	addr := ":" + t.config.Settings["port"]
+	addr := ":" + t.config.GetSetting("port")
 	t.runner = runner
 
 	// Init handlers
-	for _, handler := range t.config.Handlers {
+	for _, handlerCfg := range t.config.Handlers {
 
-		if handlerIsValid(handler) {
-			method := strings.ToUpper(handler.Settings["method"])
-			path := handler.Settings["path"]
+		if handlerIsValid(handlerCfg) {
+			method := strings.ToUpper(handlerCfg.GetSetting("method"))
+			path := handlerCfg.GetSetting("path")
 
-			log.Debugf("REST Trigger: Registering handler [%s: %s] for Action Id: [%s]", method, path, handler.ActionId)
+			log.Debugf("REST Trigger: Registering handler [%s: %s] for Action Id: [%s]", method, path, handlerCfg.ActionId)
 
 			router.OPTIONS(path, handleCorsPreflight) // for CORS
-			router.Handle(method, path, newActionHandler(t, handler.ActionId, handler.Settings))
+			router.Handle(method, path, newActionHandler(t, handlerCfg.ActionId, handlerCfg))
 
 		} else {
-			panic(fmt.Sprintf("Invalid handler: %v", handler))
+			panic(fmt.Sprintf("Invalid handler: %v", handlerCfg))
 		}
 	}
 
@@ -112,7 +112,7 @@ type IDResponse struct {
 	ID string `json:"id"`
 }
 
-func newActionHandler(rt *RestTrigger, actionId string, handlerSettings map[string]string) httprouter.Handle {
+func newActionHandler(rt *RestTrigger, actionId string, handlerCfg *trigger.HandlerConfig) httprouter.Handle {
 
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
@@ -196,7 +196,7 @@ func handlerIsValid(handler *trigger.HandlerConfig) bool {
 		return false
 	}
 
-	if !stringInList(strings.ToUpper(handler.Settings["method"]), validMethods) {
+	if !stringInList(strings.ToUpper(handler.GetSetting("method")), validMethods) {
 		return false
 	}
 

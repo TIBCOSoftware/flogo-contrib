@@ -19,7 +19,6 @@ var log = logger.GetLogger("trigger-tibco-timer")
 type TimerTrigger struct {
 	metadata *trigger.Metadata
 	runner   action.Runner
-	settings map[string]string
 	config   *trigger.Config
 	timers   map[string]*scheduler.Job
 }
@@ -37,7 +36,6 @@ func (t *TimerTrigger) Metadata() *trigger.Metadata {
 // Init implements ext.Trigger.Init
 func (t *TimerTrigger) Init(config *trigger.Config, runner action.Runner) {
 
-	t.settings = config.Settings
 	t.config = config
 	t.runner = runner
 }

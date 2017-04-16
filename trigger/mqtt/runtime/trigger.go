@@ -22,7 +22,6 @@ type MqttTrigger struct {
 	metadata          *trigger.Metadata
 	runner            action.Runner
 	client            mqtt.Client
-	settings          map[string]string
 	config            *trigger.Config
 	topicToActionURI  map[string]string
 	topicToActionType map[string]string
@@ -42,7 +41,6 @@ func (t *MqttTrigger) Metadata() *trigger.Metadata {
 func (t *MqttTrigger) Init(config *trigger.Config, runner action.Runner) {
 
 	t.config = config
-	t.settings = config.Settings
 	t.runner = runner
 }
 
@@ -50,18 +48,18 @@ func (t *MqttTrigger) Init(config *trigger.Config, runner action.Runner) {
 func (t *MqttTrigger) Start() error {
 
 	opts := mqtt.NewClientOptions()
-	opts.AddBroker(t.settings["broker"])
-	opts.SetClientID(t.settings["id"])
-	opts.SetUsername(t.settings["user"])
-	opts.SetPassword(t.settings["password"])
-	b, err := strconv.ParseBool(t.settings["cleansess"])
+	opts.AddBroker(t.config.GetSetting("broker"))
+	opts.SetClientID(t.config.GetSetting("id"))
+	opts.SetUsername(t.config.GetSetting("user"))
+	opts.SetPassword(t.config.GetSetting("password"))
+	b, err := strconv.ParseBool(t.config.GetSetting("cleansess"))
 	if err != nil {
 		log.Error("Error converting \"cleansess\" to a boolean ", err.Error())
 		return err
 	}
 	opts.SetCleanSession(b)
-	if t.settings["store"] != ":memory:" {
-		opts.SetStore(mqtt.NewFileStore(t.settings["store"]))
+	if t.config.GetSetting("store") != ":memory:" {
+		opts.SetStore(mqtt.NewFileStore(t.config.GetSetting("store")))
 	}
 
 	opts.SetDefaultPublishHandler(func(client mqtt.Client, msg mqtt.Message) {
@@ -86,7 +84,7 @@ func (t *MqttTrigger) Start() error {
 		panic(token.Error())
 	}
 
-	i, err := strconv.Atoi(t.settings["qos"])
+	i, err := strconv.Atoi(t.config.GetSetting("qos"))
 	if err != nil {
 		log.Error("Error converting \"qos\" to an integer ", err.Error())
 		return err
@@ -111,7 +109,7 @@ func (t *MqttTrigger) Start() error {
 // Stop implements ext.Trigger.Stop
 func (t *MqttTrigger) Stop() error {
 	//unsubscribe from topic
-	log.Debug("Unsubcribing from topic: ", t.settings["topic"])
+	log.Debug("Unsubcribing from topic: ", t.config.GetSetting("topic"))
 	for _, endpoint := range t.config.Endpoints {
 		if token := t.client.Unsubscribe(endpoint.Settings["topic"]); token.Wait() && token.Error() != nil {
 			log.Errorf("Error unsubscribing from topic %s: %s", endpoint.Settings["topic"], token.Error())
@@ -164,7 +162,7 @@ func (t *MqttTrigger) publishMessage(topic string, message string) {
 	log.Debug("ReplyTo topic: ", topic)
 	log.Debug("Publishing message: ", message)
 
-	qos, err := strconv.Atoi(t.settings["qos"])
+	qos, err := strconv.Atoi(t.config.GetSetting("qos"))
 	if err != nil {
 		log.Error("Error converting \"qos\" to an integer ", err.Error())
 		return
