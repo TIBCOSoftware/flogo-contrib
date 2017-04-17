@@ -17,12 +17,12 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/flow/flowdef"
 	"github.com/TIBCOSoftware/flogo-lib/flow/model"
-	"github.com/TIBCOSoftware/flogo-lib/util"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/TIBCOSoftware/flogo-lib/util"
 )
 
 const (
-	FLOW_REF  = "github.com/TIBCOSoftware/flogo-contrib/action/flow"
+	FLOW_REF = "github.com/TIBCOSoftware/flogo-contrib/action/flow"
 )
 
 // ActionOptions are the options for the FlowAction
@@ -32,8 +32,8 @@ type ActionOptions struct {
 }
 
 type FlowAction struct {
-	idGenerator            *util.Generator
-	actionOptions          *ActionOptions
+	idGenerator   *util.Generator
+	actionOptions *ActionOptions
 }
 
 // Provides the different extension points to the Flow Action
@@ -46,10 +46,9 @@ type ExtensionProvider interface {
 	GetFlowTester() *tester.RestEngineTester
 }
 
-var actionMu  sync.Mutex
+var actionMu sync.Mutex
 var ep ExtensionProvider
 var flowAction *FlowAction
-
 
 func init() {
 	action.RegisterFactory(FLOW_REF, &FlowFactory{})
@@ -69,8 +68,9 @@ func (ff *FlowFactory) New(config *action.Config) action.Action {
 	actionMu.Lock()
 	defer actionMu.Unlock()
 
+	options := &ActionOptions{Record: false}
+
 	if ep == nil {
-		options := &ActionOptions{Record: false}
 
 		testerEnabled := os.Getenv(tester.ENV_ENABLED)
 
@@ -84,18 +84,19 @@ func (ff *FlowFactory) New(config *action.Config) action.Action {
 			ep = extension.New()
 		}
 
-		flowdef.SetMapperFactory(ep.GetMapperFactory())
-		flowdef.SetLinkExprManagerFactory(ep.GetLinkExprManagerFactory())
-
-		if options.MaxStepCount < 1 {
-			options.MaxStepCount = int(^uint16(0))
-		}
-
-		flowAction = &FlowAction{}
-
-		flowAction.actionOptions = options
-		flowAction.idGenerator, _ = util.NewGenerator()
 	}
+
+	flowdef.SetMapperFactory(ep.GetMapperFactory())
+	flowdef.SetLinkExprManagerFactory(ep.GetLinkExprManagerFactory())
+
+	if options.MaxStepCount < 1 {
+		options.MaxStepCount = int(^uint16(0))
+	}
+
+	flowAction = &FlowAction{}
+
+	flowAction.actionOptions = options
+	flowAction.idGenerator, _ = util.NewGenerator()
 
 	//temporary hack to support dynamic process running by tester
 	if config.Data == nil {
@@ -271,4 +272,3 @@ func (rh *SimpleReplyHandler) Reply(replyCode int, replyData interface{}, err er
 
 	rh.resultHandler.HandleResult(replyCode, replyData, err)
 }
-
