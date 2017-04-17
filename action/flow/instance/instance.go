@@ -6,13 +6,13 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
-	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
 	"github.com/TIBCOSoftware/flogo-lib/flow/flowdef"
 	"github.com/TIBCOSoftware/flogo-lib/flow/model"
 	"github.com/TIBCOSoftware/flogo-lib/flow/support"
-	"github.com/TIBCOSoftware/flogo-lib/util"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/TIBCOSoftware/flogo-lib/util"
 )
 
 
