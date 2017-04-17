@@ -72,16 +72,17 @@ func (ff *FlowFactory) New(config *action.Config) action.Action {
 	if flowAction == nil {
 		options := &ActionOptions{Record: false}
 
-		testerEnabled := os.Getenv(tester.ENV_ENABLED)
+		if ep == nil {
+			testerEnabled := os.Getenv(tester.ENV_ENABLED)
+			if strings.ToLower(testerEnabled) == "true" {
+				ep = tester.NewExtensionProvider()
 
-		if strings.ToLower(testerEnabled) == "true" {
-			ep = tester.NewExtensionProvider()
-
-			sm := util.GetDefaultServiceManager()
-			sm.RegisterService(ep.GetFlowTester())
-			options.Record = true
-		} else {
-			ep = extension.New()
+				sm := util.GetDefaultServiceManager()
+				sm.RegisterService(ep.GetFlowTester())
+				options.Record = true
+			} else {
+				ep = extension.New()
+			}
 		}
 
 		flowdef.SetMapperFactory(ep.GetMapperFactory())
