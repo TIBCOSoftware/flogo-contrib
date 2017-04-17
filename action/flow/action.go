@@ -69,7 +69,7 @@ func (ff *FlowFactory) New(config *action.Config) action.Action {
 	actionMu.Lock()
 	defer actionMu.Unlock()
 
-	if ep == nil {
+	if flowAction == nil {
 		options := &ActionOptions{Record: false}
 
 		testerEnabled := os.Getenv(tester.ENV_ENABLED)
