@@ -91,7 +91,7 @@ func (ff *FlowFactory) New(config *action.Config) action.Action {
 			options.MaxStepCount = int(^uint16(0))
 		}
 
-		flowAction := &FlowAction{}
+		flowAction = &FlowAction{}
 
 		flowAction.actionOptions = options
 		flowAction.idGenerator, _ = util.NewGenerator()

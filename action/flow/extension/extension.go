@@ -11,6 +11,8 @@ import (
 
 //Provider is the extension provider for the flow action
 type Provider struct {
+	flowProvider definition.Provider
+	flowModel    *model.FlowModel
 }
 
 func New() *Provider {
@@ -18,11 +20,21 @@ func New() *Provider {
 }
 
 func (fp *Provider) GetFlowProvider() definition.Provider {
-	return definition.NewRemoteFlowProvider()
+
+	if fp.flowProvider == nil {
+		fp.flowProvider = definition.NewRemoteFlowProvider()
+	}
+
+	return fp.flowProvider
 }
 
 func (fp *Provider) GetFlowModel() *model.FlowModel {
-	return simple.New()
+
+	if fp.flowModel == nil {
+		fp.flowModel = simple.New()
+	}
+
+	return fp.flowModel
 }
 
 func (fp *Provider) GetStateRecorder() instance.StateRecorder {

@@ -20,6 +20,10 @@ const (
 
 //Provider is the extension provider for the flow action
 type TesterProvider struct {
+	flowProvider  definition.Provider
+	flowModel     *model.FlowModel
+	stateRecorder instance.StateRecorder
+	flowTester    *RestEngineTester
 }
 
 func NewExtensionProvider() *TesterProvider {
@@ -27,39 +31,51 @@ func NewExtensionProvider() *TesterProvider {
 }
 
 func (fp *TesterProvider) GetFlowProvider() definition.Provider {
-	return definition.NewRemoteFlowProvider()
+	if fp.flowProvider == nil {
+		fp.flowProvider = definition.NewRemoteFlowProvider()
+	}
+
+	return fp.flowProvider
 }
 
 func (fp *TesterProvider) GetFlowModel() *model.FlowModel {
-	return simple.New()
+	if fp.flowModel == nil {
+		fp.flowModel = simple.New()
+	}
+
+	return fp.flowModel
 }
 
 func (fp *TesterProvider) GetStateRecorder() instance.StateRecorder {
 
-	config := &util.ServiceConfig{Enabled: true}
+	if fp.stateRecorder == nil {
+		config := &util.ServiceConfig{Enabled: true}
 
-	server := os.Getenv(ENV_SETTING_SR_HOST)
+		server := os.Getenv(ENV_SETTING_SR_HOST)
 
-	if server != "" {
-		parts := strings.Split(server, ":")
+		if server != "" {
+			parts := strings.Split(server, ":")
 
-		host := parts[0]
-		port := "9090"
+			host := parts[0]
+			port := "9090"
 
-		if len(parts) > 1 {
-			port = parts[1]
+			if len(parts) > 1 {
+				port = parts[1]
+			}
+
+			settings := map[string]string{
+				"host": host,
+				"port": port,
+			}
+			config.Settings = settings
+		} else {
+			config.Enabled = false
 		}
 
-		settings := map[string]string{
-			"host": host,
-			"port": port,
-		}
-		config.Settings = settings
-	} else {
-		config.Enabled = false
+		fp.stateRecorder = instance.NewRemoteStateRecorder(config)
 	}
 
-	return instance.NewRemoteStateRecorder(config)
+	return fp.stateRecorder
 }
 
 func (fp *TesterProvider) GetMapperFactory() flowdef.MapperFactory {
