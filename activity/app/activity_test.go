@@ -1,12 +1,12 @@
 package app
 
 import (
-	"fmt"
 	"testing"
-
-	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
-	"github.com/TIBCOSoftware/flogo-lib/flow/test"
 	"io/ioutil"
+
+	"github.com/TIBCOSoftware/flogo-lib/core/activity"
+	"github.com/TIBCOSoftware/flogo-lib/flow/test"
+	"github.com/stretchr/testify/assert"
 )
 
 var activityMetadata *activity.Metadata
@@ -45,11 +45,11 @@ func TestAdd(t *testing.T) {
 
 	act.Eval(tc)
 
-	value, _ := tc.GetAttrValue("value")
+	value, found := tc.GetOutput(ovValue).(string)
 
-	if value != "test" {
-		fmt.Println("Bad Value: " + value)
-		t.Fail()
+	assert.True(t, found, "not found")
+	if found {
+		assert.Equal(t, "test", value, "not equal")
 	}
 }
 
@@ -71,11 +71,11 @@ func TestGet(t *testing.T) {
 
 	act.Eval(tc)
 
-	value, _ := tc.GetOutput(ovValue).(string)
+	value, found := tc.GetOutput(ovValue).(string)
 
-	if value != "test2" {
-		fmt.Println("Bad Value: " + value)
-		t.Fail()
+	assert.True(t, found, "not found")
+	if found {
+		assert.Equal(t, "test", value, "not equal")
 	}
 }
 
@@ -98,10 +98,10 @@ func TestUpdate(t *testing.T) {
 
 	act.Eval(tc)
 
-	value, _ := tc.GetAttrValue("myAttr")
+	value, found := tc.GetOutput(ovValue).(string)
 
-	if value != "test3" {
-		fmt.Println("Bad Value: " + value)
-		t.Fail()
+	assert.True(t, found, "not found")
+	if found {
+		assert.Equal(t, "test3", value, "not equal")
 	}
 }
