@@ -1,15 +1,15 @@
-package definition
+package provider
 
 import (
 	"fmt"
 	"sync"
 
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/support"
-	"github.com/TIBCOSoftware/flogo-lib/flow/flowdef"
-	"github.com/TIBCOSoftware/flogo-lib/flow/script/fggos"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/script/fggos"
 	"github.com/TIBCOSoftware/flogo-lib/flow/service"
 	"github.com/TIBCOSoftware/flogo-lib/util"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 )
 
 
@@ -18,7 +18,7 @@ import (
 type Provider interface {
 
 	// GetFlow retrieves the flow definition for the specified id
-	GetFlow(flowId string) (*flowdef.Definition, error)
+	GetFlow(flowId string) (*definition.Definition, error)
 	// AddCompressedFlow adds the flow for a specified id
 	AddCompressedFlow(id string, flow string) error
 	// AddUnCompressedFlow adds the flow for a specified id
@@ -32,14 +32,14 @@ type Provider interface {
 type RemoteFlowProvider struct {
 	//todo: switch to LRU cache
 	mutex     *sync.Mutex
-	flowCache map[string]*flowdef.Definition
+	flowCache map[string]*definition.Definition
 	flowMgr   *support.FlowManager
 }
 
 // NewRemoteFlowProvider creates a RemoteFlowProvider
 func NewRemoteFlowProvider() *RemoteFlowProvider {
 	var service RemoteFlowProvider
-	service.flowCache = make(map[string]*flowdef.Definition)
+	service.flowCache = make(map[string]*definition.Definition)
 	service.mutex = &sync.Mutex{}
 	service.flowMgr = support.NewFlowManager()
 	return &service
@@ -62,7 +62,7 @@ func (pps *RemoteFlowProvider) Stop() error {
 }
 
 // GetFlow implements flow.Provider.GetFlow
-func (pps *RemoteFlowProvider) GetFlow(id string) (*flowdef.Definition, error) {
+func (pps *RemoteFlowProvider) GetFlow(id string) (*definition.Definition, error) {
 
 	// todo turn pps.flowCache to real cache
 	if flow, ok := pps.flowCache[id]; ok {
@@ -77,7 +77,7 @@ func (pps *RemoteFlowProvider) GetFlow(id string) (*flowdef.Definition, error) {
 		return nil, err
 	}
 
-	def, err := flowdef.NewDefinition(flowRep)
+	def, err := definition.NewDefinition(flowRep)
 	if err != nil {
 		errorMsg := fmt.Sprintf("Error unmarshalling flow '%s': %s", id, err.Error())
 		logger.Errorf(errorMsg)
@@ -85,7 +85,7 @@ func (pps *RemoteFlowProvider) GetFlow(id string) (*flowdef.Definition, error) {
 	}
 
 	//todo hack until we fully move over to new action implementation
-	factory := flowdef.GetLinkExprManagerFactory()
+	factory := definition.GetLinkExprManagerFactory()
 
 	if factory == nil {
 		factory = &fggos.GosLinkExprManagerFactory{}

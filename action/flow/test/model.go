@@ -1,9 +1,9 @@
 package test
 
 import (
-	"github.com/TIBCOSoftware/flogo-lib/flow/flowdef"
-	"github.com/TIBCOSoftware/flogo-lib/flow/model"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 )
 
 
@@ -165,7 +165,7 @@ func (b *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (noti
 	return true, 0, nil
 }
 
-func (b *SimpleTaskBehavior) ChildDone(context model.TaskContext, childTask *flowdef.Task, childDoneCode int) (done bool, doneCode int) {
+func (b *SimpleTaskBehavior) ChildDone(context model.TaskContext, childTask *definition.Task, childDoneCode int) (done bool, doneCode int) {
 	logger.Debugf("Task ChildDone\n")
 
 	return true, 0

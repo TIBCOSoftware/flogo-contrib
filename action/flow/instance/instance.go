@@ -8,11 +8,12 @@ import (
 
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
-	"github.com/TIBCOSoftware/flogo-lib/flow/flowdef"
-	"github.com/TIBCOSoftware/flogo-lib/flow/model"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
 	"github.com/TIBCOSoftware/flogo-lib/flow/support"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/TIBCOSoftware/flogo-lib/util"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/provider"
 )
 
 
@@ -29,7 +30,7 @@ type Instance struct {
 	status      Status
 	state       int
 	FlowURI     string
-	Flow        *flowdef.Definition
+	Flow        *definition.Definition
 	RootTaskEnv *TaskEnv
 	EhTaskEnv   *TaskEnv
 	FlowModel   *model.FlowModel
@@ -42,12 +43,12 @@ type Instance struct {
 	wiCounter     int
 	ChangeTracker *InstanceChangeTracker `json:"-"`
 
-	flowProvider flowdef.Provider
+	flowProvider provider.Provider
 	replyHandler support.ReplyHandler
 }
 
 // New creates a new Flow Instance from the specified Flow
-func New(instanceID string, flowURI string, flow *flowdef.Definition, flowModel *model.FlowModel) *Instance {
+func New(instanceID string, flowURI string, flow *definition.Definition, flowModel *model.FlowModel) *Instance {
 	var instance Instance
 	instance.id = instanceID
 	instance.stepID = 0
@@ -72,12 +73,12 @@ func New(instanceID string, flowURI string, flow *flowdef.Definition, flowModel 
 }
 
 // SetFlowProvider sets the process.Provider that the instance should use
-func (pi *Instance) SetFlowProvider(provider flowdef.Provider) {
+func (pi *Instance) SetFlowProvider(provider provider.Provider) {
 	pi.flowProvider = provider
 }
 
 // Restart indicates that this FlowInstance was restarted
-func (pi *Instance) Restart(id string, provider flowdef.Provider) {
+func (pi *Instance) Restart(id string, provider provider.Provider) {
 	pi.id = id
 	pi.flowProvider = provider
 	pi.Flow, _ = pi.flowProvider.GetFlow(pi.FlowURI)
@@ -106,7 +107,7 @@ func (pi *Instance) SetReplyHandler(replyHandler support.ReplyHandler) {
 }
 
 // FlowDefinition returns the Flow that the instance is of
-func (pi *Instance) FlowDefinition() *flowdef.Definition {
+func (pi *Instance) FlowDefinition() *definition.Definition {
 	return pi.Flow
 }
 
@@ -481,7 +482,7 @@ func (pi *Instance) AddAttr(attrName string, attrType data.Type, value interface
 // TaskEnv is a structure that describes the execution environment for a set of tasks
 type TaskEnv struct {
 	ID        int
-	Task      *flowdef.Task
+	Task      *definition.Task
 	Instance  *Instance
 	ParentEnv *TaskEnv
 
@@ -513,7 +514,7 @@ func (te *TaskEnv) init(flowInst *Instance) {
 
 // FindOrCreateTaskData finds an existing TaskData or creates ones if not found for the
 // specified task the task environment
-func (te *TaskEnv) FindOrCreateTaskData(task *flowdef.Task) (taskData *TaskData, created bool) {
+func (te *TaskEnv) FindOrCreateTaskData(task *definition.Task) (taskData *TaskData, created bool) {
 
 	taskData, ok := te.TaskDatas[task.ID()]
 
@@ -531,7 +532,7 @@ func (te *TaskEnv) FindOrCreateTaskData(task *flowdef.Task) (taskData *TaskData,
 }
 
 // NewTaskData creates a new TaskData object
-func (te *TaskEnv) NewTaskData(task *flowdef.Task) *TaskData {
+func (te *TaskEnv) NewTaskData(task *definition.Task) *TaskData {
 
 	taskData := NewTaskData(te, task)
 	te.TaskDatas[task.ID()] = taskData
@@ -542,7 +543,7 @@ func (te *TaskEnv) NewTaskData(task *flowdef.Task) *TaskData {
 
 // FindOrCreateLinkData finds an existing LinkData or creates ones if not found for the
 // specified link the task environment
-func (te *TaskEnv) FindOrCreateLinkData(link *flowdef.Link) (linkData *LinkData, created bool) {
+func (te *TaskEnv) FindOrCreateLinkData(link *definition.Link) (linkData *LinkData, created bool) {
 
 	linkData, ok := te.LinkDatas[link.ID()]
 	created = false
@@ -559,7 +560,7 @@ func (te *TaskEnv) FindOrCreateLinkData(link *flowdef.Link) (linkData *LinkData,
 
 // releaseTask cleans up TaskData in the task environment any of its dependencies.
 // This is called when a task is completed and can be discarded
-func (te *TaskEnv) releaseTask(task *flowdef.Task) {
+func (te *TaskEnv) releaseTask(task *definition.Task) {
 	delete(te.TaskDatas, task.ID())
 	te.Instance.ChangeTracker.trackTaskData(&TaskDataChange{ChgType: CtDel, ID: task.ID()})
 
@@ -584,7 +585,7 @@ func (te *TaskEnv) releaseTask(task *flowdef.Task) {
 // TaskData represents data associated with an instance of a Task
 type TaskData struct {
 	taskEnv *TaskEnv
-	task    *flowdef.Task
+	task    *definition.Task
 	state   int
 	done    bool
 	attrs   map[string]*data.Attribute
@@ -599,7 +600,7 @@ type TaskData struct {
 
 // NewTaskData creates a TaskData for the specified task in the specified task
 // environment
-func NewTaskData(taskEnv *TaskEnv, task *flowdef.Task) *TaskData {
+func NewTaskData(taskEnv *TaskEnv, task *definition.Task) *TaskData {
 	var taskData TaskData
 
 	taskData.taskEnv = taskEnv
@@ -631,7 +632,7 @@ func (td *TaskData) SetState(state int) {
 
 // Task implements model.TaskContext.Task, by returning the Task associated with this
 // TaskData object
-func (td *TaskData) Task() *flowdef.Task {
+func (td *TaskData) Task() *definition.Task {
 	return td.task
 }
 
@@ -762,7 +763,7 @@ func (td *TaskData) EnterChildren(taskEntries []*model.TaskEntry) {
 }
 
 // EvalLink implements activity.ActivityContext.EvalLink method
-func (td *TaskData) EvalLink(link *flowdef.Link) (result bool, err error) {
+func (td *TaskData) EvalLink(link *definition.Link) (result bool, err error) {
 
 	logger.Debugf("TaskContext.EvalLink: %d\n", link.ID())
 
@@ -900,7 +901,7 @@ func (td *TaskData) SetOutput(name string, value interface{}) {
 // LinkData represents data associated with an instance of a Link
 type LinkData struct {
 	taskEnv *TaskEnv
-	link    *flowdef.Link
+	link    *definition.Link
 	state   int
 
 	changes int
@@ -910,7 +911,7 @@ type LinkData struct {
 
 // NewLinkData creates a LinkData for the specified link in the specified task
 // environment
-func NewLinkData(taskEnv *TaskEnv, link *flowdef.Link) *LinkData {
+func NewLinkData(taskEnv *TaskEnv, link *definition.Link) *LinkData {
 	var linkData LinkData
 
 	linkData.taskEnv = taskEnv
@@ -931,7 +932,7 @@ func (ld *LinkData) SetState(state int) {
 }
 
 // Link returns the Link associated with ld context
-func (ld *LinkData) Link() *flowdef.Link {
+func (ld *LinkData) Link() *definition.Link {
 	return ld.link
 }
 
