@@ -5,7 +5,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
-	"go/types"
 )
 
 //TestInitNoFlavorError
@@ -14,13 +13,13 @@ func TestInitNoFlavorError(t *testing.T) {
 	defer func() {
 		if r := recover(); r != nil {
 			// Expected error
-			if !strings.HasPrefix(r.(string), "Error while loading flow") {
+			if !strings.HasPrefix(r.(string), "No flow found in action data") {
 				t.Fail()
 			}
 		}
 	}()
 
-	mockConfig := &action.Config{Id: "myMockConfig", Ref: "github.com/my/mock/ref"}
+	mockConfig := &action.Config{Id: "myMockConfig", Ref: "github.com/my/mock/ref", Data: []byte(`{}`)}
 	f := &FlowFactory{}
 	flowAction := f.New(mockConfig)
 	assert.NotNil(t, flowAction)
