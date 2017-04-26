@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
-	"github.com/TIBCOSoftware/flogo-lib/types"
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"io/ioutil"
+	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 )
 
 var jsonMetadata = getJsonMetadata()
@@ -54,27 +54,28 @@ func (tr *TestRunner) Run(context context.Context, action action.Action, uri str
 
 
 func TestInit(t *testing.T) {
+	config := trigger.Config{}
+	json.Unmarshal([]byte(testConfig), config)
+
 	// New  factory
 	f := &MQTTFactory{}
 	tgr := f.New("tibco-mqtt")
 
 	runner := &TestRunner{}
 
-	config := trigger.Config{}
-	json.Unmarshal([]byte(testConfig), config)
-	tgr.Init(config, runner)
+	tgr.Init(runner)
 }
 
 func TestEndpoint(t *testing.T) {
+	config := trigger.Config{}
+	json.Unmarshal([]byte(testConfig), &config)
 	// New  factory
 	f := &MQTTFactory{}
 	tgr := f.New("tibco-mqtt")
 
 	runner := &TestRunner{}
 
-	config := trigger.Config{}
-	json.Unmarshal([]byte(testConfig), &config)
-	tgr.Init(config, runner)
+	tgr.Init(runner)
 
 	tgr.Start()
 	defer tgr.Stop()
