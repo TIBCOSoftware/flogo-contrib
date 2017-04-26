@@ -9,7 +9,8 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
-	"github.com/TIBCOSoftware/flogo-lib/flow/support"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/support"
+	lib_support "github.com/TIBCOSoftware/flogo-lib/flow/support"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/TIBCOSoftware/flogo-lib/util"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
@@ -44,7 +45,7 @@ type Instance struct {
 	ChangeTracker *InstanceChangeTracker `json:"-"`
 
 	flowProvider provider.Provider
-	replyHandler support.ReplyHandler
+	replyHandler lib_support.ReplyHandler
 }
 
 // New creates a new Flow Instance from the specified Flow
@@ -97,12 +98,12 @@ func (pi *Instance) Name() string {
 }
 
 // ReplyHandler returns the reply handler for the instance
-func (pi *Instance) ReplyHandler() support.ReplyHandler {
+func (pi *Instance) ReplyHandler() lib_support.ReplyHandler {
 	return pi.replyHandler
 }
 
 // SetReplyHandler sets the reply handler for the instance
-func (pi *Instance) SetReplyHandler(replyHandler support.ReplyHandler) {
+func (pi *Instance) SetReplyHandler(replyHandler lib_support.ReplyHandler) {
 	pi.replyHandler = replyHandler
 }
 

@@ -3,7 +3,7 @@ package test
 import (
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
-	"github.com/TIBCOSoftware/flogo-lib/flow/support"
+	lib_support "github.com/TIBCOSoftware/flogo-lib/flow/support"
 )
 
 // TestActivityContext is a dummy ActivityContext to assist in testing
@@ -60,7 +60,7 @@ func (fd *TestFlowDetails) Name() string {
 }
 
 // ReplyHandler implements activity.FlowDetails.ReplyHandler
-func (fd *TestFlowDetails) ReplyHandler() support.ReplyHandler {
+func (fd *TestFlowDetails) ReplyHandler() lib_support.ReplyHandler {
 	return nil
 }
 

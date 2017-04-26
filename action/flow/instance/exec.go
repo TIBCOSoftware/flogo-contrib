@@ -1,7 +1,7 @@
 package instance
 
 import (
-	"github.com/TIBCOSoftware/flogo-lib/flow/support"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/support"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
