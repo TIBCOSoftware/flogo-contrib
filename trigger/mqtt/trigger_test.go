@@ -59,7 +59,7 @@ func TestInit(t *testing.T) {
 
 	// New  factory
 	f := &MQTTFactory{}
-	tgr := f.New("tibco-mqtt")
+	tgr := f.New(&config)
 
 	runner := &TestRunner{}
 
@@ -71,7 +71,7 @@ func TestEndpoint(t *testing.T) {
 	json.Unmarshal([]byte(testConfig), &config)
 	// New  factory
 	f := &MQTTFactory{}
-	tgr := f.New("tibco-mqtt")
+	tgr := f.New(&config)
 
 	runner := &TestRunner{}
 
