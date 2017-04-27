@@ -98,6 +98,10 @@ func addTask(def *Definition, task *Task, rep *TaskRep) {
 		task.outputMapper = GetMapperFactory().NewTaskOutputMapper(task, &MapperDef{Mappings: rep.OutputMappings})
 	}
 
+	if task.outputMapper == nil {
+		task.outputMapper = GetMapperFactory().GetDefaultTaskOutputMapper(task)
+	}
+
 	if len(rep.Attributes) > 0 {
 		task.attrs = make(map[string]*data.Attribute, len(rep.Attributes))
 
