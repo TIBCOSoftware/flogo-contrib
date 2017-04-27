@@ -307,7 +307,7 @@ func (pi *Instance) execTask(workItem *WorkItem) {
 			if !appliedMapper && !taskData.task.IsScope() {
 
 				logger.Debug("Applying Default Output Mapping")
-				applyDefaultActivityOutputMappings(pi, taskData)
+				//applyDefaultActivityOutputMappings(pi, taskData)
 			}
 		}
 
