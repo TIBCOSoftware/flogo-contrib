@@ -6,9 +6,9 @@ import (
 	//"net/http"
 	"testing"
 
-	"github.com/TIBCOSoftware/flogo-lib/types"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"net/http"
+	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 )
 
 const testConfig string = `{
@@ -38,32 +38,18 @@ func (tr *TestRunner) Run(context context.Context, action action.Action, uri str
 	return 0, nil, nil
 }
 
-func TestInit(t *testing.T) {
-	// New  factory
-	f := &CoapFactory{}
-	tgr := f.New("tibco-coap")
-
-	runner := &TestRunner{}
-
-	config := trigger.Config{}
-	err := json.Unmarshal([]byte(testConfig), &config)
-	if err != nil{
-		t.Error(err)
-	}
-	tgr.Init(config, runner)
-}
 
 func TestHandlerOk(t *testing.T) {
+	config := trigger.Config{}
+	json.Unmarshal([]byte(testConfig), &config)
 
 	// New  factory
 	f := &CoapFactory{}
-	tgr := f.New("tibco-coap")
+	tgr := f.New(&config)
 
 	runner := &TestRunner{}
 
-	config := trigger.Config{}
-	json.Unmarshal([]byte(testConfig), &config)
-	tgr.Init(config, runner)
+	tgr.Init(runner)
 
 	tgr.Start()
 	defer tgr.Stop()

@@ -11,9 +11,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/TIBCOSoftware/flogo-lib/flow/flowdef"
 	"github.com/TIBCOSoftware/flogo-lib/util"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 )
 
 const (
@@ -93,7 +93,7 @@ func (mgr *FlowManager) AddURI(id string, newUri string) error {
 }
 
 // GetFlow gets the specified embedded flow
-func (mgr *FlowManager) GetFlow(id string) (*flowdef.DefinitionRep, error) {
+func (mgr *FlowManager) GetFlow(id string) (*definition.DefinitionRep, error) {
 
 	entry, ok := mgr.flows[id]
 
@@ -174,7 +174,7 @@ func (mgr *FlowManager) GetFlow(id string) (*flowdef.DefinitionRep, error) {
 		}
 	}
 
-	var flow *flowdef.DefinitionRep
+	var flow *definition.DefinitionRep
 	err := json.Unmarshal(flowDefBytes, &flow)
 	if err != nil {
 		logger.Errorf(err.Error())

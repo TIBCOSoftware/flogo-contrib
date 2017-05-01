@@ -5,13 +5,13 @@ import (
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/instance"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/tester"
 	"github.com/TIBCOSoftware/flogo-contrib/model/simple"
-	"github.com/TIBCOSoftware/flogo-lib/flow/flowdef"
-	"github.com/TIBCOSoftware/flogo-lib/flow/model"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/provider"
 )
 
 //Provider is the extension provider for the flow action
 type Provider struct {
-	flowProvider definition.Provider
+	flowProvider provider.Provider
 	flowModel    *model.FlowModel
 }
 
@@ -19,10 +19,10 @@ func New() *Provider {
 	return &Provider{}
 }
 
-func (fp *Provider) GetFlowProvider() definition.Provider {
+func (fp *Provider) GetFlowProvider() provider.Provider {
 
 	if fp.flowProvider == nil {
-		fp.flowProvider = definition.NewRemoteFlowProvider()
+		fp.flowProvider = provider.NewRemoteFlowProvider()
 	}
 
 	return fp.flowProvider
@@ -41,11 +41,11 @@ func (fp *Provider) GetStateRecorder() instance.StateRecorder {
 	return nil
 }
 
-func (fp *Provider) GetMapperFactory() flowdef.MapperFactory {
+func (fp *Provider) GetMapperFactory() definition.MapperFactory {
 	return nil
 }
 
-func (fp *Provider) GetLinkExprManagerFactory() flowdef.LinkExprManagerFactory {
+func (fp *Provider) GetLinkExprManagerFactory() definition.LinkExprManagerFactory {
 	return nil
 }
 

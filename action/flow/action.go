@@ -15,10 +15,10 @@ import (
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/tester"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
-	"github.com/TIBCOSoftware/flogo-lib/flow/flowdef"
-	"github.com/TIBCOSoftware/flogo-lib/flow/model"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
 	"github.com/TIBCOSoftware/flogo-lib/util"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/provider"
 )
 
 const (
@@ -38,11 +38,11 @@ type FlowAction struct {
 
 // Provides the different extension points to the Flow Action
 type ExtensionProvider interface {
-	GetFlowProvider() definition.Provider
+	GetFlowProvider() provider.Provider
 	GetFlowModel() *model.FlowModel
 	GetStateRecorder() instance.StateRecorder
-	GetMapperFactory() flowdef.MapperFactory
-	GetLinkExprManagerFactory() flowdef.LinkExprManagerFactory
+	GetMapperFactory() definition.MapperFactory
+	GetLinkExprManagerFactory() definition.LinkExprManagerFactory
 	GetFlowTester() *tester.RestEngineTester
 }
 
@@ -85,8 +85,8 @@ func (ff *FlowFactory) New(config *action.Config) action.Action {
 			}
 		}
 
-		flowdef.SetMapperFactory(ep.GetMapperFactory())
-		flowdef.SetLinkExprManagerFactory(ep.GetLinkExprManagerFactory())
+		definition.SetMapperFactory(ep.GetMapperFactory())
+		definition.SetLinkExprManagerFactory(ep.GetLinkExprManagerFactory())
 
 		if options.MaxStepCount < 1 {
 			options.MaxStepCount = int(^uint16(0))

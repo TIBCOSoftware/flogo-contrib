@@ -5,8 +5,8 @@ import (
 
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
-	"github.com/TIBCOSoftware/flogo-lib/flow/flowdef"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 )
 
 func applyInputMapper(pi *Instance, taskData *TaskData) {
@@ -132,11 +132,11 @@ func applyDefaultInstanceInputMappings(pi *Instance, attrs []*data.Attribute) {
 type FixedTaskScope struct {
 	attrs    map[string]*data.Attribute
 	refAttrs map[string]*data.Attribute
-	task     *flowdef.Task
+	task     *definition.Task
 }
 
 // NewFixedTaskScope creates a FixedTaskScope
-func NewFixedTaskScope(refAttrs map[string]*data.Attribute, task *flowdef.Task) data.Scope {
+func NewFixedTaskScope(refAttrs map[string]*data.Attribute, task *definition.Task) data.Scope {
 
 	scope := &FixedTaskScope{
 		refAttrs: refAttrs,

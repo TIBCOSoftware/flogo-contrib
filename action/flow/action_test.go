@@ -1,7 +1,7 @@
 package flow
 
 import (
-	"github.com/TIBCOSoftware/flogo-lib/types"
+	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
@@ -9,22 +9,23 @@ import (
 
 //TestInitNoFlavorError
 func TestInitNoFlavorError(t *testing.T) {
-	flowAction := NewFlowAction()
-	assert.NotNil(t, flowAction)
-
-	mockConfig := &types.ActionConfig{Id: "myMockConfig", Ref: "github.com/my/mock/ref"}
-
 	// Recover from expected panic
 	defer func() {
 		if r := recover(); r != nil {
 			// Expected error
-			if !strings.HasPrefix(r.(string), "Error while loading flow") {
+			if !strings.HasPrefix(r.(string), "No flow found in action data") {
 				t.Fail()
 			}
 		}
 	}()
 
-	flowAction.Init(*mockConfig)
+	mockConfig := &action.Config{Id: "myMockConfig", Ref: "github.com/my/mock/ref", Data: []byte(`{}`)}
+	f := &FlowFactory{}
+	flowAction := f.New(mockConfig)
+	assert.NotNil(t, flowAction)
+
+
+
 
 	// If reaches here it should fail, as it should panic before
 	t.Fail()
@@ -32,13 +33,6 @@ func TestInitNoFlavorError(t *testing.T) {
 
 //TestInitUnCompressedFlowFlavorError
 func TestInitUnCompressedFlowFlavorError(t *testing.T) {
-	flowAction := NewFlowAction()
-	assert.NotNil(t, flowAction)
-
-	mockFlowData := []byte(`{"flow":{}}`)
-
-	mockConfig := &types.ActionConfig{Id: "myMockConfig", Ref: "github.com/my/mock/ref", Data: mockFlowData}
-
 	// Recover from expected panic
 	defer func() {
 		if r := recover(); r != nil {
@@ -49,7 +43,13 @@ func TestInitUnCompressedFlowFlavorError(t *testing.T) {
 		}
 	}()
 
-	flowAction.Init(*mockConfig)
+	mockFlowData := []byte(`{"flow":{}}`)
+
+	mockConfig := &action.Config{Id: "myMockConfig", Ref: "github.com/my/mock/ref", Data: mockFlowData}
+
+	f := &FlowFactory{}
+	flowAction := f.New(mockConfig)
+	assert.NotNil(t, flowAction)
 
 	// If reaches here it should fail, as it should panic before
 	t.Fail()
@@ -57,13 +57,6 @@ func TestInitUnCompressedFlowFlavorError(t *testing.T) {
 
 //TestInitCompressedFlowFlavorError
 func TestInitCompressedFlowFlavorError(t *testing.T) {
-	flowAction := NewFlowAction()
-	assert.NotNil(t, flowAction)
-
-	mockFlowData := []byte(`{"flowCompressed":""}`)
-
-	mockConfig := &types.ActionConfig{Id: "myMockConfig", Ref: "github.com/my/mock/ref", Data: mockFlowData}
-
 	// Recover from expected panic
 	defer func() {
 		if r := recover(); r != nil {
@@ -73,8 +66,14 @@ func TestInitCompressedFlowFlavorError(t *testing.T) {
 			}
 		}
 	}()
+	mockFlowData := []byte(`{"flowCompressed":""}`)
 
-	flowAction.Init(*mockConfig)
+	mockConfig := &action.Config{Id: "myMockConfig", Ref: "github.com/my/mock/ref", Data: mockFlowData}
+
+	f := &FlowFactory{}
+	flowAction := f.New(mockConfig)
+	assert.NotNil(t, flowAction)
+
 
 	// If reaches here it should fail, as it should panic before
 	t.Fail()
@@ -82,13 +81,6 @@ func TestInitCompressedFlowFlavorError(t *testing.T) {
 
 //TestInitURIFlowFlavorError
 func TestInitURIFlowFlavorError(t *testing.T) {
-	flowAction := NewFlowAction()
-	assert.NotNil(t, flowAction)
-
-	mockFlowData := []byte(`{"flowURI":""}`)
-
-	mockConfig := &types.ActionConfig{Id: "myMockConfig", Ref: "github.com/my/mock/ref", Data: mockFlowData}
-
 	// Recover from expected panic
 	defer func() {
 		if r := recover(); r != nil {
@@ -98,8 +90,13 @@ func TestInitURIFlowFlavorError(t *testing.T) {
 			}
 		}
 	}()
+	mockFlowData := []byte(`{"flowURI":""}`)
 
-	flowAction.Init(*mockConfig)
+	mockConfig := &action.Config{Id: "myMockConfig", Ref: "github.com/my/mock/ref", Data: mockFlowData}
+
+	f := &FlowFactory{}
+	flowAction := f.New(mockConfig)
+	assert.NotNil(t, flowAction)
 
 	// If reaches here it should fail, as it should panic before
 	t.Fail()
