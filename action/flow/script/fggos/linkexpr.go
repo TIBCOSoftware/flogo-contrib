@@ -162,9 +162,19 @@ func (em *GosLinkExprManager) EvalLinkExpr(link *definition.Link, scope data.Sco
 			if exists && len(attrPath) > 0 {
 
 				//for now assume if we have a path, attr is "object" and only one level
-				valMap := attrValue.(map[string]interface{})
+				valMap, ok := attrValue.(map[string]interface{})
+
+				if ok {
+					_, exists = valMap[attrPath]
+				} else {
+					//assume its a map[string]string
+					strMap, ok := attrValue.(map[string]string)
+
+					if ok {
+						_, exists = strMap[attrPath]
+					}
+				}
 				//todo what if the value does not exists
-				_, exists = valMap[attrPath]
 			}
 
 			ctxt["isd"+strconv.Itoa(varInfo.isd)] = exists
@@ -173,7 +183,20 @@ func (em *GosLinkExprManager) EvalLinkExpr(link *definition.Link, scope data.Sco
 
 			if exists && len(attrPath) > 0 {
 
-				val := data.GetMapValue(attrValue.(map[string]interface{}), attrPath)
+				valMap, ok := attrValue.(map[string]interface{})
+
+				var val interface{}
+
+				if ok {
+					val = data.GetMapValue(valMap, attrPath)
+				} else {
+					//assume its a map[string]string
+					strMap, ok := attrValue.(map[string]string)
+					if ok {
+						val = strMap[attrPath]
+					}
+				}
+
 				attrValue = FixUpValue(val)
 			}
 
