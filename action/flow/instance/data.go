@@ -121,9 +121,16 @@ func applyDefaultInstanceInputMappings(pi *Instance, attrs []*data.Attribute) {
 		return
 	}
 
+	// Keep Temporarily, for short term backwards compatibility
 	for _, attr := range attrs {
 
 		attrName := "{T." + attr.Name + "}"
+		pi.AddAttr(attrName, attr.Type, attr.Value)
+	}
+
+	for _, attr := range attrs {
+
+		attrName := "{TriggerData." + attr.Name + "}"
 		pi.AddAttr(attrName, attr.Type, attr.Value)
 	}
 }
