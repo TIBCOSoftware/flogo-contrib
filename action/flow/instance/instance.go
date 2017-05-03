@@ -816,6 +816,9 @@ func (td *TaskData) EvalActivity() (done bool, evalErr error) {
 				done = false
 			}
 		}
+		if evalErr != nil {
+			logger.Errorf("Execution failed for Activity[%s] in Flow[%s] - %s", td.task.Name(), td.taskEnv.Instance.Name(), evalErr.Error())
+		}
 	}()
 
 	done, evalErr = act.Eval(td)
