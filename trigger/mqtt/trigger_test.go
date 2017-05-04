@@ -9,6 +9,7 @@ import (
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"io/ioutil"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
+	"time"
 )
 
 var jsonMetadata = getJsonMetadata()
@@ -25,7 +26,7 @@ const testConfig string = `{
   "name": "tibco-mqtt",
   "settings": {
     "topic": "flogo/#",
-    "broker": "tcp://192.168.1.12:1883",
+    "broker": "tcp://127.0.0.1:1883",
     "id": "flogoEngine",
     "user": "",
     "password": "",
@@ -33,9 +34,9 @@ const testConfig string = `{
     "qos": "0",
     "cleansess": "false"
   },
-  "endpoints": [
+  "handlers": [
     {
-      "flowURI": "local://testFlow",
+      "actionId": "device_info",
       "settings": {
         "topic": "test_start"
       }
@@ -54,12 +55,16 @@ func (tr *TestRunner) Run(context context.Context, action action.Action, uri str
 
 
 func TestInit(t *testing.T) {
-	config := trigger.Config{}
-	json.Unmarshal([]byte(testConfig), config)
 
 	// New  factory
-	f := &MQTTFactory{}
+	md := trigger.NewMetadata(jsonMetadata)
+	f := NewFactory(md)
+
+	// New Trigger
+	config := trigger.Config{}
+	json.Unmarshal([]byte(testConfig), config)
 	tgr := f.New(&config)
+
 
 	runner := &TestRunner{}
 
@@ -67,10 +72,14 @@ func TestInit(t *testing.T) {
 }
 
 func TestEndpoint(t *testing.T) {
+
+	// New  factory
+	md := trigger.NewMetadata(jsonMetadata)
+	f := NewFactory(md)
+
+	// New Trigger
 	config := trigger.Config{}
 	json.Unmarshal([]byte(testConfig), &config)
-	// New  factory
-	f := &MQTTFactory{}
 	tgr := f.New(&config)
 
 	runner := &TestRunner{}
@@ -81,8 +90,8 @@ func TestEndpoint(t *testing.T) {
 	defer tgr.Stop()
 
 	opts := MQTT.NewClientOptions()
-	opts.AddBroker("tcp://192.168.1.12:1883")
-	opts.SetClientID("flogoEngine")
+	opts.AddBroker("tcp://127.0.0.1:1883")
+	opts.SetClientID("flogo_test")
 	opts.SetUsername("")
 	opts.SetPassword("")
 	opts.SetCleanSession(false)
@@ -91,9 +100,22 @@ func TestEndpoint(t *testing.T) {
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
 		panic(token.Error())
 	}
-	log.Debug("---- doing publish ----")
-	token := client.Publish("flogo/test_start", 0, false, "Test message payload!")
+
+	log.Debug("---- doing first publish ----")
+
+	token := client.Publish("test_start", 0, false, "Test message payload!")
 	token.Wait()
+
+	duration2 := time.Duration(2)*time.Second
+	time.Sleep(duration2)
+
+	log.Debug("---- doing second publish ----")
+
+	token = client.Publish("test_start", 0, false, "Test message payload!")
+	token.Wait()
+
+	duration5 := time.Duration(5)*time.Second
+	time.Sleep(duration5)
 
 	client.Disconnect(250)
 	log.Debug("Sample Publisher Disconnected")

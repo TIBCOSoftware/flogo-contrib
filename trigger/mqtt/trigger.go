@@ -17,17 +17,16 @@ var log = logger.GetLogger("trigger-tibco-mqtt")
 
 // MqttTrigger is simple MQTT trigger
 type MqttTrigger struct {
-	metadata          *trigger.Metadata
-	runner            action.Runner
-	client            mqtt.Client
-	config            *trigger.Config
-	topicToActionURI  map[string]string
-	topicToActionType map[string]string
+	metadata         *trigger.Metadata
+	runner           action.Runner
+	client           mqtt.Client
+	config           *trigger.Config
+	topicToActionURI map[string]string
 }
 
 //NewFactory create a new Trigger factory
 func NewFactory(md *trigger.Metadata) trigger.Factory {
-	return &MQTTFactory{metadata:md}
+	return &MQTTFactory{metadata: md}
 }
 
 // MQTTFactory MQTT Trigger factory
@@ -93,15 +92,18 @@ func (t *MqttTrigger) Start() error {
 		return err
 	}
 
-	t.topicToActionType = make(map[string]string)
 	t.topicToActionURI = make(map[string]string)
 
 	for _, handlerCfg := range t.config.Handlers {
-		if token := t.client.Subscribe(handlerCfg.GetSetting("topic"), byte(i), nil); token.Wait() && token.Error() != nil {
-			log.Errorf("Error subscribing to topic %s: %s", handlerCfg.Settings["topic"], token.Error())
+
+		topic := handlerCfg.GetSetting("topic")
+
+		if token := t.client.Subscribe(topic, byte(i), nil); token.Wait() && token.Error() != nil {
+			log.Errorf("Error subscribing to topic %s: %s", topic, token.Error())
 			panic(token.Error())
 		} else {
-			t.topicToActionURI[handlerCfg.GetSetting("topic")] = handlerCfg.ActionId
+			log.Debugf("Suscribed to topic: %s, will trigger actionId: %s", topic, handlerCfg.ActionId)
+			t.topicToActionURI[topic] = handlerCfg.ActionId
 		}
 	}
 
