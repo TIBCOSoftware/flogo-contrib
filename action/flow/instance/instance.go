@@ -325,6 +325,7 @@ func (pi *Instance) handleError(taskData *TaskData, err error) {
 
 	if aerr, ok := err.(*activity.Error); ok {
 		pi.AddAttr("{E.data}", data.OBJECT, aerr.Data())
+		pi.AddAttr("{E.code}", data.INTEGER, aerr.Code())
 	}
 
 	pi.AddAttr("{Error.activity}", data.STRING, taskData.TaskName())
@@ -332,6 +333,7 @@ func (pi *Instance) handleError(taskData *TaskData, err error) {
 
 	if aerr, ok := err.(*activity.Error); ok {
 		pi.AddAttr("{Error.data}", data.OBJECT, aerr.Data())
+		pi.AddAttr("{Error.code}", data.INTEGER, aerr.Code())
 	}
 
 
