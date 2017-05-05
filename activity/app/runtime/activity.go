@@ -52,7 +52,7 @@ func (a *AppActivity) Eval(context activity.Context) (done bool, err error) {
 		if !ok {
 			errorMsg := fmt.Sprintf("Unsupported type '%s'", context.GetInput(ivType).(string))
 			log.Error(errorMsg)
-			return false, activity.NewError(errorMsg)
+			return false, activity.NewError(errorMsg, nil, "")
 		}
 
 		val := context.GetInput(ivValue)
@@ -67,7 +67,7 @@ func (a *AppActivity) Eval(context activity.Context) (done bool, err error) {
 		if !ok {
 			errorMsg := fmt.Sprintf("Attribute not defined: '%s'", attrName)
 			log.Error(errorMsg)
-			return false, activity.NewError(errorMsg)
+			return false, activity.NewError(errorMsg, nil, "")
 		}
 
 		context.SetOutput(ovValue, typedVal.Value)
@@ -81,7 +81,7 @@ func (a *AppActivity) Eval(context activity.Context) (done bool, err error) {
 	default:
 		errorMsg := fmt.Sprintf("Unsupported Op:'%s' ", op)
 		log.Error(errorMsg)
-		return false, activity.NewError(errorMsg)
+		return false, activity.NewError(errorMsg, nil, "")
 	}
 
 	return true, nil
