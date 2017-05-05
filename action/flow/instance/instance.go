@@ -262,7 +262,7 @@ func (pi *Instance) execTask(workItem *WorkItem) {
 			logger.Debugf("StackTrace: %s", debug.Stack())
 
 
-			pi.handleError(workItem.TaskData, activity.NewError(err.Error()), "", nil)
+			pi.handleError(workItem.TaskData, activity.NewError(err.Error(), "", nil))
 		}
 	}()
 
