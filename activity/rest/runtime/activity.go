@@ -69,7 +69,7 @@ func (a *RESTActivity) Eval(context activity.Context) (done bool, err error) {
 			val = context.GetInput(ivParams)
 
 			if val == nil {
-				err := activity.NewError("Path Params not specified, required for URI: " + uri,nil,"")
+				err := activity.NewError("Path Params not specified, required for URI: " + uri,"", nil)
 				return false, err
 			}
 		}

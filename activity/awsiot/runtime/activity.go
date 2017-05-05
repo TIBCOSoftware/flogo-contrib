@@ -64,7 +64,7 @@ func (a *AwsIoT) Eval(context activity.Context) (done bool, err error) {
 	reqJSON, err := json.Marshal(req)
 
 	if err != nil {
-		return false, activity.NewError(err.Error(), nil, "")
+		return false, activity.NewError(err.Error(),"",nil)
 	}
 
 	log.Debugf("Shadow Request: %s", string(reqJSON))
@@ -87,7 +87,7 @@ func (a *AwsIoT) Eval(context activity.Context) (done bool, err error) {
 
 	if token.Wait() && token.Error() != nil {
 		log.Errorf("Error connecting to '%s': %s", brokerURI, token.Error().Error())
-		return false, activity.NewError(token.Error().Error(), nil, "")
+		return false, activity.NewError(token.Error().Error(), "",nil)
 	}
 
 	thingUpdate := fmt.Sprintf("$aws/things/%s/shadow/update", thingName)
