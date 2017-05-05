@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/TIBCOSoftware/flogo-lib/flow/activity"
 	"github.com/dustin/go-coap"
+	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
@@ -46,10 +46,9 @@ type CoAPActivity struct {
 	metadata *activity.Metadata
 }
 
-// init create & register activity
-func init() {
-	md := activity.NewMetadata(jsonMetadata)
-	activity.Register(&CoAPActivity{metadata: md})
+// NewActivity creates a new CoAP activity
+func NewActivity(metadata *activity.Metadata) activity.Activity {
+	return &CoAPActivity{metadata: metadata}
 }
 
 // Metadata returns the activity's metadata
@@ -65,13 +64,13 @@ func (a *CoAPActivity) Eval(context activity.Context) (done bool, err error) {
 	method, ok := getStringValue(context, ivMethod, nil, true)
 
 	if !ok {
-		activity.NewError("Method not specified")
+		activity.NewError("Method not specified","",nil)
 	}
 
 	uri, ok := getStringValue(context, ivURI, nil, false)
 
 	if !ok {
-		activity.NewError("URI not specified")
+		activity.NewError("URI not specified", "",nil)
 	}
 
 	msgType, _ := getStringValue(context, ivType, typeNON, true)
@@ -80,12 +79,12 @@ func (a *CoAPActivity) Eval(context activity.Context) (done bool, err error) {
 
 	coapURI, err := url.Parse(uri)
 	if err != nil {
-		return false, activity.NewError(err.Error())
+		return false, activity.NewError(err.Error(), "",nil)
 	}
 
 	scheme := coapURI.Scheme
 	if scheme != "coap" {
-		return false, activity.NewError("URI scheme must be 'coap'")
+		return false, activity.NewError("URI scheme must be 'coap'","",nil)
 	}
 
 	req := coap.Message{
@@ -129,20 +128,20 @@ func (a *CoAPActivity) Eval(context activity.Context) (done bool, err error) {
 
 	c, err := coap.Dial("udp", coapURI.Host)
 	if err != nil {
-		return false, activity.NewError(err.Error())
+		return false, activity.NewError(err.Error(),"",nil)
 	}
 
 	log.Debugf("conn: %v\n", c)
 
 	rv, err := c.Send(req)
 	if err != nil {
-		return false, activity.NewError(err.Error())
+		return false, activity.NewError(err.Error(),"",nil)
 	}
 
 	if rv != nil {
 
 		if rv.Code > 100 {
-			return false, activity.NewError(fmt.Sprintf("CoAP Error: %s", rv.Code.String()))
+			return false, activity.NewError(fmt.Sprintf("CoAP Error: %s", rv.Code.String()),rv.Code.String(),nil)
 		}
 
 		if rv.Payload != nil {

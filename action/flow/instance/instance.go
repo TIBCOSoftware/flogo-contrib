@@ -262,7 +262,7 @@ func (pi *Instance) execTask(workItem *WorkItem) {
 			logger.Debugf("StackTrace: %s", debug.Stack())
 
 
-			pi.handleError(workItem.TaskData, activity.NewError(err.Error()))
+			pi.handleError(workItem.TaskData, activity.NewError(err.Error()), "", nil)
 		}
 	}()
 
@@ -325,6 +325,7 @@ func (pi *Instance) handleError(taskData *TaskData, err error) {
 
 	if aerr, ok := err.(*activity.Error); ok {
 		pi.AddAttr("{E.data}", data.OBJECT, aerr.Data())
+		pi.AddAttr("{E.code}", data.STRING, aerr.Code())
 	}
 
 	pi.AddAttr("{Error.activity}", data.STRING, taskData.TaskName())
@@ -332,6 +333,7 @@ func (pi *Instance) handleError(taskData *TaskData, err error) {
 
 	if aerr, ok := err.(*activity.Error); ok {
 		pi.AddAttr("{Error.data}", data.OBJECT, aerr.Data())
+		pi.AddAttr("{Error.code}", data.STRING, aerr.Code())
 	}
 
 
@@ -821,7 +823,7 @@ func (td *TaskData) EvalActivity() (done bool, evalErr error) {
 
 
 			if evalErr == nil {
-				evalErr = activity.NewError(fmt.Sprintf("%v", r))
+				evalErr = activity.NewError(fmt.Sprintf("%v", r), "", nil)
 				done = false
 			}
 		}
