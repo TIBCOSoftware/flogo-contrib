@@ -64,8 +64,7 @@ func (t *KafkasubFactory) New(config *trigger.Config) trigger.Trigger {
 	kafkaTrigger.kafkaConfig.Consumer.Return.Errors = true
 	error := initKafkaParms(kafkaTrigger)
 	if error != nil {
-		flogoLogger.Error("Failed to initialize parms: ", error)
-		return nil
+		panic(fmt.Errorf("Failed to initialize parms: [%s]", error))
 	}
 	//flogoLogger.Debug("KafkaSubTrigger New complete")
 	return kafkaTrigger
@@ -118,8 +117,7 @@ func (t *KafkaSubTrigger) Stop() error {
 func run(t *KafkaSubTrigger) {
 	kafkaConsumer, error := sarama.NewConsumer(t.kafkaParms.brokers, t.kafkaConfig)
 	if error != nil {
-		flogoLogger.Errorf("Failed to create Kafka consumer for reason [%s]", error)
-		return
+		panic(fmt.Errorf("Failed to create Kafka consumer for reason [%s]", error))
 	}
 	t.kafkaConsumer = &kafkaConsumer
 	thing := make(map[int32]sarama.PartitionConsumer)
@@ -127,8 +125,7 @@ func run(t *KafkaSubTrigger) {
 	flogoLogger.Debugf("Subscribing to topic [%s]", t.kafkaParms.topic)
 	validPartitions, error := kafkaConsumer.Partitions(t.kafkaParms.topic)
 	if error != nil {
-		flogoLogger.Errorf("Failed to get valid partitions from Kafka Consumer for reason [%s].  Aborting subscriber", error)
-		return
+		panic(fmt.Errorf("Failed to get valid partitions from Kafka Consumer for reason [%s].  Aborting subscriber", error))
 	}
 
 	flogoLogger.Debugf("Valid partitions for topic [%s] detected as: [%v]", t.kafkaParms.topic, validPartitions)
@@ -150,8 +147,7 @@ func run(t *KafkaSubTrigger) {
 		}
 	}
 	if len(*t.partitionConsumers) < 1 {
-		t.Stop()
-		flogoLogger.Errorf("Kafka consumer is not configured for any valid partitions and will shut down")
+		panic(fmt.Errorf("Kafka consumer is not configured for any valid partitions"))
 	} else {
 		flogoLogger.Debugf("Kafka consumers for topic [%s] started", t.kafkaParms.topic)
 	}

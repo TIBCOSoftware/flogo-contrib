@@ -7,7 +7,7 @@ To use SASL simply provide the username and password in the settings config.
 ## Installation
 
 ```bash
-flogo add trigger github.com/TIBCOSoftware/flogo-contrib/trigger/kafkasub
+flogo install github.com/TIBCOSoftware/flogo-contrib/trigger/kafkasub
 ```
 
 ## Schema
