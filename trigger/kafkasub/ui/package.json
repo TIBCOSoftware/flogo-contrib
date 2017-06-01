@@ -1,0 +1,5 @@
+{
+  "name": "tibco-kafkasub",
+  "version": "0.0.1",
+  "description": "Trigger that subscribes to a Kafka topic"
+}
