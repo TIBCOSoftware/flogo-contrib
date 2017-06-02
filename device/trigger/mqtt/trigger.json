@@ -1,0 +1,20 @@
+{
+  "name": "tibco-mqtt",
+  "type": "flogo:device:trigger",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/device/trigger/mqtt",
+  "version": "0.0.1",
+  "title": "Receive MQTT Message",
+  "description": "Simple Device MQTT Trigger",
+  "settings":[
+    {
+      "name": "topic",
+      "type": "string"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "message",
+      "type": "string"
+    }
+  ]
+}
