@@ -1,4 +1,4 @@
-# tibco-twilio
+# tibco-kafkapub
 This activity provides your flogo application the ability to send a Kafka message
 
 
@@ -75,7 +75,7 @@ Configure a task to send the time of day to the 'syslog' topic
 {
   "id": 3,
   "type": 1,
-  "activityType": "tibco-twilio",
+  "activityType": "tibco-kafkapub",
   "name": "Send Text Message",
   "attributes": [
     { "name": "accountSID", "value": "A...9" },
@@ -94,7 +94,7 @@ Configure a task in flow to send 'my text message' to a number from a REST trigg
 {
   "id": 3,
   "type": 1,
-  "activityType": "tibco-twilio",
+  "activityType": "tibco-kafkapub",
   "name": "Send Text Message",
   "attributes": [
     { "name": "accountSID", "value": "A...9" },
