@@ -5,7 +5,7 @@ This activity provides your flogo application the ability to send a Kafka messag
 ## Installation
 
 ```bash
-flogo add activity github.com/TIBCOSoftware/flogo-contrib/activity/kafkapub
+flogo install github.com/TIBCOSoftware/flogo-contrib/activity/kafkapub
 ```
 
 ## Schema
