@@ -79,7 +79,7 @@ Configure a task to send a message to the 'syslog' topic.
       "description": "Publish a message to a kafka topic",
       "type": 1,
       "activityType": "tibco-kafkapub",
-      "activityRef": "github.com/wnichols/flogo-contrib/activity/kafkapub",
+      "activityRef": "github.com/TIBCOSoftware/flogo-contrib/activity/kafkapub",
       "attributes": [
         {
           "name": "BrokerUrls",

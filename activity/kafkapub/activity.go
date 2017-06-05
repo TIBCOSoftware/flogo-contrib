@@ -40,12 +40,12 @@ func (a *KafkaPubActivity) Metadata() *activity.Metadata {
 func (a *KafkaPubActivity) Eval(context activity.Context) (done bool, err error) {
 	err = initParms(a, context)
 	if err != nil {
-		flogoLogger.Errorf("Kafkapub parameters initialization got error: [%s]", err)
+		flogoLogger.Errorf("Kafkapub parameters initialization got error: [%s]", err.Error())
 		return false, err
 	}
 	defer func() {
 		if err := a.syncProducer.Close(); err != nil {
-			panic(err)
+			flogoLogger.Errorf("Kafkapub producer close got error: [%s]", err.Error())
 		}
 	}()
 	if context.GetInput("Message") != nil {
@@ -55,7 +55,7 @@ func (a *KafkaPubActivity) Eval(context activity.Context) (done bool, err error)
 		}
 		partition, offset, err := a.syncProducer.SendMessage(msg)
 		if err != nil {
-			return false, fmt.Errorf("kafkapub failed to send message for reason [%s]", err)
+			return false, fmt.Errorf("kafkapub failed to send message for reason [%s]", err.Error())
 		}
 		context.SetOutput("partition", partition)
 		context.SetOutput("offset", offset)
@@ -161,8 +161,9 @@ func getCerts(trustStore string) (*x509.CertPool, error) {
 		trustCertBytes, err := ioutil.ReadFile(fqfName)
 		if err != nil {
 			flogoLogger.Warnf("Failed to read trusted certificate [%s] ... continuing", trustCertFile.Name())
+		} else if trustCertBytes != nil {
+			certPool.AppendCertsFromPEM(trustCertBytes)
 		}
-		certPool.AppendCertsFromPEM(trustCertBytes)
 	}
 	if len(certPool.Subjects()) < 1 {
 		return certPool, fmt.Errorf("Failed to read trusted certificates from [%s]  After processing all files in the directory no valid trusted certs were found", trustStore)

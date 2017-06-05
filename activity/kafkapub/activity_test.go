@@ -9,6 +9,35 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/flow/test"
 )
 
+/*
+The setup for the kafka server used to run these tests:
+section from server.properties:
+	listeners=PLAINTEXT://cheetah.na.tibco.com:9092,SSL://cheetah:9093,SASL_PLAINTEXT://cheetah:9094,SASL_SSL://cheetah.com:9095
+
+	sasl.enabled.mechanisms=PLAIN
+	sasl.mechanism.inter.broker.protocol=PLAIN
+
+	ssl.keystore.location=/opt/kafka_2.12-0.10.2.1/keys/kafka.jks
+	ssl.keystore.password=sauron
+	ssl.key.password=sauron
+	ssl.truststore.location=/opt/kafka_2.12-0.10.2.1/keys/kafka.jks
+	ssl.truststore.password=sauron
+	ssl.client.auth=none
+	ssl.enabled.protocols=TLSv1.2,TLSv1.1,TLSv1
+
+	advertised.listeners=PLAINTEXT://cheetah.na.tibco.com:9092,SSL://cheetah:9093,SASL_PLAINTEXT://cheetah:9094,SASL_SSL://cheetah:9095
+
+The SASL file:
+	KafkaServer {
+	org.apache.kafka.common.security.plain.PlainLoginModule required
+	username="admin"
+	password="admin"
+	user_wcn00="sauron"
+	user_alice="sissy";
+	};
+To get kafka to pick up the jaas file add a vm parm like:
+	-Djava.security.auth.login.config=/local/opt/kafka/kafka_2.11-0.10.2.0/config/kafka_server_jaas.conf
+*/
 var activityMetadata *activity.Metadata
 
 func getActivityMetadata() *activity.Metadata {
@@ -48,7 +77,7 @@ func TestPlain(t *testing.T) {
 	tc := test.NewTestActivityContext(getActivityMetadata())
 
 	//setup attrs
-	tc.SetInput("BrokerUrls", "bilbo:9092")
+	tc.SetInput("BrokerUrls", "cheetah:9092")
 	tc.SetInput("Topic", "syslog")
 	tc.SetInput("Message", "######### PLAIN ###########  Mary had a little lamb, its fleece was white as snow.")
 	act.Eval(tc)
@@ -68,7 +97,7 @@ func TestSSL(t *testing.T) {
 	tc := test.NewTestActivityContext(getActivityMetadata())
 
 	//setup attrs
-	tc.SetInput("BrokerUrls", "bilbo:9093")
+	tc.SetInput("BrokerUrls", "cheetah:9093")
 	tc.SetInput("Topic", "syslog")
 	tc.SetInput("truststore", "/opt/kafka/kafka_2.11-0.10.2.0/keys/trust")
 	tc.SetInput("Message", "######### TLS ###########  Mary had a little lamb, its fleece was white as snow.")
@@ -89,7 +118,7 @@ func TestSASL_PLAIN(t *testing.T) {
 	tc := test.NewTestActivityContext(getActivityMetadata())
 
 	//setup attrs
-	tc.SetInput("BrokerUrls", "bilbo:9094")
+	tc.SetInput("BrokerUrls", "cheetah:9094")
 	tc.SetInput("Topic", "syslog")
 	tc.SetInput("user", "wcn00")
 	tc.SetInput("password", "sauron")
@@ -111,7 +140,7 @@ func TestSASL_TLS(t *testing.T) {
 	tc := test.NewTestActivityContext(getActivityMetadata())
 
 	//setup attrs
-	tc.SetInput("BrokerUrls", "bilbo:9095")
+	tc.SetInput("BrokerUrls", "cheetah:9095")
 	tc.SetInput("truststore", "/opt/kafka/kafka_2.11-0.10.2.0/keys/trust")
 	tc.SetInput("Topic", "syslog")
 	tc.SetInput("user", "wcn00")
