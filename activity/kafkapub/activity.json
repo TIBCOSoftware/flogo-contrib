@@ -1,0 +1,44 @@
+{
+  "name": "tibco-kafkapub",
+  "version": "0.0.1",
+  "type": "flogo:activity",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/kafkapub",
+  "description": "Publish a message to a kafka topic",
+  "author": "Wendell Nichols <wnichols@tibco.com>",
+  "inputs":[
+    {
+      "name": "BrokerUrls",
+      "type": "string"
+    },
+    {
+      "name": "Topic",
+      "type": "string"
+    },
+    {
+      "name": "Message",
+      "type": "string"
+    },
+    {
+      "name": "user",
+      "type": "string"
+    },
+    {
+      "name": "password",
+      "type": "string"
+    },
+    {
+      "name": "truststore",
+      "type": "string"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "partition",
+      "type": "int"
+    },
+    {
+      "name": "offset",
+      "type": "long"
+    }
+  ]
+}
