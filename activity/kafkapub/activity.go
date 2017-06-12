@@ -67,7 +67,7 @@ func (a *KafkaPubActivity) Eval(context activity.Context) (done bool, err error)
 }
 
 func initParms(a *KafkaPubActivity, context activity.Context) error {
-	if context.GetInput("BrokerUrls") != nil {
+	if context.GetInput("BrokerUrls") != nil && context.GetInput("BrokerUrls").(string) != "" {
 		a.kafkaConfig = sarama.NewConfig()
 		a.kafkaConfig.Producer.Return.Errors = true
 		a.kafkaConfig.Producer.RequiredAcks = sarama.WaitForAll
@@ -87,7 +87,7 @@ func initParms(a *KafkaPubActivity, context activity.Context) error {
 	} else {
 		return fmt.Errorf("Kafkapub activity is not configured with at least one BrokerUrl")
 	}
-	if context.GetInput("Topic") != nil {
+	if context.GetInput("Topic") != nil && context.GetInput("Topic").(string) != "" {
 		a.topic = context.GetInput("Topic").(string)
 		flogoLogger.Debugf("Kafkapub topic [%s]", a.topic)
 	} else {
@@ -117,7 +117,7 @@ func initParms(a *KafkaPubActivity, context activity.Context) error {
 		flogoLogger.Debugf("Kafkapub initialized truststore from [%s]", trustStore)
 	}
 	// SASL
-	if context.GetInput("user") != nil {
+	if context.GetInput("user") != nil && context.GetInput("user").(string) != "" {
 		var password string
 		user := context.GetInput("user").(string)
 		if context.GetInput("password") != nil {
