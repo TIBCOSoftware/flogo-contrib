@@ -11,22 +11,3 @@ const (
 	// ServiceEngineTester is the name of the EngineTester service used in configuration
 	ServiceEngineTester string = "engineTester"
 )
-
-/*
-// StateRecorderService is the flowinst.StateRecorder wrapped as a service
-type StateRecorderService interface {
-	util.Service
-	flowinst.StateRecorder
-}
-
-// FlowProviderService is the flow.Provider wrapped as a service
-type FlowProviderService interface {
-	util.Service
-	flowdef.Provider
-}
-
-// EngineTesterService is an engine service to assist in testing flows
-type EngineTesterService interface {
-	util.Service
-}
-*/
