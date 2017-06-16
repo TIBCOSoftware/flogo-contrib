@@ -126,3 +126,52 @@ This example flow subscribes to the syslog subject of bilbo's kafka server using
     }
   ]
 }```
+
+
+To connect to a TLS port on a kafka cluster member:
+
+  "triggers": [
+    {
+      "id": "my_kafka_trigger",
+      "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/kafkasub",
+      "settings": {
+        "BrokerUrl": "bilbo:9093"
+      },
+      "handlers": [
+        {
+          "actionId": "my_simple_flow",
+          "settings": {
+            "Topic": "syslog",
+            "truststore": "/opt/kafka/kafka_2.11-0.10.2.0/keys/trust"
+          }
+        }
+      ]
+    }
+  ],
+In this scenario the kafka server on bilbo is running TLS on port 9093.  The CACert used to sign the server's certificate has been copied to the truststore directory to allow clients to connect.  At this time mutual auth is not implemented.
+
+
+
+To connect to a port on a kafka cluster where SASL authorization is enabled
+
+  "triggers": [
+    {
+      "id": "my_kafka_trigger",
+      "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/kafkasub",
+      "settings": {
+        "BrokerUrl": "bilbo:9094"
+      },
+      "handlers": [
+        {
+          "actionId": "my_simple_flow",
+          "settings": {
+            "Topic": "syslog",
+            "user": "foo",
+            "password": "bar"
+          }
+        }
+      ]
+    }
+  ],
+In this scenario the kafka server on bilbo is running SASL enabled port 9094. The user and password will be used to authenticate the user.
+
