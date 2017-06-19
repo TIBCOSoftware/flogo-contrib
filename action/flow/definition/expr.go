@@ -6,7 +6,7 @@ import "github.com/TIBCOSoftware/flogo-lib/core/data"
 type LinkExprManager interface {
 
 	// EvalLinkExpr evaluate the link expression
-	EvalLinkExpr(link *Link, scope data.Scope) bool
+	EvalLinkExpr(link *Link, scope data.Scope) (bool, error)
 }
 
 type LinkExprManagerFactory interface {

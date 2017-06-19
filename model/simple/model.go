@@ -136,12 +136,9 @@ func (tb *SimpleTaskBehavior) Eval(context model.TaskContext, evalCode int) (don
 
 			done, err := context.EvalActivity()
 
-			// todo handle error transition
 			if err != nil {
 				log.Errorf("Error evaluating activity '%s'[%s] - %s", context.Task().Name(), context.Task().ActivityType(), err.Error())
 				context.SetState(STATE_FAILED)
-
-				//we don't have an error transition, so we'll return it so the global error handler can deal with it
 				return false, 0, err
 			}
 
@@ -239,6 +236,29 @@ func (tb *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (not
 
 	// there are no outgoing links, so just notify parent that we are done
 	return true, 0, nil
+}
+
+// Done implements model.TaskBehavior.Error
+func (tb *SimpleTaskBehavior) Error(context model.TaskContext) (handled bool, taskEntry *model.TaskEntry) {
+
+	linkInsts := context.ToInstLinks()
+	numLinks := len(linkInsts)
+
+	// process outgoing links
+	if numLinks > 0 {
+
+		for _, linkInst := range linkInsts {
+
+			if linkInst.Link().Type() == definition.LtError {
+				linkInst.SetState(STATE_LINK_TRUE)
+				taskEntry := &model.TaskEntry{Task: linkInst.Link().ToTask(), EnterCode: 0}
+				return true, taskEntry
+			}
+		}
+	}
+
+	// there are no outgoing error links, so just return false
+	return false, nil
 }
 
 // ChildDone implements model.TaskBehavior.ChildDone

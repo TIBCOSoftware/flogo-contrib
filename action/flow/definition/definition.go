@@ -209,6 +209,9 @@ const (
 
 	// LtLabel denotes 'labelled' link
 	LtLabel LinkType = 2
+
+	// LtError denotes an error link
+	LtError LinkType = 3
 )
 
 // Link is the object that describes the definition of

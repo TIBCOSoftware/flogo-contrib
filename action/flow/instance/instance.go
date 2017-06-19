@@ -286,7 +286,7 @@ func (pi *Instance) execTask(workItem *WorkItem) {
 		}
 
 		if eval {
-			done, doneCode, err = taskBehavior.Eval(taskData, workItem.EvalCode)
+			done, doneCode, err = pi.evalTask(taskBehavior, taskData, workItem.EvalCode)
 		} else {
 			done = true
 		}
@@ -295,7 +295,7 @@ func (pi *Instance) execTask(workItem *WorkItem) {
 	}
 
 	if err != nil {
-		pi.handleError(taskData, err)
+		pi.handleTaskError(taskBehavior, taskData, err)
 		return
 	}
 
@@ -317,6 +317,28 @@ func (pi *Instance) execTask(workItem *WorkItem) {
 	}
 }
 
+func (pi *Instance) evalTask(taskBehavior model.TaskBehavior, taskData *TaskData, evalCode int) (done bool, doneCode int, err error) {
+
+	defer func() {
+		if r := recover(); r != nil {
+
+			err = fmt.Errorf("Unhandled Error evaluating task '%s' : %v\n", taskData.task.Name(), r)
+			logger.Error(err)
+
+
+			// todo: useful for debugging
+			logger.Debugf("StackTrace: %s", debug.Stack())
+
+			done = false
+			doneCode = 0
+		}
+	}()
+
+	done, doneCode, err = taskBehavior.Eval(taskData, evalCode)
+
+	return done, doneCode, err
+}
+
 func (pi *Instance) handleError(taskData *TaskData, err error) {
 
 	// Keep Temporarily, for short term backwards compatibility
@@ -335,7 +357,6 @@ func (pi *Instance) handleError(taskData *TaskData, err error) {
 		pi.AddAttr("{Error.data}", data.OBJECT, aerr.Data())
 		pi.AddAttr("{Error.code}", data.STRING, aerr.Code())
 	}
-
 
 	if taskData.taskEnv.ID != idEhTasEnv {
 		pi.HandleError()
@@ -394,6 +415,37 @@ func (pi *Instance) handleTaskDone(taskBehavior model.TaskBehavior, taskData *Ta
 
 	taskData.taskEnv.releaseTask(task)
 }
+
+// handleTaskError handles the completion of a task in the Flow Instance
+func (pi *Instance) handleTaskError(taskBehavior model.TaskBehavior, taskData *TaskData, err error) {
+
+	handled, taskEntry := taskBehavior.Error(taskData)
+
+	if !handled {
+		pi.handleError(taskData, err)
+		return
+	}
+
+	//todo add error data for task to flow
+
+	if taskEntry != nil {
+
+		logger.Debugf("execTask - TaskEntry: %v\n", taskEntry)
+		taskToEnterBehavior := pi.FlowModel.GetTaskBehavior(taskEntry.Task.TypeID())
+
+		enterTaskData, _ := taskData.taskEnv.FindOrCreateTaskData(taskEntry.Task)
+
+		eval, evalCode := taskToEnterBehavior.Enter(enterTaskData, taskEntry.EnterCode)
+
+		if eval {
+			pi.scheduleEval(enterTaskData, evalCode)
+		}
+	}
+
+	task := taskData.Task()
+	taskData.taskEnv.releaseTask(task)
+}
+
 
 // HandleError handles instance errors
 func (pi *Instance) HandleError() {
@@ -795,8 +847,8 @@ func (td *TaskData) EvalLink(link *definition.Link) (result bool, err error) {
 	mgr := td.taskEnv.Instance.Flow.GetLinkExprManager()
 
 	if mgr != nil {
-		result = mgr.EvalLinkExpr(link, td.taskEnv.Instance)
-		return result, nil
+		result, err = mgr.EvalLinkExpr(link, td.taskEnv.Instance)
+		return result, err
 	}
 
 	return true, nil
