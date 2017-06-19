@@ -209,6 +209,11 @@ func (tb *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (not
 
 				follow := true
 
+				if linkInst.Link().Type() == definition.LtError {
+					//todo should we skip or ignore?
+					continue
+				}
+
 				if linkInst.Link().Type() == definition.LtExpression {
 					//todo handle error
 					follow, _ = context.EvalLink(linkInst.Link())
