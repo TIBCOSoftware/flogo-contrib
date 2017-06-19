@@ -95,7 +95,7 @@ func (m *BasicMapper) Mappings() []*data.MappingDef {
 // and puts the results in the output scope
 //
 // return error
-func (m *BasicMapper) Apply(inputScope data.Scope, outputScope data.Scope) {
+func (m *BasicMapper) Apply(inputScope data.Scope, outputScope data.Scope) error {
 
 	//todo validate types
 	for _, mapping := range m.mappings {
@@ -133,9 +133,7 @@ func (m *BasicMapper) Apply(inputScope data.Scope, outputScope data.Scope) {
 				toAttr, oe := outputScope.GetAttr(attrName)
 
 				if !oe {
-					//todo handle attr dne
-					fmt.Printf("Attr %s not found in output scope\n", attrName)
-					return
+					return fmt.Errorf("Attr %s not found in output scope\n", attrName)
 				}
 
 				switch pathType {
@@ -194,6 +192,8 @@ func (m *BasicMapper) Apply(inputScope data.Scope, outputScope data.Scope) {
 		//todo implement script mapping
 		}
 	}
+
+	return nil
 }
 
 // BasicMapper is a simple object holding and executing mappings
@@ -201,7 +201,7 @@ type DefaultOutputMapper struct {
 	task *Task
 }
 
-func (m *DefaultOutputMapper) Apply(inputScope data.Scope, outputScope data.Scope) {
+func (m *DefaultOutputMapper) Apply(inputScope data.Scope, outputScope data.Scope) error {
 
 	oscope := outputScope.(data.MutableScope)
 
@@ -217,4 +217,6 @@ func (m *DefaultOutputMapper) Apply(inputScope data.Scope, outputScope data.Scop
 			oscope.AddAttr(attrNS+attr.Name+"}", attr.Type, oAttr.Value)
 		}
 	}
+
+	return nil
 }
