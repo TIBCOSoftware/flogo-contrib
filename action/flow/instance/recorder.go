@@ -7,8 +7,8 @@ import (
 	"bytes"
 
 	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"github.com/TIBCOSoftware/flogo-lib/flow/service"
 	"github.com/TIBCOSoftware/flogo-lib/util"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/service"
 )
 
 // StateRecorder is the interface that describes a service that can record
