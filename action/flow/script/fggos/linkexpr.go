@@ -10,6 +10,7 @@ import (
 	"github.com/japm/goScript"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
+	"fmt"
 )
 
 
@@ -129,11 +130,11 @@ func isPartOfName(char byte, ignoreBraces bool) (bool, bool) {
 }
 
 // EvalLinkExpr implements LinkExprManager.EvalLinkExpr
-func (em *GosLinkExprManager) EvalLinkExpr(link *definition.Link, scope data.Scope) bool {
+func (em *GosLinkExprManager) EvalLinkExpr(link *definition.Link, scope data.Scope) (bool,error) {
 
 	if link.Type() == definition.LtDependency {
 		// dependency links are always true
-		return true
+		return true, nil
 	}
 
 	vars, attrsOK := em.values[link.ID()]
@@ -141,8 +142,7 @@ func (em *GosLinkExprManager) EvalLinkExpr(link *definition.Link, scope data.Sco
 
 	if !attrsOK || !exprOK {
 
-		logger.Warnf("Unable to evaluate expression '%s', did not compile properly\n", link.Value())
-		return false
+		return false, fmt.Errorf("Unable to evaluate expression '%s', did not compile properly\n", link.Value())
 	}
 
 	ctxt := make(map[string]interface{})
@@ -215,7 +215,7 @@ func (em *GosLinkExprManager) EvalLinkExpr(link *definition.Link, scope data.Sco
 		logger.Error(err)
 	}
 
-	return val.(bool)
+	return val.(bool),nil
 }
 
 // FixUpValue fixes json numbers

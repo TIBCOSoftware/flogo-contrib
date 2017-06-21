@@ -8,12 +8,12 @@ import (
 
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/support"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/TIBCOSoftware/flogo-lib/util"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/provider"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/support"
 )
 
 
@@ -49,27 +49,27 @@ type Instance struct {
 
 // New creates a new Flow Instance from the specified Flow
 func New(instanceID string, flowURI string, flow *definition.Definition, flowModel *model.FlowModel) *Instance {
-	var instance Instance
-	instance.id = instanceID
-	instance.stepID = 0
-	instance.FlowURI = flowURI
-	instance.Flow = flow
-	instance.FlowModel = flowModel
-	instance.status = StatusNotStarted
-	instance.WorkItemQueue = util.NewSyncQueue()
-	instance.ChangeTracker = NewInstanceChangeTracker()
+	var inst Instance
+	inst.id = instanceID
+	inst.stepID = 0
+	inst.FlowURI = flowURI
+	inst.Flow = flow
+	inst.FlowModel = flowModel
+	inst.status = StatusNotStarted
+	inst.WorkItemQueue = util.NewSyncQueue()
+	inst.ChangeTracker = NewInstanceChangeTracker()
 
 	var taskEnv TaskEnv
 	taskEnv.ID = idRootTaskEnv
 	taskEnv.Task = flow.RootTask()
 	taskEnv.taskID = flow.RootTask().ID()
-	taskEnv.Instance = &instance
+	taskEnv.Instance = &inst
 	taskEnv.TaskDatas = make(map[int]*TaskData)
 	taskEnv.LinkDatas = make(map[int]*LinkData)
 
-	instance.RootTaskEnv = &taskEnv
+	inst.RootTaskEnv = &taskEnv
 
-	return &instance
+	return &inst
 }
 
 // SetFlowProvider sets the process.Provider that the instance should use
@@ -165,11 +165,11 @@ func (pi *Instance) Start(startAttrs []*data.Attribute) bool {
 	applyDefaultInstanceInputMappings(pi, startAttrs)
 
 	logger.Infof("FlowInstance Flow: %v", pi.FlowModel)
-	model := pi.FlowModel.GetFlowBehavior()
+	flowBehavior := pi.FlowModel.GetFlowBehavior()
 
-	//todo: error if model not found
+	//todo: error if flowBehavior not found
 
-	ok, evalCode := model.Start(pi)
+	ok, evalCode := flowBehavior.Start(pi)
 
 	if ok {
 		rootTaskData := pi.RootTaskEnv.NewTaskData(pi.Flow.RootTask())
@@ -260,8 +260,11 @@ func (pi *Instance) execTask(workItem *WorkItem) {
 			// todo: useful for debugging
 			logger.Debugf("StackTrace: %s", debug.Stack())
 
-
-			pi.handleActivityError(workItem.TaskData, activity.NewError(err.Error(), "", nil))
+			pi.appendActivityErrorData(workItem.TaskData, activity.NewError(err.Error(), "", nil))
+			if workItem.TaskData.taskEnv.ID != idEhTasEnv {
+				//not already in global handler, so handle it
+				pi.HandleGlobalError()
+			}
 		}
 	}()
 
@@ -283,7 +286,8 @@ func (pi *Instance) execTask(workItem *WorkItem) {
 			err := applyInputMapper(pi, taskData)
 
 			if err != nil {
-				pi.handleMapperError(err)
+				pi.appendMapperErrorData(err)
+				pi.HandleGlobalError()
 				return
 			}
 
@@ -291,7 +295,7 @@ func (pi *Instance) execTask(workItem *WorkItem) {
 		}
 
 		if eval {
-			done, doneCode, err = taskBehavior.Eval(taskData, workItem.EvalCode)
+			done, doneCode, err = pi.evalTask(taskBehavior, taskData, workItem.EvalCode)
 		} else {
 			done = true
 		}
@@ -300,7 +304,7 @@ func (pi *Instance) execTask(workItem *WorkItem) {
 	}
 
 	if err != nil {
-		pi.handleActivityError(taskData, err)
+		pi.handleTaskError(taskBehavior, taskData, err)
 		return
 	}
 
@@ -312,7 +316,8 @@ func (pi *Instance) execTask(workItem *WorkItem) {
 			appliedMapper, err := applyOutputMapper(pi, taskData)
 
 			if err != nil {
-				pi.handleMapperError(err)
+				pi.appendMapperErrorData(err)
+				pi.HandleGlobalError()
 				return
 			}
 
@@ -327,42 +332,25 @@ func (pi *Instance) execTask(workItem *WorkItem) {
 	}
 }
 
-func (pi *Instance) handleMapperError(err error) {
+func (pi *Instance) evalTask(taskBehavior model.TaskBehavior, taskData *TaskData, evalCode int) (done bool, doneCode int, err error) {
 
-	pi.AddAttr("{Error.message}", data.STRING, err.Error())
+	defer func() {
+		if r := recover(); r != nil {
 
-	//if aerr, ok := err.(*data.MapperError); ok {
-	//	pi.AddAttr("{Error.data}", data.OBJECT, aerr.Data())
-	//	pi.AddAttr("{Error.code}", data.STRING, aerr.Code())
-	//}
+			err = fmt.Errorf("Unhandled Error evaluating task '%s' : %v\n", taskData.task.Name(), r)
+			logger.Error(err)
 
+			// todo: useful for debugging
+			logger.Debugf("StackTrace: %s", debug.Stack())
 
-	pi.HandleError()
-}
+			done = false
+			doneCode = 0
+		}
+	}()
 
-func (pi *Instance) handleActivityError(taskData *TaskData, err error) {
+	done, doneCode, err = taskBehavior.Eval(taskData, evalCode)
 
-	// Keep Temporarily, for short term backwards compatibility
-	pi.AddAttr("{E.activity}", data.STRING, taskData.TaskName())
-	pi.AddAttr("{E.message}", data.STRING, err.Error())
-
-	if aerr, ok := err.(*activity.Error); ok {
-		pi.AddAttr("{E.data}", data.OBJECT, aerr.Data())
-		pi.AddAttr("{E.code}", data.STRING, aerr.Code())
-	}
-
-	pi.AddAttr("{Error.activity}", data.STRING, taskData.TaskName())
-	pi.AddAttr("{Error.message}", data.STRING, err.Error())
-
-	if aerr, ok := err.(*activity.Error); ok {
-		pi.AddAttr("{Error.data}", data.OBJECT, aerr.Data())
-		pi.AddAttr("{Error.code}", data.STRING, aerr.Code())
-	}
-
-
-	if taskData.taskEnv.ID != idEhTasEnv {
-		pi.HandleError()
-	}
+	return done, doneCode, err
 }
 
 // handleTaskDone handles the completion of a task in the Flow Instance
@@ -418,8 +406,65 @@ func (pi *Instance) handleTaskDone(taskBehavior model.TaskBehavior, taskData *Ta
 	taskData.taskEnv.releaseTask(task)
 }
 
-// HandleError handles instance errors
-func (pi *Instance) HandleError() {
+
+func (pi *Instance) appendMapperErrorData(err error) {
+
+	pi.AddAttr("{Error.message}", data.STRING, err.Error())
+
+	//if aerr, ok := err.(*data.MapperError); ok {
+	//	pi.AddAttr("{Error.data}", data.OBJECT, aerr.Data())
+	//	pi.AddAttr("{Error.code}", data.STRING, aerr.Code())
+	//}
+}
+
+func (pi *Instance) appendActivityErrorData(taskData *TaskData, err error) {
+
+	pi.AddAttr("{Error.activity}", data.STRING, taskData.TaskName())
+	pi.AddAttr("{Error.message}", data.STRING, err.Error())
+
+	if aerr, ok := err.(*activity.Error); ok {
+		pi.AddAttr("{Error.data}", data.OBJECT, aerr.Data())
+		pi.AddAttr("{Error.code}", data.STRING, aerr.Code())
+	}
+}
+
+// handleTaskError handles the completion of a task in the Flow Instance
+func (pi *Instance) handleTaskError(taskBehavior model.TaskBehavior, taskData *TaskData, err error) {
+
+	handled, taskEntry := taskBehavior.Error(taskData)
+
+	if !handled {
+		pi.appendActivityErrorData(taskData, err)
+		if taskData.taskEnv.ID != idEhTasEnv {
+			//not already in global handler, so handle it
+			pi.HandleGlobalError()
+		}
+		return
+	}
+
+	//todo add error data for task to flow
+
+	if taskEntry != nil {
+
+		logger.Debugf("execTask - TaskEntry: %v\n", taskEntry)
+		taskToEnterBehavior := pi.FlowModel.GetTaskBehavior(taskEntry.Task.TypeID())
+
+		enterTaskData, _ := taskData.taskEnv.FindOrCreateTaskData(taskEntry.Task)
+
+		eval, evalCode := taskToEnterBehavior.Enter(enterTaskData, taskEntry.EnterCode)
+
+		if eval {
+			pi.scheduleEval(enterTaskData, evalCode)
+		}
+	}
+
+	task := taskData.Task()
+	taskData.taskEnv.releaseTask(task)
+}
+
+
+// HandleGlobalError handles instance errors
+func (pi *Instance) HandleGlobalError() {
 
 	if pi.Flow.ErrorHandlerTask() != nil {
 
@@ -818,8 +863,8 @@ func (td *TaskData) EvalLink(link *definition.Link) (result bool, err error) {
 	mgr := td.taskEnv.Instance.Flow.GetLinkExprManager()
 
 	if mgr != nil {
-		result = mgr.EvalLinkExpr(link, td.taskEnv.Instance)
-		return result, nil
+		result, err = mgr.EvalLinkExpr(link, td.taskEnv.Instance)
+		return result, err
 	}
 
 	return true, nil
