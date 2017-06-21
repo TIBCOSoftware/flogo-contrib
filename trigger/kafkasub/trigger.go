@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"fmt"
-	"net/url"
 
 	"time"
 
@@ -205,9 +204,9 @@ func initKafkaParms(t *KafkaSubTrigger) error {
 	}
 	t.kafkaParms.brokers = make([]string, len(brokers))
 	for brokerNo, broker := range brokers {
-		_, error := url.Parse(broker)
+		error := validateBrokerUrl(broker)
 		if error != nil {
-			return fmt.Errorf("BrokerUrl [%s] format invalid for reason: [%s]", t.kafkaParms.brokers[0], error.Error())
+			return fmt.Errorf("BrokerUrl [%s] format invalid for reason: [%s]", broker, error.Error())
 		}
 		t.kafkaParms.brokers[brokerNo] = broker
 	}
@@ -349,6 +348,21 @@ func getCerts(trustStore string) (*x509.CertPool, error) {
 		return certPool, fmt.Errorf("Failed to read trusted certificates from [%s]  After processing all files in the directory no valid trusted certs were found", trustStore)
 	}
 	return certPool, nil
+}
+
+//Ensure that this string meets the host:port definition of a kafka hostspec
+//Kafka calls it a url but its really just host:port, which for numeric ip addresses is not a valid URI
+//technically speaking.
+func validateBrokerUrl(broker string) error {
+	hostport := strings.Split(broker, ":")
+	if len(hostport) != 2 {
+		return fmt.Errorf("BrokerUrl must be composed of sections like \"host:port\"")
+	}
+	i, err := strconv.Atoi(hostport[1])
+	if err != nil || i < 0 || i > 32767 {
+		return fmt.Errorf("Port specification [%s] is not numeric and between 0 and 32767", hostport[1])
+	}
+	return nil
 }
 
 func onMessage(t *KafkaSubTrigger, msg *sarama.ConsumerMessage) {
