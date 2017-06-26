@@ -5,8 +5,8 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io/ioutil"
-	"net/url"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/Shopify/sarama"
@@ -76,7 +76,7 @@ func initParms(a *KafkaPubActivity, context activity.Context) error {
 		brokerUrls := strings.Split(context.GetInput("BrokerUrls").(string), ",")
 		brokers := make([]string, len(brokerUrls))
 		for brokerNo, broker := range brokerUrls {
-			_, error := url.Parse(broker)
+			error := validateBrokerUrl(broker)
 			if error != nil {
 				return fmt.Errorf("BrokerUrl [%s] format invalid for reason: [%s]", broker, error.Error())
 			}
@@ -136,6 +136,21 @@ func initParms(a *KafkaPubActivity, context activity.Context) error {
 	a.syncProducer = syncProducer
 
 	flogoLogger.Debug("Kafkapub synchronous producer created")
+	return nil
+}
+
+//Ensure that this string meets the host:port definition of a kafka hostspec
+//Kafka calls it a url but its really just host:port, which for numeric ip addresses is not a valid URI
+//technically speaking.
+func validateBrokerUrl(broker string) error {
+	hostport := strings.Split(broker, ":")
+	if len(hostport) != 2 {
+		return fmt.Errorf("BrokerUrl must be composed of sections like \"host:port\"")
+	}
+	i, err := strconv.Atoi(hostport[1])
+	if err != nil || i < 0 || i > 32767 {
+		return fmt.Errorf("Port specification [%s] is not numeric and between 0 and 32767", hostport[1])
+	}
 	return nil
 }
 
