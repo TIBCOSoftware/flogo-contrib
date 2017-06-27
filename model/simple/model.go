@@ -167,7 +167,7 @@ func (tb *SimpleTaskBehavior) PostEval(context model.TaskContext, evalCode int, 
 }
 
 // Done implements model.TaskBehavior.Done
-func (tb *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (notifyParent bool, childDoneCode int, taskEntries []*model.TaskEntry) {
+func (tb *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (notifyParent bool, childDoneCode int, taskEntries []*model.TaskEntry, err error) {
 
 	task := context.Task()
 
@@ -192,7 +192,7 @@ func (tb *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (not
 			}
 
 			//continue on to successor tasks
-			return false, 0, taskEntries
+			return false, 0, taskEntries, nil
 		}
 	} else {
 		log.Debugf("done task: %s", task.Name())
@@ -216,7 +216,11 @@ func (tb *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (not
 
 				if linkInst.Link().Type() == definition.LtExpression {
 					//todo handle error
-					follow, _ = context.EvalLink(linkInst.Link())
+					follow, err = context.EvalLink(linkInst.Link())
+
+					if err != nil {
+						return false, 0, nil, err
+					}
 				}
 
 				if follow {
@@ -233,14 +237,14 @@ func (tb *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (not
 			}
 
 			//continue on to successor tasks
-			return false, 0, taskEntries
+			return false, 0, taskEntries, nil
 		}
 	}
 
 	log.Debug("notifying parent that task is done")
 
 	// there are no outgoing links, so just notify parent that we are done
-	return true, 0, nil
+	return true, 0, nil, nil
 }
 
 // Done implements model.TaskBehavior.Error

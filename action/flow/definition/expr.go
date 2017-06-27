@@ -9,6 +9,19 @@ type LinkExprManager interface {
 	EvalLinkExpr(link *Link, scope data.Scope) (bool, error)
 }
 
+func NewLinkExprError(msg string) *LinkExprError {
+	return &LinkExprError{msg:msg}
+}
+
+// LinkExprError thrown if error is encountered evaluating an link expression
+type LinkExprError struct {
+	 msg string
+}
+
+func (e *LinkExprError) Error() string {
+	return e.msg
+}
+
 type LinkExprManagerFactory interface {
 
 	NewLinkExprManager(def *Definition) LinkExprManager

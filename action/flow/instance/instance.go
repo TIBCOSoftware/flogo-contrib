@@ -16,7 +16,6 @@ import (
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/support"
 )
 
-
 const (
 	idEhTasEnv    = 0
 	idRootTaskEnv = 1
@@ -356,7 +355,13 @@ func (pi *Instance) evalTask(taskBehavior model.TaskBehavior, taskData *TaskData
 // handleTaskDone handles the completion of a task in the Flow Instance
 func (pi *Instance) handleTaskDone(taskBehavior model.TaskBehavior, taskData *TaskData, doneCode int) {
 
-	notifyParent, childDoneCode, taskEntries := taskBehavior.Done(taskData, doneCode)
+	notifyParent, childDoneCode, taskEntries, err := taskBehavior.Done(taskData, doneCode)
+
+	if err != nil {
+		pi.appendErrorData(err)
+		pi.HandleGlobalError()
+		return
+	}
 
 	task := taskData.Task()
 
@@ -406,15 +411,23 @@ func (pi *Instance) handleTaskDone(taskBehavior model.TaskBehavior, taskData *Ta
 	taskData.taskEnv.releaseTask(task)
 }
 
+func (pi *Instance) appendErrorData(err error) {
+
+	switch  err.(type) {
+	case *definition.LinkExprError:
+		pi.AddAttr("{Error.type}", data.STRING, "link_expr")
+		pi.AddAttr("{Error.message}", data.STRING, err.Error())
+	default:
+		pi.AddAttr("{Error.message}", data.STRING, err.Error())
+	}
+
+	//todo add case for *dataMapperError & *activity.Error
+}
 
 func (pi *Instance) appendMapperErrorData(err error) {
 
+	pi.AddAttr("{Error.type}", data.STRING, "mapper")
 	pi.AddAttr("{Error.message}", data.STRING, err.Error())
-
-	//if aerr, ok := err.(*data.MapperError); ok {
-	//	pi.AddAttr("{Error.data}", data.OBJECT, aerr.Data())
-	//	pi.AddAttr("{Error.code}", data.STRING, aerr.Code())
-	//}
 }
 
 func (pi *Instance) appendActivityErrorData(taskData *TaskData, err error) {
@@ -461,7 +474,6 @@ func (pi *Instance) handleTaskError(taskBehavior model.TaskBehavior, taskData *T
 	task := taskData.Task()
 	taskData.taskEnv.releaseTask(task)
 }
-
 
 // HandleGlobalError handles instance errors
 func (pi *Instance) HandleGlobalError() {
@@ -888,7 +900,6 @@ func (td *TaskData) EvalActivity() (done bool, evalErr error) {
 
 			// todo: useful for debugging
 			logger.Debugf("StackTrace: %s", debug.Stack())
-
 
 			if evalErr == nil {
 				evalErr = activity.NewError(fmt.Sprintf("%v", r), "", nil)

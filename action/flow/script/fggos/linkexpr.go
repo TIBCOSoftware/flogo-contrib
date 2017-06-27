@@ -13,7 +13,6 @@ import (
 	"fmt"
 )
 
-
 // GosLinkExprManager is the Lua Implementation of a Link Expression Manager
 type GosLinkExprManager struct {
 	values map[int][]*varInfo
@@ -26,7 +25,6 @@ type varInfo struct {
 }
 
 type GosLinkExprManagerFactory struct {
-
 }
 
 // NewGosLinkExprManager creates a new LuaLinkExprManager
@@ -94,12 +92,12 @@ func transExpr(s string) ([]*varInfo, string) {
 
 			if isdefcheck {
 				isd++
-				vars = append(vars, &varInfo{isd: isd, name: s[i+1 : j]})
+				vars = append(vars, &varInfo{isd: isd, name: s[i+1: j]})
 				rvars = append(rvars, s[i-10:j+1])
 				rvars = append(rvars, "isd"+strconv.Itoa(isd))
 				i = j + 1
 			} else {
-				vars = append(vars, &varInfo{name: s[i+1 : j]})
+				vars = append(vars, &varInfo{name: s[i+1: j]})
 				rvars = append(rvars, s[i:j])
 				rvars = append(rvars, `v["`+s[i+1:j]+`"]`)
 				i = j
@@ -130,7 +128,14 @@ func isPartOfName(char byte, ignoreBraces bool) (bool, bool) {
 }
 
 // EvalLinkExpr implements LinkExprManager.EvalLinkExpr
-func (em *GosLinkExprManager) EvalLinkExpr(link *definition.Link, scope data.Scope) (bool,error) {
+func (em *GosLinkExprManager) EvalLinkExpr(link *definition.Link, scope data.Scope) (ret bool, err error) {
+
+	defer func() {
+		if r := recover(); r != nil {
+			ret = false
+			err = definition.NewLinkExprError(fmt.Sprintf("Error evaluting expression: %s", r))
+		}
+	}()
 
 	if link.Type() == definition.LtDependency {
 		// dependency links are always true
@@ -210,12 +215,11 @@ func (em *GosLinkExprManager) EvalLinkExpr(link *definition.Link, scope data.Sco
 
 	val, err := expr.Eval(ctxt)
 
-	//todo handle error
 	if err != nil {
-		logger.Error(err)
+		return false, definition.NewLinkExprError(fmt.Sprintf("Error evaluting expression: %s", err.Error()))
 	}
 
-	return val.(bool),nil
+	return val.(bool), nil
 }
 
 // FixUpValue fixes json numbers
@@ -239,4 +243,3 @@ func FixUpValue(val interface{}) interface{} {
 
 	return ret
 }
-
