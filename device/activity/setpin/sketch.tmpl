@@ -1,0 +1,9 @@
+
+void ac_{{.Id}}_{{.Activity.Id}}_init() {
+  pinMode({{setting .Activity "pin"}}, OUTPUT);
+}
+
+void ac_{{.Id}}_{{.Activity.Id}}(int value) {
+  int val = {{if .UseTriggerVal}}value{{else}}{{setting .Activity "value"}}{{end}};
+  {{if settingb .Activity "digital"}}digitalWrite({{setting .Activity "pin"}}, val){{else}}analogWrite({{setting .Activity "pin"}}, val){{end}};
+}

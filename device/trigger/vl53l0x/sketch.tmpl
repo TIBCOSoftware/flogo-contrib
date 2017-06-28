@@ -1,0 +1,33 @@
+#include <Wire.h>
+#include "Adafruit_VL53L0X.h"
+
+Adafruit_VL53L0X lox = Adafruit_VL53L0X();
+
+bool t_{{.Id}}_lc = false;    // last condition value
+
+void t_{{.Id}}_init() {
+
+  bool status;
+
+  if (!lox.begin()) {
+    Serial.println(F("Failed to boot VL53L0X"));
+    while(1);
+  }
+}
+
+
+void t_{{.Id}}() {
+
+  VL53L0X_RangingMeasurementData_t measure;
+
+  int value = measure.RangeMilliMeter;
+
+  // create custom condition
+  bool condition = value {{setting . "condition"}};
+
+  if (condition && !t_{{.Id}}_lc) {
+    a_{{.ActionId}}(value);
+  }
+
+  t_{{.Id}}_lc = condition;
+}

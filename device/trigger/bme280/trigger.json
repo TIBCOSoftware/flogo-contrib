@@ -10,6 +10,11 @@
       "name":"Adafruit BME280 Library",
       "type":"platformio",
       "ref":" 166"
+    },
+    {
+      "name":"Adafruit Unified Sensor",
+      "type":"platformio",
+      "ref":" 31"
     }
   ],
   "settings":[

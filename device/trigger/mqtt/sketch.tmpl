@@ -1,0 +1,19 @@
+
+void t_{{.Id}}_init() {
+  client.subscribe("{{setting . "topic"}}");
+}
+
+void t_{{.Id}}(char *topic, byte *payload, unsigned int length) {
+
+	char buf[8];
+	int i=0;
+
+	for(i=0; i<length; i++) {
+		buf[i] = payload[i];
+	}
+	buf[i] = '\0';
+
+	int value = atoi(buf);
+
+	a_{{.ActionId}}(value);
+}

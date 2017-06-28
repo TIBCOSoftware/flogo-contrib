@@ -1,0 +1,33 @@
+#include <Wire.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BME280.h>
+
+const int Bme280_cs_pin__i = 5;
+Adafruit_BME280 bme(Bme280_cs_pin__i);
+
+unsigned long t_{{.Id}}_lt = 0; // lastTrigger
+
+void t_{{.Id}}_init() {
+
+    bool status;
+
+    status = bme.begin();
+    if (!status) {
+        Serial.println("Could not find a valid BME280 sensor, check wiring!");
+        while (1);
+    }
+}
+
+void t_{{.Id}}() {
+
+    int value = bme.readTemperature();
+
+    // create custom condition
+    bool condition = value {{setting . "condition"}};
+
+    if (condition && !t_{{.Id}}_lc) {
+      a_{{.ActionId}}(value);
+    }
+
+    t_{{.Id}}_lc = condition;
+}
