@@ -1,11 +1,10 @@
 package test
 
 import (
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 )
-
 
 func init() {
 	model.Register(NewTestModel())
@@ -130,7 +129,7 @@ func (b *SimpleTaskBehavior) PostEval(context model.TaskContext, evalCode int, d
 	return true, 0, nil
 }
 
-func (b *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (notifyParent bool, childDoneCode int, taskEntries []*model.TaskEntry) {
+func (b *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (notifyParent bool, childDoneCode int, taskEntries []*model.TaskEntry, err error) {
 
 	context.SetState(STATE_DONE)
 	//context.SetTaskDone() for task garbage collection
@@ -158,17 +157,21 @@ func (b *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (noti
 		}
 
 		//continue on to successor links
-		return false, 0, taskEntries
+		return false, 0, taskEntries, nil
 	}
 
 	//notify parent that we are done
-	return true, 0, nil
+	return true, 0, nil, nil
 }
 
 func (b *SimpleTaskBehavior) ChildDone(context model.TaskContext, childTask *definition.Task, childDoneCode int) (done bool, doneCode int) {
 	logger.Debugf("Task ChildDone\n")
 
 	return true, 0
+}
+
+func (b *SimpleTaskBehavior) Error(context model.TaskContext) (handled bool, taskEntry *model.TaskEntry) {
+	return false, nil
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
