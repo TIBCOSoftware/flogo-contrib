@@ -248,19 +248,12 @@ func newActionHandler(rt *CoapTrigger, resource *CoapResource) coap.Handler {
 
 		log.Debugf("Ran Action: %s", actionId)
 
-		//var payload []byte
-
-		//if endpointCfg.autoIdReply {
-		//	payload = []byte(id)
-		//}
-
 		if msg.IsConfirmable() {
 			res := &coap.Message{
 				Type:      coap.Acknowledgement,
 				Code:      0,
 				MessageID: msg.MessageID,
-				//Token:     msg.Token,
-				//Payload:   payload,
+				Token:     msg.Token,
 			}
 			//res.SetOption(coap.ContentFormat, coap.TextPlain)
 
