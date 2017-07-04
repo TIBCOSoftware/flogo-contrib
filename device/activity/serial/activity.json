@@ -1,0 +1,14 @@
+{
+  "name": "tibco-device-serial",
+  "type": "flogo:device:activity",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/device/activity/serial",
+  "version": "0.0.1",
+  "title": "Serial Output",
+  "description": "Serial Output Activity",
+  "settings":[
+    {
+      "name": "message",
+      "type": "string"
+    }
+  ]
+}
