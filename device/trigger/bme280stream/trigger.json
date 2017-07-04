@@ -9,7 +9,7 @@
     {
       "name":"Adafruit BME280 Library",
       "type":"platformio",
-      "ref":" 166"
+      "ref":"166"
     }
   ],
   "settings":[
