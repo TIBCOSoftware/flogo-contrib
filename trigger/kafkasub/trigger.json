@@ -1,7 +1,7 @@
 {
   "name": "tibco-kafkasub",
   "type": "flogo:trigger",
-  "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/kafkasub",
+  "ref": "github.com/wnichols/flogo-contrib/trigger/kafkasub",
   "version": "0.0.1",
   "title": "Receive Kafka Messages",
   "author": "Wendell Nichols <wnichols@tibco.com>",
@@ -9,6 +9,18 @@
  "settings":[
     {
       "name": "BrokerUrl",
+      "type": "string"
+    },
+    {
+      "name": "user",
+      "type": "string"
+    },
+    {
+      "name": "password",
+      "type": "string"
+    },
+    {
+      "name": "truststore",
       "type": "string"
     }
   ],
@@ -22,31 +34,23 @@
     "settings": [
       {
         "name": "Topic",
-        "type": "string"
+        "type": "string",
+        "required":"true"
       },
       {
         "name": "partitions",
-        "type": "string"
+        "type": "string",
+        "required": "false"
       },
       {
         "name": "group",
-        "type": "string"
+        "type": "string",
+        "required":"false"
       },
       {
         "name": "offset",
-        "type": "int"
-      },
-      {
-        "name": "user",
-        "type": "string"
-      },
-      {
-        "name": "password",
-        "type": "string"
-      },
-      {
-        "name": "truststore",
-        "type": "string"
+        "type": "int",
+        "required":"false"
       }
     ]
   }
