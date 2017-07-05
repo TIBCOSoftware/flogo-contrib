@@ -50,13 +50,59 @@ func getJsonMetadata() string {
 const testConfig string = `{
   "name": "tibco-kafkasub",
   "settings": {
-    "BrokerUrl": "192.168.10.69:9092"
+    "BrokerUrl": "cheetah:9092"
   },
   "handlers": [
     {
       "actionId": "kafka_message",
       "settings": {
         "Topic": "syslog"
+      }
+    }
+  ],
+	"outputs": [
+    {
+      "name": "message",
+      "type": "string"
+    }
+  ]
+}`
+
+const testConfigMulti string = `{
+  "name": "tibco-kafkasub",
+  "settings": {
+    "BrokerUrl": "cheetah:9092"
+  },
+  "handlers": [
+    {
+      "actionId": "kafka_message_topic1",
+      "settings": {
+        "Topic": "syslog",
+				"partitions":"0"
+      }
+    },
+		{
+			"actionId": "kafka_message_topic2",
+      "settings": {
+        "Topic": "topic1",
+				"group":"wcn"
+      }
+    },    
+		{
+      "actionId": "kafka_message_topic3",
+      "settings": {
+        "Topic": "topic3",
+				"user":"wcn00",
+				"password":"sauron"
+      }
+    },    
+		{
+      "actionId": "kafka_message_topic3",
+      "settings": {
+        "Topic": "topic3",
+				"group": "wcngroup",
+				"user":"wcn00",
+				"password":"sauron"
       }
     }
   ],
@@ -143,15 +189,22 @@ func TestEndpoint(t *testing.T) {
 func TestMultiBrokers(t *testing.T) {
 	config := trigger.Config{}
 	json.Unmarshal([]byte(testConfig), &config)
-	config.Settings["BrokerUrl"] = "bilbo:9092,bilbo:9092,bilbo:9092"
+	config.Settings["BrokerUrl"] = "cheetah:9092,cheetah:9092,cheetah:9092"
 	runTest(&config, true, "TestMultiBrokers", false)
+}
+
+func TestMultiHandlers(t *testing.T) {
+	config := trigger.Config{}
+	json.Unmarshal([]byte(testConfigMulti), &config)
+	config.Settings["BrokerUrl"] = "cheetah:9092,cheetah:9092,cheetah:9092"
+	runTest(&config, true, "TestMultiHandlers", false)
 }
 
 func TestTLS(t *testing.T) {
 	config := trigger.Config{}
 	json.Unmarshal([]byte(testConfig), &config)
-	config.Handlers[0].Settings["truststore"] = "/opt/kafka/kafka_2.11-0.10.2.0/keys/trust"
-	config.Settings["BrokerUrl"] = "bilbo:9093"
+	config.Handlers[0].Settings["truststore"] = "/opt/kafka/kafka_2.11-0.10.2.0/keys_cheetah"
+	config.Settings["BrokerUrl"] = "cheetah:9093"
 	runTest(&config, true, "TestTLS", false)
 }
 
@@ -160,24 +213,24 @@ func TestSASL(t *testing.T) {
 	json.Unmarshal([]byte(testConfig), &config)
 	config.Handlers[0].Settings["user"] = "wcn00"
 	config.Handlers[0].Settings["password"] = "sauron"
-	config.Settings["BrokerUrl"] = "bilbo.wcn.org:9094"
+	config.Settings["BrokerUrl"] = "cheetah.wcn.org:9094"
 	runTest(&config, true, "TestSASL", false)
 }
 
 func TestSASL_TLS(t *testing.T) {
 	config := trigger.Config{}
 	json.Unmarshal([]byte(testConfig), &config)
-	config.Handlers[0].Settings["truststore"] = "/opt/kafka/kafka_2.11-0.10.2.0/keys/trust"
+	config.Handlers[0].Settings["truststore"] = "/opt/kafka/kafka_2.11-0.10.2.0/keys_cheetah"
 	config.Handlers[0].Settings["user"] = "wcn00"
 	config.Handlers[0].Settings["password"] = "sauron"
-	config.Settings["BrokerUrl"] = "bilbo:9095"
+	config.Settings["BrokerUrl"] = "cheetah:9095"
 	runTest(&config, true, "TestSASL_TLS", false)
 }
 
 func TestNumericIpaddr(t *testing.T) {
 	config := trigger.Config{}
 	json.Unmarshal([]byte(testConfig), &config)
-	config.Settings["BrokerUrl"] = "192.168.10.69:9092"
+	config.Settings["BrokerUrl"] = "10.101.5.72:9092"
 	runTest(&config, true, "TestNumericIpaddr", false)
 }
 func TestFailingEndpoint(t *testing.T) {

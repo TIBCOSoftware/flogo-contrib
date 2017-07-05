@@ -6,7 +6,7 @@
   "title": "Receive Kafka Messages",
   "author": "Wendell Nichols <wnichols@tibco.com>",
   "description": "Simple Kafka Trigger",
- "settings":[
+  "settings":[
     {
       "name": "BrokerUrl",
       "type": "string"

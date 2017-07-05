@@ -25,12 +25,16 @@ import (
 // log is the default package logger
 var flogoLogger = logger.GetLogger("trigger-tibco-kafkasub")
 
-type _kafkaParms struct {
-	brokers    []string
+type _topichandler struct {
 	topic      string
 	offset     int64
 	group      string
 	partitions []int32
+}
+
+type _kafkaParms struct {
+	brokers  []string
+	handlers []_topichandler
 }
 
 // MqttTrigger is simple MQTT trigger
@@ -43,7 +47,7 @@ type KafkaSubTrigger struct {
 	signals            *chan os.Signal
 	kafkaConfig        *sarama.Config
 	kafkaConsumer      *sarama.Consumer
-	partitionConsumers *map[int32]sarama.PartitionConsumer
+	partitionConsumers *map[string]sarama.PartitionConsumer
 }
 
 //NewFactory create a new Trigger factory
@@ -86,7 +90,7 @@ func (t *KafkaSubTrigger) Start() error {
 	signals := make(chan os.Signal, 1)
 	t.signals = &signals
 	signal.Notify(*t.signals, os.Interrupt)
-	go run(t)
+	run(t)
 	flogoLogger.Debug("KafkaSubTrigger Started")
 	return nil
 }
@@ -94,13 +98,11 @@ func (t *KafkaSubTrigger) Start() error {
 // Stop implements ext.Trigger.Stop
 func (t *KafkaSubTrigger) Stop() error {
 	//unsubscribe from topic
-	flogoLogger.Debugf("Unsubcribing from topic [%s]", t.kafkaParms.topic)
 	if t.partitionConsumers == nil {
 		flogoLogger.Debug("Closed called for a subscriber with no running consumers")
 		flogoLogger.Debug("Stopped")
 		return nil
 	}
-
 	for id, partitionConsumer := range *t.partitionConsumers {
 		partitionConsumer.Close()
 		flogoLogger.Debug("Closed partition consumer:", id)
@@ -119,49 +121,53 @@ func run(t *KafkaSubTrigger) {
 		panic(fmt.Errorf("Failed to create Kafka consumer for reason [%s]", error))
 	}
 	t.kafkaConsumer = &kafkaConsumer
-	thing := make(map[int32]sarama.PartitionConsumer)
-	t.partitionConsumers = &thing
-	flogoLogger.Debugf("Subscribing to topic [%s]", t.kafkaParms.topic)
-	validPartitions, error := kafkaConsumer.Partitions(t.kafkaParms.topic)
-	if error != nil {
-		panic(fmt.Errorf("Failed to get valid partitions from Kafka Consumer for reason [%s].  Aborting subscriber", error))
-	}
-
-	flogoLogger.Debugf("Valid partitions for topic [%s] detected as: [%v]", t.kafkaParms.topic, validPartitions)
-	if t.kafkaParms.partitions == nil { //subscribe to all valid partitions
-		t.kafkaParms.partitions = validPartitions
-		for _, part := range validPartitions {
-			startConsumer(t, part)
+	consumers := make(map[string]sarama.PartitionConsumer)
+	t.partitionConsumers = &consumers
+	for id, handler := range t.kafkaParms.handlers {
+		validPartitions, error := kafkaConsumer.Partitions(handler.topic)
+		if error != nil {
+			panic(fmt.Errorf("Failed to get valid partitions for topic [%s] for reason [%s].  Aborting subscriber",
+				error))
 		}
-	} else { //subscribe to a subset of valid partitions
-		configPartitions := t.kafkaParms.partitions
-		for _, confPart := range configPartitions {
-			for _, valPart := range validPartitions {
-				if confPart == valPart {
-					startConsumer(t, confPart)
-					break
+		flogoLogger.Debugf("Subscribing to topic [%s]", handler.topic)
+
+		flogoLogger.Debugf("Valid partitions for topic [%s] detected as: [%v]", handler.topic, validPartitions)
+		if handler.partitions == nil { //subscribe to all valid partitions
+			handler.partitions = validPartitions
+			for _, part := range validPartitions {
+				startConsumer(t, part, id)
+			}
+		} else { //subscribe to a subset of valid partitions
+			configPartitions := handler.partitions
+			for _, confPart := range configPartitions {
+				for _, valPart := range validPartitions {
+					if confPart == valPart {
+						startConsumer(t, confPart, id)
+						break
+					}
+					flogoLogger.Errorf("Configured partition [%d] on topic [%s] does not exist and will not be subscribed", confPart, handler.topic)
 				}
 			}
-			flogoLogger.Errorf("Configured partition [%d] on topic [%s] does not exist", confPart, t.kafkaParms.topic)
 		}
-	}
-	if len(*t.partitionConsumers) < 1 {
-		panic(fmt.Errorf("Kafka consumer is not configured for any valid partitions"))
-	} else {
-		flogoLogger.Debugf("Kafka consumers for topic [%s] started", t.kafkaParms.topic)
+		if len(*t.partitionConsumers) < 1 {
+			panic(fmt.Errorf("Kafka consumer is not configured for any valid partitions"))
+		} else {
+			flogoLogger.Debugf("Kafka consumers for topic [%s] started", handler.topic)
+		}
 	}
 	return
 }
 
-func startConsumer(t *KafkaSubTrigger, part int32) error {
-	flogoLogger.Debugf("Creating PartitionConsumer for valid partition: [%s:%d]", t.kafkaParms.topic, part)
+func startConsumer(t *KafkaSubTrigger, part int32, id int) error {
+	flogoLogger.Debugf("Creating PartitionConsumer for valid partition: [%s:%d]", t.kafkaParms.handlers[id].topic, part)
 	consumer := *t.kafkaConsumer
-	partitionConsumer, error := consumer.ConsumePartition(t.kafkaParms.topic, part, t.kafkaParms.offset)
+	partitionConsumer, error := consumer.ConsumePartition(t.kafkaParms.handlers[id].topic, part, t.kafkaParms.handlers[id].offset)
 	if error != nil {
-		flogoLogger.Errorf("Creating PartitionConsumer for valid partition: [%s:%d] failed for reason: %s", t.kafkaParms.topic, part, error)
+		flogoLogger.Errorf("Creating PartitionConsumer for valid partition: [%s:%d] failed for reason: %s", t.kafkaParms.handlers[id].topic, part, error)
 		return error
 	}
-	(*t.partitionConsumers)[part] = partitionConsumer
+	consumerName := fmt.Sprintf("%d_%d", part, id)
+	(*t.partitionConsumers)[consumerName] = partitionConsumer
 	go consumePartition(t, partitionConsumer, part)
 	return nil
 }
@@ -210,111 +216,90 @@ func initKafkaParms(t *KafkaSubTrigger) error {
 		}
 		t.kafkaParms.brokers[brokerNo] = broker
 	}
+	//clientKeystore
+	/*
+		Its worth mentioning here that when the keystore for kafka is created it must support RSA keys via
+		the -keyalg RSA option.  If not then there will be ZERO overlap in supported cipher suites with java.
+		see:   https://issues.apache.org/jira/browse/KAFKA-3647
+		for more info
+	*/
+	if t.config.Settings["truststore"] != nil {
+		trustStore := t.config.Settings["truststore"]
+		if trustStore != nil && len(trustStore.(string)) > 0 {
+			trustPool, err := getCerts(trustStore.(string))
+			if err != nil {
+				return err
+			}
+			config := tls.Config{
+				RootCAs:            trustPool,
+				InsecureSkipVerify: true}
+			t.kafkaConfig.Net.TLS.Enable = true
+			t.kafkaConfig.Net.TLS.Config = &config
+		}
+	}
+	// SASL
+	if t.config.Settings["user"] != nil {
+		var password string
+		user := t.config.Settings["user"].(string)
+		if len(user) > 0 {
+			if t.config.Settings["password"] == nil ||
+				len(t.config.Settings["password"].(string)) < 1 {
+				return fmt.Errorf("Password not provided for user: %s", user)
+			}
+			password = t.config.Settings["password"].(string)
+			t.kafkaConfig.Net.SASL.Enable = true
+			t.kafkaConfig.Net.SASL.User = user
+			t.kafkaConfig.Net.SASL.Password = password
+		}
+	}
+
+	// _topichandlers section
 	if t.config.Handlers == nil || len(t.config.Handlers) < 1 {
 		return fmt.Errorf("Kafka trigger requires at least one handler containing a valid topic name")
 	}
-	for _, handler := range t.config.Handlers {
-		if handler.Settings["Topic"] == nil {
-			return fmt.Errorf("Topic string was not provided")
+	t.kafkaParms.handlers = make([]_topichandler, len(t.config.Handlers))
+	for handlernum, handler := range t.config.Handlers {
+		if handler.Settings["Topic"] == nil || len(handler.Settings["Topic"].(string)) < 1 {
+			return fmt.Errorf("Topic string was not provided for actionId: [%s]", handler.ActionId)
 		}
-		t.kafkaParms.topic = handler.Settings["Topic"].(string)
+		t.kafkaParms.handlers[handlernum].topic = handler.Settings["Topic"].(string)
 
 		//offset
-		if handler.Settings["offset"] != nil {
+		if handler.Settings["offset"] != nil && len(handler.Settings["offset"].(string)) > 0 {
 			i, error := strconv.Atoi(handler.Settings["offset"].(string))
 			if error != nil {
-				t.kafkaParms.offset = sarama.OffsetNewest
+				flogoLogger.Warnf("Offset [%s] specified for actionId [%s] is not a valid number, using latest for offset",
+					handler.Settings["offset"].(string), handler.ActionId)
+				t.kafkaParms.handlers[handlernum].offset = sarama.OffsetNewest
 			} else {
-				t.kafkaParms.offset = int64(i)
+				t.kafkaParms.handlers[handlernum].offset = int64(i)
 			}
 		} else {
-			t.kafkaParms.offset = sarama.OffsetNewest
+			t.kafkaParms.handlers[handlernum].offset = sarama.OffsetNewest
 		}
 		//partitions
-		if handler.Settings["partitions"] != nil {
+		if handler.Settings["partitions"] != nil && len(handler.Settings["partitions"].(string)) > 0 {
 			partitions := handler.Settings["partitions"].(string)
-			if partitions == "" {
-				t.kafkaParms.partitions = nil
-			} else {
-				i := 0
-				parts := strings.Split(partitions, ",")
-				t.kafkaParms.partitions = make([]int32, len(parts))
-				for _, p := range parts {
-					n, error := strconv.Atoi(p)
-					if error == nil {
-						t.kafkaParms.partitions[i] = int32(n)
-						i++
-					} else {
-						flogoLogger.Warn("Discarding non-numeric partition [%s]", p)
-					}
+			i := 0
+			parts := strings.Split(partitions, ",")
+			t.kafkaParms.handlers[handlernum].partitions = make([]int32, len(parts))
+			for _, p := range parts {
+				n, error := strconv.Atoi(p)
+				if error == nil {
+					t.kafkaParms.handlers[handlernum].partitions[i] = int32(n)
+					i++
+				} else {
+					flogoLogger.Warnf("Partition [%s] specified for actionId [%s] is not a valid number and is discarded",
+						p, handler.ActionId)
 				}
 			}
 		} else {
-			t.kafkaParms.partitions = nil
+			t.kafkaParms.handlers[handlernum].partitions = nil
 		}
-
 		//group
-		if handler.Settings["group"] != nil {
-			group := handler.Settings["group"].(string)
-			if len(group) > 0 {
-				t.kafkaParms.group = group
-			}
-		} else {
-			t.kafkaParms.group = ""
+		if handler.Settings["group"] != nil && len(handler.Settings["group"].(string)) > 0 {
+			t.kafkaParms.handlers[handlernum].group = handler.Settings["group"].(string)
 		}
-		//user
-		if handler.Settings["user"] != nil {
-			user := handler.Settings["user"].(string)
-			if len(user) > 0 {
-				t.kafkaConfig.Net.SASL.Enable = true
-				t.kafkaConfig.Net.SASL.User = user
-			}
-		}
-		//password
-		if handler.Settings["password"] != nil {
-			password := handler.Settings["password"].(string)
-			if len(password) > 0 {
-				t.kafkaConfig.Net.SASL.Password = password
-			}
-		}
-		//clientKeystore
-		/*
-			Its worth mentioning here that when the keystore for kafka is created it must support RSA keys via
-			the -keyalg RSA option.  If not then there will be ZERO overlap in supported cipher suites with java.
-			see:   https://issues.apache.org/jira/browse/KAFKA-3647
-			for more info
-		*/
-		if handler.Settings["truststore"] != nil {
-			trustStore := handler.Settings["truststore"]
-			if trustStore != nil && len(trustStore.(string)) > 0 {
-				trustPool, err := getCerts(trustStore.(string))
-				if err != nil {
-					return err
-				}
-				config := tls.Config{
-					RootCAs:            trustPool,
-					InsecureSkipVerify: true}
-				t.kafkaConfig.Net.TLS.Enable = true
-				t.kafkaConfig.Net.TLS.Config = &config
-			}
-		}
-		// SASL
-		if handler.Settings["user"] != nil {
-			var password string
-			user := handler.Settings["user"]
-			if user != nil {
-				if handler.Settings["password"] == nil {
-					//TODO  Can't read password from shell reliably on different systems
-					//      need a secure way of getting it...
-					return fmt.Errorf("Password not provided")
-				}
-				password = handler.Settings["password"].(string)
-				t.kafkaConfig.Net.SASL.Enable = true
-				t.kafkaConfig.Net.SASL.User = user.(string)
-				t.kafkaConfig.Net.SASL.Password = password
-			}
-		}
-		return nil
 	}
 	return nil
 }
