@@ -6,7 +6,20 @@ import "github.com/TIBCOSoftware/flogo-lib/core/data"
 type LinkExprManager interface {
 
 	// EvalLinkExpr evaluate the link expression
-	EvalLinkExpr(link *Link, scope data.Scope) bool
+	EvalLinkExpr(link *Link, scope data.Scope) (bool, error)
+}
+
+func NewLinkExprError(msg string) *LinkExprError {
+	return &LinkExprError{msg:msg}
+}
+
+// LinkExprError thrown if error is encountered evaluating an link expression
+type LinkExprError struct {
+	 msg string
+}
+
+func (e *LinkExprError) Error() string {
+	return e.msg
 }
 
 type LinkExprManagerFactory interface {

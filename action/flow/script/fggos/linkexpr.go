@@ -10,8 +10,8 @@ import (
 	"github.com/japm/goScript"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
+	"fmt"
 )
-
 
 // GosLinkExprManager is the Lua Implementation of a Link Expression Manager
 type GosLinkExprManager struct {
@@ -25,7 +25,6 @@ type varInfo struct {
 }
 
 type GosLinkExprManagerFactory struct {
-
 }
 
 // NewGosLinkExprManager creates a new LuaLinkExprManager
@@ -93,12 +92,12 @@ func transExpr(s string) ([]*varInfo, string) {
 
 			if isdefcheck {
 				isd++
-				vars = append(vars, &varInfo{isd: isd, name: s[i+1 : j]})
+				vars = append(vars, &varInfo{isd: isd, name: s[i+1: j]})
 				rvars = append(rvars, s[i-10:j+1])
 				rvars = append(rvars, "isd"+strconv.Itoa(isd))
 				i = j + 1
 			} else {
-				vars = append(vars, &varInfo{name: s[i+1 : j]})
+				vars = append(vars, &varInfo{name: s[i+1: j]})
 				rvars = append(rvars, s[i:j])
 				rvars = append(rvars, `v["`+s[i+1:j]+`"]`)
 				i = j
@@ -129,11 +128,18 @@ func isPartOfName(char byte, ignoreBraces bool) (bool, bool) {
 }
 
 // EvalLinkExpr implements LinkExprManager.EvalLinkExpr
-func (em *GosLinkExprManager) EvalLinkExpr(link *definition.Link, scope data.Scope) bool {
+func (em *GosLinkExprManager) EvalLinkExpr(link *definition.Link, scope data.Scope) (ret bool, err error) {
+
+	defer func() {
+		if r := recover(); r != nil {
+			ret = false
+			err = definition.NewLinkExprError(fmt.Sprintf("Error evaluting expression: %s", r))
+		}
+	}()
 
 	if link.Type() == definition.LtDependency {
 		// dependency links are always true
-		return true
+		return true, nil
 	}
 
 	vars, attrsOK := em.values[link.ID()]
@@ -141,8 +147,7 @@ func (em *GosLinkExprManager) EvalLinkExpr(link *definition.Link, scope data.Sco
 
 	if !attrsOK || !exprOK {
 
-		logger.Warnf("Unable to evaluate expression '%s', did not compile properly\n", link.Value())
-		return false
+		return false, fmt.Errorf("Unable to evaluate expression '%s', did not compile properly\n", link.Value())
 	}
 
 	ctxt := make(map[string]interface{})
@@ -210,12 +215,11 @@ func (em *GosLinkExprManager) EvalLinkExpr(link *definition.Link, scope data.Sco
 
 	val, err := expr.Eval(ctxt)
 
-	//todo handle error
 	if err != nil {
-		logger.Error(err)
+		return false, definition.NewLinkExprError(fmt.Sprintf("Error evaluting expression: %s", err.Error()))
 	}
 
-	return val.(bool)
+	return val.(bool), nil
 }
 
 // FixUpValue fixes json numbers
@@ -239,4 +243,3 @@ func FixUpValue(val interface{}) interface{} {
 
 	return ret
 }
-

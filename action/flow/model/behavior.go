@@ -57,7 +57,11 @@ type TaskBehavior interface {
 	// determine the next set of tasks to be entered.  Returning true indicates
 	// that the parent task should be notified.  Also returns the set of Tasks
 	// that should be entered next.
-	Done(context TaskContext, doneCode int) (notifyParent bool, childDoneCode int, taskEntries []*TaskEntry)
+	Done(context TaskContext, doneCode int) (notifyParent bool, childDoneCode int, taskEntries []*TaskEntry, err error)
+
+	// Error is called when there is an issue executing Eval, it returns a boolean indicating
+	// if it handled the error, otherwise the error is handled by the global error handler
+	Error(context TaskContext) (handled bool, taskEntry *TaskEntry)
 
 	// ChildDone is called when child task is Done and has indicated that its
 	// parent should be notified.  Returning true indicates that the task

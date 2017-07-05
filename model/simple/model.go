@@ -136,12 +136,9 @@ func (tb *SimpleTaskBehavior) Eval(context model.TaskContext, evalCode int) (don
 
 			done, err := context.EvalActivity()
 
-			// todo handle error transition
 			if err != nil {
 				log.Errorf("Error evaluating activity '%s'[%s] - %s", context.Task().Name(), context.Task().ActivityType(), err.Error())
 				context.SetState(STATE_FAILED)
-
-				//we don't have an error transition, so we'll return it so the global error handler can deal with it
 				return false, 0, err
 			}
 
@@ -170,7 +167,7 @@ func (tb *SimpleTaskBehavior) PostEval(context model.TaskContext, evalCode int, 
 }
 
 // Done implements model.TaskBehavior.Done
-func (tb *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (notifyParent bool, childDoneCode int, taskEntries []*model.TaskEntry) {
+func (tb *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (notifyParent bool, childDoneCode int, taskEntries []*model.TaskEntry, err error) {
 
 	task := context.Task()
 
@@ -195,7 +192,7 @@ func (tb *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (not
 			}
 
 			//continue on to successor tasks
-			return false, 0, taskEntries
+			return false, 0, taskEntries, nil
 		}
 	} else {
 		log.Debugf("done task: %s", task.Name())
@@ -212,9 +209,18 @@ func (tb *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (not
 
 				follow := true
 
+				if linkInst.Link().Type() == definition.LtError {
+					//todo should we skip or ignore?
+					continue
+				}
+
 				if linkInst.Link().Type() == definition.LtExpression {
 					//todo handle error
-					follow, _ = context.EvalLink(linkInst.Link())
+					follow, err = context.EvalLink(linkInst.Link())
+
+					if err != nil {
+						return false, 0, nil, err
+					}
 				}
 
 				if follow {
@@ -231,14 +237,37 @@ func (tb *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (not
 			}
 
 			//continue on to successor tasks
-			return false, 0, taskEntries
+			return false, 0, taskEntries, nil
 		}
 	}
 
 	log.Debug("notifying parent that task is done")
 
 	// there are no outgoing links, so just notify parent that we are done
-	return true, 0, nil
+	return true, 0, nil, nil
+}
+
+// Done implements model.TaskBehavior.Error
+func (tb *SimpleTaskBehavior) Error(context model.TaskContext) (handled bool, taskEntry *model.TaskEntry) {
+
+	linkInsts := context.ToInstLinks()
+	numLinks := len(linkInsts)
+
+	// process outgoing links
+	if numLinks > 0 {
+
+		for _, linkInst := range linkInsts {
+
+			if linkInst.Link().Type() == definition.LtError {
+				linkInst.SetState(STATE_LINK_TRUE)
+				taskEntry := &model.TaskEntry{Task: linkInst.Link().ToTask(), EnterCode: 0}
+				return true, taskEntry
+			}
+		}
+	}
+
+	// there are no outgoing error links, so just return false
+	return false, nil
 }
 
 // ChildDone implements model.TaskBehavior.ChildDone

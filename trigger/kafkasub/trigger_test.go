@@ -20,6 +20,7 @@ ssl.enabled.protocols=TLSv1.2,TLSv1.1,TLSv1
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os/signal"
 	"syscall"
 	"testing"
@@ -49,7 +50,7 @@ func getJsonMetadata() string {
 const testConfig string = `{
   "name": "tibco-kafkasub",
   "settings": {
-    "BrokerUrl": "bilbo:9092"
+    "BrokerUrl": "192.168.10.69:9092"
   },
   "handlers": [
     {
@@ -86,150 +87,108 @@ func consoleHandler() {
 		os.Exit(1)
 	}()
 }
+
+func runTest(config *trigger.Config, expectSucceed bool, testName string, configOnly bool) error {
+	log.Printf("Test %s starting\n", testName)
+	defer func() error {
+		if r := recover(); r != nil {
+			if expectSucceed {
+				log.Println("Test %s was expected to succeed but did not because: ", testName, r)
+				return fmt.Errorf("%s", r)
+			}
+		}
+		return nil
+	}()
+	f := &KafkasubFactory{}
+	tgr := f.New(config)
+	log.Printf("\t%s trigger created\n", testName)
+	runner := &TestRunner{}
+	tgr.Init(runner)
+	log.Printf("\t%s trigger initialized \n", testName)
+	if configOnly {
+		log.Printf("Test %s complete\n", testName)
+		return nil
+	}
+	defer tgr.Stop()
+	tgr.Start()
+	log.Printf("\t%s listening for messages for %d seconds\n", testName, listentime)
+	time.Sleep(time.Second * listentime)
+	log.Printf("Test %s complete\n", testName)
+	return nil
+}
 func TestInit(t *testing.T) {
 	consoleHandler()
-	f := &KafkasubFactory{}
 	config := trigger.Config{}
 	error := json.Unmarshal([]byte(testConfig), &config)
 	if error != nil {
 		log.Printf("Failed to unmarshal the config args:%s", error)
 		t.Fail()
 	}
-	tgr := f.New(&config)
-	log.Printf("TestInit: Successfully created the trigger object")
-	runner := &TestRunner{}
-	tgr.Init(runner)
-	log.Printf("TestInit: Successfully initialized the trigger object")
+	runTest(&config, true, "TestInit", true)
+	config.Settings["BrokerUrl"] = "192.168.10.1:9092,127.0.0.1:9092,a.b.c.c:9093,a.123.z-fr.c:9096"
+	runTest(&config, true, "TestInit", true)
+
 }
 
 func TestEndpoint(t *testing.T) {
-	f := &KafkasubFactory{}
 	config := trigger.Config{}
-	json.Unmarshal([]byte(testConfig), &config)
-	tgr := f.New(&config)
-	runner := &TestRunner{}
-	tgr.Init(runner)
-	tgr.Start()
-	log.Printf("TestEndpoint: Successfully started the trigger on a non-authenticated plain text port.  It will consume and print messages for %d seconds", listentime)
-
-	time.Sleep(time.Second * listentime)
-	tgr.Stop()
-	log.Printf("TestEndpoint: Successfully stopped the trigger.")
-	time.Sleep(time.Second * 2)
+	error := json.Unmarshal([]byte(testConfig), &config)
+	if error != nil {
+		log.Printf("Failed to unmarshal the config args:%s", error)
+		t.Fail()
+	}
+	runTest(&config, true, "TestEndPoint", false)
 }
 
 func TestMultiBrokers(t *testing.T) {
-	f := &KafkasubFactory{}
 	config := trigger.Config{}
 	json.Unmarshal([]byte(testConfig), &config)
-	config.Settings["BrokerUrl"] = "bilbo:9092,bilbo:9092"
-	tgr := f.New(&config)
-	runner := &TestRunner{}
-	tgr.Init(runner)
-	tgr.Start()
-	log.Printf("TestEndpoint: Successfully started the trigger on a non-authenticated plain text port.  It will consume and print messages for %d seconds", listentime)
-
-	time.Sleep(time.Second * listentime)
-	tgr.Stop()
-	log.Printf("TestEndpoint: Successfully stopped the trigger.")
-	time.Sleep(time.Second * 2)
-}
-
-func TestFailingEndpoint(t *testing.T) {
-	f := &KafkasubFactory{}
-	config := trigger.Config{}
-	json.Unmarshal([]byte(testConfig), &config)
-	config.Handlers[0].Settings["partitions"] = "21,31"
-	tgr := f.New(&config)
-	runner := &TestRunner{}
-	tgr.Init(runner)
-	log.Printf("TestFailingEndpoint: Should detect that none of the specified partitions exist and shutdown.")
-	tgr.Start()
-	defer tgr.Stop()
-	time.Sleep(time.Second * 2)
+	config.Settings["BrokerUrl"] = "bilbo:9092,bilbo:9092,bilbo:9092"
+	runTest(&config, true, "TestMultiBrokers", false)
 }
 
 func TestTLS(t *testing.T) {
-	f := &KafkasubFactory{}
 	config := trigger.Config{}
 	json.Unmarshal([]byte(testConfig), &config)
 	config.Handlers[0].Settings["truststore"] = "/opt/kafka/kafka_2.11-0.10.2.0/keys/trust"
 	config.Settings["BrokerUrl"] = "bilbo:9093"
-	tgr := f.New(&config)
-	if tgr == nil {
-		log.Printf("Failed to create trigger")
-		return
-	}
-	runner := &TestRunner{}
-	tgr.Init(runner)
-
-	err := tgr.Start()
-	if err != nil {
-		log.Printf("Trigger Star failed: %s", err)
-		return
-	}
-	log.Printf("TestTLS: Successfully started the trigger on a TLS port.  It will consume and print messages for %d seconds", listentime)
-
-	time.Sleep(time.Second * listentime)
-	defer tgr.Stop()
-	log.Printf("TestTLS: Successfully stopped the trigger.")
-	time.Sleep(time.Second * 2)
+	runTest(&config, true, "TestTLS", false)
 }
 
 func TestSASL(t *testing.T) {
-	f := &KafkasubFactory{}
 	config := trigger.Config{}
 	json.Unmarshal([]byte(testConfig), &config)
 	config.Handlers[0].Settings["user"] = "wcn00"
 	config.Handlers[0].Settings["password"] = "sauron"
-	config.Settings["BrokerUrl"] = "bilbo:9094"
-	tgr := f.New(&config)
-	if tgr == nil {
-		log.Printf("Failed to create trigger")
-		return
-	}
-	runner := &TestRunner{}
-	tgr.Init(runner)
-
-	err := tgr.Start()
-	if err != nil {
-		log.Printf("Trigger Start failed: %s", err)
-		return
-	}
-	log.Printf("TestSASL: Successfully started the trigger on a plaintext port using SASL.  It will consume and print messages for %d seconds", listentime)
-
-	time.Sleep(time.Second * listentime)
-	defer tgr.Stop()
-	log.Printf("TestSASL: Successfully stopped the trigger.")
-	time.Sleep(time.Second * 2)
+	config.Settings["BrokerUrl"] = "bilbo.wcn.org:9094"
+	runTest(&config, true, "TestSASL", false)
 }
 
-func TestSASL_SSL(t *testing.T) {
-	f := &KafkasubFactory{}
+func TestSASL_TLS(t *testing.T) {
 	config := trigger.Config{}
 	json.Unmarshal([]byte(testConfig), &config)
 	config.Handlers[0].Settings["truststore"] = "/opt/kafka/kafka_2.11-0.10.2.0/keys/trust"
 	config.Handlers[0].Settings["user"] = "wcn00"
 	config.Handlers[0].Settings["password"] = "sauron"
 	config.Settings["BrokerUrl"] = "bilbo:9095"
+	runTest(&config, true, "TestSASL_TLS", false)
+}
 
-	tgr := f.New(&config)
-	if tgr == nil {
-		log.Printf("TestSASL_SSL Failed to create trigger")
-		return
-	}
-	runner := &TestRunner{}
-	tgr.Init(runner)
-
-	err := tgr.Start()
-	if err != nil {
-		log.Printf("Trigger start failed: %s", err)
-		return
-	}
-	log.Printf("TestSASL_SSL: Successfully started the trigger.  It will consume and print messages for %d seconds", listentime)
-
-	time.Sleep(time.Second * listentime)
-	defer tgr.Stop()
-	log.Printf("TestSASL_SSL: Successfully stopped the trigger.")
-	time.Sleep(time.Second * 2)
+func TestNumericIpaddr(t *testing.T) {
+	config := trigger.Config{}
+	json.Unmarshal([]byte(testConfig), &config)
+	config.Settings["BrokerUrl"] = "192.168.10.69:9092"
+	runTest(&config, true, "TestNumericIpaddr", false)
+}
+func TestFailingEndpoint(t *testing.T) {
+	config := trigger.Config{}
+	json.Unmarshal([]byte(testConfig), &config)
+	config.Handlers[0].Settings["partitions"] = "21,31" //negative test!!!
+	defer func() {
+		if r := recover(); r != nil {
+			log.Println("Test TestFailingEndpoint failed as expected.")
+		}
+	}()
+	log.Println("This test is expected to fail!!!!!")
+	runTest(&config, false, "TestFailingEndpoint", false)
 }
