@@ -10,5 +10,12 @@
       "name": "message",
       "type": "string"
     }
+  ],
+  "device_support": [
+    {
+      "framework":"arduino",
+      "template":"serial.ino.tmpl",
+      "devices":[]
+    }
   ]
 }

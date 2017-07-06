@@ -14,5 +14,12 @@
       "name": "message",
       "type": "string"
     }
+  ],
+  "device_support": [
+    {
+      "framework":"arduino",
+      "template":"mqtt.ino.tmpl",
+      "devices":[]
+    }
   ]
 }

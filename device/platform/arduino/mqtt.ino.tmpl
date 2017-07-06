@@ -1,0 +1,50 @@
+#include <SPI.h>
+//#include <WiFi101.h>
+#include <PubSubClient.h>
+
+const char *mqtt_server = "{{setting . "mqtt:server"}}";
+const char *mqtt_user = "{{setting . "mqtt:user"}}";
+const char *mqtt_pass = "{{setting . "mqtt:pass"}}";
+const char *mqtt_pubTopic = "flogo/{{setting . "device:name"}}/out";
+const char *mqtt_subTopic = "flogo/{{setting . "device:name"}}/in";
+
+const char *mqtt_readyMsg = "{\"status\": \"READY\"}";
+
+char out_msg_buff[100];
+
+//////////////////////
+
+void setup_mqtt() {
+    client.setServer(mqtt_server, 1883);
+    client.setCallback(callback);
+}
+
+void mqtt_reconnect() {
+    // Loop until we're reconnected
+    while (!client.connected()) {
+        Serial.print("Attempting MQTT connection...");
+        // Create a random client ID
+        String clientId = "device-{{setting . "device:name"}}-";
+        clientId += String(random(0xffff), HEX);
+        // Attempt to connect
+        if (client.connect(clientId.c_str(), mqtt_user, mqtt_pass)) {
+            Serial.println("connected");
+            client.publish(mqtt_pubTopic, mqtt_readyMsg);
+            //client.subscribe(mqtt_subTopic);
+
+            init_mqtt_triggers();
+
+        } else {
+            Serial.print("failed, rc=");
+            Serial.print(client.state());
+            Serial.println(" try again in 5 seconds");
+            // Wait 5 seconds before retrying
+            delay(5000);
+        }
+    }
+}
+
+void publishMQTT(String value, String payload) {
+	payload.toCharArray(out_msg_buff, payload.length() + 1);
+	client.publish(mqtt_pubTopic, out_msg_buff);
+}

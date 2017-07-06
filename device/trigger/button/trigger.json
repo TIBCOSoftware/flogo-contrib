@@ -16,5 +16,11 @@
       "name": "value",
       "type": "int"
     }
+  ],
+  "device_support": [
+    {
+      "framework":"arduino",
+      "template":"button.ino.tmpl"
+    }
   ]
 }

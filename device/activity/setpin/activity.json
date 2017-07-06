@@ -18,5 +18,12 @@
       "name": "value",
       "type": "int"
     }
+  ],
+  "device_support": [
+    {
+      "framework":"arduino",
+      "template":"setpin.ino.tmpl",
+      "devices":[]
+    }
   ]
 }

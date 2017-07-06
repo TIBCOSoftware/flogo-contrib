@@ -23,5 +23,11 @@
       "name": "value",
       "type": "int"
     }
+  ],
+  "device_support": [
+    {
+      "framework":"arduino",
+      "template":"vl53l0x.ino.tmpl"
+    }
   ]
 }
