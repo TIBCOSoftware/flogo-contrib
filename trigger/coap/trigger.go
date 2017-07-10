@@ -10,7 +10,6 @@ import (
 
 	"github.com/dustin/go-coap"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
-	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
@@ -39,14 +38,9 @@ type CoapTrigger struct {
 }
 
 type CoapResource struct {
-	path      string
-	attrs     map[string]string
-	handlers map[string]* HandlerCfg
-}
-
-type HandlerCfg struct{
-	actionId  string
-	autoIdReply bool
+	path     string
+	attrs    map[string]string
+	handlers map[string]string
 }
 
 //NewFactory create a new Trigger factory
@@ -93,21 +87,17 @@ func (t *CoapTrigger) Init(runner action.Runner) {
 		if handlerIsValid(handler) {
 			method := strings.ToUpper(handler.GetSetting("method"))
 			path := handler.GetSetting("path")
-			autoIdReply, _ := data.CoerceToBoolean(handler.Settings["autoIdReply"])
 
 			log.Debugf("COAP Trigger: Registering handler [%s: %s] for Action Id: [%s]", method, path, handler.ActionId)
-			if autoIdReply {
-				log.Debug("CoAP Trigger: AutoIdReply Enabled")
-			}
 
 			resource, exists := t.resources[path]
 
 			if !exists {
-				resource = &CoapResource{path: path, attrs: make(map[string]string), handlers: make(map[string]*HandlerCfg)}
+				resource = &CoapResource{path: path, attrs: make(map[string]string), handlers: make(map[string]string)}
 				t.resources[path] = resource
 			}
 
-			resource.handlers[method] = &HandlerCfg{actionId: handler.ActionId, autoIdReply: autoIdReply}
+			resource.handlers[method] = handler.ActionId
 
 			mux.Handle(path, newActionHandler(t, resource))
 
@@ -124,7 +114,6 @@ func (t *CoapTrigger) Init(runner action.Runner) {
 
 // Start implements trigger.Trigger.Start
 func (t *CoapTrigger) Start() error {
-
 	return t.server.Start()
 }
 
@@ -219,7 +208,7 @@ func newActionHandler(rt *CoapTrigger, resource *CoapResource) coap.Handler {
 			}
 		}
 
-		handlerCfg, exists := resource.handlers[method]
+		actionId, exists := resource.handlers[method]
 
 		if !exists {
 			res := &coap.Message{
@@ -239,10 +228,10 @@ func newActionHandler(rt *CoapTrigger, resource *CoapResource) coap.Handler {
 		//rh.addr2 = addr
 		//rh.conn = conn
 
-		action := action.Get(handlerCfg.actionId)
+		action := action.Get(actionId)
 
 		context := trigger.NewContext(context.Background(), startAttrs)
-		_, _, err := rt.runner.Run(context, action, handlerCfg.actionId, nil)
+		_, _, err := rt.runner.Run(context, action, actionId, nil)
 
 		if err != nil {
 			//todo determining if 404 or 500
@@ -251,27 +240,20 @@ func newActionHandler(rt *CoapTrigger, resource *CoapResource) coap.Handler {
 				Code:      coap.NotFound,
 				MessageID: msg.MessageID,
 				Token:     msg.Token,
-				Payload:   []byte(fmt.Sprintf("Flow '%s' not found", handlerCfg.actionId)),
+				Payload:   []byte(fmt.Sprintf("Flow '%s' not found", actionId)),
 			}
 
 			return res
 		}
 
-		log.Debugf("Ran Action: %s", handlerCfg.actionId)
-
-		//var payload []byte
-
-		//if endpointCfg.autoIdReply {
-		//	payload = []byte(id)
-		//}
+		log.Debugf("Ran Action: %s", actionId)
 
 		if msg.IsConfirmable() {
 			res := &coap.Message{
 				Type:      coap.Acknowledgement,
 				Code:      0,
 				MessageID: msg.MessageID,
-				//Token:     msg.Token,
-				//Payload:   payload,
+				Token:     msg.Token,
 			}
 			//res.SetOption(coap.ContentFormat, coap.TextPlain)
 
