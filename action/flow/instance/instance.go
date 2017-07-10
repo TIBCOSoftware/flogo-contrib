@@ -963,7 +963,7 @@ func (td *TaskData) OutputScope() data.Scope {
 	if len(td.task.ActivityRef()) > 0 {
 
 		act := activity.Get(td.task.ActivityRef())
-		td.outScope = NewFixedTaskScope(act.Metadata().Outputs, nil)
+		td.outScope = NewFixedTaskScope(act.Metadata().Outputs, td.task)
 
 		logger.Debugf("OutputScope: %v\n", td.outScope)
 	} else if td.task.IsScope() {
@@ -978,6 +978,17 @@ func (td *TaskData) OutputScope() data.Scope {
 func (td *TaskData) GetInput(name string) interface{} {
 
 	val, found := td.InputScope().GetAttr(name)
+	if found {
+		return val.Value
+	}
+
+	return nil
+}
+
+// GetOutput implements activity.Context.GetOutput
+func (td *TaskData) GetOutput(name string) interface{} {
+
+	val, found := td.OutputScope().GetAttr(name)
 	if found {
 		return val.Value
 	}
