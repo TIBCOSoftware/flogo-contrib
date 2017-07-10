@@ -1,7 +1,7 @@
 {
   "name": "tibco-kafkasub",
   "type": "flogo:trigger",
-  "ref": "github.com/wnichols/flogo-contrib/trigger/kafkasub",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/kafkasub",
   "version": "0.0.1",
   "title": "Receive Kafka Messages",
   "author": "Wendell Nichols <wnichols@tibco.com>",

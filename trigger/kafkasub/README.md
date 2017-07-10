@@ -19,7 +19,20 @@ Settings, Outputs and Endpoint:
     {
       "name": "BrokerUrl",
       "type": "string"
+    },
+    {
+      "name": "user",
+      "type": "string"
+    },
+    {
+      "name": "password",
+      "type": "string"
+    },
+    {
+      "name": "truststore",
+      "type": "string"
     }
+
   ],
   "outputs": [
     {
@@ -45,18 +58,6 @@ Settings, Outputs and Endpoint:
         "name": "offset",
         "type": "int"
       },
-      {
-        "name": "user",
-        "type": "string"
-      },
-      {
-        "name": "password",
-        "type": "string"
-      },
-      {
-        "name": "truststore",
-        "type": "string"
-      }
     ]
   }
 ```
@@ -135,14 +136,14 @@ To connect to a TLS port on a kafka cluster member:
       "id": "my_kafka_trigger",
       "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/kafkasub",
       "settings": {
-        "BrokerUrl": "bilbo:9093"
+        "BrokerUrl": "bilbo:9093",
+        "truststore": "/opt/kafka/kafka_2.11-0.10.2.0/keys/trust"
       },
       "handlers": [
         {
           "actionId": "my_simple_flow",
           "settings": {
-            "Topic": "syslog",
-            "truststore": "/opt/kafka/kafka_2.11-0.10.2.0/keys/trust"
+            "Topic": "syslog"
           }
         }
       ]
@@ -159,15 +160,15 @@ To connect to a port on a kafka cluster where SASL authorization is enabled
       "id": "my_kafka_trigger",
       "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/kafkasub",
       "settings": {
-        "BrokerUrl": "bilbo:9094"
+        "BrokerUrl": "bilbo:9094",
+        "user": "foo",
+        "password": "bar"
       },
       "handlers": [
         {
           "actionId": "my_simple_flow",
           "settings": {
-            "Topic": "syslog",
-            "user": "foo",
-            "password": "bar"
+            "Topic": "syslog"
           }
         }
       ]
