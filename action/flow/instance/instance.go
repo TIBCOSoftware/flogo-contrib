@@ -943,7 +943,7 @@ func (td *TaskData) InputScope() data.Scope {
 	if len(td.task.ActivityRef()) > 0 {
 
 		act := activity.Get(td.task.ActivityRef())
-		td.inScope = NewFixedTaskScope(act.Metadata().Inputs, td.task)
+		td.inScope = NewFixedTaskScope(act.Metadata().Inputs, td.task, true)
 
 	} else if td.task.IsScope() {
 
@@ -963,7 +963,7 @@ func (td *TaskData) OutputScope() data.Scope {
 	if len(td.task.ActivityRef()) > 0 {
 
 		act := activity.Get(td.task.ActivityRef())
-		td.outScope = NewFixedTaskScope(act.Metadata().Outputs, td.task)
+		td.outScope = NewFixedTaskScope(act.Metadata().Outputs, td.task, false)
 
 		logger.Debugf("OutputScope: %v\n", td.outScope)
 	} else if td.task.IsScope() {

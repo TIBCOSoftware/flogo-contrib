@@ -147,30 +147,20 @@ type FixedTaskScope struct {
 	attrs    map[string]*data.Attribute
 	refAttrs map[string]*data.Attribute
 	task     *definition.Task
+	isInput  bool
 }
 
 // NewFixedTaskScope creates a FixedTaskScope
-func NewFixedTaskScope(refAttrs map[string]*data.Attribute, task *definition.Task) data.Scope {
+func NewFixedTaskScope(refAttrs map[string]*data.Attribute, task *definition.Task, isInput bool) data.Scope {
 
 	scope := &FixedTaskScope{
 		refAttrs: refAttrs,
 		task:     task,
+		isInput: isInput,
 	}
 
 	return scope
 }
-
-//// GetAttrType implements Scope.GetAttrType
-//func (s *FixedTaskScope) GetAttrType(attrName string) (attrType data.Type, exists bool) {
-//
-//	attr, found := s.refAttrs[attrName]
-//
-//	if found {
-//		return attr.Type, true
-//	}
-//
-//	return 0, false
-//}
 
 // GetAttr implements Scope.GetAttr
 func (s *FixedTaskScope) GetAttr(attrName string) (attr *data.Attribute, exists bool) {
@@ -186,7 +176,14 @@ func (s *FixedTaskScope) GetAttr(attrName string) (attr *data.Attribute, exists 
 
 	if s.task != nil {
 
-		attr, found := s.task.GetAttr(attrName)
+		var attr *data.Attribute
+		var found bool
+
+		if s.isInput {
+			attr, found = s.task.GetInputAttr(attrName)
+		} else {
+			attr, found = s.task.GetOutputAttr(attrName)
+		}
 
 		if !found {
 			attr, found = s.refAttrs[attrName]
@@ -228,3 +225,4 @@ func (s *FixedTaskScope) SetAttrValue(attrName string, value interface{}) error 
 
 	return nil
 }
+

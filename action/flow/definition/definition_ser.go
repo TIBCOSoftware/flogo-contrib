@@ -3,6 +3,7 @@ package definition
 import (
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/util"
+	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 )
 
 // DefinitionRep is a serializable representation of a flow Definition
@@ -24,8 +25,15 @@ type TaskRep struct {
 	ActivityRef    string             `json:"activityRef"`
 	Name           string             `json:"name"`
 	Attributes     []*data.Attribute  `json:"attributes,omitempty"`
+
+
+
+	InputAttrs     map[string]interface{}  `json:"inputs,omitempty"`
+	OutputAttrs    map[string]interface{}  `json:"outputs,omitempty"`
+
 	InputMappings  []*data.MappingDef `json:"inputMappings,omitempty"`
 	OutputMappings []*data.MappingDef `json:"ouputMappings,omitempty"`
+
 	Tasks          []*TaskRep         `json:"tasks,omitempty"`
 	Links          []*LinkRep         `json:"links,omitempty"`
 }
@@ -102,11 +110,44 @@ func addTask(def *Definition, task *Task, rep *TaskRep) {
 		task.outputMapper = GetMapperFactory().GetDefaultTaskOutputMapper(task)
 	}
 
+	// Keep for now, DEPRECATE "attributes" section from flogo.json
 	if len(rep.Attributes) > 0 {
-		task.attrs = make(map[string]*data.Attribute, len(rep.Attributes))
+		task.inputAttrs = make(map[string]*data.Attribute, len(rep.Attributes))
 
 		for _, value := range rep.Attributes {
-			task.attrs[value.Name] = value
+			task.inputAttrs[value.Name] = value
+		}
+	}
+
+	act := activity.Get(task.activityRef)
+
+	if act != nil {
+
+		if len(rep.InputAttrs) > 0 {
+			task.inputAttrs = make(map[string]*data.Attribute, len(rep.InputAttrs))
+
+			for name, value := range rep.InputAttrs {
+
+				attr := act.Metadata().Inputs[name]
+
+				if attr != nil {
+					task.inputAttrs[name] = &data.Attribute{Name: name, Type: attr.Type, Value: value}
+				}
+			}
+		}
+
+		if len(rep.OutputAttrs) > 0 {
+
+			task.outputAttrs = make(map[string]*data.Attribute, len(rep.OutputAttrs))
+
+			for name, value := range rep.OutputAttrs {
+
+				attr := act.Metadata().Outputs[name]
+
+				if attr != nil {
+					task.outputAttrs[name] = &data.Attribute{Name: name, Type: attr.Type, Value: value}
+				}
+			}
 		}
 	}
 

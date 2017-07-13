@@ -103,7 +103,9 @@ type Task struct {
 
 	definition *Definition
 	parent     *Task
-	attrs      map[string]*data.Attribute
+
+	inputAttrs  map[string]*data.Attribute
+	outputAttrs map[string]*data.Attribute
 
 	inputMapper  data.Mapper
 	outputMapper data.Mapper
@@ -153,10 +155,37 @@ func (task *Task) ChildLinks() []*Link {
 }
 
 // GetAttr gets the specified attribute
+// DEPRECATED
 func (task *Task) GetAttr(attrName string) (attr *data.Attribute, exists bool) {
 
-	if task.attrs != nil {
-		attr, found := task.attrs[attrName]
+	if task.inputAttrs != nil {
+		attr, found := task.inputAttrs[attrName]
+		if found {
+			return attr, true
+		}
+	}
+
+	return nil, false
+}
+
+// GetAttr gets the specified input attribute
+func (task *Task) GetInputAttr(attrName string) (attr *data.Attribute, exists bool) {
+
+	if task.inputAttrs != nil {
+		attr, found := task.inputAttrs[attrName]
+		if found {
+			return attr, true
+		}
+	}
+
+	return nil, false
+}
+
+// GetOutputAttr gets the specified output attribute
+func (task *Task) GetOutputAttr(attrName string) (attr *data.Attribute, exists bool) {
+
+	if task.outputAttrs != nil {
+		attr, found := task.outputAttrs[attrName]
 		if found {
 			return attr, true
 		}
