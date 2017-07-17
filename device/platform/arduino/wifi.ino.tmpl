@@ -1,0 +1,37 @@
+#include <SPI.h>
+#include <WiFi.h>
+
+char ssid[] = "{{setting . "wifi:ssid"}}";
+const char *password = "{{setting . "wifi:password"}}";
+
+void setup_wifi() {
+
+    // check for the presence of the shield:
+    if (WiFi.status() == WL_NO_SHIELD) {
+        Serial.println("WiFi shield not present");
+        // don't continue:
+        while (true);
+    }
+
+    delay(10);
+
+    Serial.println();
+    Serial.print("Connecting to ");
+    Serial.println(ssid);
+
+    WiFi.begin(ssid, password);
+
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        Serial.print(".");
+    }
+
+    //WiFi.lowPowerMode();
+
+    randomSeed(micros());
+
+    Serial.println("");
+    Serial.println("WiFi connected");
+    Serial.println("IP address: ");
+    Serial.println(WiFi.localIP());
+}

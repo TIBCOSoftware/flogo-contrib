@@ -1,0 +1,7 @@
+{
+  "name": "device-flow",
+  "type": "flogo:device:action",
+  "version": "0.0.1",
+  "Title": "Device Flow",
+  "description": "Simple Device Flow Action"
+}

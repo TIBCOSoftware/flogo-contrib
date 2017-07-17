@@ -1,0 +1,33 @@
+{
+  "name": "tibco-vl53l0x",
+  "type": "flogo:device:trigger",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/device/trigger/vl53l0x",
+  "version": "0.0.1",
+  "title": "VL53L0X Trigger",
+  "description": "Simple VL53L0X Trigger",
+  "libs":[
+    {
+      "name":"Adafruit_VL53L0X",
+      "type":"platformio",
+      "ref":"1494"
+    }
+  ],
+  "settings":[
+    {
+      "name": "condition",
+      "type": "string"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "value",
+      "type": "int"
+    }
+  ],
+  "device_support": [
+    {
+      "framework":"arduino",
+      "template":"vl53l0x.ino.tmpl"
+    }
+  ]
+}

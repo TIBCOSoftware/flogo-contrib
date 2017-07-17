@@ -1,0 +1,44 @@
+{
+  "name": "platform-arduino",
+  "type": "flogo:device:platform",
+  "version": "0.0.1",
+  "description": "Arduino Framework",
+  "framework" : "arduino",
+  "main_template": "main.ino.tmpl",
+  "wifi": [
+    {
+      "name": "wifi",
+      "template": "wifi.ino.tmpl",
+      "header":"WiFi.h",
+      "libs": [
+        {
+          "name": "WiFi",
+          "type": "platformio",
+          "ref": "870"
+        }
+      ]
+    },
+    {
+      "name": "wifi101",
+      "template": "wifi101.ino.tmpl",
+      "header":"WiFi101.h",
+      "libs": [
+        {
+          "name": "WiFi101",
+          "type": "platformio",
+          "ref": "299"
+        }
+      ]
+    }
+  ],
+  "mqtt": {
+    "template": "mqtt.ino.tmpl",
+    "libs": [
+      {
+        "name": "PubSubClient",
+        "type": "platformio",
+        "ref": "89"
+      }
+    ]
+  }
+}

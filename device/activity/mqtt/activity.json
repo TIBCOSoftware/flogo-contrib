@@ -1,0 +1,25 @@
+{
+  "name": "tibco-device-mqtt",
+  "type": "flogo:device:activity",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/device/activity/mqtt",
+  "version": "0.0.1",
+  "title": "Send MQTT Message",
+  "description": "Simple Device MQTT Send Activity",
+  "settings":[
+    {
+      "name": "topic",
+      "type": "string"
+    },
+    {
+      "name": "message",
+      "type": "string"
+    }
+  ],
+  "device_support": [
+    {
+      "framework":"arduino",
+      "template":"mqtt.ino.tmpl",
+      "devices":[]
+    }
+  ]
+}

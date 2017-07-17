@@ -1,0 +1,7 @@
+{
+  "name": "device-activity",
+  "type": "flogo:device:action",
+  "version": "0.0.1",
+  "Title": "Device Activity",
+  "description": "Simple Device Activity"
+}

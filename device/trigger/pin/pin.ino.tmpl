@@ -1,0 +1,21 @@
+uint8_t t_{{.Id}}_pin = {{setting . "pin"}};    // set input pin
+bool t_{{.Id}}_lc = false;    // last condition value
+
+void t_{{.Id}}_init() {
+	pinMode(t_{{.Id}}_pin, INPUT);
+}
+
+void t_{{.Id}}() {
+
+    int value = {{if settingb . "digital"}}digitalRead(t_{{.Id}}_pin){{else}}analogRead(t_{{.Id}}_pin){{end}};
+
+    // create custom condition
+    bool condition = value {{setting . "condition"}};
+
+    if (condition && !t_{{.Id}}_lc) {
+
+        a_{{.ActionId}}(value);
+    }
+
+    t_{{.Id}}_lc = condition;
+}

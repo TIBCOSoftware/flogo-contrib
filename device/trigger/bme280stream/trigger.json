@@ -1,0 +1,38 @@
+{
+  "name": "tibco-device-bme280stream",
+  "type": "flogo:device:trigger",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/device/trigger/bme280stream",
+  "version": "0.0.1",
+  "title": "BME280 Stream Trigger",
+  "description": "Simple BME280 Stream Trigger",
+  "libs":[
+    {
+      "name":"Adafruit BME280 Library",
+      "type":"platformio",
+      "ref":"166"
+    }
+  ],
+  "settings":[
+    {
+      "name":"reading",
+      "type":"string",
+      "allowed":["Temperature","Pressure","Humidity"]
+    },
+    {
+      "name": "interval",
+      "type": "int"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "value",
+      "type": "int"
+    }
+  ],
+  "device_support": [
+    {
+      "framework":"arduino",
+      "template":"bme280stream.ino.tmpl"
+    }
+  ]
+}

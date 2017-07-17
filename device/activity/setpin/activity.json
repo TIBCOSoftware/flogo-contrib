@@ -1,0 +1,29 @@
+{
+  "name": "tibco-device-setpin",
+  "type": "flogo:device:activity",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/device/activity/setpin",
+  "version": "0.0.1",
+  "title": "Set Pin",
+  "description": "Simple Device Set Pin Activity",
+  "settings":[
+    {
+      "name": "pin",
+      "type": "int"
+    },
+    {
+      "name": "digital",
+      "type": "boolean"
+    },
+    {
+      "name": "value",
+      "type": "int"
+    }
+  ],
+  "device_support": [
+    {
+      "framework":"arduino",
+      "template":"setpin.ino.tmpl",
+      "devices":[]
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "name": "tibco-device-button",
+  "type": "flogo:device:trigger",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/device/trigger/button",
+  "version": "0.0.1",
+  "title": "Button Trigger",
+  "description": "Simple Device Button Trigger",
+  "settings":[
+    {
+      "name": "pin",
+      "type": "int"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "value",
+      "type": "int"
+    }
+  ],
+  "device_support": [
+    {
+      "framework":"arduino",
+      "template":"button.ino.tmpl"
+    }
+  ]
+}

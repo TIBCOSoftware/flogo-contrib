@@ -1,0 +1,9 @@
+
+void ac_{{.Id}}_{{.Activity.Id}}_init() {
+}
+
+void ac_{{.Id}}_{{.Activity.Id}}(int value) {
+	{{$payload := setting .Activity "payload"}}
+	String payload = {{if eq $payload "${value}"}}String(value){{else}}"{{$payload}}"{{end}};
+	publishMQTT("{{setting .Activity "topic"}}", payload);
+}
