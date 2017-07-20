@@ -1,0 +1,43 @@
+{
+  "name": "tibco-device-bme280",
+  "type": "flogo:device:trigger",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/device/trigger/bme280",
+  "version": "0.0.1",
+  "title": "BME280 Trigger",
+  "description": "Simple BME280 Trigger",
+  "libs":[
+    {
+      "name":"Adafruit BME280 Library",
+      "type":"platformio",
+      "ref":"166"
+    },
+    {
+      "name":"Adafruit Unified Sensor",
+      "type":"platformio",
+      "ref":"31"
+    }
+  ],
+  "settings":[
+    {
+      "name":"reading",
+      "type":"string",
+      "allowed":["Temperature","Pressure","Humidity"]
+    },
+    {
+      "name": "condition",
+      "type": "string"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "value",
+      "type": "int"
+    }
+  ],
+  "device_support": [
+    {
+      "framework":"arduino",
+      "template":"bme280.ino.tmpl"
+    }
+  ]
+}

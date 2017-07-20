@@ -1,0 +1,33 @@
+{
+  "name": "tibco-device-vl53l0xstream",
+  "type": "flogo:device:trigger",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/device/trigger/vl53l0xstream",
+  "version": "0.0.1",
+  "title": "VL53L0X Stream Trigger",
+  "description": "Simple VL53L0X Stream Trigger",
+  "libs":[
+    {
+      "name":"Adafruit_VL53L0X",
+      "type":"platformio",
+      "ref":"1494"
+    }
+  ],
+  "settings":[
+    {
+      "name": "interval",
+      "type": "int"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "value",
+      "type": "int"
+    }
+  ],
+  "device_support": [
+    {
+      "framework":"arduino",
+      "template":"vl53l0x_stream.ino.tmpl"
+    }
+  ]
+}

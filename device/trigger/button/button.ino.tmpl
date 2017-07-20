@@ -1,0 +1,33 @@
+unsigned long t_{{.Id}}_ldt = 0; // lastDebounceTime
+
+int t_{{.Id}}_bs;          // the current reading from the input pin
+int t_{{.Id}}_lbs = LOW; // the previous reading from the input pin
+
+uint8_t t_{{.Id}}_pin = {{setting . "pin"}};  //set input pin
+
+void t_{{.Id}}_init() {
+	pinMode(t_{{.Id}}_pin, INPUT);
+}
+
+void t_{{.Id}}() {
+
+  int reading = digitalRead(t_{{.Id}}_pin);
+
+  if (reading != t_{{.Id}}_lbs) {
+    // reset the debouncing timer
+    t_{{.Id}}_ldt = millis();
+  }
+
+  if ((millis() - t_{{.Id}}_ldt) > 50) {
+
+    if (reading != t_{{.Id}}_bs) {
+      t_{{.Id}}_bs = reading;
+
+      if (t_{{.Id}}_bs == HIGH) {
+        a_{{.ActionId}}(HIGH);
+      }
+    }
+  }
+
+  t_{{.Id}}_lbs = reading;
+}
