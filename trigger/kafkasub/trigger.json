@@ -6,9 +6,21 @@
   "title": "Receive Kafka Messages",
   "author": "Wendell Nichols <wnichols@tibco.com>",
   "description": "Simple Kafka Trigger",
- "settings":[
+  "settings":[
     {
       "name": "BrokerUrl",
+      "type": "string"
+    },
+    {
+      "name": "user",
+      "type": "string"
+    },
+    {
+      "name": "password",
+      "type": "string"
+    },
+    {
+      "name": "truststore",
       "type": "string"
     }
   ],
@@ -22,31 +34,23 @@
     "settings": [
       {
         "name": "Topic",
-        "type": "string"
+        "type": "string",
+        "required":"true"
       },
       {
         "name": "partitions",
-        "type": "string"
+        "type": "string",
+        "required": "false"
       },
       {
         "name": "group",
-        "type": "string"
+        "type": "string",
+        "required":"false"
       },
       {
         "name": "offset",
-        "type": "int"
-      },
-      {
-        "name": "user",
-        "type": "string"
-      },
-      {
-        "name": "password",
-        "type": "string"
-      },
-      {
-        "name": "truststore",
-        "type": "string"
+        "type": "int",
+        "required":"false"
       }
     ]
   }
