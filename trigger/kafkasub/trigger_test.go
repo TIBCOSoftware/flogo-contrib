@@ -156,7 +156,14 @@ func runTest(config *trigger.Config, expectSucceed bool, testName string, config
 		return nil
 	}
 	defer tgr.Stop()
-	tgr.Start()
+	error := tgr.Start()
+	if !expectSucceed {
+		if error == nil {
+			return fmt.Errorf("Test was expected to fail, but didn't")
+		}
+		fmt.Printf("Test was expected to fail and did with error: %s", error)
+		return nil
+	}
 	log.Printf("\t%s listening for messages for %d seconds\n", testName, listentime)
 	time.Sleep(time.Second * listentime)
 	log.Printf("Test %s complete\n", testName)
@@ -242,6 +249,5 @@ func TestFailingEndpoint(t *testing.T) {
 			log.Println("Test TestFailingEndpoint failed as expected.")
 		}
 	}()
-	log.Println("This test is expected to fail!!!!!")
 	runTest(&config, false, "TestFailingEndpoint", false)
 }

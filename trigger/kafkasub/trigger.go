@@ -90,9 +90,9 @@ func (t *KafkaSubTrigger) Start() error {
 	signals := make(chan os.Signal, 1)
 	t.signals = &signals
 	signal.Notify(*t.signals, os.Interrupt)
-	run(t)
+	err := run(t)
 	flogoLogger.Debug("KafkaSubTrigger Started")
-	return nil
+	return err
 }
 
 // Stop implements ext.Trigger.Stop
@@ -115,10 +115,10 @@ func (t *KafkaSubTrigger) Stop() error {
 	return nil
 }
 
-func run(t *KafkaSubTrigger) {
+func run(t *KafkaSubTrigger) error {
 	kafkaConsumer, error := sarama.NewConsumer(t.kafkaParms.brokers, t.kafkaConfig)
 	if error != nil {
-		panic(fmt.Errorf("Failed to create Kafka consumer for reason [%s]", error))
+		return fmt.Errorf("Failed to create Kafka consumer for reason [%s]", error)
 	}
 	t.kafkaConsumer = &kafkaConsumer
 	consumers := make(map[string]sarama.PartitionConsumer)
@@ -126,8 +126,8 @@ func run(t *KafkaSubTrigger) {
 	for id, handler := range t.kafkaParms.handlers {
 		validPartitions, error := kafkaConsumer.Partitions(handler.topic)
 		if error != nil {
-			panic(fmt.Errorf("Failed to get valid partitions for topic [%s] for reason [%s].  Aborting subscriber",
-				error))
+			return fmt.Errorf("Failed to get valid partitions for topic [%s] for reason [%s].  Aborting subscriber",
+				error)
 		}
 		flogoLogger.Debugf("Subscribing to topic [%s]", handler.topic)
 
@@ -150,12 +150,11 @@ func run(t *KafkaSubTrigger) {
 			}
 		}
 		if len(*t.partitionConsumers) < 1 {
-			panic(fmt.Errorf("Kafka consumer is not configured for any valid partitions"))
-		} else {
-			flogoLogger.Debugf("Kafka consumers for topic [%s] started", handler.topic)
+			return fmt.Errorf("Kafka consumer is not configured for any valid partitions")
 		}
+		flogoLogger.Debugf("Kafka consumers for topic [%s] started", handler.topic)
 	}
-	return
+	return nil
 }
 
 func startConsumer(t *KafkaSubTrigger, part int32, id int) error {
@@ -223,8 +222,7 @@ func initKafkaParms(t *KafkaSubTrigger) error {
 		see:   https://issues.apache.org/jira/browse/KAFKA-3647
 		for more info
 	*/
-	if t.config.Settings["truststore"] != nil {
-		trustStore := t.config.Settings["truststore"]
+	if trustStore := t.config.Settings["truststore"]; trustStore != nil {
 		if trustStore != nil && len(trustStore.(string)) > 0 {
 			trustPool, err := getCerts(trustStore.(string))
 			if err != nil {
