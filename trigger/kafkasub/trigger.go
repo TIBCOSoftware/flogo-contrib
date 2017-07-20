@@ -222,18 +222,17 @@ func initKafkaParms(t *KafkaSubTrigger) error {
 		see:   https://issues.apache.org/jira/browse/KAFKA-3647
 		for more info
 	*/
-	if trustStore := t.config.Settings["truststore"]; trustStore != nil {
-		if trustStore != nil && len(trustStore.(string)) > 0 {
-			trustPool, err := getCerts(trustStore.(string))
-			if err != nil {
-				return err
-			}
-			config := tls.Config{
-				RootCAs:            trustPool,
-				InsecureSkipVerify: true}
-			t.kafkaConfig.Net.TLS.Enable = true
-			t.kafkaConfig.Net.TLS.Config = &config
+	if trustStore := t.config.Settings["truststore"]; trustStore != nil &&
+		len(trustStore.(string)) > 0 {
+		trustPool, err := getCerts(trustStore.(string))
+		if err != nil {
+			return err
 		}
+		config := tls.Config{
+			RootCAs:            trustPool,
+			InsecureSkipVerify: true}
+		t.kafkaConfig.Net.TLS.Enable = true
+		t.kafkaConfig.Net.TLS.Config = &config
 	}
 	// SASL
 	if t.config.Settings["user"] != nil {
