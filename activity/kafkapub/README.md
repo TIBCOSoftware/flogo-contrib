@@ -16,27 +16,33 @@ Inputs and Outputs:
  "inputs":[
     {
       "name": "BrokerUrls",
-      "type": "string"
+      "type": "string",
+      "required": true
     },
     {
       "name": "Topic",
-      "type": "string"
+      "type": "string",
+      "required": true
     },
     {
       "name": "Message",
-      "type": "string"
+      "type": "string",
+      "required": true
     },
     {
       "name": "user",
-      "type": "string"
+      "type": "string",
+      "required": false
     },
     {
       "name": "password",
-      "type": "string"
+      "type": "string",
+      "required": false
     },
     {
       "name": "truststore",
-      "type": "string"
+      "type": "string",
+      "required": false
     }
   ],
   "outputs": [
@@ -84,19 +90,19 @@ Configure a task to send a message to the 'syslog' topic.
         {
           "name": "BrokerUrls",
           "value": "bilbo:9092",
-          "required": false,
+          "required": true,
           "type": "string"
         },
         {
           "name": "Topic",
           "value": "syslog",
-          "required": false,
+          "required": true,
           "type": "string"
         },
         {
           "name": "Message",
           "value": "mary had a little lamb",
-          "required": false,
+          "required": true,
           "type": "string"
         }
       ]
