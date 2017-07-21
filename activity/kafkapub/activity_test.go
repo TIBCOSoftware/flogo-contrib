@@ -5,8 +5,8 @@ import (
 	"log"
 	"testing"
 
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/test"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
-	"github.com/TIBCOSoftware/flogo-lib/flow/test"
 )
 
 /*
@@ -101,6 +101,41 @@ func TestSSL(t *testing.T) {
 	tc.SetInput("Topic", "syslog")
 	tc.SetInput("truststore", "/opt/kafka/kafka_2.11-0.10.2.0/keys/trust")
 	tc.SetInput("Message", "######### TLS ###########  Mary had a little lamb, its fleece was white as snow.")
+	act.Eval(tc)
+	log.Printf("TestEval successfull.  partition [%d]  offset [%d]", tc.GetOutput("partition"), tc.GetOutput("offset"))
+}
+
+/*
+Run this test with FLOGO_LOG_LEVEL=DEBUG and observe the debug messages as the activity either creates new synpublishers, or reuses cached ones.
+*/
+func TestCache(t *testing.T) {
+
+	defer func() {
+		if r := recover(); r != nil {
+			t.Failed()
+			t.Errorf("panic during execution: %v", r)
+		}
+	}()
+
+	act := NewActivity(getActivityMetadata())
+	tc := test.NewTestActivityContext(getActivityMetadata())
+
+	//setup attrs
+	tc.SetInput("BrokerUrls", "cheetah:9093")
+	tc.SetInput("truststore", "/opt/kafka/kafka_2.11-0.10.2.0/keys/trust")
+	tc.SetInput("Topic", "syslog")
+	tc.SetInput("Message", "######### TLS ###########  Mary had a little lamb, its fleece was white as snow.")
+	act.Eval(tc)
+	tc.SetInput("Topic", "publishpet")
+	act.Eval(tc)
+	tc.SetInput("Topic", "publishpet")
+	act.Eval(tc)
+	tc = test.NewTestActivityContext(getActivityMetadata())
+	tc.SetInput("Message", "######### TLS ###########  Mary had a little lamb, its fleece was white as snow.")
+	tc.SetInput("BrokerUrls", "cheetah:9092")
+	tc.SetInput("Topic", "syslog")
+	act.Eval(tc)
+	tc.SetInput("Topic", "publishpet")
 	act.Eval(tc)
 	log.Printf("TestEval successfull.  partition [%d]  offset [%d]", tc.GetOutput("partition"), tc.GetOutput("offset"))
 }

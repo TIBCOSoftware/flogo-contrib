@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 
+	"sync"
+
 	"github.com/Shopify/sarama"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
@@ -19,7 +21,12 @@ var flogoLogger = logger.GetLogger("activity-tibco-kafkapub")
 
 // MyActivity is a stub for your Activity implementation
 type KafkaPubActivity struct {
-	metadata     *activity.Metadata
+	sync.Mutex
+	metadata        *activity.Metadata
+	syncProducerMap *map[string]sarama.SyncProducer
+}
+
+type KafkaParms struct {
 	kafkaConfig  *sarama.Config
 	brokers      []string
 	topic        string
@@ -28,7 +35,11 @@ type KafkaPubActivity struct {
 
 // NewActivity creates a new activity
 func NewActivity(metadata *activity.Metadata) activity.Activity {
-	return &KafkaPubActivity{metadata: metadata}
+	flogoLogger.Debugf("Kafkapub NewActivity")
+	pKafkPubActivity := &KafkaPubActivity{metadata: metadata}
+	producers := make(map[string]sarama.SyncProducer)
+	pKafkPubActivity.syncProducerMap = &producers
+	return pKafkPubActivity
 }
 
 // Metadata implements activity.Activity.Metadata
@@ -38,41 +49,39 @@ func (a *KafkaPubActivity) Metadata() *activity.Metadata {
 
 // Eval implements activity.Activity.Eval
 func (a *KafkaPubActivity) Eval(context activity.Context) (done bool, err error) {
-	err = initParms(a, context)
+	var parms (KafkaParms)
+	flogoLogger.Debugf("Kafkapub Eval")
+	err = initParms(a, context, &parms)
 	if err != nil {
 		flogoLogger.Errorf("Kafkapub parameters initialization got error: [%s]", err.Error())
 		return false, err
 	}
-	defer func() {
-		if err := a.syncProducer.Close(); err != nil {
-			flogoLogger.Errorf("Kafkapub producer close got error: [%s]", err.Error())
-		}
-	}()
-	if context.GetInput("Message") != nil {
+	if message := context.GetInput("Message"); message != nil && message.(string) != "" {
 		msg := &sarama.ProducerMessage{
-			Topic: a.topic,
-			Value: sarama.StringEncoder(context.GetInput("Message").(string)),
+			Topic: parms.topic,
+			Value: sarama.StringEncoder(message.(string)),
 		}
-		partition, offset, err := a.syncProducer.SendMessage(msg)
+		partition, offset, err := parms.syncProducer.SendMessage(msg)
 		if err != nil {
 			return false, fmt.Errorf("kafkapub failed to send message for reason [%s]", err.Error())
 		}
 		context.SetOutput("partition", partition)
 		context.SetOutput("offset", offset)
-		flogoLogger.Debugf("Kafkapub message [%s] sent successfully on partition [%d] and offset [%d]",
-			context.GetInput("Message").(string), partition, offset)
+		flogoLogger.Debugf("Kafkapub message [%v] sent successfully on partition [%d] and offset [%d]",
+			message, partition, offset)
 		return true, nil
 	}
 	return false, fmt.Errorf("kafkapub called without a message to publish")
 }
 
-func initParms(a *KafkaPubActivity, context activity.Context) error {
+func initParms(a *KafkaPubActivity, context activity.Context, params *KafkaParms) error {
+	var producerkey (string)
 	if context.GetInput("BrokerUrls") != nil && context.GetInput("BrokerUrls").(string) != "" {
-		a.kafkaConfig = sarama.NewConfig()
-		a.kafkaConfig.Producer.Return.Errors = true
-		a.kafkaConfig.Producer.RequiredAcks = sarama.WaitForAll
-		a.kafkaConfig.Producer.Retry.Max = 5
-		a.kafkaConfig.Producer.Return.Successes = true
+		params.kafkaConfig = sarama.NewConfig()
+		params.kafkaConfig.Producer.Return.Errors = true
+		params.kafkaConfig.Producer.RequiredAcks = sarama.WaitForAll
+		params.kafkaConfig.Producer.Retry.Max = 5
+		params.kafkaConfig.Producer.Return.Successes = true
 		brokerUrls := strings.Split(context.GetInput("BrokerUrls").(string), ",")
 		brokers := make([]string, len(brokerUrls))
 		for brokerNo, broker := range brokerUrls {
@@ -81,15 +90,16 @@ func initParms(a *KafkaPubActivity, context activity.Context) error {
 				return fmt.Errorf("BrokerUrl [%s] format invalid for reason: [%s]", broker, error.Error())
 			}
 			brokers[brokerNo] = broker
+			producerkey += broker
 		}
-		a.brokers = brokers
+		params.brokers = brokers
 		flogoLogger.Debugf("Kafkapub brokers [%v]", brokers)
 	} else {
 		return fmt.Errorf("Kafkapub activity is not configured with at least one BrokerUrl")
 	}
 	if context.GetInput("Topic") != nil && context.GetInput("Topic").(string) != "" {
-		a.topic = context.GetInput("Topic").(string)
-		flogoLogger.Debugf("Kafkapub topic [%s]", a.topic)
+		params.topic = context.GetInput("Topic").(string)
+		flogoLogger.Debugf("Kafkapub topic [%s]", params.topic)
 	} else {
 		return fmt.Errorf("Topic input parameter not provided and is required")
 	}
@@ -101,40 +111,49 @@ func initParms(a *KafkaPubActivity, context activity.Context) error {
 		see:   https://issues.apache.org/jira/browse/KAFKA-3647
 		for more info
 	*/
-	if context.GetInput("truststore") != nil {
-		trustStore := context.GetInput("truststore")
-		if trustStore != nil && len(trustStore.(string)) > 0 {
-			trustPool, err := getCerts(trustStore.(string))
-			if err != nil {
-				return err
-			}
+	if trustStore := context.GetInput("truststore"); trustStore != nil && trustStore.(string) != "" {
+		if trustPool, err := getCerts(trustStore.(string)); err == nil {
 			config := tls.Config{
 				RootCAs:            trustPool,
 				InsecureSkipVerify: true}
-			a.kafkaConfig.Net.TLS.Enable = true
-			a.kafkaConfig.Net.TLS.Config = &config
+			params.kafkaConfig.Net.TLS.Enable = true
+			params.kafkaConfig.Net.TLS.Config = &config
+
+			flogoLogger.Debugf("Kafkapub initialized truststore from [%v]", trustStore)
+		} else {
+			return err
 		}
-		flogoLogger.Debugf("Kafkapub initialized truststore from [%s]", trustStore)
+		producerkey += trustStore.(string)
 	}
 	// SASL
-	if context.GetInput("user") != nil && context.GetInput("user").(string) != "" {
-		var password string
-		user := context.GetInput("user").(string)
-		if context.GetInput("password") != nil {
-			password = context.GetInput("password").(string)
+	if user := context.GetInput("user"); user != nil && user.(string) != "" {
+		var password (interface{})
+		if password = context.GetInput("password"); password == nil {
+			password = ""
 		}
-		a.kafkaConfig.Net.SASL.Enable = true
-		a.kafkaConfig.Net.SASL.User = user
-		a.kafkaConfig.Net.SASL.Password = password
-		flogoLogger.Debugf("Kafkapub SASL parms initialized; user [%s]  password[########]", user)
+		params.kafkaConfig.Net.SASL.Enable = true
+		params.kafkaConfig.Net.SASL.User = user.(string)
+		params.kafkaConfig.Net.SASL.Password = password.(string)
+		flogoLogger.Debugf("Kafkapub SASL parms initialized; user [%v]  password[########]", user)
+		producerkey += user.(string)
 	}
+	a.Lock()
+	defer func() {
+		a.Unlock()
+	}()
 
-	syncProducer, err := sarama.NewSyncProducer(a.brokers, a.kafkaConfig)
-	if err != nil {
-		return fmt.Errorf("Kafkapub failed to create a SyncProducer.  Check any TLS or SASL parameters carefully.  Reason given: [%s]", err)
+	if (*a.syncProducerMap)[producerkey] == nil {
+		syncProducer, err := sarama.NewSyncProducer(params.brokers, params.kafkaConfig)
+		if err != nil {
+			return fmt.Errorf("Kafkapub failed to create a SyncProducer.  Check any TLS or SASL parameters carefully.  Reason given: [%s]", err)
+		}
+		params.syncProducer = syncProducer
+		(*a.syncProducerMap)[producerkey] = syncProducer
+		flogoLogger.Debugf("Kafkapub cacheing connection [%s]", producerkey)
+	} else {
+		params.syncProducer = (*a.syncProducerMap)[producerkey]
+		flogoLogger.Debugf("Kafkapub reusing cached connection [%s]", producerkey)
 	}
-	a.syncProducer = syncProducer
-
 	flogoLogger.Debug("Kafkapub synchronous producer created")
 	return nil
 }

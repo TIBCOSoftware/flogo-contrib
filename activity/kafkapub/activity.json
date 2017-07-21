@@ -8,27 +8,33 @@
   "inputs":[
     {
       "name": "BrokerUrls",
-      "type": "string"
+      "type": "string",
+      "required": true
     },
     {
       "name": "Topic",
-      "type": "string"
+      "type": "string",
+      "required": true
     },
     {
       "name": "Message",
-      "type": "string"
+      "type": "string",
+      "required": true
     },
     {
       "name": "user",
-      "type": "string"
+      "type": "string",
+      "required": false
     },
     {
       "name": "password",
-      "type": "string"
+      "type": "string",
+      "required": false
     },
     {
       "name": "truststore",
-      "type": "string"
+      "type": "string",
+      "required": false
     }
   ],
   "outputs": [
