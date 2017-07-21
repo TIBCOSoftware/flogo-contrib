@@ -72,6 +72,10 @@ func (a *KafkaPubActivity) Eval(context activity.Context) (done bool, err error)
 }
 
 func initParms(a *KafkaPubActivity, context activity.Context) error {
+	if a.syncProducer != nil {
+		flogoLogger.Debugf("Producer parms already initialized for [%v]", a.syncProducer)
+		return nil
+	}
 	if context.GetInput("BrokerUrls") != nil && context.GetInput("BrokerUrls").(string) != "" {
 		a.kafkaConfig = sarama.NewConfig()
 		a.kafkaConfig.Producer.Return.Errors = true
