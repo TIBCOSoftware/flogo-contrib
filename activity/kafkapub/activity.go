@@ -116,7 +116,7 @@ func initParms(a *KafkaPubActivity, context activity.Context) error {
 
 			flogoLogger.Debugf("Kafkapub initialized truststore from [%v]", trustStore)
 		} else {
-			return false, err
+			return err
 		}
 
 	}
