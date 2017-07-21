@@ -2,7 +2,7 @@
   "name": "tibco-kafkapub",
   "version": "0.0.1",
   "type": "flogo:activity",
-  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/kafkapub",
+  "ref": "github.com/wnichols/flogo-contrib/activity/kafkapub",
   "description": "Publish a message to a kafka topic",
   "author": "Wendell Nichols <wnichols@tibco.com>",
   "inputs":[

@@ -5,8 +5,8 @@ import (
 	"log"
 	"testing"
 
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/test"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
-	"github.com/TIBCOSoftware/flogo-lib/flow/test"
 )
 
 /*

@@ -28,6 +28,7 @@ type KafkaPubActivity struct {
 
 // NewActivity creates a new activity
 func NewActivity(metadata *activity.Metadata) activity.Activity {
+	flogoLogger.Debugf("Kafkapub NewActivity")
 	return &KafkaPubActivity{metadata: metadata}
 }
 
@@ -38,6 +39,7 @@ func (a *KafkaPubActivity) Metadata() *activity.Metadata {
 
 // Eval implements activity.Activity.Eval
 func (a *KafkaPubActivity) Eval(context activity.Context) (done bool, err error) {
+	flogoLogger.Debugf("Kafkapub Eval")
 	err = initParms(a, context)
 	if err != nil {
 		flogoLogger.Errorf("Kafkapub parameters initialization got error: [%s]", err.Error())
@@ -47,11 +49,12 @@ func (a *KafkaPubActivity) Eval(context activity.Context) (done bool, err error)
 		if err := a.syncProducer.Close(); err != nil {
 			flogoLogger.Errorf("Kafkapub producer close got error: [%s]", err.Error())
 		}
+		flogoLogger.Debugf("Kafkapub producer closed")
 	}()
-	if context.GetInput("Message") != nil {
+	if message := context.GetInput("Message"); message != nil && message.(string) != "" {
 		msg := &sarama.ProducerMessage{
 			Topic: a.topic,
-			Value: sarama.StringEncoder(context.GetInput("Message").(string)),
+			Value: sarama.StringEncoder(message.(string)),
 		}
 		partition, offset, err := a.syncProducer.SendMessage(msg)
 		if err != nil {
@@ -59,8 +62,8 @@ func (a *KafkaPubActivity) Eval(context activity.Context) (done bool, err error)
 		}
 		context.SetOutput("partition", partition)
 		context.SetOutput("offset", offset)
-		flogoLogger.Debugf("Kafkapub message [%s] sent successfully on partition [%d] and offset [%d]",
-			context.GetInput("Message").(string), partition, offset)
+		flogoLogger.Debugf("Kafkapub message [%v] sent successfully on partition [%d] and offset [%d]",
+			message, partition, offset)
 		return true, nil
 	}
 	return false, fmt.Errorf("kafkapub called without a message to publish")
@@ -101,32 +104,30 @@ func initParms(a *KafkaPubActivity, context activity.Context) error {
 		see:   https://issues.apache.org/jira/browse/KAFKA-3647
 		for more info
 	*/
-	if context.GetInput("truststore") != nil {
-		trustStore := context.GetInput("truststore")
-		if trustStore != nil && len(trustStore.(string)) > 0 {
-			trustPool, err := getCerts(trustStore.(string))
-			if err != nil {
-				return err
-			}
+	if trustStore := context.GetInput("truststore"); trustStore != nil && trustStore.(string) != "" {
+		if trustPool, err := getCerts(trustStore.(string)); err == nil {
 			config := tls.Config{
 				RootCAs:            trustPool,
 				InsecureSkipVerify: true}
 			a.kafkaConfig.Net.TLS.Enable = true
 			a.kafkaConfig.Net.TLS.Config = &config
+
+			flogoLogger.Debugf("Kafkapub initialized truststore from [%v]", trustStore)
+		} else {
+			return err
 		}
-		flogoLogger.Debugf("Kafkapub initialized truststore from [%s]", trustStore)
+
 	}
 	// SASL
-	if context.GetInput("user") != nil && context.GetInput("user").(string) != "" {
-		var password string
-		user := context.GetInput("user").(string)
-		if context.GetInput("password") != nil {
-			password = context.GetInput("password").(string)
+	if user := context.GetInput("user"); user != nil && user.(string) != "" {
+		var password (interface{})
+		if password = context.GetInput("password"); password == nil {
+			password = ""
 		}
 		a.kafkaConfig.Net.SASL.Enable = true
-		a.kafkaConfig.Net.SASL.User = user
-		a.kafkaConfig.Net.SASL.Password = password
-		flogoLogger.Debugf("Kafkapub SASL parms initialized; user [%s]  password[########]", user)
+		a.kafkaConfig.Net.SASL.User = user.(string)
+		a.kafkaConfig.Net.SASL.Password = password.(string)
+		flogoLogger.Debugf("Kafkapub SASL parms initialized; user [%v]  password[########]", user)
 	}
 
 	syncProducer, err := sarama.NewSyncProducer(a.brokers, a.kafkaConfig)
