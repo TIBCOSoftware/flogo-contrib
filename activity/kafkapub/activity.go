@@ -45,12 +45,14 @@ func (a *KafkaPubActivity) Eval(context activity.Context) (done bool, err error)
 		flogoLogger.Errorf("Kafkapub parameters initialization got error: [%s]", err.Error())
 		return false, err
 	}
-	defer func() {
-		if err := a.syncProducer.Close(); err != nil {
-			flogoLogger.Errorf("Kafkapub producer close got error: [%s]", err.Error())
-		}
-		flogoLogger.Debugf("Kafkapub producer closed")
-	}()
+	/*
+		defer func() {
+			if err := a.syncProducer.Close(); err != nil {
+				flogoLogger.Errorf("Kafkapub producer close got error: [%s]", err.Error())
+			}
+			flogoLogger.Debugf("Kafkapub producer closed")
+		}()
+	*/
 	if message := context.GetInput("Message"); message != nil && message.(string) != "" {
 		msg := &sarama.ProducerMessage{
 			Topic: a.topic,
@@ -114,7 +116,7 @@ func initParms(a *KafkaPubActivity, context activity.Context) error {
 
 			flogoLogger.Debugf("Kafkapub initialized truststore from [%v]", trustStore)
 		} else {
-			return err
+			return false, err
 		}
 
 	}
@@ -137,7 +139,7 @@ func initParms(a *KafkaPubActivity, context activity.Context) error {
 	a.syncProducer = syncProducer
 
 	flogoLogger.Debug("Kafkapub synchronous producer created")
-	return nil
+	return false, nil
 }
 
 //Ensure that this string meets the host:port definition of a kafka hostspec
