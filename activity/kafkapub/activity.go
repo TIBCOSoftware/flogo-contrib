@@ -62,6 +62,10 @@ func (a *KafkaPubActivity) Eval(context activity.Context) (done bool, err error)
 		if err != nil {
 			return false, fmt.Errorf("kafkapub failed to send message for reason [%s]", err.Error())
 		}
+		if err := a.syncProducer.Close(); err != nil {
+			flogoLogger.Errorf("Kafkapub producer close got error: [%s]", err.Error())
+		}
+
 		context.SetOutput("partition", partition)
 		context.SetOutput("offset", offset)
 		flogoLogger.Debugf("Kafkapub message [%v] sent successfully on partition [%d] and offset [%d]",
