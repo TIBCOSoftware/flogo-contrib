@@ -139,7 +139,7 @@ func initParms(a *KafkaPubActivity, context activity.Context) error {
 	a.syncProducer = syncProducer
 
 	flogoLogger.Debug("Kafkapub synchronous producer created")
-	return false, nil
+	return nil
 }
 
 //Ensure that this string meets the host:port definition of a kafka hostspec
