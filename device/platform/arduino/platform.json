@@ -5,6 +5,34 @@
   "description": "Arduino Framework",
   "framework" : "arduino",
   "main_template": "main.ino.tmpl",
+
+  "settings": [
+    {
+      "name": "mqtt:server",
+      "type": "string"
+    },
+    {
+      "name": "mqtt:port",
+      "type": "string"
+    },
+    {
+      "name": "mqtt:user",
+      "type": "string"
+    },
+    {
+      "name": "mqtt:pass",
+      "type": "string"
+    },
+    {
+      "name": "wifi:ssid",
+      "type": "string"
+    },
+    {
+      "name": "wifi:password",
+      "type": "string"
+    }
+  ],
+
   "wifi": [
     {
       "name": "wifi",
