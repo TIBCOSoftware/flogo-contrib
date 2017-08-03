@@ -106,9 +106,7 @@ func (m *BasicMapper) Apply(inputScope data.Scope, outputScope data.Scope) error
             tv, exists := inputScope.GetAttr(attrName)
 			if tv == nil && pathType == data.PT_PROPERTY {
 				// Property resolution
-				value, ok := property.Resolve(attrPath)
-				attrValue = value
-				exists = ok
+				attrValue, exists = property.Resolve(attrPath)
 			} else {
 				attrValue = tv.Value
 				if exists && len(attrPath) > 0 {
