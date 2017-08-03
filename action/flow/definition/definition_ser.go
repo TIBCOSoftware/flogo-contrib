@@ -2,6 +2,7 @@ package definition
 
 import (
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
+	"github.com/TIBCOSoftware/flogo-lib/core/property"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/util"
 )
@@ -113,6 +114,9 @@ func addTask(def *Definition, task *Task, rep *TaskRep) {
 		task.inputAttrs = make(map[string]*data.Attribute, len(rep.Attributes))
 
 		for _, value := range rep.Attributes {
+			// Call property resolver to resolve any references to property
+			propValue, _ := property.Resolve(value.Value)
+			value.Value = propValue
 			task.inputAttrs[value.Name] = value
 		}
 	}
@@ -129,7 +133,8 @@ func addTask(def *Definition, task *Task, rep *TaskRep) {
 				attr := act.Metadata().Inputs[name]
 
 				if attr != nil {
-					newValue, err := data.CoerceToValue(value, attr.Type)
+					propVal, _ := property.Resolve(value)
+					newValue, err := data.CoerceToValue(propVal, attr.Type)
 					if err != nil {
 						//Todo handle error
 						newValue = value
