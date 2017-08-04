@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
+	"github.com/TIBCOSoftware/flogo-lib/core/data"
 )
 
 const defJSON = `

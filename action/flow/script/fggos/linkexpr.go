@@ -6,11 +6,11 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"github.com/TIBCOSoftware/flogo-lib/core/data"
-	"github.com/japm/goScript"
-	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"fmt"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
+	"github.com/TIBCOSoftware/flogo-lib/core/data"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/japm/goScript"
 )
 
 // GosLinkExprManager is the Lua Implementation of a Link Expression Manager
@@ -92,12 +92,12 @@ func transExpr(s string) ([]*varInfo, string) {
 
 			if isdefcheck {
 				isd++
-				vars = append(vars, &varInfo{isd: isd, name: s[i+1: j]})
+				vars = append(vars, &varInfo{isd: isd, name: s[i+1 : j]})
 				rvars = append(rvars, s[i-10:j+1])
 				rvars = append(rvars, "isd"+strconv.Itoa(isd))
 				i = j + 1
 			} else {
-				vars = append(vars, &varInfo{name: s[i+1: j]})
+				vars = append(vars, &varInfo{name: s[i+1 : j]})
 				rvars = append(rvars, s[i:j])
 				rvars = append(rvars, `v["`+s[i+1:j]+`"]`)
 				i = j

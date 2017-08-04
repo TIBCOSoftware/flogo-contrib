@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/support"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/script/fggos"
-	"github.com/TIBCOSoftware/flogo-lib/util"
-	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/script/fggos"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/service"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/support"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/TIBCOSoftware/flogo-lib/util"
 )
-
 
 // Provider is the interface that describes an object
 // that can provide flow definitions from a URI

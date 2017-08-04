@@ -3,17 +3,16 @@ package instance
 import (
 	"fmt"
 	"runtime/debug"
-	"strconv"
 	"sync"
 
-	"github.com/TIBCOSoftware/flogo-lib/core/activity"
-	"github.com/TIBCOSoftware/flogo-lib/core/data"
-	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"github.com/TIBCOSoftware/flogo-lib/util"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/provider"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/support"
+	"github.com/TIBCOSoftware/flogo-lib/core/activity"
+	"github.com/TIBCOSoftware/flogo-lib/core/data"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/TIBCOSoftware/flogo-lib/util"
 )
 
 const (
@@ -63,7 +62,7 @@ func New(instanceID string, flowURI string, flow *definition.Definition, flowMod
 	taskEnv.Task = flow.RootTask()
 	taskEnv.taskID = flow.RootTask().ID()
 	taskEnv.Instance = &inst
-	taskEnv.TaskDatas = make(map[int]*TaskData)
+	taskEnv.TaskDatas = make(map[string]*TaskData)
 	taskEnv.LinkDatas = make(map[int]*LinkData)
 
 	inst.RootTaskEnv = &taskEnv
@@ -413,7 +412,7 @@ func (pi *Instance) handleTaskDone(taskBehavior model.TaskBehavior, taskData *Ta
 
 func (pi *Instance) appendErrorData(err error) {
 
-	switch  err.(type) {
+	switch err.(type) {
 	case *definition.LinkExprError:
 		pi.AddAttr("{Error.type}", data.STRING, "link_expr")
 		pi.AddAttr("{Error.message}", data.STRING, err.Error())
@@ -488,7 +487,7 @@ func (pi *Instance) HandleGlobalError() {
 			taskEnv.Task = ehTask
 			taskEnv.taskID = ehTask.ID()
 			taskEnv.Instance = pi
-			taskEnv.TaskDatas = make(map[int]*TaskData)
+			taskEnv.TaskDatas = make(map[string]*TaskData)
 			taskEnv.LinkDatas = make(map[int]*LinkData)
 
 			pi.EhTaskEnv = &taskEnv
@@ -578,10 +577,10 @@ type TaskEnv struct {
 	Instance  *Instance
 	ParentEnv *TaskEnv
 
-	TaskDatas map[int]*TaskData
+	TaskDatas map[string]*TaskData
 	LinkDatas map[int]*LinkData
 
-	taskID int // for deserialization
+	taskID string // for deserialization
 }
 
 // init initializes the Task Environment, typically called on deserialization
@@ -687,7 +686,7 @@ type TaskData struct {
 
 	changes int
 
-	taskID int //needed for serialization
+	taskID string //needed for serialization
 }
 
 // NewTaskData creates a TaskData for the specified task in the specified task
@@ -919,7 +918,7 @@ func (td *TaskData) EvalActivity() (done bool, evalErr error) {
 // Failed marks the Activity as failed
 func (td *TaskData) Failed(err error) {
 
-	errorMsgAttr := "[A" + strconv.Itoa(td.task.ID()) + "._errorMsg]"
+	errorMsgAttr := "[A" + td.task.ID() + "._errorMsg]"
 	td.taskEnv.Instance.AddAttr(errorMsgAttr, data.STRING, err.Error())
 }
 
@@ -1059,7 +1058,7 @@ type WorkItem struct {
 	ExecType ExecType  `json:"execType"`
 	EvalCode int       `json:"code"`
 
-	TaskID int `json:"taskID"` //for now need for ser
+	TaskID string `json:"taskID"` //for now need for ser
 	//taskCtxID int `json:"taskCtxID"` //not needed for now
 }
 

@@ -107,7 +107,7 @@ func (te *TaskEnv) MarshalJSON() ([]byte, error) {
 
 	return json.Marshal(&struct {
 		ID        int         `json:"id"`
-		TaskID    int         `json:"taskId"`
+		TaskID    string      `json:"taskId"`
 		TaskDatas []*TaskData `json:"taskDatas"`
 		LinkDatas []*LinkData `json:"linkDatas"`
 	}{
@@ -123,7 +123,7 @@ func (te *TaskEnv) UnmarshalJSON(data []byte) error {
 
 	ser := &struct {
 		ID        int         `json:"id"`
-		TaskID    int         `json:"taskId"`
+		TaskID    string      `json:"taskId"`
 		TaskDatas []*TaskData `json:"taskDatas"`
 		LinkDatas []*LinkData `json:"linkDatas"`
 	}{}
@@ -134,7 +134,7 @@ func (te *TaskEnv) UnmarshalJSON(data []byte) error {
 
 	te.ID = ser.ID
 	te.taskID = ser.TaskID
-	te.TaskDatas = make(map[int]*TaskData)
+	te.TaskDatas = make(map[string]*TaskData)
 	te.LinkDatas = make(map[int]*LinkData)
 
 	for _, value := range ser.TaskDatas {
@@ -158,7 +158,7 @@ func (td *TaskData) MarshalJSON() ([]byte, error) {
 	}
 
 	return json.Marshal(&struct {
-		TaskID int               `json:"taskId"`
+		TaskID string            `json:"taskId"`
 		State  int               `json:"state"`
 		Attrs  []*data.Attribute `json:"attrs"`
 	}{
@@ -171,7 +171,7 @@ func (td *TaskData) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON overrides the default UnmarshalJSON for TaskData
 func (td *TaskData) UnmarshalJSON(d []byte) error {
 	ser := &struct {
-		TaskID int               `json:"taskId"`
+		TaskID string            `json:"taskId"`
 		State  int               `json:"state"`
 		Attrs  []*data.Attribute `json:"attrs"`
 	}{}

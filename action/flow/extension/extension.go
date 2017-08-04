@@ -3,10 +3,10 @@ package extension
 import (
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/instance"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/tester"
-	"github.com/TIBCOSoftware/flogo-contrib/model/simple"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/provider"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/tester"
+	"github.com/TIBCOSoftware/flogo-contrib/model/simple"
 )
 
 //Provider is the extension provider for the flow action

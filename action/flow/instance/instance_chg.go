@@ -26,7 +26,7 @@ type WorkItemQueueChange struct {
 // TaskDataChange represents a change to a TaskData
 type TaskDataChange struct {
 	ChgType  ChgType
-	ID       int
+	ID       string
 	TaskData *TaskData
 }
 
@@ -55,7 +55,7 @@ type AttributeChange struct {
 type InstanceChangeTracker struct {
 	wiqChanges map[int]*WorkItemQueueChange
 
-	tdChanges map[int]*TaskDataChange
+	tdChanges map[string]*TaskDataChange
 	ldChanges map[int]*LinkDataChange
 
 	instChange *InstanceChange
@@ -117,7 +117,7 @@ func (ict *InstanceChangeTracker) trackWorkItem(wiChange *WorkItemQueueChange) {
 func (ict *InstanceChangeTracker) trackTaskData(tdChange *TaskDataChange) {
 
 	if ict.tdChanges == nil {
-		ict.tdChanges = make(map[int]*TaskDataChange)
+		ict.tdChanges = make(map[string]*TaskDataChange)
 	}
 
 	ict.tdChanges[tdChange.ID] = tdChange
