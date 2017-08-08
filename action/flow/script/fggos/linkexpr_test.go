@@ -124,26 +124,47 @@ func TestLuaLinkExprManager_EvalLinkExpr(t *testing.T) {
 
 	scope := data.NewSimpleScope(attrs, nil)
 
-	result := mgr.EvalLinkExpr(link1, scope)
+	result, err := mgr.EvalLinkExpr(link1, scope)
+	if err != nil{
+		t.Fatalf("Error evaluating expressions '%s'", err.Error())
+	}
 	fmt.Printf("Link 1 Result: %v\n", result)
 
-	result = mgr.EvalLinkExpr(link2, scope)
+	result, err = mgr.EvalLinkExpr(link2, scope)
+	if err != nil{
+		t.Fatalf("Error evaluating expressions '%s'", err.Error())
+	}
 	fmt.Printf("Link 2 Result: %v\n", result)
 
-	result = mgr.EvalLinkExpr(link3, scope)
+	result, err = mgr.EvalLinkExpr(link3, scope)
+	if err != nil{
+		t.Fatalf("Error evaluating expressions '%s'", err.Error())
+	}
 	fmt.Printf("Link 3 Result: %v\n", result)
 
-	result = mgr.EvalLinkExpr(link4, scope)
+	result, err = mgr.EvalLinkExpr(link4, scope)
+	if err != nil{
+		t.Fatalf("Error evaluating expressions '%s'", err.Error())
+	}
 	fmt.Printf("Link 4 Result: %v\n", result)
 
-	result = mgr.EvalLinkExpr(link5, scope)
+	result, err = mgr.EvalLinkExpr(link5, scope)
+	if err != nil{
+		t.Fatalf("Error evaluating expressions '%s'", err.Error())
+	}
 	fmt.Printf("Link 5 Result: %v\n", result)
 
-	result = mgr.EvalLinkExpr(link6, scope)
+	result, err = mgr.EvalLinkExpr(link6, scope)
+	if err != nil{
+		t.Fatalf("Error evaluating expressions '%s'", err.Error())
+	}
 	fmt.Printf("Link 6 Result: %v\n", result)
 
 	scope.SetAttrValue("petId", 6)
-	result = mgr.EvalLinkExpr(link2, scope)
+	result, err = mgr.EvalLinkExpr(link2, scope)
+	if err != nil{
+		t.Fatalf("Error evaluating expressions '%s'", err.Error())
+	}
 
 	fmt.Printf("Link2 Result: %v\n", result)
 }

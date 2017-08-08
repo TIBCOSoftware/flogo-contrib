@@ -1,3 +1,6 @@
+language: go
+go:
+  - 1.8.x
 sudo: required
 services:
   - docker
@@ -9,30 +12,35 @@ cache:
 git:
     submodules: false
 
-# Do a github login using token
-before_install:
-  - "echo -e \"machine github.com\n  login ${GITHUB_USER_TOKEN}\" >> ~/.netrc"
-script: 
-  - touch flogo-contrib.tgz 
-  - tar cvfz flogo-contrib.tgz --exclude=flogo-contrib.tgz .
-  - find . -not -name "flogo-contrib.tgz" -not  -name "\." -not -name "\.\."  -print0 | xargs -0 rm -rf --
-  - "git ls-remote --exit-code https://github.com/TIBCOSoftware/flogo-cicd.git ${TRAVIS_BRANCH} ;
-    if [ $? -eq 0 ]; then 
-        echo \"Branch ${TRAVIS_BRANCH} found on flogo-cicd\" ;
-        git clone https://github.com/TIBCOSoftware/flogo-cicd.git --branch ${TRAVIS_BRANCH} --single-branch flogo-cicd ;
-    else 
-        echo \"Branch ${TRAVIS_BRANCH} not found on flogo-cicd using master\" ;
-        git clone https://github.com/TIBCOSoftware/flogo-cicd.git flogo-cicd ;
-    fi"
-  - pushd flogo-cicd/docker/flogo-contrib
-  - ./build-flogo-contrib.sh
-  - popd
-after_script:
-  - "[ -f \"${HOME}/.netrc\" ] && rm -f ${HOME}/.netrc"
+jobs:
+  include:
+    - stage: test
+      script: go test -v ./...
+    - stage: build
+      # Do a github login using token
+      before_install:
+        - "echo -e \"machine github.com\n  login ${GITHUB_USER_TOKEN}\" >> ~/.netrc"
+      script:
+        - touch flogo-contrib.tgz
+        - tar cvfz flogo-contrib.tgz --exclude=flogo-contrib.tgz .
+        - find . -not -name "flogo-contrib.tgz" -not  -name "\." -not -name "\.\."  -print0 | xargs -0 rm -rf --
+        - "git ls-remote --exit-code https://github.com/TIBCOSoftware/flogo-cicd.git ${TRAVIS_BRANCH} ;
+          if [ $? -eq 0 ]; then
+              echo \"Branch ${TRAVIS_BRANCH} found on flogo-cicd\" ;
+              git clone https://github.com/TIBCOSoftware/flogo-cicd.git --branch ${TRAVIS_BRANCH} --single-branch flogo-cicd ;
+          else
+              echo \"Branch ${TRAVIS_BRANCH} not found on flogo-cicd using master\" ;
+              git clone https://github.com/TIBCOSoftware/flogo-cicd.git flogo-cicd ;
+          fi"
+        - pushd flogo-cicd/docker/flogo-contrib
+        - ./build-flogo-contrib.sh
+        - popd
+      after_script:
+        - "[ -f \"${HOME}/.netrc\" ] && rm -f ${HOME}/.netrc"
 
-after_success:
-  - "if [ \"${TRAVIS_BRANCH}\" == \"master\" ]; then
-    docker login -u=\"${DOCKER_USERNAME}\" -p=\"${DOCKER_PASSWORD}\";
-    source ${TRAVIS_BUILD_DIR}/flogo-cicd/scripts/init.sh ;
-    flogo::module::postbuild flogo-contrib flogo-contrib;
-    fi"
+      after_success:
+        - "if [ \"${TRAVIS_BRANCH}\" == \"master\" ]; then
+          docker login -u=\"${DOCKER_USERNAME}\" -p=\"${DOCKER_PASSWORD}\";
+          source ${TRAVIS_BUILD_DIR}/flogo-cicd/scripts/init.sh ;
+          flogo::module::postbuild flogo-contrib flogo-contrib;
+          fi"
