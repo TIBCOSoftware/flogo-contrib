@@ -6,6 +6,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
+	"github.com/TIBCOSoftware/flogo-contrib/activity/aggregate/aggregators"
 )
 
 // activityLogger is the default logger for the Aggregate Activity
@@ -74,9 +75,9 @@ func (a *AggregateActivity) Eval(context activity.Context) (done bool, err error
 
 		if !ok {
 			windowSize, _ := context.GetInput(ivWindowSize).(int)
-			autoReset, _ := context.GetInput(ivAutoReset).(bool)
+			//autoReset, _ := context.GetInput(ivAutoReset).(bool)
 
-			aggregator = NewMovingAverage(windowSize, autoReset)
+			aggregator = aggregators.NewMovingAverage(windowSize)
 			a.aggregators[aggregatorKey] = aggregator
 
 			activityLogger.Debug("Aggregator created for ", aggregatorKey)

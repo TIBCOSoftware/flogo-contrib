@@ -1,10 +1,9 @@
-package aggregate
+package aggregators
 
 import "sync"
 
 type MovingAverage struct {
 	windowSize   int
-	autoReset    bool
 	values       []float64
 	nextValueIdx int
 	full         bool
@@ -16,9 +15,9 @@ func (ma *MovingAverage) Add(value float64) (bool, float64) {
 	ma.mutex.Lock()
 	defer ma.mutex.Unlock()
 
-	if ma.full && ma.nextValueIdx == 0 && ma.autoReset {
-		ma.full = false
-	}
+	//if ma.full && ma.nextValueIdx == 0 && ma.autoReset {
+	//	ma.full = false
+	//}
 
 	ma.values[ma.nextValueIdx] = value
 
@@ -56,10 +55,9 @@ func (ma *MovingAverage) result() float64 {
 	return total / float64(count)
 }
 
-func NewMovingAverage(windowSize int, autoReset bool) Aggregator {
+func NewMovingAverage(windowSize int) *MovingAverage {
 	return &MovingAverage{
 		windowSize: windowSize,
-		autoReset:  autoReset,
 		values:     make([]float64, windowSize),
 		mutex:      &sync.Mutex{},
 	}
