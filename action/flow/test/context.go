@@ -1,8 +1,8 @@
 package test
 
 import (
-	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
+	"github.com/TIBCOSoftware/flogo-lib/core/data"
 )
 
 // TestActivityContext is a dummy ActivityContext to assist in testing
@@ -11,9 +11,9 @@ type TestActivityContext struct {
 	TaskNameVal string
 	Attrs       map[string]*data.Attribute
 
-	metadata    *activity.Metadata
-	inputs      map[string]*data.Attribute
-	outputs     map[string]*data.Attribute
+	metadata *activity.Metadata
+	inputs   map[string]*data.Attribute
+	outputs  map[string]*data.Attribute
 }
 
 // TestFlowDetails simple FlowDetails for use in testing

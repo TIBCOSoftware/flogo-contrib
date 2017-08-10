@@ -1,8 +1,8 @@
 package fgn
 
 import (
-	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
+	"github.com/TIBCOSoftware/flogo-lib/core/data"
 )
 
 type ExprFunc func(map[string]interface{}) bool

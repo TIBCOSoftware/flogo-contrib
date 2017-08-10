@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const defJSON = `
@@ -79,4 +81,33 @@ func TestRestartWithFlowData(t *testing.T) {
 	def, _ := NewDefinition(defRep)
 
 	fmt.Printf("Definition: %v", def)
+}
+
+type MyDummyJson struct {
+	Value interface{}
+}
+
+func TestConvertInterfaceToString(t *testing.T) {
+	intJson := `{"Value": 1}`
+	dummyJ := &MyDummyJson{}
+
+	err := json.Unmarshal([]byte(intJson), &dummyJ)
+
+	assert.Nil(t, err)
+
+	result := convertInterfaceToString(dummyJ.Value)
+
+	assert.Equal(t, "1", result)
+
+	strJson := `{"Value": "stringId"}`
+	dummyJ = &MyDummyJson{}
+
+	err = json.Unmarshal([]byte(strJson), &dummyJ)
+
+	assert.Nil(t, err)
+
+	result = convertInterfaceToString(dummyJ.Value)
+
+	assert.Equal(t, "stringId", result)
+
 }

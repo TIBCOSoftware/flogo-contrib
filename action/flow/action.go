@@ -12,17 +12,17 @@ import (
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/extension"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/instance"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/provider"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/tester"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
-	"github.com/TIBCOSoftware/flogo-lib/util"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/provider"
+	"github.com/TIBCOSoftware/flogo-lib/util"
 )
 
 const (
-	FLOW_REF  = "github.com/TIBCOSoftware/flogo-contrib/action/flow"
+	FLOW_REF = "github.com/TIBCOSoftware/flogo-contrib/action/flow"
 )
 
 // ActionOptions are the options for the FlowAction
@@ -32,8 +32,8 @@ type ActionOptions struct {
 }
 
 type FlowAction struct {
-	idGenerator            *util.Generator
-	actionOptions          *ActionOptions
+	idGenerator   *util.Generator
+	actionOptions *ActionOptions
 }
 
 // Provides the different extension points to the Flow Action
@@ -46,10 +46,9 @@ type ExtensionProvider interface {
 	GetFlowTester() *tester.RestEngineTester
 }
 
-var actionMu  sync.Mutex
+var actionMu sync.Mutex
 var ep ExtensionProvider
 var flowAction *FlowAction
-
 
 func init() {
 	action.RegisterFactory(FLOW_REF, &FlowFactory{})
@@ -272,4 +271,3 @@ func (rh *SimpleReplyHandler) Reply(replyCode int, replyData interface{}, err er
 
 	rh.resultHandler.HandleResult(replyCode, replyData, err)
 }
-

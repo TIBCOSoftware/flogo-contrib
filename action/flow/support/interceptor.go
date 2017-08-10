@@ -9,7 +9,7 @@ import "github.com/TIBCOSoftware/flogo-lib/core/data"
 type Interceptor struct {
 	TaskInterceptors []*TaskInterceptor `json:"tasks"`
 
-	taskInterceptorMap map[int]*TaskInterceptor
+	taskInterceptorMap map[string]*TaskInterceptor
 }
 
 // Init initializes the FlowInterceptor, usually called after deserialization
@@ -18,7 +18,7 @@ func (pi *Interceptor) Init() {
 	numAttrs := len(pi.TaskInterceptors)
 	if numAttrs > 0 {
 
-		pi.taskInterceptorMap = make(map[int]*TaskInterceptor, numAttrs)
+		pi.taskInterceptorMap = make(map[string]*TaskInterceptor, numAttrs)
 
 		for _, interceptor := range pi.TaskInterceptors {
 			pi.taskInterceptorMap[interceptor.ID] = interceptor
@@ -27,7 +27,7 @@ func (pi *Interceptor) Init() {
 }
 
 // GetTaskInterceptor get the TaskInterceptor for the specified task (referred to by ID)
-func (pi *Interceptor) GetTaskInterceptor(taskID int) *TaskInterceptor {
+func (pi *Interceptor) GetTaskInterceptor(taskID string) *TaskInterceptor {
 	return pi.taskInterceptorMap[taskID]
 }
 
@@ -35,7 +35,7 @@ func (pi *Interceptor) GetTaskInterceptor(taskID int) *TaskInterceptor {
 // Also, a 'Skip' flag can be enabled to inform the runtime that the task should not
 // execute.
 type TaskInterceptor struct {
-	ID      int               `json:"id"`
+	ID      string            `json:"id"`
 	Skip    bool              `json:"skip,omitempty"`
 	Inputs  []*data.Attribute `json:"inputs,omitempty"`
 	Outputs []*data.Attribute `json:"outputs,omitempty"`

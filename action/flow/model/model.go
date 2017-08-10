@@ -1,6 +1,5 @@
 package model
 
-
 // FlowModel defines the execution Model for a Flow.  It contains the
 // execution behaviors for Flows and Tasks.
 type FlowModel struct {

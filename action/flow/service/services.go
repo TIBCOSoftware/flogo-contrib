@@ -1,6 +1,5 @@
 package service
 
-
 const (
 	// ServiceStateRecorder is the name of the StateRecorder service used in configuration
 	ServiceStateRecorder string = "stateRecorder"

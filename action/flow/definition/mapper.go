@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
+	"github.com/TIBCOSoftware/flogo-lib/core/data"
 )
-
 
 // MapperDef represents a Mapper, which is a collection of mappings
 type MapperDef struct {
@@ -33,7 +32,7 @@ type MapperFactory interface {
 	GetDefaultTaskOutputMapper(task *Task) data.Mapper
 }
 
-var	mapperFactory MapperFactory
+var mapperFactory MapperFactory
 
 func SetMapperFactory(mapper MapperFactory) {
 	mapperFactory = mapper
@@ -49,27 +48,25 @@ func GetMapperFactory() MapperFactory {
 	return mapperFactory
 }
 
-
 //todo move the following to flowAction
 
 type BasicMapperFactory struct {
-
 }
 
-func(mf *BasicMapperFactory) NewMapper(mapperDef *MapperDef) data.Mapper {
+func (mf *BasicMapperFactory) NewMapper(mapperDef *MapperDef) data.Mapper {
 	return NewBasicMapper(mapperDef)
 }
 
-func(mf *BasicMapperFactory) NewTaskInputMapper(task *Task, mapperDef *MapperDef) data.Mapper {
+func (mf *BasicMapperFactory) NewTaskInputMapper(task *Task, mapperDef *MapperDef) data.Mapper {
 	return NewBasicMapper(mapperDef)
 }
 
-func(mf *BasicMapperFactory) NewTaskOutputMapper(task *Task, mapperDef *MapperDef) data.Mapper {
+func (mf *BasicMapperFactory) NewTaskOutputMapper(task *Task, mapperDef *MapperDef) data.Mapper {
 	return NewBasicMapper(mapperDef)
 }
 
 func (mf *BasicMapperFactory) GetDefaultTaskOutputMapper(task *Task) data.Mapper {
-	return &DefaultOutputMapper{task:task}
+	return &DefaultOutputMapper{task: task}
 }
 
 // BasicMapper is a simple object holding and executing mappings
@@ -189,7 +186,7 @@ func (m *BasicMapper) Apply(inputScope data.Scope, outputScope data.Scope) error
 		case data.MtLiteral:
 			outputScope.SetAttrValue(mapping.MapTo, mapping.Value)
 		case data.MtExpression:
-		//todo implement script mapping
+			//todo implement script mapping
 		}
 	}
 
@@ -207,7 +204,7 @@ func (m *DefaultOutputMapper) Apply(inputScope data.Scope, outputScope data.Scop
 
 	act := activity.Get(m.task.ActivityRef())
 
-	attrNS := "{A" + strconv.Itoa(m.task.ID()) + "."
+	attrNS := "{A" + m.task.ID() + "."
 
 	for _, attr := range act.Metadata().Outputs {
 

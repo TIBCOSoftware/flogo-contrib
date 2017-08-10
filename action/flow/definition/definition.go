@@ -20,7 +20,7 @@ type Definition struct {
 
 	inputMapper data.Mapper
 	links       map[int]*Link
-	tasks       map[int]*Task
+	tasks       map[string]*Task
 
 	linkExprMgr LinkExprManager
 }
@@ -63,7 +63,7 @@ func (pd *Definition) GetAttr(attrName string) (attr *data.Attribute, exists boo
 }
 
 // GetTask returns the task with the specified ID
-func (pd *Definition) GetTask(taskID int) *Task {
+func (pd *Definition) GetTask(taskID string) *Task {
 	task := pd.tasks[taskID]
 	return task
 }
@@ -92,7 +92,7 @@ func (pd *Definition) GetLinkExprManager() LinkExprManager {
 // a task.  It contains its data (attributes) and its
 // nested structure (child tasks & child links).
 type Task struct {
-	id           int
+	id           string
 	typeID       int
 	activityType string
 	activityRef  string
@@ -115,7 +115,7 @@ type Task struct {
 }
 
 // ID gets the id of the task
-func (task *Task) ID() int {
+func (task *Task) ID() string {
 	return task.id
 }
 

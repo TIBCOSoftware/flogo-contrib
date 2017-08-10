@@ -10,12 +10,12 @@ type LinkExprManager interface {
 }
 
 func NewLinkExprError(msg string) *LinkExprError {
-	return &LinkExprError{msg:msg}
+	return &LinkExprError{msg: msg}
 }
 
 // LinkExprError thrown if error is encountered evaluating an link expression
 type LinkExprError struct {
-	 msg string
+	msg string
 }
 
 func (e *LinkExprError) Error() string {
@@ -23,11 +23,10 @@ func (e *LinkExprError) Error() string {
 }
 
 type LinkExprManagerFactory interface {
-
 	NewLinkExprManager(def *Definition) LinkExprManager
 }
 
-var	linkExprMangerFactory LinkExprManagerFactory
+var linkExprMangerFactory LinkExprManagerFactory
 
 func SetLinkExprManagerFactory(factory LinkExprManagerFactory) {
 	linkExprMangerFactory = factory
@@ -44,7 +43,7 @@ func GetExpressionLinks(def *Definition) []*Link {
 
 	getExpressionLinks(def.RootTask(), &links)
 
-	if (def.ErrorHandlerTask() != nil) {
+	if def.ErrorHandlerTask() != nil {
 		getExpressionLinks(def.ErrorHandlerTask(), &links)
 	}
 
