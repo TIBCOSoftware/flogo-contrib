@@ -19,10 +19,6 @@
       "required": true
     },
     {
-      "name": "autoReset",
-      "type": "boolean"
-    },
-    {
       "name": "value",
       "type": "number"
     }

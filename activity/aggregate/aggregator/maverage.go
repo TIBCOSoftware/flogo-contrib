@@ -1,4 +1,4 @@
-package aggregators
+package aggregator
 
 import "sync"
 
@@ -8,6 +8,10 @@ type MovingAverage struct {
 	nextValueIdx int
 	full         bool
 	mutex        *sync.Mutex
+}
+
+func init() {
+	RegisterFactory("moving_avg", NewMovingAverage)
 }
 
 func (ma *MovingAverage) Add(value float64) (bool, float64) {
@@ -55,7 +59,7 @@ func (ma *MovingAverage) result() float64 {
 	return total / float64(count)
 }
 
-func NewMovingAverage(windowSize int) *MovingAverage {
+func NewMovingAverage(windowSize int) Aggregator {
 	return &MovingAverage{
 		windowSize: windowSize,
 		values:     make([]float64, windowSize),

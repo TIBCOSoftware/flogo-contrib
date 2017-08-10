@@ -41,8 +41,7 @@ func TestEval(t *testing.T) {
 	tc := test.NewTestActivityContext(getActivityMetadata())
 
 	//setup attrs
-	tc.SetInput(ivFunction, "average")
-	tc.SetInput(ivAutoReset, false)
+	tc.SetInput(ivFunction, "moving_avg")
 	tc.SetInput(ivWindowSize, 2)
 	tc.SetInput(ivValue, 2)
 
@@ -61,8 +60,7 @@ func TestEval(t *testing.T) {
 	tc2 := test.NewTestActivityContext(getActivityMetadata())
 
 	//setup attrs
-	tc2.SetInput(ivFunction, "average")
-	tc2.SetInput(ivAutoReset, false)
+	tc2.SetInput(ivFunction, "moving_avg")
 	tc2.SetInput(ivWindowSize, 5)
 	tc2.SetInput(ivValue, 3)
 
@@ -82,8 +80,7 @@ func TestEval(t *testing.T) {
 	tc3 := test.NewTestActivityContext(getActivityMetadata())
 
 	//setup attrs
-	tc3.SetInput(ivFunction, "average")
-	tc3.SetInput(ivAutoReset, false)
+	tc3.SetInput(ivFunction, "moving_avg")
 	tc3.SetInput(ivWindowSize, 5)
 	tc3.SetInput(ivValue, 3)
 
@@ -107,8 +104,7 @@ func TestResetEval(t *testing.T) {
 	tc := test.NewTestActivityContext(getActivityMetadata())
 
 	//setup attrs
-	tc.SetInput(ivFunction, "average")
-	tc.SetInput(ivAutoReset, true)
+	tc.SetInput(ivFunction, "block_avg")
 	tc.SetInput(ivWindowSize, 2)
 	tc.SetInput(ivValue, 2)
 
@@ -127,8 +123,7 @@ func TestResetEval(t *testing.T) {
 	tc2 := test.NewTestActivityContext(getActivityMetadata())
 
 	//setup attrs
-	tc2.SetInput(ivFunction, "average")
-	tc2.SetInput(ivAutoReset, true)
+	tc2.SetInput(ivFunction, "block_avg")
 	tc2.SetInput(ivWindowSize, 2)
 	tc2.SetInput(ivValue, 3)
 
@@ -148,8 +143,7 @@ func TestResetEval(t *testing.T) {
 	tc3 := test.NewTestActivityContext(getActivityMetadata())
 
 	//setup attrs
-	tc3.SetInput(ivFunction, "average")
-	tc3.SetInput(ivAutoReset, true)
+	tc3.SetInput(ivFunction, "block_avg")
 	tc3.SetInput(ivWindowSize, 2)
 	tc3.SetInput(ivValue, 3)
 

@@ -1,4 +1,4 @@
-package aggregators
+package aggregator
 
 import "sync"
 
@@ -7,6 +7,10 @@ type BlockAverage struct {
 	values       []float64
 	nextValueIdx int
 	mutex        *sync.Mutex
+}
+
+func init() {
+	RegisterFactory("block_avg", NewBlockAverage)
 }
 
 func (ba *BlockAverage) Add(value float64) (bool, float64) {
@@ -36,7 +40,7 @@ func (ba *BlockAverage) average() float64 {
 	return total / float64(ba.windowSize)
 }
 
-func NewBlockAverage(windowSize int) *BlockAverage {
+func NewBlockAverage(windowSize int) Aggregator {
 	return &BlockAverage{
 		windowSize: windowSize,
 		values:     make([]float64, windowSize),

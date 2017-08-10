@@ -1,4 +1,4 @@
-package aggregators
+package aggregator
 
 import (
 	"sync"
@@ -11,6 +11,10 @@ type TimeBlockAverage struct {
 	windowMtx    *sync.Mutex
 	startMtx     *sync.RWMutex
 	windowActive bool
+}
+
+func init() {
+	RegisterFactory("timeblockavg", NewTimeBlockAverage)
 }
 
 func (ta *TimeBlockAverage) Add(value float64) (bool, float64) {
@@ -74,7 +78,7 @@ func (ta *TimeBlockAverage) resetWindow() {
 	ta.startMtx.Unlock()
 }
 
-func NewTimeBlockAverage(windowSize int) *TimeBlockAverage {
+func NewTimeBlockAverage(windowSize int) Aggregator {
 	return &TimeBlockAverage{
 		windowSize: time.Duration(windowSize),
 		windowMtx:  &sync.Mutex{},

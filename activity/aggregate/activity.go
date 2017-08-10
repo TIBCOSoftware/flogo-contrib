@@ -6,27 +6,21 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
-	"github.com/TIBCOSoftware/flogo-contrib/activity/aggregate/aggregators"
+	"github.com/TIBCOSoftware/flogo-contrib/activity/aggregate/aggregator"
+	"github.com/pkg/errors"
 )
 
 // activityLogger is the default logger for the Aggregate Activity
 var activityLogger = logger.GetLogger("activity-tibco-aggregate")
 
-
-
 const (
 	ivFunction   = "function"
 	ivWindowSize = "windowSize"
-	ivAutoReset  = "autoReset"
 	ivValue      = "value"
 
 	ovResult = "result"
 	ovReport = "report"
 )
-
-type Aggregator interface {
-	Add(value float64) (report bool, result float64)
-}
 
 func init() {
 	activityLogger.SetLogLevel(logger.InfoLevel)
@@ -40,12 +34,12 @@ type AggregateActivity struct {
 	mutex    *sync.RWMutex
 
 	// aggregators stateful map of aggregators
-	aggregators map[string]Aggregator
+	aggregators map[string]aggregator.Aggregator
 }
 
 // NewActivity creates a new AppActivity
 func NewActivity(metadata *activity.Metadata) activity.Activity {
-	return &AggregateActivity{metadata: metadata, aggregators:make(map[string]Aggregator), mutex:&sync.RWMutex{}}
+	return &AggregateActivity{metadata: metadata, aggregators:make(map[string]aggregator.Aggregator), mutex:&sync.RWMutex{}}
 }
 
 // Metadata returns the activity's metadata
@@ -60,7 +54,7 @@ func (a *AggregateActivity) Eval(context activity.Context) (done bool, err error
 
 	a.mutex.RLock()
 	//get aggregator for activity, assumes flow & task names are unique
-	aggregator, ok := a.aggregators[aggregatorKey]
+	aggr, ok := a.aggregators[aggregatorKey]
 
 	a.mutex.RUnlock()
 
@@ -71,14 +65,20 @@ func (a *AggregateActivity) Eval(context activity.Context) (done bool, err error
 		//go doesn't have lock upgrades or try, so do same check again
 
 		a.mutex.Lock()
-		aggregator, ok = a.aggregators[aggregatorKey]
+		aggr, ok = a.aggregators[aggregatorKey]
 
 		if !ok {
 			windowSize, _ := context.GetInput(ivWindowSize).(int)
-			//autoReset, _ := context.GetInput(ivAutoReset).(bool)
+			aggrName,_ := context.GetInput(ivFunction).(string)
 
-			aggregator = aggregators.NewMovingAverage(windowSize)
-			a.aggregators[aggregatorKey] = aggregator
+			factory := aggregator.GetFactory(aggrName)
+
+			if factory == nil {
+				return false, errors.New("Unknown aggregator: " +aggrName)
+			}
+
+			aggr = factory(windowSize)
+			a.aggregators[aggregatorKey] = aggr
 
 			activityLogger.Debug("Aggregator created for ", aggregatorKey)
 		}
@@ -92,7 +92,7 @@ func (a *AggregateActivity) Eval(context activity.Context) (done bool, err error
 		value,_ = data.CoerceToNumber(context.GetInput(ivValue))
 	}
 
-	report, result := aggregator.Add(value)
+	report, result := aggr.Add(value)
 
 	context.SetOutput(ovReport, report)
 	context.SetOutput(ovResult, result)
