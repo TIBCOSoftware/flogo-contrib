@@ -6,6 +6,7 @@ import (
 
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
+	"github.com/TIBCOSoftware/flogo-lib/core/property"
 )
 
 // MapperDef represents a Mapper, which is a collection of mappings
@@ -101,25 +102,36 @@ func (m *BasicMapper) Apply(inputScope data.Scope, outputScope data.Scope) error
 		case data.MtAssign:
 
 			attrName, attrPath, pathType := data.GetAttrPath(mapping.Value)
-
+			var attrValue interface{}
 			tv, exists := inputScope.GetAttr(attrName)
-			attrValue := tv.Value
-
-			if exists && len(attrPath) > 0 {
-				if tv.Type == data.PARAMS {
-					valMap := attrValue.(map[string]string)
-					attrValue, exists = valMap[attrPath]
-				} else if tv.Type == data.ARRAY && pathType == data.PT_ARRAY {
-					//assigning part of array
-					idx, _ := strconv.Atoi(attrPath)
-					//todo handle err
-					valArray := attrValue.([]interface{})
-					attrValue = valArray[idx]
-				} else {
-					//for now assume if we have a path, attr is "object"
-					valMap := attrValue.(map[string]interface{})
-					attrValue = data.GetMapValue(valMap, attrPath)
-					//attrValue, exists = valMap[attrPath]
+			if tv == nil && pathType == data.PT_PROPERTY {
+				// Property resolution
+				attrValue, exists = property.Resolve(mapping.Value)
+				if exists == false {
+					if attrName == "property" {
+						return fmt.Errorf("Failed to resolve Property: '%s' mapped to the Attribute: '%s'. Ensure that property is configured in the application.", attrPath, mapping.MapTo)
+					} else if attrName == "env" {
+						return fmt.Errorf("Failed to resolve Environment Variable: '%s' mapped to the Attribute: '%s'. Ensure that variable is configured.", attrPath, mapping.MapTo)
+					}
+				}
+			} else {
+				attrValue = tv.Value
+				if exists && len(attrPath) > 0 {
+					if tv.Type == data.PARAMS {
+						valMap := attrValue.(map[string]string)
+						attrValue, exists = valMap[attrPath]
+					} else if tv.Type == data.ARRAY && pathType == data.PT_ARRAY {
+						//assigning part of array
+						idx, _ := strconv.Atoi(attrPath)
+						//todo handle err
+						valArray := attrValue.([]interface{})
+						attrValue = valArray[idx]
+					} else {
+						//for now assume if we have a path, attr is "object"
+						valMap := attrValue.(map[string]interface{})
+						attrValue = data.GetMapValue(valMap, attrPath)
+						//attrValue, exists = valMap[attrPath]
+					}
 				}
 			}
 

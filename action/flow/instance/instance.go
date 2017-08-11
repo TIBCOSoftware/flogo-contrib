@@ -345,7 +345,7 @@ func (pi *Instance) evalTask(taskBehavior model.TaskBehavior, taskData *TaskData
 			doneCode = 0
 		}
 	}()
-
+	
 	done, doneCode, err = taskBehavior.Eval(taskData, evalCode)
 
 	return done, doneCode, err
@@ -889,6 +889,7 @@ func (td *TaskData) HasActivity() bool {
 // EvalActivity implements activity.ActivityContext.EvalActivity method
 func (td *TaskData) EvalActivity() (done bool, evalErr error) {
 
+   
 	act := activity.Get(td.task.ActivityRef())
 
 	//todo: if act == nil, return TaskDoesntHaveActivity error or something like that
