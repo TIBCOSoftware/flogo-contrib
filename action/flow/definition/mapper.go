@@ -109,9 +109,9 @@ func (m *BasicMapper) Apply(inputScope data.Scope, outputScope data.Scope) error
 				attrValue, exists = property.Resolve(mapping.Value)
 				if exists == false {
 					if attrName == "property" {
-						return fmt.Errorf("Failed to resolve Property: '%s' mapped to the Field: '%s'. Ensure that property is configured in the application.", attrPath, mapping.MapTo)
+						return fmt.Errorf("Failed to resolve Property: '%s' mapped to the Attribute: '%s'. Ensure that property is configured in the application.", attrPath, mapping.MapTo)
 					} else if attrName == "env" {
-						return fmt.Errorf("Failed to resolve Environment Variable: '%s' mapped to the Field: '%s'. Ensure that variable is configured.", attrPath, mapping.MapTo)
+						return fmt.Errorf("Failed to resolve Environment Variable: '%s' mapped to the Attribute: '%s'. Ensure that variable is configured.", attrPath, mapping.MapTo)
 					}
 				}
 			} else {
