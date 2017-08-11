@@ -1,4 +1,7 @@
 # flogo-contrib
+
+[![Build Status](https://travis-ci.org/TIBCOSoftware/flogo-contrib.svg?branch=master)](https://travis-ci.org/TIBCOSoftware/flogo-contrib.svg?branch=master)
+
 Collection of Flogo activities, triggers and models.
 
 ## Contributions

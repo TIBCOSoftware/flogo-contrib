@@ -11,16 +11,15 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/TIBCOSoftware/flogo-lib/util"
-	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/TIBCOSoftware/flogo-lib/util"
 )
 
 const (
 	uriSchemeFile = "file://"
 	uriSchemeHttp = "http://"
 )
-
 
 // FlowManager is a simple manager for flows
 type FlowManager struct {

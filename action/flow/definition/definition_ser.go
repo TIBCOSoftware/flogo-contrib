@@ -1,9 +1,11 @@
 package definition
 
 import (
+	"fmt"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/util"
+	"strconv"
 )
 
 // DefinitionRep is a serializable representation of a flow Definition
@@ -19,7 +21,9 @@ type DefinitionRep struct {
 
 // TaskRep is a serializable representation of a flow Task
 type TaskRep struct {
-	ID           int               `json:"id"`
+	// Using interface{} type to support backward compatibility changes since Id was
+	// int before, change to string once BC is removed
+	ID           interface{}       `json:"id"`
 	TypeID       int               `json:"type"`
 	ActivityType string            `json:"activityType"`
 	ActivityRef  string            `json:"activityRef"`
@@ -38,12 +42,16 @@ type TaskRep struct {
 
 // LinkRep is a serializable representation of a flow Link
 type LinkRep struct {
-	ID     int    `json:"id"`
-	Type   int    `json:"type"`
-	Name   string `json:"name"`
-	ToID   int    `json:"to"`
-	FromID int    `json:"from"`
-	Value  string `json:"value"`
+	ID   int    `json:"id"`
+	Type int    `json:"type"`
+	Name string `json:"name"`
+	// Using interface{} type to support backward compatibility changes since Id was
+	// int before, change to string once BC is removed
+	ToID interface{} `json:"to"`
+	// Using interface{} type to support backward compatibility changes since Id was
+	// int before, change to string once BC is removed
+	FromID interface{} `json:"from"`
+	Value  string      `json:"value"`
 }
 
 // NewDefinition creates a flow Definition from a serializable
@@ -72,7 +80,7 @@ func NewDefinition(rep *DefinitionRep) (def *Definition, err error) {
 
 	def.rootTask = &Task{}
 
-	def.tasks = make(map[int]*Task)
+	def.tasks = make(map[string]*Task)
 	def.links = make(map[int]*Link)
 
 	addTask(def, def.rootTask, rep.RootTask)
@@ -89,7 +97,9 @@ func NewDefinition(rep *DefinitionRep) (def *Definition, err error) {
 }
 
 func addTask(def *Definition, task *Task, rep *TaskRep) {
-	task.id = rep.ID
+	// Workaround to support Backwards compatibility
+	// Remove once rep.ID is string
+	task.id = convertInterfaceToString(rep.ID)
 	task.activityType = rep.ActivityType
 	task.activityRef = rep.ActivityRef
 	task.typeID = rep.TypeID
@@ -175,6 +185,21 @@ func addTask(def *Definition, task *Task, rep *TaskRep) {
 	}
 }
 
+//convertInterfaceToString will identify whether the interface is int or string and return a string in any case
+func convertInterfaceToString(m interface{}) string {
+	if m == nil {
+		panic("Invalid nil activity id found")
+	}
+	switch m.(type) {
+	case string:
+		return m.(string)
+	case float64:
+		return strconv.Itoa(int(m.(float64)))
+	default:
+		panic(fmt.Sprintf("Error parsing Task with Id '%v', invalid type '%T'", m, m))
+	}
+}
+
 func addLinks(def *Definition, task *Task, rep *TaskRep) {
 
 	numLinks := len(rep.Links)
@@ -191,8 +216,8 @@ func addLinks(def *Definition, task *Task, rep *TaskRep) {
 			//link.Definition = pd
 			link.linkType = LinkType(linkRep.Type)
 			link.value = linkRep.Value
-			link.fromTask = def.tasks[linkRep.FromID]
-			link.toTask = def.tasks[linkRep.ToID]
+			link.fromTask = def.tasks[convertInterfaceToString(linkRep.FromID)]
+			link.toTask = def.tasks[convertInterfaceToString(linkRep.ToID)]
 
 			// add this link as predecessor "fromLink" to the "toTask"
 			link.toTask.fromLinks = append(link.toTask.fromLinks, link)

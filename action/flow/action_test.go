@@ -24,9 +24,6 @@ func TestInitNoFlavorError(t *testing.T) {
 	flowAction := f.New(mockConfig)
 	assert.NotNil(t, flowAction)
 
-
-
-
 	// If reaches here it should fail, as it should panic before
 	t.Fail()
 }
@@ -73,7 +70,6 @@ func TestInitCompressedFlowFlavorError(t *testing.T) {
 	f := &FlowFactory{}
 	flowAction := f.New(mockConfig)
 	assert.NotNil(t, flowAction)
-
 
 	// If reaches here it should fail, as it should panic before
 	t.Fail()

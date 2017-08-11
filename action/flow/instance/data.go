@@ -1,12 +1,10 @@
 package instance
 
 import (
-	"strconv"
-
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 )
 
 func applyInputMapper(pi *Instance, taskData *TaskData) error {
@@ -110,7 +108,7 @@ func applyDefaultActivityOutputMappings(pi *Instance, taskData *TaskData) {
 
 	activity := activity.Get(taskData.task.ActivityRef())
 
-	attrNS := "{A" + strconv.Itoa(taskData.task.ID()) + "."
+	attrNS := "{A" + taskData.task.ID() + "."
 
 	for _, attr := range activity.Metadata().Outputs {
 
@@ -156,7 +154,7 @@ func NewFixedTaskScope(refAttrs map[string]*data.Attribute, task *definition.Tas
 	scope := &FixedTaskScope{
 		refAttrs: refAttrs,
 		task:     task,
-		isInput: isInput,
+		isInput:  isInput,
 	}
 
 	return scope
@@ -225,4 +223,3 @@ func (s *FixedTaskScope) SetAttrValue(attrName string, value interface{}) error 
 
 	return nil
 }
-

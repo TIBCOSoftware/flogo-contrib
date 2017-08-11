@@ -3,19 +3,18 @@ package tester
 import (
 	"context"
 
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/instance"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/support"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/engine/runner"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/support"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/instance"
 )
 
 const (
-	FLOW_REF  = "github.com/TIBCOSoftware/flogo-contrib/action/flow"
+	FLOW_REF = "github.com/TIBCOSoftware/flogo-contrib/action/flow"
 )
-
 
 // RequestProcessor processes request objects and invokes the corresponding
 // flow Manager methods
@@ -55,7 +54,7 @@ func (rp *RequestProcessor) StartFlow(startRequest *StartRequest) (code int, ret
 	}
 
 	factory := action.GetFactory(FLOW_REF)
-	act := factory.New(&action.Config{Id:"flow"})
+	act := factory.New(&action.Config{Id: "flow"})
 
 	ctx := trigger.NewContext(context.Background(), attrs)
 
@@ -84,7 +83,7 @@ func (rp *RequestProcessor) RestartFlow(restartRequest *RestartRequest) (code in
 	}
 
 	factory := action.GetFactory(FLOW_REF)
-	act := factory.New(&action.Config{Id:"flow"})
+	act := factory.New(&action.Config{Id: "flow"})
 
 	ro := &instance.RunOptions{Op: instance.OpRestart, ReturnID: true, InitialState: restartRequest.InitialState, ExecOptions: execOptions}
 	return rp.runner.Run(ctx, act, restartRequest.InitialState.FlowURI, ro)
@@ -111,7 +110,7 @@ func (rp *RequestProcessor) ResumeFlow(resumeRequest *ResumeRequest) (code int, 
 	}
 
 	factory := action.GetFactory(FLOW_REF)
-	act := factory.New(&action.Config{Id:"flow"})
+	act := factory.New(&action.Config{Id: "flow"})
 
 	ro := &instance.RunOptions{Op: instance.OpResume, ReturnID: true, InitialState: resumeRequest.State, ExecOptions: execOptions}
 	return rp.runner.Run(ctx, act, resumeRequest.State.FlowURI, ro)

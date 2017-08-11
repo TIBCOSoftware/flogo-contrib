@@ -216,7 +216,7 @@ func (m *DefaultOutputMapper) Apply(inputScope data.Scope, outputScope data.Scop
 
 	act := activity.Get(m.task.ActivityRef())
 
-	attrNS := "{A" + strconv.Itoa(m.task.ID()) + "."
+	attrNS := "{A" + m.task.ID() + "."
 
 	for _, attr := range act.Metadata().Outputs {
 
