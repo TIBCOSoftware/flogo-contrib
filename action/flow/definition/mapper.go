@@ -102,11 +102,18 @@ func (m *BasicMapper) Apply(inputScope data.Scope, outputScope data.Scope) error
 		case data.MtAssign:
 
 			attrName, attrPath, pathType := data.GetAttrPath(mapping.Value)
-            var attrValue interface{}
-            tv, exists := inputScope.GetAttr(attrName)
+			var attrValue interface{}
+			tv, exists := inputScope.GetAttr(attrName)
 			if tv == nil && pathType == data.PT_PROPERTY {
 				// Property resolution
-				attrValue, exists = property.Resolve(attrPath)
+				attrValue, exists = property.Resolve(mapping.Value)
+				if exists == false {
+					if attrName == "property" {
+						return fmt.Errorf("Failed to resolve Property: '%s' mapped to the Field: '%s'. Ensure that property is configured in the application.", attrPath, mapping.MapTo)
+					} else if attrName == "env" {
+						return fmt.Errorf("Failed to resolve Environment Variable: '%s' mapped to the Field: '%s'. Ensure that variable is configured.", attrPath, mapping.MapTo)
+					}
+				}
 			} else {
 				attrValue = tv.Value
 				if exists && len(attrPath) > 0 {
