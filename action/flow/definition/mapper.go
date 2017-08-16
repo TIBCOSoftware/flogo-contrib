@@ -100,13 +100,20 @@ func (m *BasicMapper) Apply(inputScope data.Scope, outputScope data.Scope) error
 
 		switch mapping.Type {
 		case data.MtAssign:
-
 			var attrValue interface{}
-			attrName, attrPath, pathType := data.GetAttrPath(mapping.Value)
-			tv, exists := inputScope.GetAttr(attrName)
+			var exists bool
+			var attrName string
+			// Get resolver type
+			resolType, err := data.GetResolverType(mapping.Value)
+			if err != nil {
+				return err
+			}
 
-			switch pathType {
-			default:
+			switch resolType {
+			// This is the Backward compatible case
+			case data.RES_DEFAULT:
+				attrName, attrPath, pathType := data.GetAttrPath(mapping.Value)
+				tv, exists := inputScope.GetAttr(attrName)
 				attrValue = tv.Value
 				if exists && len(attrPath) > 0 {
 					if tv.Type == data.PARAMS {
@@ -125,7 +132,7 @@ func (m *BasicMapper) Apply(inputScope data.Scope, outputScope data.Scope) error
 						//attrValue, exists = valMap[attrPath]
 					}
 				}
-			case data.PT_PROPERTY:
+			case data.RES_PROPERTY:
 				// Property resolution
 				attrValue, exists = property.Resolve(mapping.Value)
 				if !exists {
@@ -134,6 +141,12 @@ func (m *BasicMapper) Apply(inputScope data.Scope, outputScope data.Scope) error
 					} else if attrName == "env" {
 						return fmt.Errorf("Failed to resolve Environment Variable: '%s' mapped to the Attribute: '%s'. Ensure that variable is configured.", attrPath, mapping.MapTo)
 					}
+				}
+			case data.RES_ACTIVITY:
+				// Activity resolution
+				attrValue, exists = activity.Resolve(inputScope, mapping.Value)
+				if !exists {
+					return fmt.Errorf("Could not resolve expression '%s' for the current input scope", mapping.Value)
 				}
 			}
 
