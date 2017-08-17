@@ -8,6 +8,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/core/property"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 )
 
 // MapperDef represents a Mapper, which is a collection of mappings
@@ -162,12 +163,13 @@ func (m *BasicMapper) Apply(inputScope data.Scope, outputScope data.Scope) error
 					return err
 				}
 			case data.RES_TRIGGER:
-				// TODO finish trigger implementation
 				// Trigger resolution
-				//attrValue, exists = trigger.Resolve(inputScope, mapping.Value)
-				//if !exists {
-				//		return fmt.Errorf("Could not resolve expression '%s' for the current input scope", mapping.Value)
-				//}
+				attrValue, exists = trigger.Resolve(inputScope, mapping.Value)
+				if !exists {
+					err := fmt.Errorf("Could not resolve expression '%s' for the current input scope", mapping.Value)
+					logger.Error(err.Error())
+					return err
+				}
 			}
 
 			//todo implement type conversion
@@ -252,7 +254,7 @@ func (m *DefaultOutputMapper) Apply(inputScope data.Scope, outputScope data.Scop
 
 	attrNS := "{A" + m.task.ID() + "."
 
-	attrNS2 := "{activity." + m.task.ID() + "."
+	attrNS2 := "${activity." + m.task.ID() + "."
 
 	for _, attr := range act.Metadata().Outputs {
 

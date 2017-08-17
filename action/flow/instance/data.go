@@ -109,6 +109,7 @@ func applyDefaultActivityOutputMappings(pi *Instance, taskData *TaskData) {
 	activity := activity.Get(taskData.task.ActivityRef())
 
 	attrNS := "{A" + taskData.task.ID() + "."
+	attrNS2 := "${activity." + taskData.task.ID() + "."
 
 	for _, attr := range activity.Metadata().Outputs {
 
@@ -116,6 +117,7 @@ func applyDefaultActivityOutputMappings(pi *Instance, taskData *TaskData) {
 
 		if oAttr != nil {
 			pi.AddAttr(attrNS+attr.Name+"}", attr.Type, oAttr.Value)
+			pi.AddAttr(attrNS2+attr.Name+"}", attr.Type, oAttr.Value)
 		}
 	}
 }
@@ -136,7 +138,9 @@ func applyDefaultInstanceInputMappings(pi *Instance, attrs []*data.Attribute) {
 	for _, attr := range attrs {
 
 		attrName := "{TriggerData." + attr.Name + "}"
+		attrName2 := "${trigger." + attr.Name + "}"
 		pi.AddAttr(attrName, attr.Type, attr.Value)
+		pi.AddAttr(attrName2, attr.Type, attr.Value)
 	}
 }
 

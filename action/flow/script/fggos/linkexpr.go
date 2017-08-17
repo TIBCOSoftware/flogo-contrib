@@ -97,9 +97,12 @@ func transExpr(s string) ([]*varInfo, string) {
 				rvars = append(rvars, "isd"+strconv.Itoa(isd))
 				i = j + 1
 			} else {
-				vars = append(vars, &varInfo{name: s[i+1 : j]})
+				name := s[i+1 : j]
+				// Workaround until we don't support old resolutions
+				name = strings.Replace(strings.Replace(name, "{trigger.", "${trigger.", -1), "{activity.", "${activity.", -1)
+				vars = append(vars, &varInfo{name: name})
 				rvars = append(rvars, s[i:j])
-				rvars = append(rvars, `v["`+s[i+1:j]+`"]`)
+				rvars = append(rvars, `v["`+name+`"]`)
 				i = j
 			}
 		}
@@ -145,7 +148,6 @@ func (em *GosLinkExprManager) EvalLinkExpr(link *definition.Link, scope data.Sco
 	vars, attrsOK := em.values[link.ID()]
 	expr, exprOK := em.exprs[link.ID()]
 
-
 	if !attrsOK || !exprOK {
 
 		return false, fmt.Errorf("Unable to evaluate expression '%s', did not compile properly\n", link.Value())
@@ -162,8 +164,6 @@ func (em *GosLinkExprManager) EvalLinkExpr(link *definition.Link, scope data.Sco
 		attr, exists := scope.GetAttr(attrName)
 
 		attrValue = attr.Value
-		logger.Debugf("LINK EXPRESSION varInfo.name: '%s', attrName: '%s', attrPath: '%s', attr: '%+v', attrValue: '%s' ", varInfo.name, attrName, attrPath, attr, attrValue)
-
 		if varInfo.isd > 0 {
 
 			if exists && len(attrPath) > 0 {
