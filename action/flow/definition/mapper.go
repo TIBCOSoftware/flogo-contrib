@@ -114,7 +114,8 @@ func (m *BasicMapper) Apply(inputScope data.Scope, outputScope data.Scope) error
 			// This is the Backward compatible case
 			case data.RES_DEFAULT:
 				attrName, attrPath, pathType := data.GetAttrPath(mapping.Value)
-				tv, exists := inputScope.GetAttr(attrName)
+				var tv *data.Attribute
+				tv, exists = inputScope.GetAttr(attrName)
 				if tv == nil {
 					err := fmt.Errorf("Failed to resolve attribute '%s' for mapping value '%s'", attrName, mapping.Value)
 					logger.Error(err.Error())
@@ -171,7 +172,6 @@ func (m *BasicMapper) Apply(inputScope data.Scope, outputScope data.Scope) error
 
 			//todo implement type conversion
 			if exists {
-
 				attrName, attrPath, pathType := data.GetAttrPath(mapping.MapTo)
 				toAttr, oe := outputScope.GetAttr(attrName)
 
@@ -252,7 +252,7 @@ func (m *DefaultOutputMapper) Apply(inputScope data.Scope, outputScope data.Scop
 
 	attrNS := "{A" + m.task.ID() + "."
 
-	attrNS2 := "${activity." + m.task.ID() + "."
+	attrNS2 := "{activity." + m.task.ID() + "."
 
 	for _, attr := range act.Metadata().Outputs {
 
