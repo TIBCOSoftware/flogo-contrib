@@ -145,6 +145,7 @@ func (em *GosLinkExprManager) EvalLinkExpr(link *definition.Link, scope data.Sco
 	vars, attrsOK := em.values[link.ID()]
 	expr, exprOK := em.exprs[link.ID()]
 
+
 	if !attrsOK || !exprOK {
 
 		return false, fmt.Errorf("Unable to evaluate expression '%s', did not compile properly\n", link.Value())
@@ -161,6 +162,7 @@ func (em *GosLinkExprManager) EvalLinkExpr(link *definition.Link, scope data.Sco
 		attr, exists := scope.GetAttr(attrName)
 
 		attrValue = attr.Value
+		logger.Debugf("LINK EXPRESSION varInfo.name: '%s', attrName: '%s', attrPath: '%s', attr: '%+v', attrValue: '%s' ", varInfo.name, attrName, attrPath, attr, attrValue)
 
 		if varInfo.isd > 0 {
 
