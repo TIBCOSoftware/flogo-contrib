@@ -921,6 +921,8 @@ func (td *TaskData) Failed(err error) {
 
 	errorMsgAttr := "[A" + td.task.ID() + "._errorMsg]"
 	td.taskEnv.Instance.AddAttr(errorMsgAttr, data.STRING, err.Error())
+	errorMsgAttr2 := "[activity." + td.task.ID() + "._errorMsg]"
+	td.taskEnv.Instance.AddAttr(errorMsgAttr2, data.STRING, err.Error())
 }
 
 // FlowDetails implements activity.Context.FlowName method

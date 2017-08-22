@@ -7,6 +7,8 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/core/property"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 )
 
 // MapperDef represents a Mapper, which is a collection of mappings
@@ -100,21 +102,26 @@ func (m *BasicMapper) Apply(inputScope data.Scope, outputScope data.Scope) error
 
 		switch mapping.Type {
 		case data.MtAssign:
-
-			attrName, attrPath, pathType := data.GetAttrPath(mapping.Value)
 			var attrValue interface{}
-			tv, exists := inputScope.GetAttr(attrName)
-			if tv == nil && pathType == data.PT_PROPERTY {
-				// Property resolution
-				attrValue, exists = property.Resolve(mapping.Value)
-				if exists == false {
-					if attrName == "property" {
-						return fmt.Errorf("Failed to resolve Property: '%s' mapped to the Attribute: '%s'. Ensure that property is configured in the application.", attrPath, mapping.MapTo)
-					} else if attrName == "env" {
-						return fmt.Errorf("Failed to resolve Environment Variable: '%s' mapped to the Attribute: '%s'. Ensure that variable is configured.", attrPath, mapping.MapTo)
-					}
+			var exists bool
+			var attrName string
+			// Get resolver type
+			resolType, err := data.GetResolverType(mapping.Value)
+			if err != nil {
+				return err
+			}
+
+			switch resolType {
+			// This is the Backward compatible case
+			case data.RES_DEFAULT:
+				attrName, attrPath, pathType := data.GetAttrPath(mapping.Value)
+				var tv *data.Attribute
+				tv, exists = inputScope.GetAttr(attrName)
+				if tv == nil {
+					err := fmt.Errorf("Failed to resolve attribute '%s' for mapping value '%s'", attrName, mapping.Value)
+					logger.Error(err.Error())
+					return err
 				}
-			} else {
 				attrValue = tv.Value
 				if exists && len(attrPath) > 0 {
 					if tv.Type == data.PARAMS {
@@ -133,11 +140,40 @@ func (m *BasicMapper) Apply(inputScope data.Scope, outputScope data.Scope) error
 						//attrValue, exists = valMap[attrPath]
 					}
 				}
+			case data.RES_PROPERTY:
+				// Property resolution
+				attrValue, exists = property.Resolve(mapping.Value)
+				if !exists {
+					if attrName == "property" {
+						err := fmt.Errorf("Failed to resolve Property: '%s' mapped to the Attribute: '%s'. Ensure that property is configured in the application.", mapping.Value, mapping.MapTo)
+						logger.Error(err.Error())
+						return err
+					} else if attrName == "env" {
+						err := fmt.Errorf("Failed to resolve Environment Variable: '%s' mapped to the Attribute: '%s'. Ensure that variable is configured.", mapping.Value, mapping.MapTo)
+						logger.Error(err.Error())
+						return err
+					}
+				}
+			case data.RES_ACTIVITY:
+				// Activity resolution
+				attrValue, exists = activity.Resolve(inputScope, mapping.Value)
+				if !exists {
+					err := fmt.Errorf("Could not resolve expression '%s' for the current input scope", mapping.Value)
+					logger.Error(err.Error())
+					return err
+				}
+			case data.RES_TRIGGER:
+				// Trigger resolution
+				attrValue, exists = trigger.Resolve(inputScope, mapping.Value)
+				if !exists {
+					err := fmt.Errorf("Could not resolve expression '%s' for the current input scope", mapping.Value)
+					logger.Error(err.Error())
+					return err
+				}
 			}
 
 			//todo implement type conversion
 			if exists {
-
 				attrName, attrPath, pathType := data.GetAttrPath(mapping.MapTo)
 				toAttr, oe := outputScope.GetAttr(attrName)
 
@@ -218,12 +254,16 @@ func (m *DefaultOutputMapper) Apply(inputScope data.Scope, outputScope data.Scop
 
 	attrNS := "{A" + m.task.ID() + "."
 
+	attrNS2 := "${activity." + m.task.ID() + "."
+
 	for _, attr := range act.Metadata().Outputs {
 
 		oAttr, _ := inputScope.GetAttr(attr.Name)
 
 		if oAttr != nil {
+			// TODO remove the first attribute once we move to string ids
 			oscope.AddAttr(attrNS+attr.Name+"}", attr.Type, oAttr.Value)
+			oscope.AddAttr(attrNS2+attr.Name+"}", attr.Type, oAttr.Value)
 		}
 	}
 
