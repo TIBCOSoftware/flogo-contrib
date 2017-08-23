@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/dustin/go-coap"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/dustin/go-coap"
 )
 
 // log is the default package logger
@@ -64,13 +64,13 @@ func (a *CoAPActivity) Eval(context activity.Context) (done bool, err error) {
 	method, ok := getStringValue(context, ivMethod, nil, true)
 
 	if !ok {
-		activity.NewError("Method not specified", "",nil)
+		activity.NewError("Method not specified", "", nil)
 	}
 
 	uri, ok := getStringValue(context, ivURI, nil, false)
 
 	if !ok {
-		activity.NewError("URI not specified","",nil)
+		activity.NewError("URI not specified", "", nil)
 	}
 
 	msgType, _ := getStringValue(context, ivType, typeNON, true)
@@ -79,12 +79,12 @@ func (a *CoAPActivity) Eval(context activity.Context) (done bool, err error) {
 
 	coapURI, err := url.Parse(uri)
 	if err != nil {
-		return false, activity.NewError(err.Error(),"",nil)
+		return false, activity.NewError(err.Error(), "", nil)
 	}
 
 	scheme := coapURI.Scheme
 	if scheme != "coap" {
-		return false, activity.NewError("URI scheme must be 'coap'","", nil)
+		return false, activity.NewError("URI scheme must be 'coap'", "", nil)
 	}
 
 	req := coap.Message{
@@ -128,20 +128,20 @@ func (a *CoAPActivity) Eval(context activity.Context) (done bool, err error) {
 
 	c, err := coap.Dial("udp", coapURI.Host)
 	if err != nil {
-		return false, activity.NewError(err.Error(),"", nil)
+		return false, activity.NewError(err.Error(), "", nil)
 	}
 
 	log.Debugf("conn: %v\n", c)
 
 	rv, err := c.Send(req)
 	if err != nil {
-		return false, activity.NewError(err.Error(),"", nil)
+		return false, activity.NewError(err.Error(), "", nil)
 	}
 
 	if rv != nil {
 
 		if rv.Code > 100 {
-			return false, activity.NewError(fmt.Sprintf("CoAP Error: %s", rv.Code.String()),rv.Code.String(),nil)
+			return false, activity.NewError(fmt.Sprintf("CoAP Error: %s", rv.Code.String()), rv.Code.String(), nil)
 		}
 
 		if rv.Payload != nil {

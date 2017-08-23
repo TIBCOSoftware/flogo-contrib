@@ -8,11 +8,11 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/TIBCOSoftware/flogo-contrib/trigger/rest/cors"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/julienschmidt/httprouter"
 )
 
 const (
@@ -24,28 +24,27 @@ var log = logger.GetLogger("trigger-tibco-rest")
 
 var validMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
 
-
 // RestTrigger REST trigger struct
 type RestTrigger struct {
-	metadata     *trigger.Metadata
-	runner action.Runner
-	server *Server
-	config *trigger.Config
+	metadata *trigger.Metadata
+	runner   action.Runner
+	server   *Server
+	config   *trigger.Config
 }
 
 //NewFactory create a new Trigger factory
 func NewFactory(md *trigger.Metadata) trigger.Factory {
-	return &RestFactory{metadata:md}
+	return &RestFactory{metadata: md}
 }
 
 // RestFactory REST Trigger factory
-type RestFactory struct{
+type RestFactory struct {
 	metadata *trigger.Metadata
 }
 
 //New Creates a new trigger instance for a given id
 func (t *RestFactory) New(config *trigger.Config) trigger.Trigger {
-	return &RestTrigger{metadata: t.metadata, config:config}
+	return &RestTrigger{metadata: t.metadata, config: config}
 }
 
 // Metadata implements trigger.Trigger.Metadata
@@ -61,7 +60,7 @@ func (t *RestTrigger) Init(runner action.Runner) {
 		panic(fmt.Sprintf("No Settings found for trigger '%s'", t.config.Id))
 	}
 
-	if _,ok := t.config.Settings["port"]; !ok {
+	if _, ok := t.config.Settings["port"]; !ok {
 		panic(fmt.Sprintf("No Port found for trigger '%s' in settings", t.config.Id))
 	}
 

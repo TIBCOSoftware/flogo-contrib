@@ -5,8 +5,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
+	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
@@ -51,7 +51,7 @@ func (a *AppActivity) Eval(context activity.Context) (done bool, err error) {
 		if !ok {
 			errorMsg := fmt.Sprintf("Unsupported type '%s'", context.GetInput(ivType).(string))
 			log.Error(errorMsg)
-			return false, activity.NewError(errorMsg,"",nil)
+			return false, activity.NewError(errorMsg, "", nil)
 		}
 
 		val := context.GetInput(ivValue)

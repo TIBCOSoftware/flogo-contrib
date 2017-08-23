@@ -7,16 +7,16 @@ import (
 
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	//MQTT "github.com/eclipse/paho.mqtt.golang"
-	"io/ioutil"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
+	"io/ioutil"
 	//"time"
 )
 
 var jsonMetadata = getJsonMetadata()
 
-func getJsonMetadata() string{
+func getJsonMetadata() string {
 	jsonMetadataBytes, err := ioutil.ReadFile("trigger.json")
-	if err != nil{
+	if err != nil {
 		panic("No Json Metadata found for trigger.json path")
 	}
 	return string(jsonMetadataBytes)
@@ -53,7 +53,6 @@ func (tr *TestRunner) Run(context context.Context, action action.Action, uri str
 	return 0, nil, nil
 }
 
-
 func TestInit(t *testing.T) {
 
 	// New  factory
@@ -65,12 +64,10 @@ func TestInit(t *testing.T) {
 	json.Unmarshal([]byte(testConfig), config)
 	tgr := f.New(&config)
 
-
 	runner := &TestRunner{}
 
 	tgr.Init(runner)
 }
-
 
 /*
 // TODO Fix this test

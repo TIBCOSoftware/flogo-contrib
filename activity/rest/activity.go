@@ -68,7 +68,7 @@ func (a *RESTActivity) Eval(context activity.Context) (done bool, err error) {
 			val = context.GetInput(ivParams)
 
 			if val == nil {
-				err := activity.NewError("Path Params not specified, required for URI: " + uri, "", nil)
+				err := activity.NewError("Path Params not specified, required for URI: "+uri, "", nil)
 				return false, err
 			}
 		}
@@ -156,7 +156,7 @@ func getContentType(replyData interface{}) string {
 		if !strings.HasPrefix(v, "{") && !strings.HasPrefix(v, "[") {
 			contentType = "text/plain; charset=UTF-8"
 		}
-	case int, int64, float64, bool, json.Number :
+	case int, int64, float64, bool, json.Number:
 		contentType = "text/plain; charset=UTF-8"
 	default:
 		contentType = "application/json; charset=UTF-8"
@@ -217,7 +217,7 @@ func BuildURI(uri string, values map[string]string) string {
 				i++
 			} else {
 
-				param := uri[i+1: j]
+				param := uri[i+1 : j]
 				value := values[param]
 				buffer.WriteString(value)
 				if j < len(uri) {

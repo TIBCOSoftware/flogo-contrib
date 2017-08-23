@@ -38,5 +38,5 @@ func (a *ErrorActivity) Eval(context activity.Context) (done bool, err error) {
 
 	log.Debugf("Message :'%s', Data: '%+v'", mesg, data)
 
-	return false, activity.NewError(mesg,"", data)
+	return false, activity.NewError(mesg, "", data)
 }

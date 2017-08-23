@@ -1,9 +1,9 @@
 package twilio
 
 import (
-	"github.com/sfreiberg/gotwilio"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/sfreiberg/gotwilio"
 )
 
 // log is the default package logger

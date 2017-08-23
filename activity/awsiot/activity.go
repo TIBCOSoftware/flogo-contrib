@@ -63,7 +63,7 @@ func (a *AwsIoT) Eval(context activity.Context) (done bool, err error) {
 	reqJSON, err := json.Marshal(req)
 
 	if err != nil {
-		return false, activity.NewError(err.Error(), "",nil)
+		return false, activity.NewError(err.Error(), "", nil)
 	}
 
 	log.Debugf("Shadow Request: %s", string(reqJSON))

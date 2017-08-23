@@ -8,10 +8,10 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/dustin/go-coap"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/dustin/go-coap"
 )
 
 const (
@@ -45,11 +45,11 @@ type CoapResource struct {
 
 //NewFactory create a new Trigger factory
 func NewFactory(md *trigger.Metadata) trigger.Factory {
-	return &CoapFactory{metadata:md}
+	return &CoapFactory{metadata: md}
 }
 
 //CoapFactory Coap Trigger factory
-type CoapFactory struct{
+type CoapFactory struct {
 	metadata *trigger.Metadata
 }
 
@@ -72,7 +72,7 @@ func (t *CoapTrigger) Init(runner action.Runner) {
 	port := t.config.Settings["port"]
 
 	if port == "" {
-		panic(fmt.Sprintf("No Port found for trigger '%s' in settings",  t.config.Id))
+		panic(fmt.Sprintf("No Port found for trigger '%s' in settings", t.config.Id))
 	}
 
 	t.runner = runner

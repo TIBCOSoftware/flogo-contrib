@@ -3,9 +3,9 @@ package wsmessage
 import (
 	"net/url"
 
-	"github.com/gorilla/websocket"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/gorilla/websocket"
 )
 
 // log is the default package logger
