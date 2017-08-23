@@ -4,23 +4,23 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/stianeikeland/go-rpio"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/stianeikeland/go-rpio"
 )
 
 // log is the default package logger
 var log = logger.GetLogger("activity-tibco-rest")
 
 const (
-	method = "method"
-	pinNumber = "pinNumber"
+	method         = "method"
+	pinNumber      = "pinNumber"
 	directionState = "direction"
-	state = "state"
-	direction = "Direction"
-	setState = "Set State"
-	readState = "Read State"
-	pull = "Pull"
+	state          = "state"
+	direction      = "Direction"
+	setState       = "Set State"
+	readState      = "Read State"
+	pull           = "Pull"
 
 	input = "Input"
 	//output = "Output"
@@ -28,7 +28,7 @@ const (
 	high = "High"
 	//low = "Low"
 
-	up = "Up"
+	up   = "Up"
 	down = "Down"
 	//off = "off"
 

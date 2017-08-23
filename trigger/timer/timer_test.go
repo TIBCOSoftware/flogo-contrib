@@ -13,9 +13,9 @@ import (
 
 var jsonMetadata = getJsonMetadata()
 
-func getJsonMetadata() string{
+func getJsonMetadata() string {
 	jsonMetadataBytes, err := ioutil.ReadFile("trigger.json")
-	if err != nil{
+	if err != nil {
 		panic("No Json Metadata found for trigger.json path")
 	}
 	return string(jsonMetadataBytes)
@@ -114,7 +114,6 @@ func (tr *TestRunner) Run(context context.Context, action action.Action, uri str
 	return 0, nil, nil
 }
 
-
 /*
 //TODO fix this test
 func TestInit(t *testing.T) {
@@ -129,7 +128,6 @@ func TestInit(t *testing.T) {
 	tgr.Init(config, runner)
 }
 */
-
 
 /*
 //TODO fix this test

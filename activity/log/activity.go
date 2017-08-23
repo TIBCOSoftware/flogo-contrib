@@ -11,7 +11,6 @@ import (
 // activityLog is the default logger for the Log Activity
 var activityLog = logger.GetLogger("activity-tibco-log")
 
-
 const (
 	ivMessage   = "message"
 	ivFlowInfo  = "flowInfo"

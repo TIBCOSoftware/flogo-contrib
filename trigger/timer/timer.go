@@ -7,26 +7,25 @@ import (
 	"strings"
 	"time"
 
+	"github.com/TIBCOSoftware/flogo-lib/core/action"
+	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/carlescere/scheduler"
 	"github.com/op/go-logging"
-	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
-	"github.com/TIBCOSoftware/flogo-lib/core/action"
 )
-
 
 // log is the default package logger
 var log = logging.MustGetLogger("trigger-tibco-timer")
 
 type TimerTrigger struct {
-	metadata   *trigger.Metadata
-	runner     action.Runner
-	config     *trigger.Config
-	timers     map[string]*scheduler.Job
+	metadata *trigger.Metadata
+	runner   action.Runner
+	config   *trigger.Config
+	timers   map[string]*scheduler.Job
 }
 
 //NewFactory create a new Trigger factory
 func NewFactory(md *trigger.Metadata) trigger.Factory {
-	return &TimerFactory{metadata:md}
+	return &TimerFactory{metadata: md}
 }
 
 // TimerFactory Timer Trigger factory
@@ -36,7 +35,7 @@ type TimerFactory struct {
 
 //New Creates a new trigger instance for a given id
 func (t *TimerFactory) New(config *trigger.Config) trigger.Trigger {
-	return &TimerTrigger{metadata: t.metadata, config:config}
+	return &TimerTrigger{metadata: t.metadata, config: config}
 }
 
 // Metadata implements trigger.Trigger.Metadata
@@ -169,7 +168,7 @@ func (t *TimerTrigger) scheduleRepeating(endpoint *trigger.HandlerConfig) {
 
 func getInitialStartInSeconds(handlerCfg *trigger.HandlerConfig) int {
 
-	if _,ok := handlerCfg.Settings["startDate"]; !ok {
+	if _, ok := handlerCfg.Settings["startDate"]; !ok {
 		return 0
 	}
 

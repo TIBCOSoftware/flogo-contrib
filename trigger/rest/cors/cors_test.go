@@ -3,12 +3,12 @@
 package cors
 
 import (
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
-	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
 const (

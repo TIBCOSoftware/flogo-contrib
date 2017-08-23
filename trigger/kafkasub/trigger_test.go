@@ -169,6 +169,7 @@ func runTest(config *trigger.Config, expectSucceed bool, testName string, config
 	log.Printf("Test %s complete\n", testName)
 	return nil
 }
+
 /*
 // TODO Fix this test
 func TestInit(t *testing.T) {
