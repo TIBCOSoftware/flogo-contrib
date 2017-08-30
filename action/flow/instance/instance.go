@@ -148,7 +148,7 @@ func (pi *Instance) UpdateAttrs(attrs []*data.Attribute) {
 		}
 
 		for _, attr := range attrs {
-			pi.Attrs[attr.Name] = data.NewAttribute(attr.Name, attr.Type, attr.Value)
+			pi.Attrs[attr.Name] = attr
 		}
 	}
 }
@@ -159,8 +159,13 @@ func (pi *Instance) Start(startAttrs []*data.Attribute) bool {
 
 	pi.setStatus(StatusActive)
 
-	//apply inputMapper if we have one, otherwise do default mappings
-	applyDefaultInstanceInputMappings(pi, startAttrs)
+	if pi.Attrs == nil {
+		pi.Attrs = make(map[string]*data.Attribute)
+	}
+
+	for _, attr := range startAttrs {
+		pi.Attrs[attr.Name] = attr
+	}
 
 	logger.Infof("FlowInstance Flow: %v", pi.FlowModel)
 	flowBehavior := pi.FlowModel.GetFlowBehavior()

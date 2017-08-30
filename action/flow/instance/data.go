@@ -122,27 +122,6 @@ func applyDefaultActivityOutputMappings(pi *Instance, taskData *TaskData) {
 	}
 }
 
-func applyDefaultInstanceInputMappings(pi *Instance, attrs []*data.Attribute) {
-
-	if len(attrs) == 0 {
-		return
-	}
-
-	// Keep Temporarily, for short term backwards compatibility
-	for _, attr := range attrs {
-
-		attrName := "{T." + attr.Name + "}"
-		pi.AddAttr(attrName, attr.Type, attr.Value)
-	}
-
-	for _, attr := range attrs {
-
-		attrName := "{TriggerData." + attr.Name + "}"
-		attrName2 := "${trigger." + attr.Name + "}"
-		pi.AddAttr(attrName, attr.Type, attr.Value)
-		pi.AddAttr(attrName2, attr.Type, attr.Value)
-	}
-}
 
 // FixedTaskScope is scope restricted by the set of reference attrs and backed by the specified Task
 type FixedTaskScope struct {

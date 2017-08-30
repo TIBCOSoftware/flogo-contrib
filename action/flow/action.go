@@ -16,10 +16,9 @@ import (
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/provider"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/tester"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
-	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
+	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/TIBCOSoftware/flogo-lib/util"
-	"github.com/TIBCOSoftware/flogo-lib/core/data"
 )
 
 const (
@@ -93,7 +92,7 @@ func (ff *FlowFactory) New(config *action.Config) action.Action {
 			options.MaxStepCount = int(^uint16(0))
 		}
 
-		flowAction = &FlowAction{config:config}
+		flowAction = &FlowAction{config: config}
 
 		flowAction.actionOptions = options
 		flowAction.idGenerator, _ = util.NewGenerator()
@@ -170,6 +169,7 @@ func (fa *FlowAction) Run(context context.Context, inputs map[string]interface{}
 	retID := false
 	var initialState *instance.Instance
 	var flowURI string
+	mh := data.GetMapHelper()
 
 	oldOptions, old := options["deprecated_options"]
 
@@ -184,7 +184,6 @@ func (fa *FlowAction) Run(context context.Context, inputs map[string]interface{}
 		}
 
 	} else {
-		mh := data.GetMapHelper()
 		if v, ok := mh.GetInt(inputs, "op"); ok {
 			op = v
 		}
@@ -248,21 +247,20 @@ func (fa *FlowAction) Run(context context.Context, inputs map[string]interface{}
 	//	instance.ApplyExecOptions(inst, ro.ExecOptions)
 	//}
 
-	triggerAttrs, ok := trigger.FromContext(context)
+	attrs := mh.ToAttributes(inputs, action.GetConfigInputMetadata(fa), op == instance.OpStart)
 
-	if ok {
-		if len(triggerAttrs) > 0 {
-			logger.Debug("Run Attributes:")
-			for _, attr := range triggerAttrs {
-				logger.Debugf(" Attr:%s, Type:%s, Value:%v", attr.Name, attr.Type.String(), attr.Value)
-			}
-		}
+	//todo remove
+	if old {
+		attrs = extractAttributes(inputs)
 	}
 
+	//todo how do we check if debug is enabled?
+	logInputs(attrs)
+
 	if op == instance.OpStart {
-		inst.Start(triggerAttrs)
+		inst.Start(attrs)
 	} else {
-		inst.UpdateAttrs(triggerAttrs)
+		inst.UpdateAttrs(attrs)
 	}
 
 	logger.Debugf("Executing instance: %s\n", inst.ID())
@@ -330,4 +328,30 @@ type SimpleReplyHandler struct {
 // Reply implements ReplyHandler.Reply
 func (rh *SimpleReplyHandler) Reply(replyCode int, replyData map[string]interface{}, err error) {
 	rh.resultHandler.HandleResult(replyCode, replyData, err)
+}
+
+func logInputs(attrs []*data.Attribute) {
+	if len(attrs) > 0 {
+		logger.Debug("Input Attributes:")
+		for _, attr := range attrs {
+			logger.Debugf(" Attr:%s, Type:%s, Value:%v", attr.Name, attr.Type.String(), attr.Value)
+		}
+	}
+}
+
+
+func extractAttributes(inputs map[string]interface{}) []*data.Attribute {
+
+	size := len(inputs)
+
+	attrs := make([]*data.Attribute, 0, size)
+
+	//todo do special handling for complex_object metadata (merge or ref it)
+	for _, value := range inputs {
+
+		attr,_ := value.(*data.Attribute)
+		attrs = append(attrs, attr)
+	}
+
+	return attrs
 }
