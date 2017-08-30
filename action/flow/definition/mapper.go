@@ -4,7 +4,6 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/core/mapper"
-	"fmt"
 )
 
 // MapperDef represents a Mapper, which is a collection of mappings
