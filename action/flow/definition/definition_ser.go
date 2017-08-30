@@ -104,7 +104,7 @@ func addTask(def *Definition, task *Task, rep *TaskRep) {
 	task.activityRef = rep.ActivityRef
 	task.typeID = rep.TypeID
 	task.name = rep.Name
-	//task.Definition = def
+	task.definition = def
 
 	if rep.InputMappings != nil {
 		task.inputMapper = GetMapperFactory().NewTaskInputMapper(task, &MapperDef{Mappings: rep.InputMappings})
