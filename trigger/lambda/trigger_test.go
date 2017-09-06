@@ -23,16 +23,13 @@ func getJsonMetadata() string {
 
 const testConfig string = `{
   "id": "tibco-rest",
-  "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/rest",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/lambda",
   "settings": {
-    "port": "8091"
   },
   "handlers": [
     {
       "actionId": "my_test_flow",
       "settings": {
-        "method": "POST",
-        "path": "/device/:id/reset"
       }
     }
   ]
@@ -47,53 +44,3 @@ func (tr *TestRunner) Run(context context.Context, action action.Action, uri str
 	log.Debugf("Ran Action: %v", uri)
 	return 0, nil, nil
 }
-
-/*
-//TODO fix this test
-func TestInitOk(t *testing.T) {
-	// New  factory
-	f := &RestFactory{}
-	tgr := f.New("tibco-rest")
-
-	runner := &TestRunner{}
-
-	config := trigger.Config{}
-	json.Unmarshal([]byte(testConfig), &config)
-	tgr.Init(config, runner)
-}
-*/
-/*
-//TODO fix this test
-func TestHandlerOk(t *testing.T) {
-
-	// New  factory
-	f := &RestFactory{}
-	tgr := f.New("tibco-rest")
-
-	runner := &TestRunner{}
-
-	config := trigger.Config{}
-	json.Unmarshal([]byte(testConfig), &config)
-	tgr.Init(runner)
-
-	tgr.Start()
-	defer tgr.Stop()
-
-	uri := "http://127.0.0.1:8091/device/12345/reset"
-
-	req, err := http.NewRequest("POST", uri, nil)
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
-
-	log.Debug("response Status:", resp.Status)
-
-	if resp.StatusCode >= 300 {
-		t.Fail()
-	}
-}
-*/

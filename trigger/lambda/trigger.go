@@ -3,13 +3,16 @@ package lambda
 import (
 	"context"
 	"encoding/json"
-	syslog "log"
+	"flag"
+
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
-	"github.com/TIBCOSoftware/flogo-lib/core/data"
-	"flag"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/eawsy/aws-lambda-go-core/service/lambda/runtime"
 )
+
+// log is the default package logger
+var log = logger.GetLogger("trigger-tibco-lambda")
 
 // LambdaTrigger AWS Lambda trigger struct
 type LambdaTrigger struct {
@@ -44,7 +47,7 @@ func (t *LambdaTrigger) Init(runner action.Runner) {
 
 func (t *LambdaTrigger) Start() error {
 
-	syslog.Printf("Starting AWS Lambda Trigger\n")
+	log.Debug("Starting AWS Lambda Trigger")
 
 	// Parse the flags
 	flag.Parse()
@@ -57,7 +60,7 @@ func (t *LambdaTrigger) Start() error {
 		return err
 	}
 
-	syslog.Printf("Received evt: '%+v'\n", evt)
+	log.Debugf("Received evt: '%+v'\n", evt)
 
 	ctxArg := flag.Lookup("ctx")
 	var ctx *runtime.Context
@@ -66,21 +69,34 @@ func (t *LambdaTrigger) Start() error {
 		return err
 	}
 
-	syslog.Printf("Received ctx: '%+v'\n", ctx)
+	log.Debugf("Received ctx: '%+v'\n", ctx)
 
 	actionId := t.config.Handlers[0].ActionId
-	syslog.Printf("Hi there inside trigger calling actionid: '%s'!!\n", actionId)
+	log.Debugf("Calling actionid: '%s'\n", actionId)
 
 	action := action.Get(actionId)
-	syslog.Printf("Found action' %+x'\n", action)
 
-	context := trigger.NewContext(context.Background(), make([]*data.Attribute,0))
+	data := map[string]interface{}{
+		"logStreamName":   ctx.LogStreamName,
+		"logGroupName":    ctx.LogGroupName,
+		"awsRequestId":    ctx.AWSRequestID,
+		"memoryLimitInMB": ctx.MemoryLimitInMB,
+	}
+
+	startAttrs, err := t.metadata.OutputsToAttrs(data, false)
+	if err != nil {
+		log.Errorf("After run error' %s'\n", err)
+		return err
+	}
+
+	context := trigger.NewContext(context.Background(), startAttrs)
 	code, data, err := t.runner.Run(context, action, actionId, nil)
 
-	syslog.Printf("After run error code: '%d', data: '%+v'\n", code, data)
+	log.Debugf("After run code: '%d', data: '%+v'\n", code, data)
 
 	if err != nil {
-		syslog.Printf("After run error' %s'\n", err)
+		log.Debugf("After run error' %s'\n", err)
+		return err
 	}
 
 	return err
