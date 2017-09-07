@@ -9,6 +9,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/eawsy/aws-lambda-go-core/service/lambda/runtime"
+	syslog "log"
 )
 
 // log is the default package logger
@@ -47,7 +48,10 @@ func (t *LambdaTrigger) Init(runner action.Runner) {
 
 func (t *LambdaTrigger) Start() error {
 
-	log.Debug("Starting AWS Lambda Trigger")
+
+	log.Info("Starting AWS Lambda Trigger")
+	// Use syslog since aws logs are still not that good
+	syslog.Println("Starting AWS Lambda Trigger")
 
 	// Parse the flags
 	flag.Parse()
@@ -61,6 +65,7 @@ func (t *LambdaTrigger) Start() error {
 	}
 
 	log.Debugf("Received evt: '%+v'\n", evt)
+	syslog.Printf("Received evt: '%+v'\n", evt)
 
 	ctxArg := flag.Lookup("ctx")
 	var ctx *runtime.Context
@@ -70,6 +75,7 @@ func (t *LambdaTrigger) Start() error {
 	}
 
 	log.Debugf("Received ctx: '%+v'\n", ctx)
+	syslog.Printf("Received ctx: '%+v'\n", ctx)
 
 	actionId := t.config.Handlers[0].ActionId
 	log.Debugf("Calling actionid: '%s'\n", actionId)
