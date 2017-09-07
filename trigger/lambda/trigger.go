@@ -90,9 +90,9 @@ func (t *LambdaTrigger) Start() error {
 	}
 
 	context := trigger.NewContext(context.Background(), startAttrs)
-	code, data, err := t.runner.Run(context, action, actionId, nil)
+	code, result, err := t.runner.Run(context, action, actionId, nil)
 
-	log.Debugf("After run code: '%d', data: '%+v'\n", code, data)
+	log.Debugf("After run code: '%d', result: '%+v'\n", code, result)
 
 	if err != nil {
 		log.Debugf("After run error' %s'\n", err)
