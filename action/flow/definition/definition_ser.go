@@ -6,6 +6,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/util"
 	"strconv"
+	"strings"
 )
 
 // DefinitionRep is a serializable representation of a flow Definition
@@ -14,7 +15,6 @@ type DefinitionRep struct {
 	Name             string             `json:"name"`
 	ModelID          string             `json:"model"`
 	Attributes       []*data.Attribute  `json:"attributes,omitempty"`
-	InputMappings    []*data.MappingDef `json:"inputMappings,omitempty"`
 	RootTask         *TaskRep           `json:"rootTask"`
 	ErrorHandlerTask *TaskRep           `json:"errorHandlerTask"`
 }
@@ -65,11 +65,6 @@ func NewDefinition(rep *DefinitionRep) (def *Definition, err error) {
 	def.modelID = rep.ModelID
 	def.explicitReply = rep.ExplicitReply
 
-	//todo is this used or needed?
-	if rep.InputMappings != nil {
-		def.inputMapper = GetMapperFactory().NewMapper(&MapperDef{Mappings: rep.InputMappings})
-	}
-
 	if len(rep.Attributes) > 0 {
 		def.attrs = make(map[string]*data.Attribute, len(rep.Attributes))
 
@@ -107,6 +102,7 @@ func addTask(def *Definition, task *Task, rep *TaskRep) {
 	task.definition = def
 
 	if rep.InputMappings != nil {
+		fixupMappings(rep.InputMappings)
 		task.inputMapper = GetMapperFactory().NewTaskInputMapper(task, &MapperDef{Mappings: rep.InputMappings})
 	}
 
@@ -227,6 +223,26 @@ func addLinks(def *Definition, task *Task, rep *TaskRep) {
 
 			task.links[i] = link
 			def.links[link.id] = link
+		}
+	}
+}
+
+//fixupMappings updates old mappings to new syntax
+func fixupMappings(mappings []*data.MappingDef) {
+	for _, md := range mappings {
+		if md.Type == data.MtAssign {
+
+			val, ok := md.Value.(string)
+
+			if ok {
+				if strings.HasPrefix(val, "{T.") {
+					md.Value = strings.Replace(val, "{T.", "${trigger.", 1)
+				} else if strings.HasPrefix(val, "{TriggerData.") {
+					md.Value = strings.Replace(val, "{TriggerData.", "${trigger.", 1)
+				} else if strings.HasPrefix(val, "{A") {
+					md.Value = strings.Replace(val, "{A","${activity.", 1)
+				}
+			}
 		}
 	}
 }

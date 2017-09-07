@@ -12,7 +12,6 @@ type MapperDef struct {
 }
 
 type MapperFactory interface {
-
 	// NewMapper creates a new Mapper from the specified MapperDef
 	NewMapper(mapperDef *MapperDef) data.Mapper
 
@@ -44,29 +43,28 @@ func GetMapperFactory() MapperFactory {
 
 	//temp hack until we consolidate mapper definition
 	if mapperFactory == nil {
-		mapperFactory = &BasicMapperFactory{baseFactory:mapper.GetFactory()}
+		mapperFactory = &BasicMapperFactory{baseFactory: mapper.GetFactory()}
 	}
 
 	return mapperFactory
 }
-
 
 type BasicMapperFactory struct {
 	baseFactory mapper.Factory
 }
 
 func (mf *BasicMapperFactory) NewMapper(mapperDef *MapperDef) data.Mapper {
-	return mf.baseFactory.NewMapper(&data.MapperDef{Mappings:mapperDef.Mappings})
+	return mf.baseFactory.NewMapper(&data.MapperDef{Mappings: mapperDef.Mappings})
 }
 
 func (mf *BasicMapperFactory) NewTaskInputMapper(task *Task, mapperDef *MapperDef) data.Mapper {
 	id := task.definition.name + "." + task.id + ".input"
-	return mf.baseFactory.NewUniqueMapper(id, &data.MapperDef{Mappings:mapperDef.Mappings})
+	return mf.baseFactory.NewUniqueMapper(id, &data.MapperDef{Mappings: mapperDef.Mappings})
 }
 
 func (mf *BasicMapperFactory) NewTaskOutputMapper(task *Task, mapperDef *MapperDef) data.Mapper {
 	id := task.definition.name + "." + task.id + ".output"
-	return mf.baseFactory.NewUniqueMapper(id, &data.MapperDef{Mappings:mapperDef.Mappings})
+	return mf.baseFactory.NewUniqueMapper(id, &data.MapperDef{Mappings: mapperDef.Mappings})
 }
 
 func (mf *BasicMapperFactory) GetDefaultTaskOutputMapper(task *Task) data.Mapper {
@@ -75,7 +73,7 @@ func (mf *BasicMapperFactory) GetDefaultTaskOutputMapper(task *Task) data.Mapper
 
 // NewBasicMapper creates a new BasicMapper with the specified mappings
 func NewBasicMapper(mapperDef *MapperDef) data.Mapper {
-	return mapper.NewBasicMapper(&data.MapperDef{Mappings:mapperDef.Mappings})
+	return mapper.NewBasicMapper(&data.MapperDef{Mappings: mapperDef.Mappings})
 }
 
 // BasicMapper is a simple object holding and executing mappings
@@ -89,18 +87,14 @@ func (m *DefaultOutputMapper) Apply(inputScope data.Scope, outputScope data.Scop
 
 	act := activity.Get(m.task.ActivityRef())
 
-	attrNS := "{A" + m.task.ID() + "."
-
-	attrNS2 := "${activity." + m.task.ID() + "."
+	attrNS := "{A." + m.task.ID() + "."
 
 	for _, attr := range act.Metadata().Outputs {
 
 		oAttr, _ := inputScope.GetAttr(attr.Name)
 
 		if oAttr != nil {
-			// TODO remove the first attribute once we move to string ids
 			oscope.AddAttr(attrNS+attr.Name+"}", attr.Type, oAttr.Value)
-			oscope.AddAttr(attrNS2+attr.Name+"}", attr.Type, oAttr.Value)
 		}
 	}
 

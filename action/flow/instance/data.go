@@ -2,7 +2,6 @@ package instance
 
 import (
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
-	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
@@ -103,25 +102,6 @@ func applyOutputMapper(pi *Instance, taskData *TaskData) (bool, error) {
 
 	return false, nil
 }
-
-func applyDefaultActivityOutputMappings(pi *Instance, taskData *TaskData) {
-
-	activity := activity.Get(taskData.task.ActivityRef())
-
-	attrNS := "{A" + taskData.task.ID() + "."
-	attrNS2 := "${activity." + taskData.task.ID() + "."
-
-	for _, attr := range activity.Metadata().Outputs {
-
-		oAttr, _ := taskData.OutputScope().GetAttr(attr.Name)
-
-		if oAttr != nil {
-			pi.AddAttr(attrNS+attr.Name+"}", attr.Type, oAttr.Value)
-			pi.AddAttr(attrNS2+attr.Name+"}", attr.Type, oAttr.Value)
-		}
-	}
-}
-
 
 // FixedTaskScope is scope restricted by the set of reference attrs and backed by the specified Task
 type FixedTaskScope struct {
