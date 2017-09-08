@@ -48,7 +48,9 @@ func (mgr *FlowManager) AddCompressed(id string, newFlow string) error {
 	defer mgr.mu.Unlock()
 	_, ok := mgr.flows[id]
 	if ok {
-		return fmt.Errorf("Flow with id '%s' already exists", id)
+		//return fmt.Errorf("Flow with id '%s' already exists", id)
+		// Quick fix for Lambda, we need to fix this Manager so it is stateless
+		return nil
 	}
 	// Add the flow
 	mgr.flows[id] = &FlowEntry{compressed: newFlow}
@@ -66,7 +68,9 @@ func (mgr *FlowManager) AddUncompressed(id string, newFlow []byte) error {
 	defer mgr.mu.Unlock()
 	_, ok := mgr.flows[id]
 	if ok {
-		return fmt.Errorf("Flow with id '%s' already exists", id)
+		//return fmt.Errorf("Flow with id '%s' already exists", id)
+		// Quick fix for Lambda, we need to fix this Manager so it is stateless
+		return nil
 	}
 	// Add the flow
 	mgr.flows[id] = &FlowEntry{uncompressed: newFlow}
@@ -83,7 +87,9 @@ func (mgr *FlowManager) AddURI(id string, newUri string) error {
 	defer mgr.mu.Unlock()
 	_, ok := mgr.flows[id]
 	if ok {
-		return fmt.Errorf("Flow with id '%s' already exists", id)
+		//return fmt.Errorf("Flow with id '%s' already exists", id)
+		// Quick fix for Lambda, we need to fix this Manager so it is stateless
+		return nil
 	}
 	// Add the flow
 	mgr.flows[id] = &FlowEntry{uri: newUri}
