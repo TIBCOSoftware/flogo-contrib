@@ -59,7 +59,7 @@ func (tr *TestRunner) Run(context context.Context, action action.Action, uri str
 func TestInitOk(t *testing.T) {
 	// New  factory
 	f := &CliTriggerFactory{}
-	tgr := f.New("tibco-rest")
+	tgr := f.New("tibco-cli")
 
 	runner := &TestRunner{}
 

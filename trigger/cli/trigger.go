@@ -27,7 +27,7 @@ type CliTrigger struct {
 
 type actionInfo struct {
 	actionId string
-	invoke   bool
+	Invoke   bool
 }
 
 //NewFactory create a new Trigger factory
@@ -70,7 +70,7 @@ func (t *CliTrigger) Init(runner action.Runner) {
 
 		cmdString := "default"
 
-		aInfo := &actionInfo{actionId: handlerCfg.ActionId, invoke: false}
+		aInfo := &actionInfo{actionId: handlerCfg.ActionId, Invoke: false}
 		if cmd, ok := handlerCfg.Settings["command"]; ok {
 			cmdString = cmd.(string)
 		}
@@ -85,7 +85,7 @@ func (t *CliTrigger) Init(runner action.Runner) {
 		t.actions = append(t.actions, aInfo)
 
 		xv := reflect.ValueOf(aInfo).Elem()
-		addr := xv.FieldByName("invoke").Addr().Interface()
+		addr := xv.FieldByName("Invoke").Addr().Interface()
 
 		switch ptr := addr.(type) {
 		case *bool:
@@ -114,7 +114,7 @@ func Invoke() (string, error) {
 
 	for _, value := range singleton.actions {
 
-		if value.invoke {
+		if value.Invoke {
 			return singleton.Invoke(value.actionId, args)
 		}
 	}
