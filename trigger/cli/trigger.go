@@ -1,4 +1,4 @@
-package rest
+package cli
 
 import (
 	"context"
