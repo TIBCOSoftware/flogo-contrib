@@ -8,8 +8,8 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"reflect"
 )
-
 
 // log is the default package logger
 var log = logger.GetLogger("trigger-tibco-cli")
@@ -18,10 +18,10 @@ var singleton *CliTrigger
 
 // CliTrigger CLI trigger struct
 type CliTrigger struct {
-	metadata *trigger.Metadata
-	runner   action.Runner
-	config   *trigger.Config
-	actions  []*actionInfo
+	metadata  *trigger.Metadata
+	runner    action.Runner
+	config    *trigger.Config
+	actions   []*actionInfo
 	defAction *actionInfo
 }
 
@@ -42,7 +42,7 @@ type CliTriggerFactory struct {
 
 //New Creates a new trigger instance for a given id
 func (t *CliTriggerFactory) New(config *trigger.Config) trigger.Trigger {
-	singleton := &CliTrigger{metadata: t.metadata, config: config}
+	singleton = &CliTrigger{metadata: t.metadata, config: config}
 
 	return singleton
 }
@@ -70,7 +70,7 @@ func (t *CliTrigger) Init(runner action.Runner) {
 
 		cmdString := "default"
 
-		aInfo := &actionInfo{actionId:handlerCfg.ActionId, invoke:false}
+		aInfo := &actionInfo{actionId: handlerCfg.ActionId, invoke: false}
 		if cmd, ok := handlerCfg.Settings["command"]; ok {
 			cmdString = cmd.(string)
 		}
@@ -83,7 +83,14 @@ func (t *CliTrigger) Init(runner action.Runner) {
 		}
 
 		t.actions = append(t.actions, aInfo)
-		flag.BoolVar(aInfo.&invoke, cmdString, false, "")
+
+		xv := reflect.ValueOf(aInfo).Elem()
+		addr := xv.FieldByName("invoke").Addr().Interface()
+
+		switch ptr := addr.(type) {
+		case *bool:
+			flag.BoolVar(ptr, cmdString, false, "")
+		}
 	}
 
 	if !hasDefault {
@@ -100,7 +107,7 @@ func (t *CliTrigger) Stop() error {
 	return nil
 }
 
-func Invoke() (string,error) {
+func Invoke() (string, error) {
 
 	flag.Parse()
 	args := flag.Args()
@@ -115,12 +122,12 @@ func Invoke() (string,error) {
 	return singleton.Invoke(singleton.defAction.actionId, args)
 }
 
-func (t *CliTrigger) Invoke(actionId string, args []string) (string,error) {
+func (t *CliTrigger) Invoke(actionId string, args []string) (string, error) {
 
 	log.Infof("CLI Trigger: Invoking action '%s'", actionId)
 
 	data := map[string]interface{}{
-		"args":      args,
+		"args": args,
 	}
 
 	//todo handle error
