@@ -9,6 +9,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"reflect"
+	"encoding/json"
 )
 
 // log is the default package logger
@@ -145,7 +146,11 @@ func (t *CliTrigger) Invoke(actionId string, args []string) (string, error) {
 	}
 
 	if replyData != nil {
-		return replyData.(string), nil
+		data, err := json.Marshal(replyData)
+		if err != nil {
+			return "", err
+		}
+		return string(data), nil
 	}
 
 	return "", nil
