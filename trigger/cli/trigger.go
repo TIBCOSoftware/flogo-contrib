@@ -10,6 +10,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"reflect"
 	"encoding/json"
+	"github.com/TIBCOSoftware/flogo-lib/config"
 )
 
 // log is the default package logger
@@ -54,6 +55,12 @@ func (t *CliTrigger) Metadata() *trigger.Metadata {
 }
 
 func (t *CliTrigger) Init(runner action.Runner) {
+
+	level, err := logger.GetLevelForName(config.GetLogLevel())
+
+	if err == nil {
+		log.SetLogLevel(level)
+	}
 
 	if t.config.Settings == nil {
 		panic(fmt.Sprintf("No Settings found for trigger '%s'", t.config.Id))
