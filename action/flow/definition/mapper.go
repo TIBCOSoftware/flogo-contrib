@@ -131,8 +131,11 @@ func (m *BasicMapper) Apply(inputScope data.Scope, outputScope data.Scope) error
 						//assigning part of array
 						idx, _ := strconv.Atoi(attrPath)
 						//todo handle err
-						valArray := attrValue.([]interface{})
-						attrValue = valArray[idx]
+						if valArray, ok := attrValue.([]interface{}); ok {
+							attrValue = valArray[idx]
+						} else if valArray, ok := attrValue.([]string); ok {
+							attrValue = valArray[idx]
+						}
 					} else {
 						//for now assume if we have a path, attr is "object"
 						valMap := attrValue.(map[string]interface{})
