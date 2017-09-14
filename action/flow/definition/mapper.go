@@ -9,6 +9,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/property"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/pkg/errors"
 )
 
 // MapperDef represents a Mapper, which is a collection of mappings
@@ -105,8 +106,15 @@ func (m *BasicMapper) Apply(inputScope data.Scope, outputScope data.Scope) error
 			var attrValue interface{}
 			var exists bool
 			var attrName string
+
+			strValue, ok := mapping.Value.(string)
+
+			if !ok {
+				return errors.New("Assign value must be a string expression")
+			}
+
 			// Get resolver type
-			resolType, err := data.GetResolverType(mapping.Value)
+			resolType, err := data.GetResolverType(strValue)
 			if err != nil {
 				return err
 			}
@@ -114,7 +122,7 @@ func (m *BasicMapper) Apply(inputScope data.Scope, outputScope data.Scope) error
 			switch resolType {
 			// This is the Backward compatible case
 			case data.RES_DEFAULT:
-				attrName, attrPath, pathType := data.GetAttrPath(mapping.Value)
+				attrName, attrPath, pathType := data.GetAttrPath(strValue)
 				var tv *data.Attribute
 				tv, exists = inputScope.GetAttr(attrName)
 				if tv == nil {
@@ -142,7 +150,7 @@ func (m *BasicMapper) Apply(inputScope data.Scope, outputScope data.Scope) error
 				}
 			case data.RES_PROPERTY:
 				// Property resolution
-				attrValue, exists = property.Resolve(mapping.Value)
+				attrValue, exists = property.Resolve(strValue)
 				if !exists {
 					if attrName == "property" {
 						err := fmt.Errorf("Failed to resolve Property: '%s' mapped to the Attribute: '%s'. Ensure that property is configured in the application.", mapping.Value, mapping.MapTo)
@@ -156,7 +164,7 @@ func (m *BasicMapper) Apply(inputScope data.Scope, outputScope data.Scope) error
 				}
 			case data.RES_ACTIVITY:
 				// Activity resolution
-				attrValue, exists = activity.Resolve(inputScope, mapping.Value)
+				attrValue, exists = activity.Resolve(inputScope, strValue)
 				if !exists {
 					err := fmt.Errorf("Could not resolve expression '%s' for the current input scope", mapping.Value)
 					logger.Error(err.Error())
@@ -164,7 +172,7 @@ func (m *BasicMapper) Apply(inputScope data.Scope, outputScope data.Scope) error
 				}
 			case data.RES_TRIGGER:
 				// Trigger resolution
-				attrValue, exists = trigger.Resolve(inputScope, mapping.Value)
+				attrValue, exists = trigger.Resolve(inputScope, strValue)
 				if !exists {
 					err := fmt.Errorf("Could not resolve expression '%s' for the current input scope", mapping.Value)
 					logger.Error(err.Error())
