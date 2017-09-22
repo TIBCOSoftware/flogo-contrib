@@ -60,7 +60,8 @@ const defJSON = `
       { "id": 3, "type": 1, "name": "",  "from": 2, "to": "C", "value":"isDefined(\"${activity.2.result}\")" },
       { "id": 4, "type": 1, "name": "", "from": "C", "to": "D", "value":"${activity.C.result} <= ${petMax}" },
       { "id": 5, "type": 1, "name": "", "from": "C", "to": 4, "value":"${petId}<=${petMax}" },
-      { "id": 6, "type": 1, "name": "", "from": "C", "to": 4, "value":"${T.result}.code<=${petMax}" }
+      { "id": 6, "type": 1, "name": "", "from": "C", "to": 4, "value":"${T.result}.code<=${petMax}" },
+      { "id": 7, "type": 1, "name": "", "from": "C", "to": 4, "value":"isDefined(\"${petId}\")" }
     ]
   }
 }
@@ -129,18 +130,12 @@ func TestGosLinkExprManager_EvalLinkExpr(t *testing.T) {
 	link4 := def.GetLink(4)
 	link5 := def.GetLink(5)
 	link6 := def.GetLink(6)
+	link7 := def.GetLink(7)
 
 	a2result := make(map[string]interface{})
 	a2result["code"] = 1
 
 	aCresult := 2
-	//aCresult["code"] = 2
-
-	//      { "id": 1, "type": 1, "name": "",  "from": 2, "to": 3, "value":"${petMax} > 2" },
-	//{ "id": 2, "type": 1, "name": "",  "from": 2, "to": 3, "value":"${A2.result}.code == 1" },
-	//{ "id": 3, "type": 1, "name": "",  "from": 2, "to": "C", "value":"isDefined(${activity.2.result})" },
-	//{ "id": 4, "type": 1, "name": "", "from": "C", "to": "D", "value":"$activity.C.result} <= ${petMax}" },
-	//{ "id": 5, "type": 1, "name": "", "from": "C", "to": 4, "value":"${petId}<=${petMax}" }
 
 	attrs := []*data.Attribute{
 		data.NewAttribute("petMax", data.INTEGER, 4),
@@ -196,4 +191,12 @@ func TestGosLinkExprManager_EvalLinkExpr(t *testing.T) {
 	}
 
 	fmt.Printf("Link6 Result: %v\n", result)
+
+	//todo fix so isDefined("petId") works
+	result, err = mgr.EvalLinkExpr(link7, scope)
+	if err != nil {
+		t.Fatalf("Error evaluating expressions '%s'", err.Error())
+	}
+
+	fmt.Printf("Link7 Result: %v\n", result)
 }
