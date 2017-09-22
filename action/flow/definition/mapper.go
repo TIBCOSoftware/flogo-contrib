@@ -71,11 +71,6 @@ func (mf *BasicMapperFactory) GetDefaultTaskOutputMapper(task *Task) data.Mapper
 	return &DefaultOutputMapper{task: task}
 }
 
-// NewBasicMapper creates a new BasicMapper with the specified mappings
-func NewBasicMapper(mapperDef *MapperDef) data.Mapper {
-	return mapper.NewBasicMapper(&data.MapperDef{Mappings: mapperDef.Mappings})
-}
-
 // BasicMapper is a simple object holding and executing mappings
 type DefaultOutputMapper struct {
 	task *Task

@@ -1,21 +1,21 @@
 package fggos
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
 	"strings"
 
-	"encoding/json"
-	"strconv"
-
-	"fmt"
+	"github.com/japm/goScript"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"github.com/japm/goScript"
+	"github.com/TIBCOSoftware/flogo-lib/core/mapper"
 )
 
 // GosLinkExprManager is the Lua Implementation of a Link Expression Manager
 type GosLinkExprManager struct {
-	values map[int][]*varInfo
+	values map[int][]string
 	exprs  map[int]*goScript.Expr
 }
 
@@ -31,7 +31,7 @@ type GosLinkExprManagerFactory struct {
 func (f *GosLinkExprManagerFactory) NewLinkExprManager(def *definition.Definition) definition.LinkExprManager {
 
 	mgr := &GosLinkExprManager{}
-	mgr.values = make(map[int][]*varInfo)
+	mgr.values = make(map[int][]string)
 	mgr.exprs = make(map[int]*goScript.Expr)
 
 	links := definition.GetExpressionLinks(def)
@@ -39,7 +39,9 @@ func (f *GosLinkExprManagerFactory) NewLinkExprManager(def *definition.Definitio
 	for _, link := range links {
 
 		if len(strings.TrimSpace(link.Value())) > 0 {
-			vars, exprStr := transExpr(link.Value())
+
+			fixedExpr := fixupExpression(link.Value())
+			vars, exprStr := transExpr(fixedExpr)
 
 			mgr.values[link.ID()] = vars
 
@@ -59,75 +61,77 @@ func (f *GosLinkExprManagerFactory) NewLinkExprManager(def *definition.Definitio
 	return mgr
 }
 
-func transExpr(s string) ([]*varInfo, string) {
+func fixupExpression(expr string) string {
 
-	var vars []*varInfo
-	var rvars []string
+	fixed := strings.Replace(expr, "${T.", "${trigger.", -1)
+	fixed = strings.Replace(fixed, "${TriggerData.", "${trigger.", -1)
+	fixed = strings.Replace(fixed, "${A", "${activity.", 1)
+
+	return fixed
+}
+
+func transExpr(s string) ([]string, string) {
+
+	var vars []string
 
 	strLen := len(s)
 
-	isd := 0
+	var buffer bytes.Buffer
 
+	//todo cleanup
 	for i := 0; i < strLen; i++ {
-		if s[i] == '$' {
 
-			isdefcheck := false
-
-			if strings.HasSuffix(s[0:i], "isDefined(") {
-				isdefcheck = true
-			}
-
-			ignoreBraces := s[i+1] == '{'
-			var partOfName bool
+		if s[i] == '"' {
+			buffer.WriteByte('"')
 
 			var j int
 			for j = i + 1; j < strLen; j++ {
+				buffer.WriteByte(s[j])
+				if s[j] == '"' {
 
-				partOfName, ignoreBraces = isPartOfName(s[j], ignoreBraces)
-
-				if !partOfName {
 					break
 				}
 			}
+			i = j
+		} else if s[i] == '$' && s[i+1] == '{' {
+			//variable
 
-			if isdefcheck {
-				isd++
-				vars = append(vars, &varInfo{isd: isd, name: s[i+1 : j]})
-				rvars = append(rvars, s[i-10:j+1])
-				rvars = append(rvars, "isd"+strconv.Itoa(isd))
-				i = j + 1
-			} else {
-				name := s[i+1 : j]
-				// Workaround until we don't support old resolutions
-				name = strings.Replace(strings.Replace(name, "{trigger.", "${trigger.", -1), "{activity.", "${activity.", -1)
-				vars = append(vars, &varInfo{name: name})
-				rvars = append(rvars, s[i:j])
-				rvars = append(rvars, `v["`+name+`"]`)
-				i = j
+			buffer.WriteString("v[\"${")
+
+			for j := i + 2; j < strLen; j++ {
+
+				if !isPartOfName(s[j]) {
+					//fmt.Printf("\n")
+					vars = append(vars, s[i:j])
+					buffer.WriteString("\"]")
+					buffer.WriteByte(s[j])
+					i = j
+					break
+				} else if j == strLen-1 {
+					//last char
+					vars = append(vars, s[i:j+1])
+					buffer.WriteByte(s[j])
+					buffer.WriteString("\"]")
+					i = j + 1
+					break
+				}
+				buffer.WriteByte(s[j])
 			}
+		} else {
+			buffer.WriteByte(s[i])
 		}
 	}
 
-	replacer := strings.NewReplacer(rvars...)
-
-	return vars, replacer.Replace(s)
+	return vars, buffer.String()
 }
 
-func isPartOfName(char byte, ignoreBraces bool) (bool, bool) {
+func isPartOfName(char byte) bool {
 
-	if (char < '0' || char > '9') && (char < 'a' || char > 'z') && (char < 'A' || char > 'Z') && char != '.' && char != '_' {
-
-		if ignoreBraces && char == '{' {
-			return true, true
-		} else if ignoreBraces && char == '}' {
-			return true, false
-		}
-
-		return false, ignoreBraces
-
+	if (char < '0' || char > '9') && (char < 'a' || char > 'z') && (char < 'A' || char > 'Z') && char != '.' && char != '_' && char != '}' {
+		return false
 	}
 
-	return true, ignoreBraces
+	return true
 }
 
 // EvalLinkExpr implements LinkExprManager.EvalLinkExpr
@@ -156,62 +160,52 @@ func (em *GosLinkExprManager) EvalLinkExpr(link *definition.Link, scope data.Sco
 	ctxt := make(map[string]interface{})
 	vals := make(map[string]interface{})
 
-	for _, varInfo := range vars {
+	for _, varRep := range vars {
 
-		var attrValue interface{}
+		lookupExpr := mapper.NewLookupExpr(varRep)
 
-		attrName, attrPath, _ := data.GetAttrPath(varInfo.name)
-		attr, exists := scope.GetAttr(attrName)
+		val, err := lookupExpr.Eval(scope)
 
-		attrValue = attr.Value
-		if varInfo.isd > 0 {
-
-			if exists && len(attrPath) > 0 {
-
-				//for now assume if we have a path, attr is "object" and only one level
-				valMap, ok := attrValue.(map[string]interface{})
-
-				if ok {
-					_, exists = valMap[attrPath]
-				} else {
-					//assume its a map[string]string
-					strMap, ok := attrValue.(map[string]string)
-
-					if ok {
-						_, exists = strMap[attrPath]
-					}
-				}
-				//todo what if the value does not exists
-			}
-
-			ctxt["isd"+strconv.Itoa(varInfo.isd)] = exists
-
-		} else {
-
-			if exists && len(attrPath) > 0 {
-
-				valMap, ok := attrValue.(map[string]interface{})
-
-				var val interface{}
-
-				if ok {
-					val = data.GetMapValue(valMap, attrPath)
-				} else {
-					//assume its a map[string]string
-					strMap, ok := attrValue.(map[string]string)
-					if ok {
-						val = strMap[attrPath]
-					}
-				}
-
-				attrValue = FixUpValue(val)
-			}
-
-			vals[varInfo.name] = attrValue
+		if err == nil {
+			//	return false, err
+			vals[varRep] = val
 		}
+
+		//var attrValue interface{}
+		//
+		//
+		//
+		//attrName, attrPath, _ := data.PathDeconstruct(varRep)
+		//attr, exists := scope.GetAttr(attrName)
+		//
+		//attrValue = attr.Value
+		//
+		//if exists && len(attrPath) > 0 {
+		//
+		//	valMap, ok := attrValue.(map[string]interface{})
+		//
+		//	var val interface{}
+		//
+		//	if ok && len(valMap) > 0 {
+		//		val = nil //data.GetMapValue(valMap, attrPath)
+		//	} else {
+		//		//assume its a map[string]string
+		//		strMap, ok := attrValue.(map[string]string)
+		//		if ok {
+		//			val = strMap[attrPath]
+		//		}
+		//	}
+		//
+		//	attrValue = FixUpValue(val)
+		//
+		//	vals[varRep] = attrValue
+		//}
 	}
 
 	ctxt["v"] = vals
+
+	f := isDefinedFunc{scope:scope}
+	ctxt["isDefined"] = f.isDefined
 
 	logger.Debugf("Vals: %v", vals)
 
@@ -244,4 +238,28 @@ func FixUpValue(val interface{}) interface{} {
 	}
 
 	return ret
+}
+
+type ByLength []string
+
+func (s ByLength) Len() int {
+	return len(s)
+}
+func (s ByLength) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+func (s ByLength) Less(i, j int) bool {
+	return len(s[i]) > len(s[j])
+}
+
+type isDefinedFunc struct {
+	scope data.Scope
+}
+
+func (f *isDefinedFunc) isDefined(value string) bool {
+	lookupExpr := mapper.NewLookupExpr(value)
+
+	_, err := lookupExpr.Eval(f.scope)
+
+	return err == nil
 }

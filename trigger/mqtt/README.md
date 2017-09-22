@@ -5,7 +5,7 @@ This trigger provides your flogo application the ability to start a flow via MQT
 ## Installation
 
 ```bash
-flogo add trigger github.com/TIBCOSoftware/flogo-contrib/trigger/mqtt
+flogo install github.com/TIBCOSoftware/flogo-contrib/trigger/mqtt
 ```
 
 ## Schema
