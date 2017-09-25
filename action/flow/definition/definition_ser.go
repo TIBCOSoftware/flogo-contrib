@@ -132,7 +132,7 @@ func addTask(def *Definition, task *Task, rep *TaskRep) {
 
 			for name, value := range rep.InputAttrs {
 
-				attr := act.Metadata().Inputs[name]
+				attr := act.Metadata().Input[name]
 
 				if attr != nil {
 					newValue, err := data.CoerceToValue(value, attr.Type)
@@ -151,7 +151,7 @@ func addTask(def *Definition, task *Task, rep *TaskRep) {
 
 			for name, value := range rep.OutputAttrs {
 
-				attr := act.Metadata().Outputs[name]
+				attr := act.Metadata().Output[name]
 
 				if attr != nil {
 					newValue, err := data.CoerceToValue(value, attr.Type)

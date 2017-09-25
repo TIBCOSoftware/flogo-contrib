@@ -84,7 +84,7 @@ func (m *DefaultOutputMapper) Apply(inputScope data.Scope, outputScope data.Scop
 
 	attrNS := "{A." + m.task.ID() + "."
 
-	for _, attr := range act.Metadata().Outputs {
+	for _, attr := range act.Metadata().Output {
 
 		oAttr, _ := inputScope.GetAttr(attr.Name)
 

@@ -48,9 +48,10 @@ func (a *ReplyActivity) Eval(context activity.Context) (done bool, err error) {
 		//todo add support for map type to facilitate this?
 		resp := map[string]interface{}{
 			"default": data,
+			"code":code,
 		}
 
-		replyHandler.Reply(code, resp, nil)
+		replyHandler.Reply(resp, nil)
 	}
 
 	return true, nil

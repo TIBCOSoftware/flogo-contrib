@@ -275,15 +275,16 @@ func (fa *FlowAction) Run(context context.Context, inputs map[string]interface{}
 		defer handler.Done()
 
 		if !inst.Flow.ExplicitReply() {
-			resp := map[string]interface{}{
+			results := map[string]interface{}{
 				"id": inst.ID(),
 			}
 
 			if old {
-				resp["default"] = inst.ID()
+				results["default"] = inst.ID()
+				results["code"] = 200
 			}
 
-			handler.HandleResult(200, resp, nil)
+			handler.HandleResult(results, nil)
 		}
 
 		for hasWork && inst.Status() < instance.StatusCompleted && stepCount < fa.actionOptions.MaxStepCount {
@@ -305,9 +306,10 @@ func (fa *FlowAction) Run(context context.Context, inputs map[string]interface{}
 
 			if old {
 				resp["default"] = inst.ID()
+				resp["code"] = 200
 			}
 
-			handler.HandleResult(200, resp, nil)
+			handler.HandleResult(resp, nil)
 		}
 
 		logger.Debugf("Done Executing A.instance [%s] - Status: %d\n", inst.ID(), inst.Status())
@@ -326,8 +328,8 @@ type SimpleReplyHandler struct {
 }
 
 // Reply implements ReplyHandler.Reply
-func (rh *SimpleReplyHandler) Reply(replyCode int, replyData map[string]interface{}, err error) {
-	rh.resultHandler.HandleResult(replyCode, replyData, err)
+func (rh *SimpleReplyHandler) Reply(replyData map[string]interface{}, err error) {
+	rh.resultHandler.HandleResult(replyData, err)
 }
 
 func logInputs(attrs []*data.Attribute) {
