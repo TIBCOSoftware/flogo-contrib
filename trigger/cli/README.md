@@ -1,10 +1,10 @@
-# tibco-rest
+# tibco-cli
 This trigger provides your flogo application the ability to start a flow via REST over HTTP
 
 ## Installation
 
 ```bash
-flogo add trigger github.com/TIBCOSoftware/flogo-contrib/trigger/rest
+flogo install github.com/TIBCOSoftware/flogo-contrib/trigger/cli
 ```
 
 ## Schema
@@ -12,37 +12,21 @@ Settings, Outputs and Endpoint:
 
 ```json
 {
-  "settings": [
-    {
-      "name": "port",
-      "type": "integer"
-    }
-  ],
   "outputs": [
     {
-      "name": "pathParams",
-      "type": "params"
-    },
-    {
-      "name": "queryParams",
-      "type": "params"
-    },
-    {
-      "name": "content",
-      "type": "object"
+      "name": "args",
+      "type": "array"
     }
   ],
-  "endpoint": {
+  "handler": {
     "settings": [
       {
-        "name": "method",
-        "type": "string",
-        "required" : true
+        "name": "command",
+        "type": "string"
       },
       {
-        "name": "path",
-        "type": "string",
-        "required" : true
+        "name": "default",
+        "type": "bool"
       }
     ]
   }
@@ -50,68 +34,70 @@ Settings, Outputs and Endpoint:
 ```
 ## Settings
 ### Trigger:
+| Output     | Description    |
+|:------------|:---------------|
+| args | The array of arguments |         
+### Handler:
 | Setting     | Description    |
 |:------------|:---------------|
-| port | The port to listen on |         
-### Endpoint:
-| Setting     | Description    |
-|:------------|:---------------|
-| method      | The HTTP method |         
-| path        | The resource path  |
+| command      | The command invoked |         
+| default      | Indicates if its the default command  |
 
 
 ## Example Configurations
 
-Triggers are configured via the triggers.json of your application. The following are some example configuration of the REST Trigger.
+Triggers are configured via the triggers section of your application. The following are some example configuration of the CLI Trigger.
 
-### POST
-Configure the Trigger to handle a POST on /device
+### No command
+Configure the Trigger to execute one flow
 
 ```json
 {
-  "triggers": [
-    {
-      "name": "tibco-rest",
-      "settings": {
-        "port": "8080"
-      },
-      "endpoints": [
-        {
-          "actionType": "flow",
-          "actionURI": "embedded://new_device_flow",
-          "settings": {
-            "method": "POST",
-            "path": "/device"
+    "triggers": [
+      {
+        "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/cli",
+        "description": "Simple CLI trigger",
+        "settings": {},
+        "id": "main",
+        "handlers": [
+          {
+            "settings": {
+              "default": true
+            },
+            "actionId": "log_cli"
           }
-        }
-      ]
-    }
-  ]
+        ]
+      }
+    ]
 }
 ```
 
-### GET
-Configure the Trigger to handle a GET on /device/:id
+### Multiple Commands
+Configure the Trigger to handle multiple commands
 
 ```json
 {
-  "triggers": [
-    {
-      "name": "tibco-rest",
-      "settings": {
-        "port": "8080"
-      },
-      "endpoints": [
-        {
-          "actionType": "flow",
-          "actionURI": "embedded://get_device_flow",
-          "settings": {
-            "method": "GET",
-            "path": "/device/:id"
+    "triggers": [
+      {
+        "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/cli",
+        "description": "Simple CLI trigger",
+        "settings": {},
+        "id": "main",
+        "handlers": [
+          {
+            "settings": {
+              "command": "list"
+            },
+            "actionId": "list_flow"
+          },
+          {
+            "settings": {
+              "command": "run"
+            },
+            "actionId": "run_flow"
           }
-        }
-      ]
-    }
-  ]
+        ]
+      }
+    ]
 }
 ```

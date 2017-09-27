@@ -1,7 +1,7 @@
 {
   "name": "tibco-cli",
   "type": "flogo:trigger",
-  "entrypoint":"main",
+  "shim": "main",
   "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/cli",
   "version": "0.0.1",
   "title": "CLI Trigger",
