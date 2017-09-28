@@ -82,14 +82,14 @@ func (m *DefaultOutputMapper) Apply(inputScope data.Scope, outputScope data.Scop
 
 	act := activity.Get(m.task.ActivityRef())
 
-	attrNS := "{A." + m.task.ID() + "."
+	attrNS := "_A." + m.task.ID() + "."
 
 	for _, attr := range act.Metadata().Output {
 
 		oAttr, _ := inputScope.GetAttr(attr.Name)
 
 		if oAttr != nil {
-			oscope.AddAttr(attrNS+attr.Name+"}", attr.Type, oAttr.Value)
+			oscope.AddAttr(attrNS+attr.Name, attr.Type, oAttr.Value)
 		}
 	}
 
