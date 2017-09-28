@@ -328,7 +328,19 @@ type SimpleReplyHandler struct {
 }
 
 // Reply implements ReplyHandler.Reply
-func (rh *SimpleReplyHandler) Reply(replyData map[string]interface{}, err error) {
+func (rh *SimpleReplyHandler) Reply(code int, data interface{}, err error) {
+
+	replyData := map[string]interface{}{
+		"data": data,
+		"code":code,
+	}
+
+	rh.resultHandler.HandleResult(replyData, err)
+}
+
+
+// Reply implements ReplyHandler.Reply
+func (rh *SimpleReplyHandler) ReplyWithData(replyData map[string]interface{}, err error) {
 	rh.resultHandler.HandleResult(replyData, err)
 }
 

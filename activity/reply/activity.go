@@ -44,14 +44,8 @@ func (a *ReplyActivity) Eval(context activity.Context) (done bool, err error) {
 
 	if replyHandler != nil {
 
-		//todo fix to support multiple returns
-		//todo add support for map type to facilitate this?
-		resp := map[string]interface{}{
-			"data": data,
-			"code":code,
-		}
-
-		replyHandler.Reply(resp, nil)
+		//todo fix to support new ReplyWithData (had to keep old Reply for backwards compatibility)
+		replyHandler.Reply(code, data, nil)
 	}
 
 	return true, nil
