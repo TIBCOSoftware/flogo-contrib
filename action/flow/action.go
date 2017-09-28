@@ -16,7 +16,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/provider"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/tester"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
-	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
+	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/TIBCOSoftware/flogo-lib/util"
 )
@@ -34,6 +34,7 @@ type ActionOptions struct {
 type FlowAction struct {
 	idGenerator   *util.Generator
 	actionOptions *ActionOptions
+	config        *action.Config
 }
 
 // Provides the different extension points to the Flow Action
@@ -91,7 +92,7 @@ func (ff *FlowFactory) New(config *action.Config) action.Action {
 			options.MaxStepCount = int(^uint16(0))
 		}
 
-		flowAction = &FlowAction{}
+		flowAction = &FlowAction{config: config}
 
 		flowAction.actionOptions = options
 		flowAction.idGenerator, _ = util.NewGenerator()
@@ -150,28 +151,69 @@ func (ff *FlowFactory) New(config *action.Config) action.Action {
 	return flowAction
 }
 
-// Run implements action.Action.Run
-func (fa *FlowAction) Run(context context.Context, uri string, options interface{}, handler action.ResultHandler) error {
+//Config get the Action's config
+func (fa *FlowAction) Config() *action.Config {
+	return fa.config
+}
 
-	logger.Infof("In Flow Run uri: '%s'", uri)
-	//todo: catch panic
-	//todo: consider switch to URI to dictate flow operation (ex. flow://blah/resume)
+//Metadata get the Action's metadata
+func (fa *FlowAction) Metadata() *action.Metadata {
+	return nil
+}
+
+// Run implements action.Action.Run
+//func (fa *FlowAction) Run(context context.Context, uri string, options interface{}, handler action.ResultHandler) error {
+func (fa *FlowAction) Run(context context.Context, inputs map[string]interface{}, options map[string]interface{}, handler action.ResultHandler) error {
 
 	op := instance.OpStart
 	retID := false
+	var initialState *instance.Instance
+	var flowURI string
+	mh := data.GetMapHelper()
 
-	ro, ok := options.(*instance.RunOptions)
+	oldOptions, old := options["deprecated_options"]
 
-	if ok {
-		op = ro.Op
-		retID = ro.ReturnID
+	if old {
+		ro, ok := oldOptions.(*instance.RunOptions)
+
+		if ok {
+			op = ro.Op
+			retID = ro.ReturnID
+			initialState = ro.InitialState
+			flowURI = ro.FlowURI
+		}
+
+	} else {
+		if v, ok := mh.GetInt(inputs, "op"); ok {
+			op = v
+		}
+		if v, ok := mh.GetBool(inputs, "returnId"); ok {
+			retID = v
+		}
+		if v, ok := mh.GetString(inputs, "flowURI"); ok {
+			flowURI = v
+		}
+		if v, ok := inputs["initialState"]; ok {
+			if v, ok := v.(*instance.Instance); ok {
+				initialState = v
+			}
+		}
 	}
+
+	if flowURI == "" {
+		flowURI = fa.Config().Id
+	}
+
+	logger.Infof("In Flow Run uri: '%s'", flowURI)
+
+	//todo: catch panic
+	//todo: consider switch to URI to dictate flow operation (ex. flow://blah/resume)
 
 	var inst *instance.Instance
 
 	switch op {
 	case instance.OpStart:
-		flow, err := ep.GetFlowProvider().GetFlow(uri)
+		flowDef, err := ep.GetFlowProvider().GetFlow(flowURI)
 		if err != nil {
 			return err
 		}
@@ -179,46 +221,46 @@ func (fa *FlowAction) Run(context context.Context, uri string, options interface
 		instanceID := fa.idGenerator.NextAsString()
 		logger.Debug("Creating Instance: ", instanceID)
 
-		inst = instance.New(instanceID, uri, flow, ep.GetFlowModel())
+		inst = instance.New(instanceID, flowURI, flowDef, ep.GetFlowModel())
 	case instance.OpResume:
-		if ok {
-			inst = ro.InitialState
+		if initialState != nil {
+			inst = initialState
 			logger.Debug("Resuming Instance: ", inst.ID())
 		} else {
-			return errors.New("Unable to resume instance, resume options not provided")
+			return errors.New("Unable to resume instance, initial state not provided")
 		}
 	case instance.OpRestart:
-		if ok {
-			inst = ro.InitialState
+		if initialState != nil {
+			inst = initialState
 			instanceID := fa.idGenerator.NextAsString()
 			inst.Restart(instanceID, ep.GetFlowProvider())
 
 			logger.Debug("Restarting Instance: ", instanceID)
 		} else {
-			return errors.New("Unable to restart instance, restart options not provided")
+			return errors.New("Unable to restart instance, initial state not provided")
 		}
 	}
 
-	if ok && ro.ExecOptions != nil {
-		logger.Debugf("Applying Exec Options to instance: %s\n", inst.ID())
-		instance.ApplyExecOptions(inst, ro.ExecOptions)
+	//TODO revisit enabling this feature
+	//if ok && ro.ExecOptions != nil {
+	//	logger.Debugf("Applying Exec Options to instance: %s\n", inst.ID())
+	//	instance.ApplyExecOptions(inst, ro.ExecOptions)
+	//}
+
+	attrs := mh.ToAttributes(inputs, action.GetConfigInputMetadata(fa), op == instance.OpStart)
+
+	//todo remove
+	if old {
+		attrs = extractAttributes(inputs)
 	}
 
-	triggerAttrs, ok := trigger.FromContext(context)
-
-	if ok {
-		if len(triggerAttrs) > 0 {
-			logger.Debug("Run Attributes:")
-			for _, attr := range triggerAttrs {
-				logger.Debugf(" Attr:%s, Type:%s, Value:%v", attr.Name, attr.Type.String(), attr.Value)
-			}
-		}
-	}
+	//todo how do we check if debug is enabled?
+	logInputs(attrs)
 
 	if op == instance.OpStart {
-		inst.Start(triggerAttrs)
+		inst.Start(attrs)
 	} else {
-		inst.UpdateAttrs(triggerAttrs)
+		inst.UpdateAttrs(attrs)
 	}
 
 	logger.Debugf("Executing instance: %s\n", inst.ID())
@@ -233,7 +275,16 @@ func (fa *FlowAction) Run(context context.Context, uri string, options interface
 		defer handler.Done()
 
 		if !inst.Flow.ExplicitReply() {
-			handler.HandleResult(200, &instance.IDResponse{ID: inst.ID()}, nil)
+			results := map[string]interface{}{
+				"id": inst.ID(),
+			}
+
+			if old {
+				results["data"] = inst.ID()
+				results["code"] = 200
+			}
+
+			handler.HandleResult(results, nil)
 		}
 
 		for hasWork && inst.Status() < instance.StatusCompleted && stepCount < fa.actionOptions.MaxStepCount {
@@ -248,7 +299,17 @@ func (fa *FlowAction) Run(context context.Context, uri string, options interface
 		}
 
 		if retID {
-			handler.HandleResult(200, &instance.IDResponse{ID: inst.ID()}, nil)
+
+			resp := map[string]interface{}{
+				"id": inst.ID(),
+			}
+
+			if old {
+				resp["data"] = inst.ID()
+				resp["code"] = 200
+			}
+
+			handler.HandleResult(resp, nil)
 		}
 
 		logger.Debugf("Done Executing A.instance [%s] - Status: %d\n", inst.ID(), inst.Status())
@@ -267,7 +328,32 @@ type SimpleReplyHandler struct {
 }
 
 // Reply implements ReplyHandler.Reply
-func (rh *SimpleReplyHandler) Reply(replyCode int, replyData interface{}, err error) {
+func (rh *SimpleReplyHandler) Reply(replyData map[string]interface{}, err error) {
+	rh.resultHandler.HandleResult(replyData, err)
+}
 
-	rh.resultHandler.HandleResult(replyCode, replyData, err)
+func logInputs(attrs []*data.Attribute) {
+	if len(attrs) > 0 {
+		logger.Debug("Input Attributes:")
+		for _, attr := range attrs {
+			logger.Debugf(" Attr:%s, Type:%s, Value:%v", attr.Name, attr.Type.String(), attr.Value)
+		}
+	}
+}
+
+
+func extractAttributes(inputs map[string]interface{}) []*data.Attribute {
+
+	size := len(inputs)
+
+	attrs := make([]*data.Attribute, 0, size)
+
+	//todo do special handling for complex_object metadata (merge or ref it)
+	for _, value := range inputs {
+
+		attr,_ := value.(*data.Attribute)
+		attrs = append(attrs, attr)
+	}
+
+	return attrs
 }

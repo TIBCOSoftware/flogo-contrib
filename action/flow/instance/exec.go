@@ -15,6 +15,7 @@ const (
 type RunOptions struct {
 	Op           int
 	ReturnID     bool
+	FlowURI      string
 	InitialState *Instance
 	ExecOptions  *ExecOptions
 }
@@ -27,7 +28,6 @@ type ExecOptions struct {
 
 // IDGenerator generates IDs for flow instances
 type IDGenerator interface {
-
 	//NewFlowInstanceID generate a new instance ID
 	NewFlowInstanceID() string
 }

@@ -148,7 +148,7 @@ func (pi *Instance) UpdateAttrs(attrs []*data.Attribute) {
 		}
 
 		for _, attr := range attrs {
-			pi.Attrs[attr.Name] = data.NewAttribute(attr.Name, attr.Type, attr.Value)
+			pi.Attrs[attr.Name] = attr
 		}
 	}
 }
@@ -159,8 +159,13 @@ func (pi *Instance) Start(startAttrs []*data.Attribute) bool {
 
 	pi.setStatus(StatusActive)
 
-	//apply inputMapper if we have one, otherwise do default mappings
-	applyDefaultInstanceInputMappings(pi, startAttrs)
+	if pi.Attrs == nil {
+		pi.Attrs = make(map[string]*data.Attribute)
+	}
+
+	for _, attr := range startAttrs {
+		pi.Attrs[attr.Name] = attr
+	}
 
 	logger.Infof("FlowInstance Flow: %v", pi.FlowModel)
 	flowBehavior := pi.FlowModel.GetFlowBehavior()
@@ -321,8 +326,7 @@ func (pi *Instance) execTask(workItem *WorkItem) {
 
 			if !appliedMapper && !taskData.task.IsScope() {
 
-				logger.Debug("Applying Default Output Mapping")
-				//applyDefaultActivityOutputMappings(pi, taskData)
+				logger.Debug("Mapper not applied")
 			}
 		}
 
@@ -944,7 +948,7 @@ func (td *TaskData) InputScope() data.Scope {
 	if len(td.task.ActivityRef()) > 0 {
 
 		act := activity.Get(td.task.ActivityRef())
-		td.inScope = NewFixedTaskScope(act.Metadata().Inputs, td.task, true)
+		td.inScope = NewFixedTaskScope(act.Metadata().Input, td.task, true)
 
 	} else if td.task.IsScope() {
 
@@ -964,7 +968,7 @@ func (td *TaskData) OutputScope() data.Scope {
 	if len(td.task.ActivityRef()) > 0 {
 
 		act := activity.Get(td.task.ActivityRef())
-		td.outScope = NewFixedTaskScope(act.Metadata().Outputs, td.task, false)
+		td.outScope = NewFixedTaskScope(act.Metadata().Output, td.task, false)
 
 		logger.Debugf("OutputScope: %v\n", td.outScope)
 	} else if td.task.IsScope() {
