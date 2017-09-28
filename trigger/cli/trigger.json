@@ -1,0 +1,28 @@
+{
+  "name": "tibco-cli",
+  "type": "flogo:trigger",
+  "shim": "main",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/cli",
+  "version": "0.0.1",
+  "title": "CLI Trigger",
+  "description": "Simple CLI Trigger",
+  "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/trigger/cli",
+  "outputs": [
+    {
+      "name": "args",
+      "type": "array"
+    }
+  ],
+  "handler": {
+    "settings": [
+      {
+        "name": "command",
+        "type": "string"
+      },
+      {
+        "name": "default",
+        "type": "bool"
+      }
+    ]
+  }
+}
