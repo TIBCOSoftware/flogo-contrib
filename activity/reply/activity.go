@@ -47,7 +47,7 @@ func (a *ReplyActivity) Eval(context activity.Context) (done bool, err error) {
 		//todo fix to support multiple returns
 		//todo add support for map type to facilitate this?
 		resp := map[string]interface{}{
-			"default": data,
+			"data": data,
 			"code":code,
 		}
 

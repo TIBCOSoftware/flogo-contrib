@@ -280,7 +280,7 @@ func (fa *FlowAction) Run(context context.Context, inputs map[string]interface{}
 			}
 
 			if old {
-				results["default"] = inst.ID()
+				results["data"] = inst.ID()
 				results["code"] = 200
 			}
 
@@ -305,7 +305,7 @@ func (fa *FlowAction) Run(context context.Context, inputs map[string]interface{}
 			}
 
 			if old {
-				resp["default"] = inst.ID()
+				resp["data"] = inst.ID()
 				resp["code"] = 200
 			}
 
