@@ -49,7 +49,8 @@ type ExtensionProvider interface {
 
 var actionMu sync.Mutex
 var ep ExtensionProvider
-var flowAction *FlowAction
+//var flowAction *FlowAction
+var idGenerator *util.Generator
 
 func init() {
 	action.RegisterFactory(FLOW_REF, &FlowFactory{})
@@ -69,6 +70,8 @@ func (ff *FlowFactory) New(config *action.Config) action.Action {
 	actionMu.Lock()
 	defer actionMu.Unlock()
 
+	var flowAction *FlowAction
+
 	if flowAction == nil {
 		options := &ActionOptions{Record: false}
 
@@ -83,10 +86,12 @@ func (ff *FlowFactory) New(config *action.Config) action.Action {
 			} else {
 				ep = extension.New()
 			}
-		}
 
-		definition.SetMapperFactory(ep.GetMapperFactory())
-		definition.SetLinkExprManagerFactory(ep.GetLinkExprManagerFactory())
+			definition.SetMapperFactory(ep.GetMapperFactory())
+			definition.SetLinkExprManagerFactory(ep.GetLinkExprManagerFactory())
+
+			idGenerator, _ = util.NewGenerator()
+		}
 
 		if options.MaxStepCount < 1 {
 			options.MaxStepCount = int(^uint16(0))
@@ -95,7 +100,7 @@ func (ff *FlowFactory) New(config *action.Config) action.Action {
 		flowAction = &FlowAction{config: config}
 
 		flowAction.actionOptions = options
-		flowAction.idGenerator, _ = util.NewGenerator()
+		flowAction.idGenerator = idGenerator
 	}
 
 	//temporary hack to support dynamic process running by tester
