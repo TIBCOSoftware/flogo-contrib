@@ -168,7 +168,7 @@ func (em *GosLinkExprManager) EvalLinkExpr(link *definition.Link, scope data.Sco
 
 		if err == nil {
 			//	return false, err
-			vals[varRep] = val
+			vals[varRep] = FixUpValue(val)
 		}
 
 		//var attrValue interface{}
