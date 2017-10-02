@@ -89,7 +89,9 @@ func (ff *FlowFactory) New(config *action.Config) action.Action {
 
 			definition.SetMapperFactory(ep.GetMapperFactory())
 			definition.SetLinkExprManagerFactory(ep.GetLinkExprManagerFactory())
+		}
 
+		if idGenerator == nil {
 			idGenerator, _ = util.NewGenerator()
 		}
 
