@@ -1,7 +1,7 @@
 {
   "name": "tibco-lambda",
   "type": "flogo:activity",
-  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/app",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/lambda",
   "version": "0.0.1",
   "title": "Invoke AWS Lambda Function",
   "description": "Invoke AWS Lambda Function via ARN Activity",
