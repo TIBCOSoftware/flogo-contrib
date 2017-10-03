@@ -34,14 +34,14 @@ func NewTestActivityContext(metadata *activity.Metadata) *TestActivityContext {
 		details:     fd,
 		TaskNameVal: "Test Task",
 		Attrs:       make(map[string]*data.Attribute),
-		inputs:      make(map[string]*data.Attribute, len(metadata.Inputs)),
-		outputs:     make(map[string]*data.Attribute, len(metadata.Outputs)),
+		inputs:      make(map[string]*data.Attribute, len(metadata.Input)),
+		outputs:     make(map[string]*data.Attribute, len(metadata.Output)),
 	}
 
-	for _, element := range metadata.Inputs {
+	for _, element := range metadata.Input {
 		tc.inputs[element.Name] = data.NewAttribute(element.Name, element.Type, nil)
 	}
-	for _, element := range metadata.Outputs {
+	for _, element := range metadata.Output {
 		tc.outputs[element.Name] = data.NewAttribute(element.Name, element.Type, nil)
 	}
 
