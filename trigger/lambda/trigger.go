@@ -50,21 +50,16 @@ func (t *LambdaTrigger) Init(runner action.Runner) {
 
 func Invoke() (string, error) {
 
-
-	log.Info("Starting AWS Lambda Trigger Shim")
+	log.Info("Starting AWS Lambda Trigger")
 	// Use syslog since aws logs are still not that good
-	syslog.Println("Starting AWS Lambda Trigger Shim")
+	syslog.Println("Starting AWS Lambda Trigger")
 
 	// Parse the flags
 	flag.Parse()
 
 	// Looking up the arguments
 	evtArg := flag.Lookup("evt")
-	var evt interface{}
-	// Unmarshall evt
-	if err := json.Unmarshal([]byte(evtArg.Value.String()), &evt); err != nil {
-		return "", err
-	}
+	evt := evtArg.Value.String()
 
 	log.Debugf("Received evt: '%+v'\n", evt)
 	syslog.Printf("Received evt: '%+v'\n", evt)
@@ -89,6 +84,7 @@ func Invoke() (string, error) {
 		"logGroupName":    ctx.LogGroupName,
 		"awsRequestId":    ctx.AWSRequestID,
 		"memoryLimitInMB": ctx.MemoryLimitInMB,
+		"evt":             evt,
 	}
 
 	startAttrs, err := singleton.metadata.OutputsToAttrs(data, false)
