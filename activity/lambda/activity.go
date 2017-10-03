@@ -1,7 +1,6 @@
 package lambda
 
 import (
-	"errors"
 	"sync"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
@@ -73,22 +72,24 @@ func (a *LambdaActivity) Eval(context activity.Context) (done bool, err error) {
 	if err != nil {
 		log.Error(err)
 
-		return true, err
+		return false, err
 	}
 
-	if *out.StatusCode != 200 {
-		err := errors.New(*out.FunctionError)
-		log.Error(err)
+	/*
+		Removing this block, as it may be useful to get a response back and not an error... For the flow logic to do something specific and continue
+		if *out.StatusCode != 200 {
+			err := errors.New(*out.FunctionError)
+			log.Error(err)
 
-		return true, err
-	}
-
+			return true, err
+		}
+	*/
 	response := LambdaResponse{
 		Status:  *out.StatusCode,
 		Payload: out.Payload,
 	}
 
-	log.Infof("Lambda response: %s", string(response.Payload))
+	log.Debugf("Lambda response: %s", string(response.Payload))
 	context.SetOutput(ovValue, response)
 
 	return true, nil
