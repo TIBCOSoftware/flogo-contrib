@@ -1,12 +1,10 @@
 package main
 
 import (
-	"fmt"
-	"os"
 	"encoding/json"
 	"flag"
 
-    	"github.com/TIBCOSoftware/flogo-contrib/trigger/lambda"
+	"github.com/TIBCOSoftware/flogo-contrib/trigger/lambda"
 	"github.com/eawsy/aws-lambda-go-core/service/lambda/runtime"
 )
 
