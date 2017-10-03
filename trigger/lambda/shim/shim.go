@@ -16,8 +16,10 @@ func Handle(evt json.RawMessage, ctx *runtime.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	result,_ := lambda.Invoke()
-	fmt.Fprintf(os.Stdout, "%s", result)
+	result, err := lambda.Invoke()
+	if err != nil {
+		return "", err
+	}
 	return result, nil
 }
 
