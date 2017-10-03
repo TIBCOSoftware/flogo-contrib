@@ -1,6 +1,7 @@
 package lambda
 
 import (
+	"encoding/json"
 	"testing"
 
 	"io/ioutil"
@@ -36,6 +37,10 @@ func TestCreate(t *testing.T) {
 	}
 }
 
+type Hello struct {
+	Name string `json:"name"`
+}
+
 func TestLambdaInvokeWithSecurity(t *testing.T) {
 
 	act := NewActivity(getActivityMetadata())
@@ -46,7 +51,12 @@ func TestLambdaInvokeWithSecurity(t *testing.T) {
 	tc.SetInput("region", "us-east-1")
 	tc.SetInput("accessKey", "AKIAJ2HZLVTLTDSIPJCA")
 	tc.SetInput("secretKey", "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")
-	tc.SetInput("payload", "hello")
+
+	payLoad := Hello{
+		Name: "Matt",
+	}
+	b, _ := json.Marshal(payLoad)
+	tc.SetInput("payload", string(b))
 
 	//eval
 	_, err := act.Eval(tc)

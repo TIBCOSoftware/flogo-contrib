@@ -1,6 +1,7 @@
 package lambda
 
 import (
+	"errors"
 	"sync"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
@@ -22,6 +23,11 @@ const (
 
 	ovValue = "value"
 )
+
+type LambdaResponse struct {
+	Status  int64
+	Payload []byte
+}
 
 // LambdaActivity is a App Activity implementation
 type LambdaActivity struct {
@@ -59,17 +65,30 @@ func (a *LambdaActivity) Eval(context activity.Context) (done bool, err error) {
 	}
 	aws := lambda.New(session.New(config))
 
-	out, awsErr := aws.Invoke(&lambda.InvokeInput{
+	out, err := aws.Invoke(&lambda.InvokeInput{
 		FunctionName: &arn,
 		Payload:      []byte(payload)})
 
-	if awsErr != nil {
+	if err != nil {
 		log.Error(err)
 
-		return true, awsErr
+		return true, err
 	}
 
-	log.Info(out)
+	if *out.StatusCode != 200 {
+		err := errors.New(*out.FunctionError)
+		log.Error(err)
+
+		return true, err
+	}
+
+	response := LambdaResponse{
+		Status:  *out.StatusCode,
+		Payload: out.Payload,
+	}
+
+	log.Infof("Lambda response: %s", string(response.Payload))
+	context.SetOutput(ovValue, response)
 
 	return true, nil
 }
