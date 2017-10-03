@@ -24,6 +24,7 @@ const (
 	ovValue = "value"
 )
 
+// LambdaResponse struct is used to store the response from Lambda
 type LambdaResponse struct {
 	Status  int64
 	Payload []byte

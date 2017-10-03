@@ -47,10 +47,10 @@ func TestLambdaInvokeWithSecurity(t *testing.T) {
 	tc := test.NewTestActivityContext(getActivityMetadata())
 
 	//setup attrs
-	tc.SetInput("arn", "arn:aws:lambda:us-east-1:658833855929:function:myFlogoApp")
+	tc.SetInput("arn", "<arn:..")
 	tc.SetInput("region", "us-east-1")
-	tc.SetInput("accessKey", "AKIAJ2HZLVTLTDSIPJCA")
-	tc.SetInput("secretKey", "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")
+	tc.SetInput("accessKey", "<access_key>")
+	tc.SetInput("secretKey", "<secret>")
 
 	payLoad := Hello{
 		Name: "Matt",
