@@ -30,6 +30,10 @@ Settings, Outputs:
     {
       "name": "memoryLimitInMB",
       "type": "string"
+    },
+    {
+      "name": "evt",
+      "type": "string"
     }
   ]
 }
