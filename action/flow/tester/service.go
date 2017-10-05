@@ -99,12 +99,17 @@ func (et *RestEngineTester) StartFlow(w http.ResponseWriter, r *http.Request, _ 
 	}
 
 	if data != nil {
-		idResponse := data.(*instance.IDResponse)
+		idResponse, ok := data.(*instance.IDResponse)
 
-		logger.Debugf("Started Instance [ID:%s] for %s", idResponse.ID, req.FlowURI)
+		if ok {
+			logger.Debugf("Started Instance [ID:%s] for %s", idResponse.ID, req.FlowURI)
 
-		encoder := json.NewEncoder(w)
-		encoder.Encode(data)
+			encoder := json.NewEncoder(w)
+			encoder.Encode(data)
+		}  else {
+			logger.Debugf("Unsupported response: [%v]", data)
+			w.WriteHeader(http.StatusOK)
+		}
 	} else {
 		w.WriteHeader(http.StatusOK)
 	}
