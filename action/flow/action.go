@@ -312,7 +312,7 @@ func (fa *FlowAction) Run(context context.Context, inputs map[string]interface{}
 			}
 
 			if old {
-				resp["data"] = inst.ID()
+				resp["data"] = &instance.IDResponse{ID: inst.ID()}
 				resp["code"] = 200
 			}
 
