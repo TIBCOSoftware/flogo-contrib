@@ -51,6 +51,7 @@ var actionMu sync.Mutex
 var ep ExtensionProvider
 //var flowAction *FlowAction
 var idGenerator *util.Generator
+var record bool
 
 func init() {
 	action.RegisterFactory(FLOW_REF, &FlowFactory{})
@@ -73,7 +74,7 @@ func (ff *FlowFactory) New(config *action.Config) action.Action {
 	var flowAction *FlowAction
 
 	if flowAction == nil {
-		options := &ActionOptions{Record: false}
+		options := &ActionOptions{Record: record}
 
 		if ep == nil {
 			testerEnabled := os.Getenv(tester.ENV_ENABLED)
@@ -82,6 +83,7 @@ func (ff *FlowFactory) New(config *action.Config) action.Action {
 
 				sm := util.GetDefaultServiceManager()
 				sm.RegisterService(ep.GetFlowTester())
+				record = true
 				options.Record = true
 			} else {
 				ep = extension.New()
