@@ -179,7 +179,7 @@ func addTask(def *Definition, task *Task, rep *TaskRep) {
 
 		//for backwards compatibility
 		if len(outputAttrs) == 0 {
-			inputAttrs = rep.OutputAttrsOld
+			outputAttrs = rep.OutputAttrsOld
 		}
 
 		if len(outputAttrs) > 0 {
