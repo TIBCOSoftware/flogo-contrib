@@ -2,11 +2,12 @@ package definition
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/util"
-	"strconv"
-	"strings"
 )
 
 // DefinitionRep is a serializable representation of a flow Definition
@@ -23,21 +24,30 @@ type DefinitionRep struct {
 type TaskRep struct {
 	// Using interface{} type to support backward compatibility changes since Id was
 	// int before, change to string once BC is removed
-	ID           interface{}       `json:"id"`
-	TypeID       int               `json:"type"`
-	ActivityType string            `json:"activityType"`
-	ActivityRef  string            `json:"activityRef"`
-	Name         string            `json:"name"`
-	Attributes   []*data.Attribute `json:"attributes,omitempty"`
-
-	InputAttrs  map[string]interface{} `json:"inputs,omitempty"`
-	OutputAttrs map[string]interface{} `json:"outputs,omitempty"`
-
-	InputMappings  []*data.MappingDef `json:"inputMappings,omitempty"`
-	OutputMappings []*data.MappingDef `json:"ouputMappings,omitempty"`
+	ID          interface{} `json:"id"`
+	TypeID      int         `json:"type"`
+	ActivityRef string      `json:"activityRef"`
+	Name        string      `json:"name"`
 
 	Tasks []*TaskRep `json:"tasks,omitempty"`
 	Links []*LinkRep `json:"links,omitempty"`
+
+	Mappings    *Mappings `json:"mappings,omitempty"`
+	InputAttrs  map[string]interface{} `json:"input,omitempty"`
+	OutputAttrs map[string]interface{} `json:"output,omitempty"`
+
+	//keep temporarily for backwards compatibility
+	InputAttrsOld  map[string]interface{} `json:"inputs,omitempty"`
+	OutputAttrsOld map[string]interface{} `json:"outputs,omitempty"`
+	InputMappings  []*data.MappingDef     `json:"inputMappings,omitempty"`
+	OutputMappings []*data.MappingDef     `json:"outputMappings,omitempty"`
+	Attributes     []*data.Attribute      `json:"attributes,omitempty"`
+	ActivityType   string                 `json:"activityType"`
+}
+
+type Mappings struct {
+	Input  []*data.MappingDef `json:"input,omitempty"`
+	Output []*data.MappingDef `json:"output,omitempty"`
 }
 
 // LinkRep is a serializable representation of a flow Link
@@ -95,19 +105,32 @@ func addTask(def *Definition, task *Task, rep *TaskRep) {
 	// Workaround to support Backwards compatibility
 	// Remove once rep.ID is string
 	task.id = convertInterfaceToString(rep.ID)
-	task.activityType = rep.ActivityType
 	task.activityRef = rep.ActivityRef
 	task.typeID = rep.TypeID
 	task.name = rep.Name
 	task.definition = def
 
-	if rep.InputMappings != nil {
-		fixupMappings(rep.InputMappings)
-		task.inputMapper = GetMapperFactory().NewTaskInputMapper(task, &MapperDef{Mappings: rep.InputMappings})
-	}
+	//temporary support for old configuration
+	task.activityType = rep.ActivityType
 
-	if rep.OutputMappings != nil {
-		task.outputMapper = GetMapperFactory().NewTaskOutputMapper(task, &MapperDef{Mappings: rep.OutputMappings})
+	// create mappers
+	if rep.Mappings != nil {
+		if rep.Mappings.Input != nil {
+			fixupMappings(rep.Mappings.Input)
+			task.inputMapper = GetMapperFactory().NewTaskInputMapper(task, &MapperDef{Mappings: rep.Mappings.Input})
+		}
+		if rep.Mappings.Output != nil {
+			task.outputMapper = GetMapperFactory().NewTaskOutputMapper(task, &MapperDef{Mappings: rep.Mappings.Output})
+		}
+	} else {
+		//temporary support for old configuration
+		if rep.InputMappings != nil {
+			fixupMappings(rep.InputMappings)
+			task.inputMapper = GetMapperFactory().NewTaskInputMapper(task, &MapperDef{Mappings: rep.InputMappings})
+		}
+		if rep.OutputMappings != nil {
+			task.outputMapper = GetMapperFactory().NewTaskOutputMapper(task, &MapperDef{Mappings: rep.OutputMappings})
+		}
 	}
 
 	if task.outputMapper == nil {
@@ -127,10 +150,17 @@ func addTask(def *Definition, task *Task, rep *TaskRep) {
 
 	if act != nil {
 
-		if len(rep.InputAttrs) > 0 {
-			task.inputAttrs = make(map[string]*data.Attribute, len(rep.InputAttrs))
+		inputAttrs := rep.InputAttrs
 
-			for name, value := range rep.InputAttrs {
+		//for backwards compatibility
+		if len(inputAttrs) == 0 {
+			inputAttrs = rep.InputAttrsOld
+		}
+
+		if len(inputAttrs) > 0 {
+			task.inputAttrs = make(map[string]*data.Attribute, len(inputAttrs))
+
+			for name, value := range inputAttrs {
 
 				attr := act.Metadata().Input[name]
 
@@ -145,11 +175,18 @@ func addTask(def *Definition, task *Task, rep *TaskRep) {
 			}
 		}
 
-		if len(rep.OutputAttrs) > 0 {
+		outputAttrs := rep.OutputAttrs
 
-			task.outputAttrs = make(map[string]*data.Attribute, len(rep.OutputAttrs))
+		//for backwards compatibility
+		if len(outputAttrs) == 0 {
+			outputAttrs = rep.OutputAttrsOld
+		}
 
-			for name, value := range rep.OutputAttrs {
+		if len(outputAttrs) > 0 {
+
+			task.outputAttrs = make(map[string]*data.Attribute, len(outputAttrs))
+
+			for name, value := range outputAttrs {
 
 				attr := act.Metadata().Output[name]
 
@@ -240,7 +277,7 @@ func fixupMappings(mappings []*data.MappingDef) {
 				} else if strings.HasPrefix(val, "{TriggerData.") {
 					md.Value = strings.Replace(val, "{TriggerData.", "${trigger.", 1)
 				} else if strings.HasPrefix(val, "{A") {
-					md.Value = strings.Replace(val, "{A","${activity.", 1)
+					md.Value = strings.Replace(val, "{A", "${activity.", 1)
 				}
 			}
 		}
