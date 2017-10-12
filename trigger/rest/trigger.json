@@ -13,7 +13,7 @@
       "required": true
     }
   ],
-  "output": [
+  "outputs": [
     {
       "name": "params",
       "type": "params"
