@@ -35,6 +35,10 @@
     {
       "name": "result",
       "type": "any"
+    },
+    {
+      "name": "status",
+      "type": "integer"
     }
   ]
 }

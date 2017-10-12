@@ -31,6 +31,7 @@ const (
 	ivParams      = "params"
 
 	ovResult = "result"
+	ovStatus = "status"
 )
 
 var validMethods = []string{methodGET, methodPOST, methodPUT, methodPATCH, methodDELETE}
@@ -139,6 +140,7 @@ func (a *RESTActivity) Eval(context activity.Context) (done bool, err error) {
 	log.Debug("response Body:", result)
 
 	context.SetOutput(ovResult, result)
+	context.SetOutput(ovStatus, resp.Status)
 
 	return true, nil
 }
