@@ -28,7 +28,7 @@
     },
     {
       "name": "evt",
-      "type": "any"
+      "type": "object"
     }
   ]
 }
