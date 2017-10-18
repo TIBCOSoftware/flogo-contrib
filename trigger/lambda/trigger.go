@@ -59,7 +59,12 @@ func Invoke() (string, error) {
 
 	// Looking up the arguments
 	evtArg := flag.Lookup("evt")
-	evt := evtArg.Value.String()
+	//evt := evtArg.Value.String()
+	var evt interface{}
+	// Unmarshall ctx
+	if err := json.Unmarshal([]byte(evtArg.Value.String()), &evt); err != nil {
+		return "", err
+	}
 
 	log.Debugf("Received evt: '%+v'\n", evt)
 	syslog.Printf("Received evt: '%+v'\n", evt)
