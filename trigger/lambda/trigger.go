@@ -48,7 +48,7 @@ func (t *LambdaTrigger) Init(runner action.Runner) {
 	t.runner = runner
 }
 
-func Invoke() (string, error) {
+func Invoke() ([]byte, error) {
 
 	log.Info("Starting AWS Lambda Trigger")
 	// Use syslog since aws logs are still not that good
@@ -63,7 +63,7 @@ func Invoke() (string, error) {
 	var evt interface{}
 	// Unmarshall ctx
 	if err := json.Unmarshal([]byte(evtArg.Value.String()), &evt); err != nil {
-		return "", err
+		return nil, err
 	}
 
 	log.Debugf("Received evt: '%+v'\n", evt)
@@ -73,7 +73,7 @@ func Invoke() (string, error) {
 	var ctx *runtime.Context
 	// Unmarshall ctx
 	if err := json.Unmarshal([]byte(ctxArg.Value.String()), &ctx); err != nil {
-		return "", err
+		return nil, err
 	}
 
 	log.Debugf("Received ctx: '%+v'\n", ctx)
@@ -95,7 +95,7 @@ func Invoke() (string, error) {
 	startAttrs, err := singleton.metadata.OutputsToAttrs(data, false)
 	if err != nil {
 		log.Errorf("After run error' %s'\n", err)
-		return "", err
+		return nil, err
 	}
 
 	context := trigger.NewContext(context.Background(), startAttrs)
@@ -103,18 +103,18 @@ func Invoke() (string, error) {
 
 	if err != nil {
 		log.Debugf("Lambda Trigger Error: %s", err.Error())
-		return "", err
+		return nil, err
 	}
 
 	if replyData != nil {
 		data, err := json.Marshal(replyData)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
-		return string(data), nil
+		return data, nil
 	}
 
-	return "", err
+	return nil, err
 }
 
 func (t *LambdaTrigger) Start() error {

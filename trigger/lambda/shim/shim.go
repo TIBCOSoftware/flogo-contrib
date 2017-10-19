@@ -9,14 +9,14 @@ import (
 )
 
 
-func Handle(evt json.RawMessage, ctx *runtime.Context) (string, error) {
+func Handle(evt json.RawMessage, ctx *runtime.Context) ([]byte, error) {
 	err := setupArgs(evt, ctx)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	result, err := lambda.Invoke()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	return result, nil
 }
