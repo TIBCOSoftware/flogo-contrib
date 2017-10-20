@@ -9,7 +9,7 @@ import (
 )
 
 
-func Handle(evt json.RawMessage, ctx *runtime.Context) ([]byte, error) {
+func Handle(evt json.RawMessage, ctx *runtime.Context) (interface{}, error) {
 	err := setupArgs(evt, ctx)
 	if err != nil {
 		return nil, err

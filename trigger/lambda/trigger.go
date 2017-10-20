@@ -48,7 +48,7 @@ func (t *LambdaTrigger) Init(runner action.Runner) {
 	t.runner = runner
 }
 
-func Invoke() ([]byte, error) {
+func Invoke() (interface{}, error) {
 
 	log.Info("Starting AWS Lambda Trigger")
 	// Use syslog since aws logs are still not that good
@@ -106,15 +106,7 @@ func Invoke() ([]byte, error) {
 		return nil, err
 	}
 
-	if replyData != nil {
-		data, err := json.Marshal(replyData)
-		if err != nil {
-			return nil, err
-		}
-		return data, nil
-	}
-
-	return nil, err
+	return replyData, err
 }
 
 func (t *LambdaTrigger) Start() error {
