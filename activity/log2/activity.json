@@ -3,7 +3,7 @@
   "type": "flogo:activity",
   "ref": "github.com/teivah/flogo-contrib/activity/log2",
   "version": "0.0.1",
-  "title": "Log Message",
+  "title": "Log Message 2",
   "description": "Simple Log Activity 2",
   "homepage": "https://github.com/teivah/flogo-contrib/tree/master/activity/log2",
   "inputs":[
