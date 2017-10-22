@@ -1,4 +1,4 @@
-package log
+package log2
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 )
 
 // activityLog is the default logger for the Log Activity
-var activityLog = logger.GetLogger("activity-tibco-log")
+var activityLog = logger.GetLogger("activity-tibco-log2")
 
 const (
 	ivMessage   = "message"
