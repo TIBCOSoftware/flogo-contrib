@@ -80,6 +80,8 @@ func (a *CouchbaseActivity) Eval(context activity.Context) (done bool, err error
 		return false, openBucketError
 	}
 
+	defer bucket.Close()
+
 	switch method {
 	case methodInsert:
 		cas, methodError := bucket.Insert(key, data, uint32(expiry))
