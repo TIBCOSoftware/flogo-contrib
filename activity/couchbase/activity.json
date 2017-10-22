@@ -21,8 +21,11 @@
       "type": "string",
       "allowed": [
         "Insert",
-        "Upsert"
+        "Upsert",
+        "Remove",
+        "Get"
       ],
+      "value": "Insert",
       "required": true
     },
     {
@@ -58,10 +61,6 @@
     {
       "name": "output",
       "type": "any"
-    },
-    {
-      "name": "status",
-      "type": "boolean"
     }
   ]
 }

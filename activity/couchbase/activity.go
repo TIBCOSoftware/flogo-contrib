@@ -13,6 +13,8 @@ var activityLog = logger.GetLogger("activity-tibco-couchbase")
 const (
 	methodInsert = "Insert"
 	methodUpsert = "Upsert"
+	methodRemove = "Remove"
+	methodGet    = "Get"
 
 	ivKey            = "key"
 	ivData           = "data"
@@ -25,7 +27,6 @@ const (
 	ivBucketPassword = "bucketPassword"
 
 	ovOutput = "output"
-	ovStatus = "status"
 )
 
 func init() {
@@ -81,21 +82,40 @@ func (a *CouchbaseActivity) Eval(context activity.Context) (done bool, err error
 
 	switch method {
 	case methodInsert:
-		cas, error := bucket.Insert(key, data, uint32(expiry))
-		if error != nil {
-			activityLog.Errorf("Insert error: %v", error)
-			return false, error
+		cas, methodError := bucket.Insert(key, data, uint32(expiry))
+		if methodError != nil {
+			activityLog.Errorf("Insert error: %v", methodError)
+			return false, methodError
 		} else {
 			context.SetOutput(ovOutput, cas)
 			return true, nil
 		}
 	case methodUpsert:
-		cas, error := bucket.Upsert(key, data, uint32(expiry))
-		if error != nil {
-			activityLog.Errorf("Upsert error: %v", error)
-			return false, error
+		cas, methodError := bucket.Upsert(key, data, uint32(expiry))
+		if methodError != nil {
+			activityLog.Errorf("Upsert error: %v", methodError)
+			return false, methodError
 		} else {
 			context.SetOutput(ovOutput, cas)
+			return true, nil
+		}
+	case methodRemove:
+		cas, methodError := bucket.Remove("u:"+key, 0)
+		if methodError != nil {
+			activityLog.Errorf("Remove error: %v", methodError)
+			return false, methodError
+		} else {
+			context.SetOutput(ovOutput, cas)
+			return true, nil
+		}
+	case methodGet:
+		var document interface{}
+		_, methodError := bucket.Get("u:"+key, &document)
+		if methodError != nil {
+			activityLog.Errorf("Get error: %v", methodError)
+			return false, methodError
+		} else {
+			context.SetOutput(ovOutput, document)
 			return true, nil
 		}
 	default:
