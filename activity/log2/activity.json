@@ -1,12 +1,12 @@
 {
-  "name": "tibco-log",
+  "name": "tibco-log2",
   "type": "flogo:activity",
-  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/log",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/log2",
   "version": "0.0.1",
-  "title": "Log Message",
-  "description": "Simple Log Activity",
-  "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/log",
-  "inputs":[
+  "title": "Log Message 2",
+  "description": "Simple Log Activity 2",
+  "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/log2",
+  "inputs": [
     {
       "name": "message",
       "type": "string",
