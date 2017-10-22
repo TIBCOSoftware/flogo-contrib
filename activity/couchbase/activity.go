@@ -56,26 +56,26 @@ func (a *CouchbaseActivity) Eval(context activity.Context) (done bool, err error
 	data, _ := context.GetInput(ivData).(string)
 	method, _ := context.GetInput(ivMethod).(string)
 	expiry, _ := context.GetInput(ivExpiry).(int)
-	server, _ := context.GetInput(ivServer).(string)
-	username, _ := context.GetInput(ivUsername).(string)
-	password, _ := context.GetInput(ivPassword).(string)
-	bucketName, _ := context.GetInput(ivBucket).(string)
-	bucketPassword, _ := context.GetInput(ivBucketPassword).(string)
+	//server, _ := context.GetInput(ivServer).(string)
+	//username, _ := context.GetInput(ivUsername).(string)
+	//password, _ := context.GetInput(ivPassword).(string)
+	//bucketName, _ := context.GetInput(ivBucket).(string)
+	//bucketPassword, _ := context.GetInput(ivBucketPassword).(string)
 
-	cluster, connectError := gocb.Connect("couchbase://" + server)
+	cluster, connectError := gocb.Connect("couchbase://192.168.99.100")
 	if connectError != nil {
 		activityLog.Errorf("Connection error: %v", connectError)
 		return false, connectError
 	}
 
 	cluster.Authenticate(gocb.PasswordAuthenticator{
-		Username: username,
-		Password: password,
+		Username: "Administrator",
+		Password: "password",
 	})
 
-	bucket, openBucketError := cluster.OpenBucket(bucketName, "")
+	bucket, openBucketError := cluster.OpenBucket("customer", "")
 	if openBucketError != nil {
-		activityLog.Errorf("Error while opening the bucked with the specified credentials: %v, %v, %v", bucketName, bucketPassword, openBucketError)
+		activityLog.Errorf("Error while opening the bucked with the specified credentials: ", openBucketError)
 		return false, openBucketError
 	}
 
