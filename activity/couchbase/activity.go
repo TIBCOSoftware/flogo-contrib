@@ -100,7 +100,7 @@ func (a *CouchbaseActivity) Eval(context activity.Context) (done bool, err error
 			return true, nil
 		}
 	case methodRemove:
-		cas, methodError := bucket.Remove("u:"+key, 0)
+		cas, methodError := bucket.Remove(key, 0)
 		if methodError != nil {
 			activityLog.Errorf("Remove error: %v", methodError)
 			return false, methodError
@@ -110,7 +110,7 @@ func (a *CouchbaseActivity) Eval(context activity.Context) (done bool, err error
 		}
 	case methodGet:
 		var document interface{}
-		_, methodError := bucket.Get("u:"+key, &document)
+		_, methodError := bucket.Get(key, &document)
 		if methodError != nil {
 			activityLog.Errorf("Get error: %v", methodError)
 			return false, methodError
