@@ -5,7 +5,6 @@ import (
 	"gopkg.in/couchbase/gocb.v1"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"strconv"
 )
 
 // ActivityLog is the default logger for the Log Activity
@@ -65,7 +64,7 @@ func (a *CouchbaseActivity) Eval(context activity.Context) (done bool, err error
 
 	cluster, connectError := gocb.Connect("couchbase://" + server)
 	if connectError != nil {
-		activityLog.Error(connectError)
+		activityLog.Errorf("Connection error: %v", connectError)
 		return false, connectError
 	}
 
@@ -76,7 +75,7 @@ func (a *CouchbaseActivity) Eval(context activity.Context) (done bool, err error
 
 	bucket, openBucketError := cluster.OpenBucket(bucketName, bucketPassword)
 	if openBucketError != nil {
-		activityLog.Error(openBucketError)
+		activityLog.Errorf("Error while opening the bucked with the specified credentials: %v, %v, %v", bucketName, bucketPassword, openBucketError)
 		return false, openBucketError
 	}
 
@@ -84,7 +83,7 @@ func (a *CouchbaseActivity) Eval(context activity.Context) (done bool, err error
 	case methodInsert:
 		cas, error := bucket.Insert(key, data, uint32(expiry))
 		if error != nil {
-			activityLog.Error(error)
+			activityLog.Errorf("Insert error: %v", error)
 			return false, error
 		} else {
 			context.SetOutput(ovOutput, cas)
@@ -93,7 +92,7 @@ func (a *CouchbaseActivity) Eval(context activity.Context) (done bool, err error
 	case methodUpsert:
 		cas, error := bucket.Upsert(key, data, uint32(expiry))
 		if error != nil {
-			activityLog.Error(error)
+			activityLog.Errorf("Upsert error: %v", error)
 			return false, error
 		} else {
 			context.SetOutput(ovOutput, cas)
@@ -105,25 +104,4 @@ func (a *CouchbaseActivity) Eval(context activity.Context) (done bool, err error
 	}
 
 	return true, nil
-}
-
-func toBool(val interface{}) (bool, error) {
-
-	b, ok := val.(bool)
-	if !ok {
-		s, ok := val.(string)
-
-		if !ok {
-			return false, fmt.Errorf("unable to convert to boolean")
-		}
-
-		var err error
-		b, err = strconv.ParseBool(s)
-
-		if err != nil {
-			return false, err
-		}
-	}
-
-	return b, nil
 }
