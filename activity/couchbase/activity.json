@@ -1,32 +1,67 @@
 {
-  "name": "tibco-log",
+  "name": "tibco-couchbase",
   "type": "flogo:activity",
-  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/log",
-  "version": "0.0.1",
-  "title": "Log Message",
-  "description": "Simple Log Activity",
-  "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/log",
-  "inputs":[
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/couchbase",
+  "version": "5.0.0.0",
+  "title": "Upsert Couchbase document",
+  "description": "Update or insert a Couchbase document in a specified bucket",
+  "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/couchbase",
+  "inputs": [
     {
-      "name": "message",
+      "name": "key",
       "type": "string",
-      "value": ""
+      "required": true
     },
     {
-      "name": "flowInfo",
-      "type": "boolean",
-      "value": "false"
+      "name": "data",
+      "type": "string"
     },
     {
-      "name": "addToFlow",
-      "type": "boolean",
-      "value": "false"
+      "name": "method",
+      "type": "string",
+      "required": true,
+      "allowed": [
+        "Insert",
+        "Upsert"
+      ]
+    },
+    {
+      "name": "expiry",
+      "type": "integer",
+      "value": 0,
+      "required": true
+    },
+    {
+      "name": "server",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "username",
+      "type": "string"
+    },
+    {
+      "name": "password",
+      "type": "string"
+    },
+    {
+      "name": "bucket",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "bucketPassword",
+      "type": "string"
     }
   ],
   "outputs": [
     {
-      "name": "message",
-      "type": "string"
+      "name": "output",
+      "type": "any"
+    },
+    {
+      "name": "status",
+      "type": "boolean"
     }
   ]
 }

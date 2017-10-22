@@ -1,66 +1,107 @@
-package log
+package couchbase
 
 import (
 	"fmt"
-	"strconv"
-
+	"gopkg.in/couchbase/gocb.v1"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"strconv"
 )
 
-// activityLog is the default logger for the Log Activity
-var activityLog = logger.GetLogger("activity-tibco-log")
+// ActivityLog is the default logger for the Log Activity
+var activityLog = logger.GetLogger("activity-tibco-couchbase")
 
 const (
-	ivMessage   = "message"
-	ivFlowInfo  = "flowInfo"
-	ivAddToFlow = "addToFlow"
+	methodInsert = "Insert"
+	methodUpsert = "Upsert"
 
-	ovMessage = "message"
+	ivKey            = "key"
+	ivData           = "data"
+	ivMethod         = "method"
+	ivExpiry         = "expiry"
+	ivServer         = "server"
+	ivUsername       = "username"
+	ivPassword       = "password"
+	ivBucket         = "bucket"
+	ivBucketPassword = "bucketPassword"
+
+	ovOutput = "output"
+	ovStatus = "status"
 )
 
 func init() {
 	activityLog.SetLogLevel(logger.InfoLevel)
 }
 
-// LogActivity is an Activity that is used to log a message to the console
-// inputs : {message, flowInfo}
-// outputs: none
-type LogActivity struct {
+// Integration with Couchbase
+// inputs: {data, method, expiry, server, username, password, bucket, bucketPassword}
+// outputs: {output, status}
+type CouchbaseActivity struct {
 	metadata *activity.Metadata
 }
 
 // NewActivity creates a new AppActivity
 func NewActivity(metadata *activity.Metadata) activity.Activity {
-	return &LogActivity{metadata: metadata}
+	return &CouchbaseActivity{metadata: metadata}
 }
 
 // Metadata returns the activity's metadata
-func (a *LogActivity) Metadata() *activity.Metadata {
+func (a *CouchbaseActivity) Metadata() *activity.Metadata {
 	return a.metadata
 }
 
-// Eval implements api.Activity.Eval - Logs the Message
-func (a *LogActivity) Eval(context activity.Context) (done bool, err error) {
+// Eval implements api.Activity.Eval - Couchbase integration
+func (a *CouchbaseActivity) Eval(context activity.Context) (done bool, err error) {
 
-	//mv := context.GetInput(ivMessage)
-	message, _ := context.GetInput(ivMessage).(string)
+	key, _ := context.GetInput(ivKey).(string)
+	data, _ := context.GetInput(ivData).(string)
+	method, _ := context.GetInput(ivMethod).(string)
+	expiry, _ := context.GetInput(ivExpiry).(int)
+	server, _ := context.GetInput(ivServer).(string)
+	username, _ := context.GetInput(ivUsername).(string)
+	password, _ := context.GetInput(ivPassword).(string)
+	bucketName, _ := context.GetInput(ivBucket).(string)
+	bucketPassword, _ := context.GetInput(ivBucketPassword).(string)
 
-	flowInfo, _ := toBool(context.GetInput(ivFlowInfo))
-	addToFlow, _ := toBool(context.GetInput(ivAddToFlow))
-
-	msg := message
-
-	if flowInfo {
-
-		msg = fmt.Sprintf("'%s' - FlowInstanceID [%s], Flow [%s], Task [%s]", msg,
-			context.FlowDetails().ID(), context.FlowDetails().Name(), context.TaskName())
+	cluster, connectError := gocb.Connect("couchbase://" + server)
+	if connectError != nil {
+		activityLog.Error(connectError)
+		return false, connectError
 	}
 
-	activityLog.Info(msg)
+	cluster.Authenticate(gocb.PasswordAuthenticator{
+		Username: username,
+		Password: password,
+	})
 
-	if addToFlow {
-		context.SetOutput(ovMessage, msg)
+	bucket, openBucketError := cluster.OpenBucket(bucketName, bucketPassword)
+	if openBucketError != nil {
+		activityLog.Error(openBucketError)
+		return false, openBucketError
+	}
+
+	switch method {
+	case methodInsert:
+		cas, error := bucket.Insert(key, data, uint32(expiry))
+		if error != nil {
+			activityLog.Error(error)
+			return false, error
+		} else {
+			context.SetOutput(ovOutput, cas)
+			return true, nil
+		}
+	case methodUpsert:
+		cas, error := bucket.Upsert(key, data, uint32(expiry))
+		if error != nil {
+			activityLog.Error(error)
+			return false, error
+		} else {
+			context.SetOutput(ovOutput, cas)
+			return true, nil
+		}
+	default:
+		activityLog.Errorf("Method %v not recognized.", method)
+		return false, fmt.Errorf("method %v not recognized", method)
 	}
 
 	return true, nil

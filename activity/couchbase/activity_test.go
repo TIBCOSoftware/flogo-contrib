@@ -1,4 +1,4 @@
-package log
+package couchbase
 
 import (
 	"fmt"
