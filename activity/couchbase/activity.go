@@ -73,7 +73,7 @@ func (a *CouchbaseActivity) Eval(context activity.Context) (done bool, err error
 		Password: password,
 	})
 
-	bucket, openBucketError := cluster.OpenBucket(bucketName, bucketPassword)
+	bucket, openBucketError := cluster.OpenBucket(bucketName, "")
 	if openBucketError != nil {
 		activityLog.Errorf("Error while opening the bucked with the specified credentials: %v, %v, %v", bucketName, bucketPassword, openBucketError)
 		return false, openBucketError
