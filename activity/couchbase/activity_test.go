@@ -1,12 +1,12 @@
 package couchbase
 
 import (
-	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/test"
+	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"io/ioutil"
-	"testing"
 	"log"
 	"math/rand"
+	"testing"
 	"time"
 )
 
@@ -21,7 +21,7 @@ Docker command: docker run -d -v ~/couchbase/node1:/opt/couchbase/var -p 8091-80
 3) You must create a bucket in Couchbase called "test"
 
 The tests are using the default Couchbase username, password and port
- */
+*/
 
 var activityMetadata *activity.Metadata
 
@@ -78,7 +78,7 @@ func insert(id string, data string, t *testing.T) (act activity.Activity, tc *te
 
 /*
 Test a create activity
- */
+*/
 func TestCreate(t *testing.T) {
 	act := NewActivity(getActivityMetadata())
 	if act == nil {
@@ -91,7 +91,7 @@ func TestCreate(t *testing.T) {
 
 /*
 Insert test
- */
+*/
 func TestInsert(t *testing.T) {
 	id := randomString(5)
 	insert(id, "", t)
@@ -100,7 +100,7 @@ func TestInsert(t *testing.T) {
 
 /*
 Remove test
- */
+*/
 func TestRemove(t *testing.T) {
 	id := randomString(5)
 	act, tc := insert(id, "", t)
@@ -117,7 +117,7 @@ func TestRemove(t *testing.T) {
 
 /*
 Upsert test
- */
+*/
 func TestUpsert(t *testing.T) {
 	id := randomString(5)
 	act, tc := insert(id, "", t)
@@ -134,7 +134,7 @@ func TestUpsert(t *testing.T) {
 
 /*
 Get test
- */
+*/
 func TestGet(t *testing.T) {
 	id := randomString(5)
 	data := `{"name":"foo"}`

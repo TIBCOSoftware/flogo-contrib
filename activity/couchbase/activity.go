@@ -2,9 +2,9 @@ package couchbase
 
 import (
 	"fmt"
-	"gopkg.in/couchbase/gocb.v1"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"gopkg.in/couchbase/gocb.v1"
 )
 
 // ActivityLog is the default logger for the Log Activity
