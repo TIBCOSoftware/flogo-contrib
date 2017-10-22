@@ -19,11 +19,11 @@
     {
       "name": "method",
       "type": "string",
-      "required": true,
       "allowed": [
         "Insert",
         "Upsert"
-      ]
+      ],
+      "required": true
     },
     {
       "name": "expiry",
