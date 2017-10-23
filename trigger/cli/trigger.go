@@ -28,8 +28,9 @@ type CliTrigger struct {
 }
 
 type actionInfo struct {
-	actionId string
-	Invoke   bool
+	actionId   string
+	Invoke     bool
+	handlerCfg *trigger.HandlerConfig
 }
 
 //NewFactory create a new Trigger factory
@@ -78,7 +79,7 @@ func (t *CliTrigger) Init(runner action.Runner) {
 
 		cmdString := "default"
 
-		aInfo := &actionInfo{actionId: handlerCfg.ActionId, Invoke: false}
+		aInfo := &actionInfo{actionId: handlerCfg.ActionId, Invoke: false, handlerCfg: handlerCfg}
 		if cmd, ok := handlerCfg.Settings["command"]; ok {
 			cmdString = cmd.(string)
 		}
@@ -123,14 +124,14 @@ func Invoke() (string, error) {
 	for _, value := range singleton.actions {
 
 		if value.Invoke {
-			return singleton.Invoke(value.actionId, args)
+			return singleton.Invoke(value.actionId, value.handlerCfg, args)
 		}
 	}
 
-	return singleton.Invoke(singleton.defAction.actionId, args)
+	return singleton.Invoke(singleton.defAction.actionId, singleton.defAction.handlerCfg, args)
 }
 
-func (t *CliTrigger) Invoke(actionId string, args []string) (string, error) {
+func (t *CliTrigger) Invoke(actionId string, handlerCfg *trigger.HandlerConfig, args []string) (string, error) {
 
 	log.Infof("CLI Trigger: Invoking action '%s'", actionId)
 
@@ -142,9 +143,7 @@ func (t *CliTrigger) Invoke(actionId string, args []string) (string, error) {
 	startAttrs, _ := t.metadata.OutputsToAttrs(data, false)
 
 	act := action.Get(actionId)
-	log.Debugf("Found action' %+x'", act)
-
-	ctx := trigger.NewContext(context.Background(), startAttrs)
+	ctx := trigger.NewContextWithData(context.Background(), &trigger.ContextData{Attrs: startAttrs, HandlerCfg: handlerCfg})
 	_, replyData, err := t.runner.Run(ctx, act, actionId, nil)
 
 	if err != nil {

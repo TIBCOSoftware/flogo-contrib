@@ -130,8 +130,8 @@ func newActionHandler(rt *RestTrigger, actionId string, handlerCfg *trigger.Hand
 		if err != nil {
 			switch {
 			case err == io.EOF:
-			// empty body
-			//todo should handler say if content is expected?
+				// empty body
+				//todo should handler say if content is expected?
 			case err != nil:
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
@@ -155,11 +155,9 @@ func newActionHandler(rt *RestTrigger, actionId string, handlerCfg *trigger.Hand
 		//todo handle error
 		startAttrs, _ := rt.metadata.OutputsToAttrs(data, false)
 
-		action := action.Get(actionId)
-		log.Debugf("Found action' %+x'", action)
-
-		context := trigger.NewContextWithData(context.Background(), &trigger.ContextData{Attrs:startAttrs,HandlerCfg:handlerCfg})
-		replyCode, replyData, err := rt.runner.Run(context, action, actionId, nil)
+		act := action.Get(actionId)
+		ctx := trigger.NewContextWithData(context.Background(), &trigger.ContextData{Attrs: startAttrs, HandlerCfg: handlerCfg})
+		replyCode, replyData, err := rt.runner.Run(ctx, act, actionId, nil)
 
 		if err != nil {
 			log.Debugf("REST Trigger Error: %s", err.Error())

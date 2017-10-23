@@ -70,25 +70,24 @@ func Invoke() (interface{}, error) {
 	syslog.Printf("Received evt: '%+v'\n", evt)
 
 	ctxArg := flag.Lookup("ctx")
-	var ctx *runtime.Context
-	// Unmarshall ctx
-	if err := json.Unmarshal([]byte(ctxArg.Value.String()), &ctx); err != nil {
+	var lambdaCtx *runtime.Context
+
+	// Unmarshal ctx
+	if err := json.Unmarshal([]byte(ctxArg.Value.String()), &lambdaCtx); err != nil {
 		return nil, err
 	}
 
-	log.Debugf("Received ctx: '%+v'\n", ctx)
-	syslog.Printf("Received ctx: '%+v'\n", ctx)
+	log.Debugf("Received ctx: '%+v'\n", lambdaCtx)
+	syslog.Printf("Received ctx: '%+v'\n", lambdaCtx)
 
 	actionId := singleton.config.Handlers[0].ActionId
 	log.Debugf("Calling actionid: '%s'\n", actionId)
 
-	action := action.Get(actionId)
-
 	data := map[string]interface{}{
-		"logStreamName":   ctx.LogStreamName,
-		"logGroupName":    ctx.LogGroupName,
-		"awsRequestId":    ctx.AWSRequestID,
-		"memoryLimitInMB": ctx.MemoryLimitInMB,
+		"logStreamName":   lambdaCtx.LogStreamName,
+		"logGroupName":    lambdaCtx.LogGroupName,
+		"awsRequestId":    lambdaCtx.AWSRequestID,
+		"memoryLimitInMB": lambdaCtx.MemoryLimitInMB,
 		"evt":             evt,
 	}
 
@@ -98,8 +97,8 @@ func Invoke() (interface{}, error) {
 		return nil, err
 	}
 
-	context := trigger.NewContext(context.Background(), startAttrs)
-	_, replyData, err := singleton.runner.Run(context, action, actionId, nil)
+	ctx := trigger.NewContextWithData(context.Background(), &trigger.ContextData{Attrs: startAttrs, HandlerCfg: singleton.config.Handlers[0]})
+	_, replyData, err := singleton.runner.Run(ctx, action, actionId, nil)
 
 	if err != nil {
 		log.Debugf("Lambda Trigger Error: %s", err.Error())
