@@ -13,6 +13,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/TIBCOSoftware/flogo-lib/util"
+	"github.com/TIBCOSoftware/flogo-lib/core/action"
 )
 
 const (
@@ -43,6 +44,7 @@ type Instance struct {
 
 	flowProvider provider.Provider
 	replyHandler activity.ReplyHandler
+	actionCtx    *ActionCtx //todo after transition to actionCtx, make sure actionCtx isn't null before executing
 }
 
 // New creates a new Flow Instance from the specified Flow
@@ -102,6 +104,11 @@ func (pi *Instance) ReplyHandler() activity.ReplyHandler {
 // SetReplyHandler sets the reply handler for the instance
 func (pi *Instance) SetReplyHandler(replyHandler activity.ReplyHandler) {
 	pi.replyHandler = replyHandler
+}
+
+// InitActionContext initialize the action context, should be initialized before execution
+func (pi *Instance) InitActionContext(config *action.Config, handler action.ResultHandler) {
+	pi.actionCtx = &ActionCtx{inst:pi, config:config, rh:handler}
 }
 
 // FlowDefinition returns the Flow that the instance is of
@@ -571,6 +578,36 @@ func (pi *Instance) AddAttr(attrName string, attrType data.Type, value interface
 	return attr
 }
 
+func (pi *Instance) ActionContext() action.Context {
+	return pi.actionCtx
+}
+
+type ActionCtx struct {
+	config *action.Config
+	inst   *Instance
+	rh     action.ResultHandler
+}
+
+func (ac ActionCtx) ID() string {
+	return ac.config.Id
+}
+
+func (ac ActionCtx) Ref() string {
+	return ac.config.Ref
+}
+
+func (ac ActionCtx) InstanceMetadata() *action.ConfigMetadata {
+	return ac.config.Metadata
+}
+
+func (ac ActionCtx) Reply(data map[string]interface{}, err error) {
+	ac.rh.HandleResult(data, err)
+}
+
+func (ac ActionCtx) WorkingData() data.Scope {
+	return ac.inst
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Task Environment
 
@@ -931,6 +968,11 @@ func (td *TaskData) Failed(err error) {
 // FlowDetails implements activity.Context.FlowName method
 func (td *TaskData) FlowDetails() activity.FlowDetails {
 	return td.taskEnv.Instance
+}
+
+// FlowDetails implements activity.Context.FlowName method
+func (td *TaskData) ActionContext() action.Context {
+	return td.taskEnv.Instance.ActionContext()
 }
 
 // TaskName implements activity.Context.TaskName method
