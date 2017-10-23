@@ -278,6 +278,7 @@ func (fa *FlowAction) Run(context context.Context, inputs map[string]interface{}
 	hasWork := true
 
 	inst.SetReplyHandler(&SimpleReplyHandler{resultHandler: handler})
+	inst.InitActionContext(fa.config, handler)
 
 	go func() {
 
