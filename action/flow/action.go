@@ -271,6 +271,7 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 	hasWork := true
 
 	inst.SetReplyHandler(&SimpleReplyHandler{resultHandler: handler})
+	inst.InitActionContext(fa.config, handler)
 
 	go func() {
 

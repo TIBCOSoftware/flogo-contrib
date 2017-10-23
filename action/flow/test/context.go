@@ -3,27 +3,27 @@ package test
 import (
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
+	"github.com/TIBCOSoftware/flogo-lib/core/action"
 )
-
-// TestActivityContext is a dummy ActivityContext to assist in testing
-type TestActivityContext struct {
-	details     activity.FlowDetails
-	TaskNameVal string
-	Attrs       map[string]*data.Attribute
-
-	metadata *activity.Metadata
-	inputs   map[string]*data.Attribute
-	outputs  map[string]*data.Attribute
-}
-
-// TestFlowDetails simple FlowDetails for use in testing
-type TestFlowDetails struct {
-	FlowIDVal   string
-	FlowNameVal string
-}
 
 // NewTestActivityContext creates a new TestActivityContext
 func NewTestActivityContext(metadata *activity.Metadata) *TestActivityContext {
+
+	input := []*data.Attribute{{Name: "Input1", Type: data.STRING}}
+	output := []*data.Attribute{{Name: "Output1", Type: data.STRING}}
+
+	ac := &TestActionCtx{
+		ActionId:   "1",
+		ActionRef:  "github.com/TIBCOSoftware/flogo-contrib/action/flow",
+		ActionMd:   &action.ConfigMetadata{Input: input, Output: output},
+		ActionData: data.NewSimpleScope(nil, nil),
+	}
+
+	return NewTestActivityContextWithAction(metadata, ac)
+}
+
+// NewTestActivityContextWithAction creates a new TestActivityContext
+func NewTestActivityContextWithAction(metadata *activity.Metadata, actionCtx *TestActionCtx) *TestActivityContext {
 
 	fd := &TestFlowDetails{
 		FlowIDVal:   "1",
@@ -32,6 +32,7 @@ func NewTestActivityContext(metadata *activity.Metadata) *TestActivityContext {
 
 	tc := &TestActivityContext{
 		details:     fd,
+		ACtx:        actionCtx,
 		TaskNameVal: "Test Task",
 		Attrs:       make(map[string]*data.Attribute),
 		inputs:      make(map[string]*data.Attribute, len(metadata.Input)),
@@ -48,6 +49,15 @@ func NewTestActivityContext(metadata *activity.Metadata) *TestActivityContext {
 	return tc
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// TestFlowDetails
+
+// TestFlowDetails simple FlowDetails for use in testing
+type TestFlowDetails struct {
+	FlowIDVal   string
+	FlowNameVal string
+}
+
 // ID implements activity.FlowDetails.ID
 func (fd *TestFlowDetails) ID() string {
 	return fd.FlowIDVal
@@ -61,6 +71,63 @@ func (fd *TestFlowDetails) Name() string {
 // ReplyHandler implements activity.FlowDetails.ReplyHandler
 func (fd *TestFlowDetails) ReplyHandler() activity.ReplyHandler {
 	return nil
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// TestActionCtx
+
+type TestActionCtx struct {
+	ActionId  string
+	ActionRef string
+	ActionMd  *action.ConfigMetadata
+
+	ActionData    data.Scope
+	ReplyData     map[string]interface{}
+	ReplyDataAttr map[string]*data.Attribute
+	ReplyErr      error
+}
+
+func (ac *TestActionCtx) ID() string {
+	return ac.ActionId
+}
+
+func (ac *TestActionCtx) Ref() string {
+	return ac.ActionRef
+}
+
+func (ac *TestActionCtx) InstanceMetadata() *action.ConfigMetadata {
+	return ac.ActionMd
+}
+
+func (ac *TestActionCtx) Reply(data map[string]interface{}, err error) {
+	//todo log reply
+	ac.ReplyData = data
+	ac.ReplyErr = err
+}
+
+func (ac *TestActionCtx) ReplyWithAttrs(data map[string]*data.Attribute, err error) {
+	//todo log reply
+	ac.ReplyDataAttr = data
+	ac.ReplyErr = err
+}
+
+func (ac *TestActionCtx) WorkingData() data.Scope {
+	return ac.ActionData
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// TestActivityContext
+
+// TestActivityContext is a dummy ActivityContext to assist in testing
+type TestActivityContext struct {
+	details     activity.FlowDetails
+	ACtx        *TestActionCtx
+	TaskNameVal string
+	Attrs       map[string]*data.Attribute
+
+	metadata *activity.Metadata
+	inputs   map[string]*data.Attribute
+	outputs  map[string]*data.Attribute
 }
 
 // FlowDetails implements activity.Context.FlowDetails
@@ -153,4 +220,8 @@ func (c *TestActivityContext) GetOutput(name string) interface{} {
 	}
 
 	return nil
+}
+
+func (c *TestActivityContext) ActionContext() action.Context {
+	return c.ACtx
 }
