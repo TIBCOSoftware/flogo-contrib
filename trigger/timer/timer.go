@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/carlescere/scheduler"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
-	"github.com/carlescere/scheduler"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
@@ -145,10 +145,10 @@ func (t *TimerTrigger) scheduleRepeating(endpoint *trigger.HandlerConfig) {
 	fn2 := func() {
 		log.Debug("-- Starting \"Repeating\" (repeat) timer action")
 
-		action := action.Get(endpoint.ActionId)
-		log.Debugf("Found action: '%+x'", action)
+		act := action.Get(endpoint.ActionId)
+		log.Debugf("Found action: '%+x'", act)
 		log.Debugf("ActionID: '%s'", endpoint.ActionId)
-		_, _, err := t.runner.Run(context.Background(), action, endpoint.ActionId, nil)
+		_, _, err := t.runner.Run(context.Background(), act, endpoint.ActionId, nil)
 
 		if err != nil {
 			log.Error("Error starting flow: ", err.Error())
@@ -193,7 +193,7 @@ func getInitialStartInSeconds(handlerCfg *trigger.HandlerConfig) int {
 	}
 
 	idx := strings.LastIndex(startDate, "Z")
-	timeZone := startDate[idx+1: len(startDate)]
+	timeZone := startDate[idx+1: ]
 	log.Debug("Time Zone: ", timeZone)
 	startDate = strings.TrimSuffix(startDate, timeZone)
 	log.Debug("startDate: ", startDate)
