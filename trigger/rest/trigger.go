@@ -158,7 +158,7 @@ func newActionHandler(rt *RestTrigger, actionId string, handlerCfg *trigger.Hand
 		action := action.Get(actionId)
 		log.Debugf("Found action' %+x'", action)
 
-		context := trigger.NewContext(context.Background(), startAttrs)
+		context := trigger.NewContextWithData(context.Background(), &trigger.ContextData{Attrs:startAttrs,HandlerCfg:handlerCfg})
 		replyCode, replyData, err := rt.runner.Run(context, action, actionId, nil)
 
 		if err != nil {

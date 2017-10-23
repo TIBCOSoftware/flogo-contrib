@@ -172,7 +172,7 @@ func (fa *FlowAction) Metadata() *action.Metadata {
 
 // Run implements action.Action.Run
 //func (fa *FlowAction) Run(context context.Context, uri string, options interface{}, handler action.ResultHandler) error {
-func (fa *FlowAction) Run(context context.Context, inputs map[string]interface{}, options map[string]interface{}, handler action.ResultHandler) error {
+func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, options map[string]interface{}, handler action.ResultHandler) error {
 
 	op := instance.OpStart
 	retID := false
@@ -193,16 +193,16 @@ func (fa *FlowAction) Run(context context.Context, inputs map[string]interface{}
 		}
 
 	} else {
-		if v, ok := mh.GetInt(inputs, "op"); ok {
+		if v, ok := mh.GetInt(options, "op"); ok {
 			op = v
 		}
-		if v, ok := mh.GetBool(inputs, "returnId"); ok {
+		if v, ok := mh.GetBool(options, "returnId"); ok {
 			retID = v
 		}
-		if v, ok := mh.GetString(inputs, "flowURI"); ok {
+		if v, ok := mh.GetString(options, "flowURI"); ok {
 			flowURI = v
 		}
-		if v, ok := inputs["initialState"]; ok {
+		if v, ok := options["initialState"]; ok {
 			if v, ok := v.(*instance.Instance); ok {
 				initialState = v
 			}
@@ -256,20 +256,13 @@ func (fa *FlowAction) Run(context context.Context, inputs map[string]interface{}
 	//	instance.ApplyExecOptions(inst, ro.ExecOptions)
 	//}
 
-	attrs := mh.ToAttributes(inputs, action.GetConfigInputMetadata(fa), op == instance.OpStart)
-
-	//todo remove
-	if old {
-		attrs = extractAttributes(inputs)
-	}
-
 	//todo how do we check if debug is enabled?
-	logInputs(attrs)
+	logInputs(inputs)
 
 	if op == instance.OpStart {
-		inst.Start(attrs)
+		inst.Start(inputs)
 	} else {
-		inst.UpdateAttrs(attrs)
+		inst.UpdateAttrs(inputs)
 	}
 
 	logger.Debugf("Executing instance: %s\n", inst.ID())
@@ -357,7 +350,12 @@ func logInputs(attrs []*data.Attribute) {
 	if len(attrs) > 0 {
 		logger.Debug("Input Attributes:")
 		for _, attr := range attrs {
-			logger.Debugf(" Attr:%s, Type:%s, Value:%v", attr.Name, attr.Type.String(), attr.Value)
+
+			if attr == nil {
+				logger.Error("Nil Attribute passed as input")
+			} else {
+				logger.Debugf(" Attr:%s, Type:%s, Value:%v", attr.Name, attr.Type.String(), attr.Value)
+			}
 		}
 	}
 }
