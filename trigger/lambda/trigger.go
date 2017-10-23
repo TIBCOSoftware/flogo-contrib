@@ -83,6 +83,7 @@ func Invoke() (interface{}, error) {
 	actionId := singleton.config.Handlers[0].ActionId
 	log.Debugf("Calling actionid: '%s'\n", actionId)
 
+
 	data := map[string]interface{}{
 		"logStreamName":   lambdaCtx.LogStreamName,
 		"logGroupName":    lambdaCtx.LogGroupName,
@@ -97,8 +98,9 @@ func Invoke() (interface{}, error) {
 		return nil, err
 	}
 
+	act := action.Get(actionId)
 	ctx := trigger.NewContextWithData(context.Background(), &trigger.ContextData{Attrs: startAttrs, HandlerCfg: singleton.config.Handlers[0]})
-	_, replyData, err := singleton.runner.Run(ctx, action, actionId, nil)
+	_, replyData, err := singleton.runner.Run(ctx, act, actionId, nil)
 
 	if err != nil {
 		log.Debugf("Lambda Trigger Error: %s", err.Error())
