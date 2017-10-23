@@ -7,14 +7,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/carlescere/scheduler"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
-	"github.com/carlescere/scheduler"
-	"github.com/op/go-logging"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
-// log is the default package logger
-var log = logging.MustGetLogger("trigger-tibco-timer")
+var log = logger.GetLogger("timer-trigger")
 
 type TimerTrigger struct {
 	metadata *trigger.Metadata
@@ -46,7 +45,7 @@ func (t *TimerTrigger) Metadata() *trigger.Metadata {
 // Init implements ext.Trigger.Init
 func (t *TimerTrigger) Init(runner action.Runner) {
 	t.runner = runner
-	log.Infof("In init, id: '%s', Metadata: '%+v', Config: '%+v'", t.config.Id, t.metadata, t.config)
+	//log.Infof("In init, id: '%s', Metadata: '%+v', Config: '%+v'", t.config.Id, t.metadata, t.config)
 }
 
 // Start implements ext.Trigger.Start
@@ -95,33 +94,47 @@ func (t *TimerTrigger) scheduleOnce(endpoint *trigger.HandlerConfig) {
 	log.Info("Scheduling a run one time job")
 
 	seconds := getInitialStartInSeconds(endpoint)
-	log.Debug("Seconds till trigger fires: ", seconds)
-	timerJob := scheduler.Every(int(seconds))
+	log.Debug("Seconds until trigger fires: ", seconds)
 
-	if timerJob == nil {
-		log.Error("timerJob is nil")
+	var timerJob *scheduler.Job
+
+	if seconds != 0 {
+		timerJob = scheduler.Every(int(seconds))
+	} else {
+		log.Debug("Start Date not specified, executing action immediately")
 	}
 
 	fn := func() {
-		log.Debug("-- Starting \"Once\" timer process")
+		log.Debug("Executing \"Once\" timer trigger")
 
 		act := action.Get(endpoint.ActionId)
-		log.Debugf("Found action: '%+x'", act)
-		log.Debugf("ActionID: '%s'", endpoint.ActionId)
-		_, _, err := t.runner.Run(context.Background(), act, endpoint.ActionId, nil)
 
-		if err != nil {
-			log.Error("Error starting action: ", err.Error())
+		if act != nil {
+			log.Debugf("Running action: %s", endpoint.ActionId)
+			_, _, err := t.runner.Run(context.Background(), act, endpoint.ActionId, nil)
+
+			if err != nil {
+				log.Error("Error running action: ", err.Error())
+			}
+		} else {
+			log.Errorf("Action '%s' not found", endpoint.ActionId)
 		}
-		timerJob.Quit <- true
+
+		if timerJob != nil {
+			timerJob.Quit <- true
+		}
 	}
 
-	timerJob, err := timerJob.Seconds().NotImmediately().Run(fn)
-	if err != nil {
-		log.Error("Error scheduleOnce flo err: ", err.Error())
-	}
+	if seconds == 0 {
+		fn()
+	} else {
+		timerJob, err := timerJob.Seconds().NotImmediately().Run(fn)
+		if err != nil {
+			log.Error("Error performing scheduleOnce: ", err.Error())
+		}
 
-	t.timers[endpoint.ActionId] = timerJob
+		t.timers[endpoint.ActionId] = timerJob
+	}
 }
 
 func (t *TimerTrigger) scheduleRepeating(endpoint *trigger.HandlerConfig) {
@@ -132,10 +145,10 @@ func (t *TimerTrigger) scheduleRepeating(endpoint *trigger.HandlerConfig) {
 	fn2 := func() {
 		log.Debug("-- Starting \"Repeating\" (repeat) timer action")
 
-		action := action.Get(endpoint.ActionId)
-		log.Debugf("Found action: '%+x'", action)
+		act := action.Get(endpoint.ActionId)
+		log.Debugf("Found action: '%+x'", act)
 		log.Debugf("ActionID: '%s'", endpoint.ActionId)
-		_, _, err := t.runner.Run(context.Background(), action, endpoint.ActionId, nil)
+		_, _, err := t.runner.Run(context.Background(), act, endpoint.ActionId, nil)
 
 		if err != nil {
 			log.Error("Error starting flow: ", err.Error())
@@ -174,8 +187,13 @@ func getInitialStartInSeconds(handlerCfg *trigger.HandlerConfig) int {
 
 	layout := time.RFC3339
 	startDate := handlerCfg.GetSetting("startDate")
+
+	if startDate == "" {
+		return 0
+	}
+
 	idx := strings.LastIndex(startDate, "Z")
-	timeZone := startDate[idx+1 : len(startDate)]
+	timeZone := startDate[idx+1: ]
 	log.Debug("Time Zone: ", timeZone)
 	startDate = strings.TrimSuffix(startDate, timeZone)
 	log.Debug("startDate: ", startDate)

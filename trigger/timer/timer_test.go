@@ -9,11 +9,14 @@ import (
 
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	//"github.com/TIBCOSoftware/flogo-lib/core/trigger"
+	"testing"
+	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
+	"encoding/json"
 )
 
-var jsonMetadata = getJsonMetadata()
+var jsonTestMetadata = getTestJsonMetadata()
 
-func getJsonMetadata() string {
+func getTestJsonMetadata() string {
 	jsonMetadataBytes, err := ioutil.ReadFile("trigger.json")
 	if err != nil {
 		panic("No Json Metadata found for trigger.json path")
@@ -114,20 +117,19 @@ func (tr *TestRunner) Run(context context.Context, action action.Action, uri str
 	return 0, nil, nil
 }
 
-/*
 //TODO fix this test
 func TestInit(t *testing.T) {
 	// New  factory
-	f := &TimerFactory{}
-	tgr := f.New("tibco-timer")
+	//f := &TimerFactory{}
+	//tgr := f.New("tibco-timer")
 
-	runner := &TestRunner{}
+	//runner := &TestRunner{}
 
 	config := trigger.Config{}
 	json.Unmarshal([]byte(testConfig), &config)
-	tgr.Init(config, runner)
+	//tgr.Init(config, runner)
 }
-*/
+
 
 /*
 //TODO fix this test
