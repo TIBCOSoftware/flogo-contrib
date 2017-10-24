@@ -1,11 +1,11 @@
 {
   "name": "tibco-couchbase",
   "type": "flogo:activity",
-  "ref": "github.com/teivah/flogo-contrib/activity/couchbase",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/couchbase",
   "version": "5.0.0.0",
   "title": "Couchbase connector",
   "description": "Manage Couchbase documents in a specified bucket",
-  "homepage": "https://github.com/teivah/flogo-contrib/tree/master/activity/couchbase",
+  "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/couchbase",
   "inputs": [
     {
       "name": "key",

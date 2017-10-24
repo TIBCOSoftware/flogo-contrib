@@ -5,7 +5,7 @@ This activity provides your flogo application the ability to connect to a Couchb
 ## Installation
 
 ```bash
-flogo add activity github.com/TIBCOSoftware/flogo-contrib/activity/couchbase
+flogo install github.com/TIBCOSoftware/flogo-contrib/activity/couchbase
 ```
 
 ## Schema
