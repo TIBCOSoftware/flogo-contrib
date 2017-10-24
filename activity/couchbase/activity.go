@@ -33,9 +33,11 @@ func init() {
 	activityLog.SetLogLevel(logger.InfoLevel)
 }
 
-// Integration with Couchbase
-// inputs: {data, method, expiry, server, username, password, bucket, bucketPassword}
-// outputs: {output, status}
+/*
+Integration with Couchbase
+inputs: {data, method, expiry, server, username, password, bucket, bucketPassword}
+outputs: {output, status}
+ */
 type CouchbaseActivity struct {
 	metadata *activity.Metadata
 }
@@ -76,7 +78,7 @@ func (a *CouchbaseActivity) Eval(context activity.Context) (done bool, err error
 
 	bucket, openBucketError := cluster.OpenBucket(bucketName, bucketPassword)
 	if openBucketError != nil {
-		activityLog.Errorf("Error while opening the bucked with the specified credentials: ", openBucketError)
+		activityLog.Errorf("Error while opening the bucked with the specified credentials: %v", openBucketError)
 		return false, openBucketError
 	}
 
@@ -88,42 +90,36 @@ func (a *CouchbaseActivity) Eval(context activity.Context) (done bool, err error
 		if methodError != nil {
 			activityLog.Errorf("Insert error: %v", methodError)
 			return false, methodError
-		} else {
-			context.SetOutput(ovOutput, cas)
-			return true, nil
 		}
+		context.SetOutput(ovOutput, cas)
+		return true, nil
 	case methodUpsert:
 		cas, methodError := bucket.Upsert(key, data, uint32(expiry))
 		if methodError != nil {
 			activityLog.Errorf("Upsert error: %v", methodError)
 			return false, methodError
-		} else {
-			context.SetOutput(ovOutput, cas)
-			return true, nil
 		}
+		context.SetOutput(ovOutput, cas)
+		return true, nil
 	case methodRemove:
 		cas, methodError := bucket.Remove(key, 0)
 		if methodError != nil {
 			activityLog.Errorf("Remove error: %v", methodError)
 			return false, methodError
-		} else {
-			context.SetOutput(ovOutput, cas)
-			return true, nil
 		}
+		context.SetOutput(ovOutput, cas)
+		return true, nil
 	case methodGet:
 		var document interface{}
 		_, methodError := bucket.Get(key, &document)
 		if methodError != nil {
 			activityLog.Errorf("Get error: %v", methodError)
 			return false, methodError
-		} else {
-			context.SetOutput(ovOutput, document)
-			return true, nil
 		}
+		context.SetOutput(ovOutput, document)
+		return true, nil
 	default:
 		activityLog.Errorf("Method %v not recognized.", method)
 		return false, fmt.Errorf("method %v not recognized", method)
 	}
-
-	return true, nil
 }
