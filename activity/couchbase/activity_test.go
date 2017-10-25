@@ -86,7 +86,7 @@ func TestCreate(t *testing.T) {
 		t.Fail()
 		return
 	}
-	log.Println("TestCreate successfull")
+	log.Println("TestCreate successful")
 }
 
 /*
@@ -95,7 +95,7 @@ Insert test
 func TestInsert(t *testing.T) {
 	id := randomString(5)
 	insert(id, "", t)
-	log.Println("TestInsert successfull")
+	log.Println("TestInsert successful")
 }
 
 /*
@@ -112,7 +112,7 @@ func TestRemove(t *testing.T) {
 		t.Error("Document not removed")
 		t.Fail()
 	}
-	log.Println("TestRemove successfull")
+	log.Println("TestRemove successful")
 }
 
 /*
@@ -129,7 +129,7 @@ func TestUpsert(t *testing.T) {
 		t.Error("Document not upserted")
 		t.Fail()
 	}
-	log.Println("TestUpsert successfull")
+	log.Println("TestUpsert successful")
 }
 
 /*
@@ -154,5 +154,5 @@ func TestGet(t *testing.T) {
 		t.Fail()
 	}
 
-	log.Println("TestGet successfull")
+	log.Println("TestGet successful")
 }
