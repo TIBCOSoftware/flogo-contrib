@@ -171,6 +171,7 @@ func newActionHandler(rt *RestTrigger, actionId string, handlerCfg *trigger.Hand
 			if err := json.NewEncoder(w).Encode(replyData); err != nil {
 				log.Error(err)
 			}
+			return
 		}
 
 		if replyCode > 0 {
