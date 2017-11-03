@@ -136,6 +136,7 @@ func (t *MqttTrigger) RunAction(actionURI string, payload string) {
 	//	log.Error("Error Starting action ", err.Error())
 	//	return
 	//}
+	req.ReplyTo = t.config.GetSetting("topic")
 
 	//todo handle error
 	startAttrs, _ := t.metadata.OutputsToAttrs(req.Data, false)
