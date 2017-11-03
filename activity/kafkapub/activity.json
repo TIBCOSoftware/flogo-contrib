@@ -1,6 +1,7 @@
 {
   "name": "tibco-kafkapub",
   "version": "0.0.1",
+  "title": "Publish Kafka message",
   "type": "flogo:activity",
   "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/kafkapub",
   "description": "Publish a message to a kafka topic",
