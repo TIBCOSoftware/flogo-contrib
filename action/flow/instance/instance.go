@@ -588,23 +588,32 @@ type ActionCtx struct {
 	rh     action.ResultHandler
 }
 
-func (ac ActionCtx) ID() string {
+func (ac *ActionCtx) ID() string {
 	return ac.config.Id
 }
 
-func (ac ActionCtx) Ref() string {
+func (ac *ActionCtx) Ref() string {
 	return ac.config.Ref
 }
 
-func (ac ActionCtx) InstanceMetadata() *action.ConfigMetadata {
+func (ac *ActionCtx) InstanceMetadata() *action.ConfigMetadata {
 	return ac.config.Metadata
 }
 
-func (ac ActionCtx) Reply(data map[string]interface{}, err error) {
+func (ac *ActionCtx) Reply(data map[string]interface{}, err error) {
 	ac.rh.HandleResult(data, err)
 }
 
-func (ac ActionCtx) WorkingData() data.Scope {
+func (ac *ActionCtx) ReplyWithAttrs(data map[string]*data.Attribute, err error) {
+
+//	ac.rh.HandleResult(data, err)
+}
+
+func (ac *ActionCtx) Return(data map[string]*data.Attribute, err error) {
+//	ac.rh.HandleResult(data, err)
+}
+
+func (ac *ActionCtx) WorkingData() data.Scope {
 	return ac.inst
 }
 

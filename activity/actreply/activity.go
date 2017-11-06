@@ -1,4 +1,4 @@
-package response
+package actreply
 
 import (
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
@@ -8,40 +8,38 @@ import (
 )
 
 // log is the default package logger
-var log = logger.GetLogger("activity-tibco-response")
+var log = logger.GetLogger("activity-flogo-reply")
 
 const (
 	ivMappings = "mappings"
-	ivOperation = "operation"
 )
 
-// ResponseActivity is an Activity that is used to reply/return via the trigger
+// ReplyActivity is an Activity that is used to reply/return via the trigger
 // inputs : {method,uri,params}
 // outputs: {result}
-type ResponseActivity struct {
+type ReplyActivity struct {
 	metadata *activity.Metadata
 }
 
-// NewActivity creates a new ResponseActivity
+// NewActivity creates a new ReplyActivity
 func NewActivity(metadata *activity.Metadata) activity.Activity {
-	return &ResponseActivity{metadata: metadata}
+	return &ReplyActivity{metadata: metadata}
 }
 
 // Metadata returns the activity's metadata
-func (a *ResponseActivity) Metadata() *activity.Metadata {
+func (a *ReplyActivity) Metadata() *activity.Metadata {
 	return a.metadata
 }
 
 // Eval implements api.Activity.Eval - Invokes a REST Operation
-func (a *ResponseActivity) Eval(context activity.Context) (done bool, err error) {
+func (a *ReplyActivity) Eval(context activity.Context) (done bool, err error) {
 
 	mappings := context.GetInput(ivMappings).([]interface{})
-	operation := context.GetInput(ivOperation).(string)
 
-	log.Debugf("Operation :'%s', Mappings: %+v", operation, mappings)
+	log.Debugf("Mappings: %+v", mappings)
 
 	//todo move this to a action instance level initialization, need the notion of static inputs or config
-	replyMapper, err := createMapper(mappings)
+	replyMapper, err := mapper.NewBasicMapperFromAnyArray(mappings)
 
 	if err != nil {
 		return false, nil
@@ -70,26 +68,4 @@ func (a *ResponseActivity) Eval(context activity.Context) (done bool, err error)
 	//actionCtx.Reply()
 
 	return true, nil
-}
-
-func createMapper(mappings []interface{}) (data.Mapper, error) {
-
-	var mappingDefs []*data.MappingDef
-
-	for _, mapping := range mappings {
-
-		mappingObject := mapping.(map[string]interface{})
-
-		mappingType := int(mappingObject["type"].(float64))
-		value := mappingObject["value"]
-		mapTo := mappingObject["mapTo"].(string)
-
-		mappingDef := &data.MappingDef{Type:data.MappingType(mappingType), MapTo:mapTo, Value:value}
-		mappingDefs = append(mappingDefs, mappingDef)
-	}
-
-	mapperDef := &data.MapperDef{Mappings:mappingDefs}
-	basicMapper := mapper.NewBasicMapper(mapperDef)
-
-	return basicMapper, nil
 }
