@@ -111,6 +111,13 @@ func (ac *TestActionCtx) ReplyWithAttrs(data map[string]*data.Attribute, err err
 	ac.ReplyErr = err
 }
 
+func (ac *TestActionCtx) Return(data map[string]*data.Attribute, err error) {
+	//todo log reply
+	ac.ReplyDataAttr = data
+	ac.ReplyErr = err
+}
+
+
 func (ac *TestActionCtx) WorkingData() data.Scope {
 	return ac.ActionData
 }

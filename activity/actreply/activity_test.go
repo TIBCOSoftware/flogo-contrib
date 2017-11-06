@@ -1,4 +1,4 @@
-package response
+package actreply
 
 import (
 	"testing"
@@ -39,7 +39,7 @@ func TestCreate(t *testing.T) {
 	}
 }
 
-func TestSimpleResponse(t *testing.T) {
+func TestSimpleReply(t *testing.T) {
 
 	act := NewActivity(getActivityMetadata())
 	ac := newActionContext()
