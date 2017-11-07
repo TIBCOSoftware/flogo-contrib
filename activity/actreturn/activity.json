@@ -15,7 +15,7 @@
       "display": {
         "name": "Mapper",
         "type": "mapper",
-        "mapper_output_scope" : "action.output"
+        "mapperOutputScope" : "action.output"
       }
     }
   ],
