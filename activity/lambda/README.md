@@ -44,6 +44,14 @@ Inputs and Outputs:
     {
       "name": "value",
       "type": "any"
+    },
+    {
+      "name": "result",
+      "type": "any"
+    },
+    {
+      "name": "status",
+      "type": "integer"
     }
   ]
 }
@@ -58,4 +66,8 @@ Inputs and Outputs:
 | payload     | The payload. A JSON object.                    |
 
 ## Output
-The output is a struct containing the Status and response Payload from the function.
+| Setting     | Description                                    |
+|:------------|:-----------------------------------------------|
+| value       | A struct containing the status and response    |
+| result      | The response                                   |
+| status      | The status                                     |
