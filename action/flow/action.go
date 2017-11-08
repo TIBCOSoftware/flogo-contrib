@@ -181,6 +181,7 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 	mh := data.GetMapHelper()
 
 	oldOptions, old := options["deprecated_options"]
+	var execOptions *instance.ExecOptions
 
 	if old {
 		ro, ok := oldOptions.(*instance.RunOptions)
@@ -190,9 +191,12 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 			retID = ro.ReturnID
 			initialState = ro.InitialState
 			flowURI = ro.FlowURI
+			execOptions = ro.ExecOptions
 		}
 
 	} else {
+		//todo enable support for ExecOption when using new action options
+
 		if v, ok := mh.GetInt(options, "op"); ok {
 			op = v
 		}
@@ -250,11 +254,10 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 		}
 	}
 
-	//TODO revisit enabling this feature
-	//if ok && ro.ExecOptions != nil {
-	//	logger.Debugf("Applying Exec Options to instance: %s\n", inst.ID())
-	//	instance.ApplyExecOptions(inst, ro.ExecOptions)
-	//}
+	if execOptions != nil {
+		logger.Debugf("Applying Exec Options to instance: %s\n", inst.ID())
+		instance.ApplyExecOptions(inst, execOptions)
+	}
 
 	//todo how do we check if debug is enabled?
 	logInputs(inputs)
