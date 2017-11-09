@@ -18,7 +18,6 @@ type Definition struct {
 
 	attrs map[string]*data.Attribute
 
-	inputMapper data.Mapper
 	links       map[int]*Link
 	tasks       map[string]*Task
 

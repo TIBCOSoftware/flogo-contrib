@@ -240,7 +240,7 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 			inst = initialState
 			logger.Debug("Resuming Instance: ", inst.ID())
 		} else {
-			return errors.New("Unable to resume instance, initial state not provided")
+			return errors.New("unable to resume instance, initial state not provided")
 		}
 	case instance.OpRestart:
 		if initialState != nil {
@@ -250,7 +250,7 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 
 			logger.Debug("Restarting Instance: ", instanceID)
 		} else {
-			return errors.New("Unable to restart instance, initial state not provided")
+			return errors.New("unable to restart instance, initial state not provided")
 		}
 	}
 
@@ -302,6 +302,11 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 				ep.GetStateRecorder().RecordSnapshot(inst)
 				ep.GetStateRecorder().RecordStep(inst)
 			}
+		}
+
+		if inst.Status() == instance.StatusCompleted {
+			//data,err := inst.GetReturnData()
+			//handler.HandleResult(nil, err)
 		}
 
 		if retID {
