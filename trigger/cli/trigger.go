@@ -2,15 +2,15 @@ package cli
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
+	"reflect"
 
+	"github.com/TIBCOSoftware/flogo-lib/config"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"reflect"
-	"encoding/json"
-	"github.com/TIBCOSoftware/flogo-lib/config"
 )
 
 // log is the default package logger
@@ -80,7 +80,7 @@ func (t *CliTrigger) Init(runner action.Runner) {
 		cmdString := "default"
 
 		aInfo := &actionInfo{actionId: handlerCfg.ActionId, Invoke: false, handlerCfg: handlerCfg}
-		if cmd, ok := handlerCfg.Settings["command"]; ok {
+		if cmd, ok := handlerCfg.Settings["command"]; ok && cmd != nil {
 			cmdString = cmd.(string)
 		}
 
