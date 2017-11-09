@@ -181,6 +181,7 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 	mh := data.GetMapHelper()
 
 	oldOptions, old := options["deprecated_options"]
+	var execOptions *instance.ExecOptions
 
 	if old {
 		ro, ok := oldOptions.(*instance.RunOptions)
@@ -190,9 +191,12 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 			retID = ro.ReturnID
 			initialState = ro.InitialState
 			flowURI = ro.FlowURI
+			execOptions = ro.ExecOptions
 		}
 
 	} else {
+		//todo enable support for ExecOption when using new action options
+
 		if v, ok := mh.GetInt(options, "op"); ok {
 			op = v
 		}
@@ -236,7 +240,7 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 			inst = initialState
 			logger.Debug("Resuming Instance: ", inst.ID())
 		} else {
-			return errors.New("Unable to resume instance, initial state not provided")
+			return errors.New("unable to resume instance, initial state not provided")
 		}
 	case instance.OpRestart:
 		if initialState != nil {
@@ -246,15 +250,14 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 
 			logger.Debug("Restarting Instance: ", instanceID)
 		} else {
-			return errors.New("Unable to restart instance, initial state not provided")
+			return errors.New("unable to restart instance, initial state not provided")
 		}
 	}
 
-	//TODO revisit enabling this feature
-	//if ok && ro.ExecOptions != nil {
-	//	logger.Debugf("Applying Exec Options to instance: %s\n", inst.ID())
-	//	instance.ApplyExecOptions(inst, ro.ExecOptions)
-	//}
+	if execOptions != nil {
+		logger.Debugf("Applying Exec Options to instance: %s\n", inst.ID())
+		instance.ApplyExecOptions(inst, execOptions)
+	}
 
 	//todo how do we check if debug is enabled?
 	logInputs(inputs)
@@ -299,6 +302,11 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 				ep.GetStateRecorder().RecordSnapshot(inst)
 				ep.GetStateRecorder().RecordStep(inst)
 			}
+		}
+
+		if inst.Status() == instance.StatusCompleted {
+			//data,err := inst.GetReturnData()
+			//handler.HandleResult(nil, err)
 		}
 
 		if retID {

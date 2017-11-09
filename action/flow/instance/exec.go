@@ -44,7 +44,7 @@ func ApplyExecOptions(instance *Instance, execOptions *ExecOptions) {
 		}
 
 		if execOptions.Interceptor != nil {
-			logger.Infof("Instance [%s] has interceptor", instance.ID)
+			logger.Infof("Instance [%s] has interceptor", instance.ID())
 			instance.Interceptor = execOptions.Interceptor
 			instance.Interceptor.Init()
 		}
