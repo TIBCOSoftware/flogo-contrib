@@ -64,8 +64,7 @@ func (a *ReplyActivity) Eval(context activity.Context) (done bool, err error) {
 		return false, nil
 	}
 
-	actionCtx.ReplyWithAttrs(outputScope.GetAttrs(), nil)
-	//actionCtx.Reply()
+	actionCtx.Reply(outputScope.GetAttrs(), nil)
 
 	return true, nil
 }

@@ -273,7 +273,6 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 	stepCount := 0
 	hasWork := true
 
-	inst.SetReplyHandler(&SimpleReplyHandler{resultHandler: handler})
 	inst.InitActionContext(fa.config, handler)
 
 	go func() {
@@ -281,13 +280,14 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 		defer handler.Done()
 
 		if !inst.Flow.ExplicitReply() {
-			results := map[string]interface{}{
-				"id": inst.ID(),
+
+			results := map[string]*data.Attribute {
+				"id": data.NewAttribute("id", data.STRING, inst.ID()),
 			}
 
 			if old {
-				results["data"] = &instance.IDResponse{ID: inst.ID()}
-				results["code"] = 200
+				results["data"] = data.NewAttribute("data", data.OBJECT, &instance.IDResponse{ID: inst.ID()})
+				results["code"] = data.NewAttribute("code", data.INTEGER, 200)
 			}
 
 			handler.HandleResult(results, nil)
@@ -305,19 +305,19 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 		}
 
 		if inst.Status() == instance.StatusCompleted {
-			//data,err := inst.GetReturnData()
-			//handler.HandleResult(nil, err)
+			returnData, err := inst.GetReturnData()
+			handler.HandleResult(returnData, err)
 		}
 
 		if retID {
 
-			resp := map[string]interface{}{
-				"id": inst.ID(),
+			resp := map[string]*data.Attribute {
+				"id": data.NewAttribute("id", data.STRING, inst.ID()),
 			}
 
 			if old {
-				resp["data"] = &instance.IDResponse{ID: inst.ID()}
-				resp["code"] = 200
+				resp["data"] = data.NewAttribute("data", data.OBJECT, &instance.IDResponse{ID: inst.ID()})
+				resp["code"] = data.NewAttribute("code", data.INTEGER, 200)
 			}
 
 			handler.HandleResult(resp, nil)
@@ -331,28 +331,6 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 	}()
 
 	return nil
-}
-
-// SimpleReplyHandler is a simple ReplyHandler that is pass-thru to the action ResultHandler
-type SimpleReplyHandler struct {
-	resultHandler action.ResultHandler
-}
-
-// Reply implements ReplyHandler.Reply
-func (rh *SimpleReplyHandler) Reply(code int, data interface{}, err error) {
-
-	replyData := map[string]interface{}{
-		"data": data,
-		"code":code,
-	}
-
-	rh.resultHandler.HandleResult(replyData, err)
-}
-
-
-// Reply implements ReplyHandler.Reply
-func (rh *SimpleReplyHandler) ReplyWithData(replyData map[string]interface{}, err error) {
-	rh.resultHandler.HandleResult(replyData, err)
 }
 
 func logInputs(attrs []*data.Attribute) {
