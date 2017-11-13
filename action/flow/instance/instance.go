@@ -13,6 +13,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/TIBCOSoftware/flogo-lib/util"
+	"github.com/TIBCOSoftware/flogo-lib/core/action"
 )
 
 const (
@@ -43,6 +44,11 @@ type Instance struct {
 
 	flowProvider provider.Provider
 	replyHandler activity.ReplyHandler
+	actionCtx    *ActionCtx //todo after transition to actionCtx, make sure actionCtx isn't null before executing
+
+	forceCompletion bool
+	returnData map[string]*data.Attribute
+	returnError error
 }
 
 // New creates a new Flow Instance from the specified Flow
@@ -96,12 +102,28 @@ func (pi *Instance) Name() string {
 
 // ReplyHandler returns the reply handler for the instance
 func (pi *Instance) ReplyHandler() activity.ReplyHandler {
-	return pi.replyHandler
+	return &SimpleReplyHandler{pi.actionCtx.rh}
 }
 
-// SetReplyHandler sets the reply handler for the instance
-func (pi *Instance) SetReplyHandler(replyHandler activity.ReplyHandler) {
-	pi.replyHandler = replyHandler
+// SimpleReplyHandler is a simple ReplyHandler that is pass-thru to the action ResultHandler
+type SimpleReplyHandler struct {
+	resultHandler action.ResultHandler
+}
+
+// Reply implements ReplyHandler.Reply
+func (rh *SimpleReplyHandler) Reply(code int, replyData interface{}, err error) {
+
+	resultData := map[string]*data.Attribute{
+		"data": data.NewAttribute("data", data.OBJECT, replyData),
+		"code":data.NewAttribute("code", data.INTEGER, code),
+	}
+
+	rh.resultHandler.HandleResult(resultData, err)
+}
+
+// InitActionContext initialize the action context, should be initialized before execution
+func (pi *Instance) InitActionContext(config *action.Config, handler action.ResultHandler) {
+	pi.actionCtx = &ActionCtx{inst:pi, config:config, rh:handler}
 }
 
 // FlowDefinition returns the Flow that the instance is of
@@ -366,6 +388,7 @@ func (pi *Instance) handleTaskDone(taskBehavior model.TaskBehavior, taskData *Ta
 		return
 	}
 
+	flowDone := false
 	task := taskData.Task()
 
 	if notifyParent {
@@ -389,12 +412,20 @@ func (pi *Instance) handleTaskDone(taskBehavior model.TaskBehavior, taskData *Ta
 			flowBehavior := pi.FlowModel.GetFlowBehavior()
 			flowBehavior.TasksDone(pi, childDoneCode)
 			flowBehavior.Done(pi)
+			flowDone = true
 
 			pi.setStatus(StatusCompleted)
 		}
 	}
 
-	if len(taskEntries) > 0 {
+	if !flowDone && pi.forceCompletion {
+		//return was called explicitly, so lets complete the flow
+		flowBehavior := pi.FlowModel.GetFlowBehavior()
+		flowBehavior.Done(pi)
+		flowDone = true
+	}
+
+	if !flowDone && len(taskEntries) > 0 {
 
 		for _, taskEntry := range taskEntries {
 
@@ -570,6 +601,69 @@ func (pi *Instance) AddAttr(attrName string, attrType data.Type, value interface
 
 	return attr
 }
+
+func (pi *Instance) ActionContext() action.Context {
+	return pi.actionCtx
+}
+
+type ActionCtx struct {
+	config *action.Config
+	inst   *Instance
+	rh     action.ResultHandler
+}
+
+func (ac *ActionCtx) ID() string {
+	return ac.config.Id
+}
+
+func (ac *ActionCtx) Ref() string {
+	return ac.config.Ref
+}
+
+func (ac *ActionCtx) InstanceMetadata() *action.ConfigMetadata {
+	return ac.config.Metadata
+}
+
+//func (ac *ActionCtx) Reply(data map[string]interface{}, err error) {
+//	ac.rh.HandleResult(data, err)
+//}
+
+func (ac *ActionCtx) Reply(replyData map[string]*data.Attribute, err error) {
+	ac.rh.HandleResult(replyData, err)
+}
+
+func (ac *ActionCtx) Return(returnData map[string]*data.Attribute, err error) {
+	ac.inst.forceCompletion = true
+	ac.inst.returnData = returnData
+	ac.inst.returnError = err
+}
+
+func (ac *ActionCtx) WorkingData() data.Scope {
+	return ac.inst
+}
+
+func (pi *Instance) GetReturnData()  (map[string]*data.Attribute, error) {
+
+	if pi.returnData == nil {
+
+		md := pi.actionCtx.InstanceMetadata()
+		//construct returnData from instance attributes
+
+		if md != nil && md.Output != nil {
+
+			pi.returnData = make(map[string]*data.Attribute)
+			for _, mdAttr := range md.Output {
+				piAttr, exists := pi.Attrs[mdAttr.Name]
+				if exists {
+					pi.returnData[piAttr.Name] = piAttr
+				}
+			}
+		}
+	}
+
+	return pi.returnData, pi.returnError
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Task Environment
@@ -931,6 +1025,11 @@ func (td *TaskData) Failed(err error) {
 // FlowDetails implements activity.Context.FlowName method
 func (td *TaskData) FlowDetails() activity.FlowDetails {
 	return td.taskEnv.Instance
+}
+
+// FlowDetails implements activity.Context.FlowName method
+func (td *TaskData) ActionContext() action.Context {
+	return td.taskEnv.Instance.ActionContext()
 }
 
 // TaskName implements activity.Context.TaskName method

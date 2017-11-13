@@ -31,22 +31,29 @@ func (a *ReplyActivity) Metadata() *activity.Metadata {
 }
 
 // Eval implements api.Activity.Eval - Invokes a REST Operation
-func (a *ReplyActivity) Eval(context activity.Context) (done bool, err error) {
+func (a *ReplyActivity) Eval(ctx activity.Context) (done bool, err error) {
 
-	code := context.GetInput(ivCode).(int)
-	data := context.GetInput(ivData)
+	replyCode := ctx.GetInput(ivCode).(int)
+	replyData := ctx.GetInput(ivData)
 
-	log.Debugf("Code :'%d', Data: '%+v'", code, data)
+	log.Debugf("Code :'%d', Data: '%+v'", replyCode, replyData)
 
-	replyHandler := context.FlowDetails().ReplyHandler()
+	replyHandler := ctx.FlowDetails().ReplyHandler()
 
 	//todo support replying with error
 
 	if replyHandler != nil {
 
-		//todo fix to support new ReplyWithData (had to keep old Reply for backwards compatibility)
-		replyHandler.Reply(code, data, nil)
+		replyHandler.Reply(replyCode, replyData, nil)
 	}
+
+	//reply := map[string]*data.Attribute{
+	//	"data": data.NewAttribute("data", data.OBJECT, replyData),
+	//	"code":data.NewAttribute("code", data.INTEGER, replyCode),
+	//}
+	//
+	//actionCtx := ctx.ActionContext()
+	//actionCtx.Reply(reply, nil)
 
 	return true, nil
 }
