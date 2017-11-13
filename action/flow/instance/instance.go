@@ -102,12 +102,23 @@ func (pi *Instance) Name() string {
 
 // ReplyHandler returns the reply handler for the instance
 func (pi *Instance) ReplyHandler() activity.ReplyHandler {
-	return pi.replyHandler
+	return &SimpleReplyHandler{pi.actionCtx.rh}
 }
 
-// SetReplyHandler sets the reply handler for the instance
-func (pi *Instance) SetReplyHandler(replyHandler activity.ReplyHandler) {
-	pi.replyHandler = replyHandler
+// SimpleReplyHandler is a simple ReplyHandler that is pass-thru to the action ResultHandler
+type SimpleReplyHandler struct {
+	resultHandler action.ResultHandler
+}
+
+// Reply implements ReplyHandler.Reply
+func (rh *SimpleReplyHandler) Reply(code int, replyData interface{}, err error) {
+
+	resultData := map[string]*data.Attribute{
+		"data": data.NewAttribute("data", data.OBJECT, replyData),
+		"code":data.NewAttribute("code", data.INTEGER, code),
+	}
+
+	rh.resultHandler.HandleResult(resultData, err)
 }
 
 // InitActionContext initialize the action context, should be initialized before execution
@@ -613,18 +624,17 @@ func (ac *ActionCtx) InstanceMetadata() *action.ConfigMetadata {
 	return ac.config.Metadata
 }
 
-func (ac *ActionCtx) Reply(data map[string]interface{}, err error) {
-	ac.rh.HandleResult(data, err)
-}
-
-func (ac *ActionCtx) ReplyWithAttrs(data map[string]*data.Attribute, err error) {
-
+//func (ac *ActionCtx) Reply(data map[string]interface{}, err error) {
 //	ac.rh.HandleResult(data, err)
+//}
+
+func (ac *ActionCtx) Reply(replyData map[string]*data.Attribute, err error) {
+	ac.rh.HandleResult(replyData, err)
 }
 
-func (ac *ActionCtx) Return(data map[string]*data.Attribute, err error) {
+func (ac *ActionCtx) Return(returnData map[string]*data.Attribute, err error) {
 	ac.inst.forceCompletion = true
-	ac.inst.returnData = data
+	ac.inst.returnData = returnData
 	ac.inst.returnError = err
 }
 
