@@ -6,7 +6,7 @@
   "title": "Mapper",
   "description": "Simple Mapper Activity",
   "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/mapper",
-  "inputs":[
+  "input":[
     {
       "name": "mappings",
       "type": "array",
@@ -18,6 +18,6 @@
       }
     }
   ],
-  "outputs": [
+  "output": [
   ]
 }

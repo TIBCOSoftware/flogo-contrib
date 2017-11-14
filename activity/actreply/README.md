@@ -1,50 +1,49 @@
-# tibco-reply
-This activity provides your flogo application the ability to reply to a trigger invocation.
+# flogo-reply
+This activity provides your flogo action/flow the ability to reply to a trigger invocation and set output values.
 
 ## Installation
 
 ```bash
-flogo add activity github.com/TIBCOSoftware/flogo-contrib/activity/reply
+flogo install github.com/TIBCOSoftware/flogo-contrib/activity/actreply
 ```
 
 ## Schema
-Inputs and Outputs:
+Input and Output:
 
 ```json
 {
-  "inputs":[
+  "input":[
     {
-      "name": "code",
-      "type": "integer",
+      "name": "mappings",
+      "type": "array",
       "required": true
-    },
-    {
-      "name": "data",
-      "type": "any"
     }
   ],
-  "outputs": [
+  "output": [
   ]
 }
 ```
 ## Settings
 | Setting     | Description    |
 |:------------|:---------------|
-| code        | The response code |         
-| data        | The response data |
+| mappings    | The mappings to the action/flow ouputs |         
+
 
 ## Configuration Examples
 ### Simple
-Configure a activity to respond with a simple http success code.
+Configure a activity to reply and set the output values to literals "1" and 2.
 
 ```json
 {
-  "id": 3,
+  "id": "reply",
   "type": 1,
-  "activityType": "tibco-reply",
-  "name": "Respond OK",
-  "attributes": [
-    { "name": "code", "value": 200 }
-  ]
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/actreply"
+  "name": "Reply",
+  "input": { 
+  	"mappings":[
+      { "type": 2, "value": "1", "mapTo": "Output1" },
+      { "type": 2, "value": 2, "mapTo": "Output2" }
+    ]
+  }
 }
 ```
