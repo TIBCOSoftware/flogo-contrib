@@ -99,13 +99,7 @@ func (ac *TestActionCtx) InstanceMetadata() *action.ConfigMetadata {
 	return ac.ActionMd
 }
 
-func (ac *TestActionCtx) Reply(data map[string]interface{}, err error) {
-	//todo log reply
-	ac.ReplyData = data
-	ac.ReplyErr = err
-}
-
-func (ac *TestActionCtx) ReplyWithAttrs(data map[string]*data.Attribute, err error) {
+func (ac *TestActionCtx) Reply(data map[string]*data.Attribute, err error) {
 	//todo log reply
 	ac.ReplyDataAttr = data
 	ac.ReplyErr = err
@@ -116,7 +110,6 @@ func (ac *TestActionCtx) Return(data map[string]*data.Attribute, err error) {
 	ac.ReplyDataAttr = data
 	ac.ReplyErr = err
 }
-
 
 func (ac *TestActionCtx) WorkingData() data.Scope {
 	return ac.ActionData
