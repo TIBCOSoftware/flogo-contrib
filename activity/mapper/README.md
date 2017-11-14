@@ -1,50 +1,49 @@
-# tibco-reply
-This activity provides your flogo application the ability to reply to a trigger invocation.
+# flogo-mapper
+This activity provides your flogo application the ability to map values on to the action/flow working attribute set.
 
 ## Installation
 
 ```bash
-flogo add activity github.com/TIBCOSoftware/flogo-contrib/activity/reply
+flogo install github.com/TIBCOSoftware/flogo-contrib/activity/mapper
 ```
 
 ## Schema
-Inputs and Outputs:
+Input and Output:
 
 ```json
 {
-  "inputs":[
+  "input":[
     {
-      "name": "code",
-      "type": "integer",
+      "name": "mappings",
+      "type": "array",
       "required": true
-    },
-    {
-      "name": "data",
-      "type": "any"
     }
   ],
-  "outputs": [
+  "output": [
   ]
 }
 ```
 ## Settings
 | Setting     | Description    |
 |:------------|:---------------|
-| code        | The response code |         
-| data        | The response data |
+| mappings    | The mappings to the action/flow working data |         
+
 
 ## Configuration Examples
 ### Simple
-Configure a activity to respond with a simple http success code.
+Configure a activity to set the flow attributes to literals "1" and 2.
 
 ```json
 {
-  "id": 3,
+  "id": "reply",
   "type": 1,
-  "activityType": "tibco-reply",
-  "name": "Respond OK",
-  "attributes": [
-    { "name": "code", "value": 200 }
-  ]
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/actreply"
+  "name": "Reply",
+  "input": { 
+  	"mappings":[
+      { "type": 2, "value": "1", "mapTo": "FlowAttr1" },
+      { "type": 2, "value": 2, "mapTo": "FlowAttr2" }
+    ]
+  }
 }
 ```
