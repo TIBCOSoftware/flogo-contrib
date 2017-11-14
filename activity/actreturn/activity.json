@@ -7,7 +7,7 @@
   "description": "Simple Return Activity",
   "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/actreturn",
   "return": true,
-  "inputs":[
+  "input":[
     {
       "name": "mappings",
       "type": "array",
@@ -19,6 +19,6 @@
       }
     }
   ],
-  "outputs": [
+  "output": [
   ]
 }

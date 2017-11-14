@@ -1,12 +1,12 @@
 {
-  "name": "flogo-response",
+  "name": "flogo-reply",
   "type": "flogo:activity",
   "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/actreply",
   "version": "0.0.1",
   "title": "Reply To Trigger",
   "description": "Simple Reply Activity",
   "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/actreply",
-  "inputs":[
+  "input":[
     {
       "name": "mappings",
       "type": "array",
@@ -18,6 +18,6 @@
       }
     }
   ],
-  "outputs": [
+  "output": [
   ]
 }
