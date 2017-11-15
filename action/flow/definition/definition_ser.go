@@ -148,9 +148,15 @@ func addTask(def *Definition, task *Task, rep *TaskRep) {
 
 	act := activity.Get(task.activityRef)
 
+	//todo report error if activity not registered
+
 	if act != nil {
 
 		inputAttrs := rep.InputAttrs
+
+		if act.Metadata().ProducesResult || def.explicitReply {
+			def.explicitReply = true
+		}
 
 		//for backwards compatibility
 		if len(inputAttrs) == 0 {

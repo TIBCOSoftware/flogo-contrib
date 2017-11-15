@@ -6,6 +6,7 @@
   "title": "Reply To Trigger",
   "description": "Simple Reply Activity",
   "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/actreply",
+  "reply": true,
   "input":[
     {
       "name": "mappings",
