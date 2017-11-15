@@ -9,7 +9,7 @@
   "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/trigger/lambda",
   "settings": [
   ],
-  "outputs": [
+  "output": [
     {
       "name": "logStreamName",
       "type": "string"
@@ -28,6 +28,12 @@
     },
     {
       "name": "evt",
+      "type": "object"
+    }
+  ],
+  "reply": [
+    {
+      "name": "data",
       "type": "object"
     }
   ]

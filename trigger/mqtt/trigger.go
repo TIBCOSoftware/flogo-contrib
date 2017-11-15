@@ -1,7 +1,6 @@
 package mqtt
 
 import (
-	"context"
 	"encoding/json"
 	"strconv"
 	"time"
@@ -141,13 +140,25 @@ func (t *MqttTrigger) RunAction(actionURI string, payload string) {
 	//todo handle error
 	startAttrs, _ := t.metadata.OutputsToAttrs(req.Data, false)
 
-	action := action.Get(actionURI)
-	context := trigger.NewContext(context.Background(), startAttrs)
-	_, replyData, err := t.runner.Run(context, action, actionURI, nil)
+	act := action.Get(actionURI)
+
+	//add handlerCfg to handle return mappings
+	ctx := trigger.NewInitialContext(startAttrs, nil)
+	results, err := t.runner.RunAction(ctx, act, nil)
+
 	if err != nil {
 		log.Error("Error starting action: ", err.Error())
 	}
 	log.Debugf("Ran action: [%s]", actionURI)
+
+	var replyData interface{}
+
+	if len(results) != 0 {
+		dataAttr, ok := results["data"]
+		if ok {
+			replyData = dataAttr.Value
+		}
+	}
 
 	if replyData != nil {
 		data, err := json.Marshal(replyData)

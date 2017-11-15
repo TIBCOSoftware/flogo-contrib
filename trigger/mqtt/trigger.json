@@ -41,10 +41,16 @@
       "type": "boolean"
     }
   ],
-  "outputs": [
+  "output": [
     {
       "name": "message",
       "type": "string"
+    }
+  ],
+  "reply": [
+    {
+      "name": "data",
+      "type": "object"
     }
   ],
   "handler": {

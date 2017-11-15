@@ -2,7 +2,6 @@ package coap
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"net"
 	"net/url"
@@ -228,10 +227,9 @@ func newActionHandler(rt *CoapTrigger, resource *CoapResource) coap.Handler {
 		//rh.addr2 = addr
 		//rh.conn = conn
 
-		action := action.Get(actionId)
-
-		context := trigger.NewContext(context.Background(), startAttrs)
-		_, _, err := rt.runner.Run(context, action, actionId, nil)
+		act := action.Get(actionId)
+		ctx := trigger.NewInitialContext(startAttrs, nil)
+		_, err := rt.runner.RunAction(ctx, act, nil)
 
 		if err != nil {
 			//todo determining if 404 or 500

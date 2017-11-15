@@ -1,7 +1,6 @@
 package lambda
 
 import (
-	"context"
 	"encoding/json"
 	"flag"
 
@@ -99,8 +98,18 @@ func Invoke() (interface{}, error) {
 	}
 
 	act := action.Get(actionId)
-	ctx := trigger.NewContextWithData(context.Background(), &trigger.ContextData{Attrs: startAttrs, HandlerCfg: singleton.config.Handlers[0]})
-	_, replyData, err := singleton.runner.Run(ctx, act, actionId, nil)
+
+	ctx := trigger.NewInitialContext(startAttrs, singleton.config.Handlers[0])
+	results, err := singleton.runner.RunAction(ctx, act, nil)
+
+	var replyData interface{}
+
+	if len(results) != 0 {
+		dataAttr, ok := results["data"]
+		if ok {
+			replyData = dataAttr.Value
+		}
+	}
 
 	if err != nil {
 		log.Debugf("Lambda Trigger Error: %s", err.Error())

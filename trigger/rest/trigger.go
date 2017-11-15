@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -156,8 +155,22 @@ func newActionHandler(rt *RestTrigger, actionId string, handlerCfg *trigger.Hand
 		startAttrs, _ := rt.metadata.OutputsToAttrs(data, false)
 
 		act := action.Get(actionId)
-		ctx := trigger.NewContextWithData(context.Background(), &trigger.ContextData{Attrs: startAttrs, HandlerCfg: handlerCfg})
-		replyCode, replyData, err := rt.runner.Run(ctx, act, actionId, nil)
+		ctx := trigger.NewInitialContext(startAttrs, handlerCfg)
+		results, err := rt.runner.RunAction(ctx, act, nil)
+
+		var replyData interface{}
+		var replyCode int
+
+		if len(results) != 0 {
+			dataAttr, ok := results["data"]
+			if ok {
+				replyData = dataAttr.Value
+			}
+			codeAttr, ok := results["code"]
+			if ok {
+				replyCode = codeAttr.Value.(int)
+			}
+		}
 
 		if err != nil {
 			log.Debugf("REST Trigger Error: %s", err.Error())
