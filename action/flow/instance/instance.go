@@ -941,9 +941,13 @@ func (td *TaskData) TaskName() string {
 // InputScope get the InputScope of the task instance
 func (td *TaskData) InputScope() data.Scope {
 
+	logger.Debugf("Inside TaskData.InputScope()")
+
 	if td.inScope != nil {
 		return td.inScope
 	}
+
+	logger.Debugf("Inside TaskData.InputScope() td.task: '%x' , act ref %s", td.task, td.task.ActivityRef())
 
 	if len(td.task.ActivityRef()) > 0 {
 

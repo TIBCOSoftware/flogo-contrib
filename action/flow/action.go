@@ -3,41 +3,48 @@ package flow
 import (
 	"context"
 	"encoding/json"
-	"errors"
+	//"errors"
 	"fmt"
-	"os"
-	"strings"
-	"sync"
+	//"os"
+	//"strings"
+	//"sync"
 
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/extension"
+	//"github.com/TIBCOSoftware/flogo-contrib/action/flow/extension"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/instance"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/provider"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/tester"
+	//"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
+	//"github.com/TIBCOSoftware/flogo-contrib/action/flow/provider"
+	//"github.com/TIBCOSoftware/flogo-contrib/action/flow/tester"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"github.com/TIBCOSoftware/flogo-lib/util"
+	//"github.com/TIBCOSoftware/flogo-lib/util"
+	//"github.com/TIBCOSoftware/flogo-contrib/action/flow/support"
+	"github.com/TIBCOSoftware/flogo-contrib/model/simple"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/script/fggos"
 )
 
-const (
+/*const (
 	FLOW_REF = "github.com/TIBCOSoftware/flogo-contrib/action/flow"
-)
+)*/
 
-// ActionOptions are the options for the FlowAction
+/*// ActionOptions are the options for the FlowAction
 type ActionOptions struct {
 	MaxStepCount int
 	Record       bool
-}
+}*/
 
 type FlowAction struct {
-	idGenerator   *util.Generator
-	actionOptions *ActionOptions
-	config        *action.Config
+	/*idGenerator   *util.Generator
+	actionOptions *ActionOptions*/
+	Conf        *action.Config
 }
 
-// Provides the different extension points to the Flow Action
+type FlowData struct {
+	Flow json.RawMessage `json:"flow"`
+}
+
+/*// Provides the different extension points to the Flow Action
 type ExtensionProvider interface {
 	GetFlowProvider() provider.Provider
 	GetFlowModel() *model.FlowModel
@@ -45,33 +52,33 @@ type ExtensionProvider interface {
 	GetMapperFactory() definition.MapperFactory
 	GetLinkExprManagerFactory() definition.LinkExprManagerFactory
 	GetFlowTester() *tester.RestEngineTester
-}
+}*/
 
-var actionMu sync.Mutex
+/*var actionMu sync.Mutex
 var ep ExtensionProvider
 //var flowAction *FlowAction
 var idGenerator *util.Generator
-var record bool
+var record bool*/
 
-func init() {
+/*func init() {
 	action.RegisterFactory(FLOW_REF, &FlowFactory{})
-}
+}*/
 
-func SetExtensionProvider(provider ExtensionProvider) {
+/*func SetExtensionProvider(provider ExtensionProvider) {
 	actionMu.Lock()
 	defer actionMu.Unlock()
 
 	ep = provider
-}
+}*/
 
 type FlowFactory struct{}
 
 func (ff *FlowFactory) New(config *action.Config) action.Action {
 
-	actionMu.Lock()
-	defer actionMu.Unlock()
+	/*actionMu.Lock()
+	defer actionMu.Unlock()*/
 
-	var flowAction *FlowAction
+	/*var flowAction *FlowAction
 
 	if flowAction == nil {
 		options := &ActionOptions{Record: record}
@@ -157,12 +164,13 @@ func (ff *FlowFactory) New(config *action.Config) action.Action {
 	logger.Errorf(errorMsg)
 	panic(errorMsg)
 
-	return flowAction
+	return flowAction*/
+	return &FlowAction{Conf:config}
 }
 
 //Config get the Action's config
 func (fa *FlowAction) Config() *action.Config {
-	return fa.config
+	return fa.Conf
 }
 
 //Metadata get the Action's metadata
@@ -171,10 +179,10 @@ func (fa *FlowAction) Metadata() *action.Metadata {
 }
 
 // Run implements action.Action.Run
-//func (fa *FlowAction) Run(context context.Context, uri string, options interface{}, handler action.ResultHandler) error {
 func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, options map[string]interface{}, handler action.ResultHandler) error {
 
-	op := instance.OpStart
+	logger.Infof("Running flow action")
+	/*op := instance.OpStart
 	retID := false
 	var initialState *instance.Instance
 	var flowURI string
@@ -221,10 +229,10 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 
 	//todo: catch panic
 	//todo: consider switch to URI to dictate flow operation (ex. flow://blah/resume)
+*/
 
-	var inst *instance.Instance
 
-	switch op {
+/*	switch op {
 	case instance.OpStart:
 		flowDef, err := ep.GetFlowProvider().GetFlow(flowURI)
 		if err != nil {
@@ -267,8 +275,66 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 	} else {
 		inst.UpdateAttrs(inputs)
 	}
+*/
 
-	logger.Debugf("Executing instance: %s\n", inst.ID())
+	if fa.Config() == nil{
+		return fmt.Errorf("Error nil action config found")
+	}
+
+	if len(fa.Config().Data) == 0{
+		return fmt.Errorf("Error getting flow from data, no data found")
+	}
+
+
+	logger.Debugf("Unmarshalling flow Data")
+
+	var flowData *FlowData
+	err := json.Unmarshal(fa.Config().Data, &flowData)
+	if err != nil {
+		return fmt.Errorf("Error marshalling flow data with id 'flow', %s", err.Error())
+	}
+
+	if flowData == nil {
+		return fmt.Errorf("Error marshalling flow data, nil value")
+	}
+
+	if len(flowData.Flow) == 0{
+		return fmt.Errorf("Error marshalling flow with id 'flow', %s", err.Error())
+	}
+
+	logger.Debugf("Unmarshalling flow Rep")
+
+	var inst *instance.Instance
+	var flowRep *definition.DefinitionRep
+	err = json.Unmarshal(flowData.Flow, &flowRep)
+	if err != nil {
+		return fmt.Errorf("Error unmarshalling flow data , %s", err.Error())
+	}
+	def, err := definition.NewDefinition(flowRep)
+	if err != nil {
+		errorMsg := fmt.Sprintf("Error unmarshalling flow definition : %s", err.Error())
+		return fmt.Errorf(errorMsg)
+	}
+
+	//todo hack until we fully move over to new action implementation
+	factory := definition.GetLinkExprManagerFactory()
+
+	if factory == nil {
+		factory = &fggos.GosLinkExprManagerFactory{}
+	}
+
+	def.SetLinkExprManager(factory.NewLinkExprManager(def))
+
+
+
+	inst = instance.New("0", fa.Config().Id, def, simple.New())
+
+	logger.Debugf("Executing instance: %s, inputs %v\n", inst.ID(), inputs)
+
+	if (!inst.Start(inputs)){
+		return fmt.Errorf("Error starting instance")
+	}
+
 
 	stepCount := 0
 	hasWork := true
@@ -284,38 +350,38 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 				"id": inst.ID(),
 			}
 
-			if old {
+			/*if old {
 				results["data"] = &instance.IDResponse{ID: inst.ID()}
 				results["code"] = 200
-			}
+			}*/
 
 			handler.HandleResult(results, nil)
 		}
 
-		for hasWork && inst.Status() < instance.StatusCompleted && stepCount < fa.actionOptions.MaxStepCount {
-			stepCount++
+		for hasWork && inst.Status() < instance.StatusCompleted{// && stepCount < fa.actionOptions.MaxStepCount {
+			//stepCount++
 			logger.Debugf("Step: %d\n", stepCount)
 			hasWork = inst.DoStep()
 
-			if fa.actionOptions.Record {
+			/*if fa.actionOptions.Record {
 				ep.GetStateRecorder().RecordSnapshot(inst)
 				ep.GetStateRecorder().RecordStep(inst)
-			}
+			}*/
 		}
 
-		if retID {
+		//if retID {
 
 			resp := map[string]interface{}{
 				"id": inst.ID(),
 			}
 
-			if old {
+			/*if old {
 				resp["data"] = &instance.IDResponse{ID: inst.ID()}
 				resp["code"] = 200
-			}
+			}*/
 
 			handler.HandleResult(resp, nil)
-		}
+		//}
 
 		logger.Debugf("Done Executing A.instance [%s] - Status: %d\n", inst.ID(), inst.Status())
 
@@ -364,7 +430,7 @@ func logInputs(attrs []*data.Attribute) {
 }
 
 
-func extractAttributes(inputs map[string]interface{}) []*data.Attribute {
+/*func extractAttributes(inputs map[string]interface{}) []*data.Attribute {
 
 	size := len(inputs)
 
@@ -378,4 +444,4 @@ func extractAttributes(inputs map[string]interface{}) []*data.Attribute {
 	}
 
 	return attrs
-}
+}*/

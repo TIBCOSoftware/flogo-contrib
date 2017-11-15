@@ -20,7 +20,8 @@ func applyInputMapper(pi *Instance, taskData *TaskData) error {
 	}
 
 	if inputMapper != nil {
-		logger.Debug("Applying InputMapper")
+		logger.Debugf("Applying InputMapper type '%T'", inputMapper)
+		logger.Debugf("Applying InputMapper TaskData '%v', inputScope '%v'", taskData, taskData.InputScope() )
 		err := inputMapper.Apply(pi, taskData.InputScope())
 
 		if err != nil {
