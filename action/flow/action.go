@@ -279,7 +279,7 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 
 		defer handler.Done()
 
-		if !inst.Flow.ExplicitReply() {
+		if !inst.Flow.ExplicitReply() || retID{
 
 			results := map[string]*data.Attribute {
 				"id": data.NewAttribute("id", data.STRING, inst.ID()),
@@ -309,19 +309,19 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 			handler.HandleResult(returnData, err)
 		}
 
-		if retID {
-
-			resp := map[string]*data.Attribute {
-				"id": data.NewAttribute("id", data.STRING, inst.ID()),
-			}
-
-			if old {
-				resp["data"] = data.NewAttribute("data", data.OBJECT, &instance.IDResponse{ID: inst.ID()})
-				resp["code"] = data.NewAttribute("code", data.INTEGER, 200)
-			}
-
-			handler.HandleResult(resp, nil)
-		}
+		//if retID {
+		//
+		//	resp := map[string]*data.Attribute {
+		//		"id": data.NewAttribute("id", data.STRING, inst.ID()),
+		//	}
+		//
+		//	if old {
+		//		resp["data"] = data.NewAttribute("data", data.OBJECT, &instance.IDResponse{ID: inst.ID()})
+		//		resp["code"] = data.NewAttribute("code", data.INTEGER, 200)
+		//	}
+		//
+		//	handler.HandleResult(resp, nil)
+		//}
 
 		logger.Debugf("Done Executing A.instance [%s] - Status: %d\n", inst.ID(), inst.Status())
 

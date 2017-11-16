@@ -91,23 +91,27 @@ func (et *RestEngineTester) StartFlow(w http.ResponseWriter, r *http.Request, _ 
 		return
 	}
 
-	_, data, err := et.reqProcessor.StartFlow(req)
+	results, err := et.reqProcessor.StartFlow(req)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if data != nil {
-		idResponse, ok := data.(*instance.IDResponse)
+	idAttr, ok := results["id"]
+
+	if ok {
+
+		idResponse := &instance.IDResponse{ID: idAttr.Value.(string)}
+		//idResponse, ok := data.Value.(*instance.IDResponse)
 
 		if ok {
 			logger.Debugf("Started Instance [ID:%s] for %s", idResponse.ID, req.FlowURI)
 
 			encoder := json.NewEncoder(w)
-			encoder.Encode(data)
+			encoder.Encode(idResponse)
 		}  else {
-			logger.Debugf("Unsupported response: [%v]", data)
+			logger.Error("Id not returned")
 			w.WriteHeader(http.StatusOK)
 		}
 	} else {
@@ -136,20 +140,23 @@ func (et *RestEngineTester) RestartFlow(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 
-	_, data, err := et.reqProcessor.RestartFlow(req)
+	results, err := et.reqProcessor.RestartFlow(req)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if data != nil {
-		idResponse := data.(*instance.IDResponse)
+	idAttr, ok := results["id"]
+
+	if ok {
+
+		idResponse := &instance.IDResponse{ID: idAttr.Value.(string)}
 
 		logger.Debugf("Restarted Instance [ID:%s] for %s", idResponse.ID, req.InitialState.FlowURI)
 
 		encoder := json.NewEncoder(w)
-		encoder.Encode(data)
+		encoder.Encode(idResponse)
 	} else {
 		w.WriteHeader(http.StatusOK)
 	}
@@ -176,20 +183,23 @@ func (et *RestEngineTester) ResumeFlow(w http.ResponseWriter, r *http.Request, _
 		return
 	}
 
-	_, data, err := et.reqProcessor.ResumeFlow(req)
+	results, err := et.reqProcessor.ResumeFlow(req)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if data != nil {
-		idResponse := data.(*instance.IDResponse)
+	idAttr, ok := results["id"]
+
+	if ok {
+
+		idResponse := &instance.IDResponse{ID: idAttr.Value.(string)}
 
 		logger.Debugf("Resumed Instance [ID:%s] for %s", idResponse.ID, req.State.FlowURI)
 
 		encoder := json.NewEncoder(w)
-		encoder.Encode(data)
+		encoder.Encode(idResponse)
 	} else {
 		w.WriteHeader(http.StatusOK)
 	}
