@@ -37,8 +37,10 @@ func (a *MapperActivity) Eval(context activity.Context) (done bool, err error) {
 
 	log.Debugf("Mappings: %+v", mappings)
 
+	mapperDef, err := mapper.NewMapperDefFromAnyArray(mappings)
+
 	//todo move this to a action instance level initialization, need the notion of static inputs or config
-	actionMapper, err := mapper.NewBasicMapperFromAnyArray(mappings)
+	actionMapper := mapper.NewBasicMapper(mapperDef)
 
 	if err != nil {
 		return false, nil
