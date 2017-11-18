@@ -140,7 +140,7 @@ func (a *RESTActivity) Eval(context activity.Context) (done bool, err error) {
 	log.Debug("response Body:", result)
 
 	context.SetOutput(ovResult, result)
-	context.SetOutput(ovStatus, resp.Status)
+	context.SetOutput(ovStatus, resp.StatusCode)
 
 	return true, nil
 }

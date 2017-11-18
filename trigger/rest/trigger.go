@@ -167,6 +167,9 @@ func newActionHandler(rt *RestTrigger, actionId string, handlerCfg *trigger.Hand
 
 		if replyData != nil {
 			w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+			if replyCode == 0 {
+				replyCode = 200
+			}
 			w.WriteHeader(replyCode)
 			if err := json.NewEncoder(w).Encode(replyData); err != nil {
 				log.Error(err)

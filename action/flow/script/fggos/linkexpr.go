@@ -10,7 +10,6 @@ import (
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"github.com/TIBCOSoftware/flogo-lib/core/mapper"
 )
 
 // GosLinkExprManager is the Lua Implementation of a Link Expression Manager
@@ -162,9 +161,9 @@ func (em *GosLinkExprManager) EvalLinkExpr(link *definition.Link, scope data.Sco
 
 	for _, varRep := range vars {
 
-		lookupExpr := mapper.NewLookupExpr(varRep)
+		resolver := definition.GetDataResolver()
 
-		val, err := lookupExpr.Eval(scope)
+		val, err := resolver.Resolve(varRep, scope)
 
 		if err == nil {
 			//	return false, err
@@ -257,9 +256,9 @@ type isDefinedFunc struct {
 }
 
 func (f *isDefinedFunc) isDefined(value string) bool {
-	lookupExpr := mapper.NewLookupExpr(value)
 
-	_, err := lookupExpr.Eval(f.scope)
+	resolver := definition.GetDataResolver()
+	_, err := resolver.Resolve(value, f.scope)
 
 	return err == nil
 }

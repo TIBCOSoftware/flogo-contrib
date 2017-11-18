@@ -558,6 +558,15 @@ func (pi *Instance) GetAttr(attrName string) (value *data.Attribute, exists bool
 	return pi.Flow.GetAttr(attrName)
 }
 
+func (pi *Instance) getInstAttr(attrName string) (value *data.Attribute, exists bool) {
+
+	if pi.Attrs != nil {
+		attr, found := pi.Attrs[attrName]
+		return attr, found
+	}
+	return nil, false
+}
+
 // SetAttrValue implements api.Scope.SetAttrValue
 func (pi *Instance) SetAttrValue(attrName string, value interface{}) error {
 	if pi.Attrs == nil {
@@ -624,10 +633,6 @@ func (ac *ActionCtx) InstanceMetadata() *action.ConfigMetadata {
 	return ac.config.Metadata
 }
 
-//func (ac *ActionCtx) Reply(data map[string]interface{}, err error) {
-//	ac.rh.HandleResult(data, err)
-//}
-
 func (ac *ActionCtx) Reply(replyData map[string]*data.Attribute, err error) {
 	ac.rh.HandleResult(replyData, err)
 }
@@ -640,6 +645,11 @@ func (ac *ActionCtx) Return(returnData map[string]*data.Attribute, err error) {
 
 func (ac *ActionCtx) WorkingData() data.Scope {
 	return ac.inst
+}
+
+
+func (ac *ActionCtx) GetResolver() data.Resolver {
+	return definition.GetDataResolver()
 }
 
 func (pi *Instance) GetReturnData()  (map[string]*data.Attribute, error) {
@@ -1181,3 +1191,4 @@ func NewWorkItem(id int, taskData *TaskData, execType ExecType, evalCode int) *W
 
 	return &workItem
 }
+
