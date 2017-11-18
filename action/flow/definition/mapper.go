@@ -54,17 +54,17 @@ type BasicMapperFactory struct {
 }
 
 func (mf *BasicMapperFactory) NewMapper(mapperDef *MapperDef) data.Mapper {
-	return mf.baseFactory.NewMapper(&data.MapperDef{Mappings: mapperDef.Mappings})
+	return mf.baseFactory.NewMapper(&data.MapperDef{Mappings: mapperDef.Mappings}, GetDataResolver())
 }
 
 func (mf *BasicMapperFactory) NewTaskInputMapper(task *Task, mapperDef *MapperDef) data.Mapper {
 	id := task.definition.name + "." + task.id + ".input"
-	return mf.baseFactory.NewUniqueMapper(id, &data.MapperDef{Mappings: mapperDef.Mappings})
+	return mf.baseFactory.NewUniqueMapper(id, &data.MapperDef{Mappings: mapperDef.Mappings}, GetDataResolver())
 }
 
 func (mf *BasicMapperFactory) NewTaskOutputMapper(task *Task, mapperDef *MapperDef) data.Mapper {
 	id := task.definition.name + "." + task.id + ".output"
-	return mf.baseFactory.NewUniqueMapper(id, &data.MapperDef{Mappings: mapperDef.Mappings})
+	return mf.baseFactory.NewUniqueMapper(id, &data.MapperDef{Mappings: mapperDef.Mappings}, nil)
 }
 
 func (mf *BasicMapperFactory) GetDefaultTaskOutputMapper(task *Task) data.Mapper {
