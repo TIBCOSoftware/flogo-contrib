@@ -35,10 +35,10 @@ Configure a activity to set the flow attributes to literals "1" and 2.
 
 ```json
 {
-  "id": "reply",
+  "id": "mapper",
   "type": 1,
-  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/actreply"
-  "name": "Reply",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/mapper",
+  "name": "Mapper",
   "input": { 
   	"mappings":[
       { "type": 2, "value": "1", "mapTo": "FlowAttr1" },
