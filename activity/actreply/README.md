@@ -37,7 +37,7 @@ Configure a activity to reply and set the output values to literals "1" and 2.
 {
   "id": "reply",
   "type": 1,
-  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/actreply"
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/actreply",
   "name": "Reply",
   "input": { 
   	"mappings":[
