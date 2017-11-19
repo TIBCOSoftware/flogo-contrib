@@ -3,8 +3,8 @@ package tf
 import (
 	"fmt"
 
+	models "github.com/TIBCOSoftware/flogo-contrib/activity/inference/model"
 	"github.com/golang/protobuf/proto"
-	models "github.com/TIBCOSoftware/flogo-contrib/activity/ml-inference/model"
 	tf "github.com/tensorflow/tensorflow/tensorflow/go"
 )
 

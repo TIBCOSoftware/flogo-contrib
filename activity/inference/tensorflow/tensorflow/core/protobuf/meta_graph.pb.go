@@ -20,7 +20,7 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import google_protobuf "github.com/golang/protobuf/ptypes/any"
-import tffw "github.com/TIBCOSoftware/flogo-contrib/activity/ml-inference/tensorflow/tensorflow/core/framework"
+import tffw "github.com/TIBCOSoftware/flogo-contrib/activity/inference/tensorflow/tensorflow/core/framework"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal

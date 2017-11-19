@@ -3,7 +3,7 @@ package framework
 import (
 	"sync"
 
-	"github.com/TIBCOSoftware/flogo-contrib/activity/ml-inference/model"
+	"github.com/TIBCOSoftware/flogo-contrib/activity/inference/model"
 )
 
 var (

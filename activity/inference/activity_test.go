@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/test"
-	"github.com/TIBCOSoftware/flogo-contrib/activity/ml-inference/framework/tf"
+	"github.com/TIBCOSoftware/flogo-contrib/activity/inference/framework/tf"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 )
 

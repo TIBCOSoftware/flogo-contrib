@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/TIBCOSoftware/flogo-contrib/activity/ml-inference/model"
-	"github.com/TIBCOSoftware/flogo-contrib/activity/ml-inference/framework"
+	"github.com/TIBCOSoftware/flogo-contrib/activity/inference/framework"
+	"github.com/TIBCOSoftware/flogo-contrib/activity/inference/model"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 )

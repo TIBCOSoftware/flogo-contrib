@@ -1,11 +1,11 @@
 {
-  "name": "flogo-ml-inference",
+  "name": "flogo-inference",
   "type": "flogo:activity",
-  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/ml-inference",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/inference",
   "version": "0.0.1",
   "title": "Invoke ML Model",
   "description": "Basic inferencing activity to invoke ML model using the flogo-ml framework.",
-  "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/ml-inference",
+  "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/inference",
   "input":[
     {
         "name": "model",
