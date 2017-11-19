@@ -5,9 +5,9 @@ import (
 	"io/ioutil"
 	"strings"
 
+	models "github.com/TIBCOSoftware/flogo-contrib/activity/inference/model"
+	tfpb "github.com/TIBCOSoftware/flogo-contrib/activity/inference/tensorflow/tensorflow/core/protobuf"
 	"github.com/golang/protobuf/proto"
-	models "github.com/TIBCOSoftware/flogo-contrib/activity/ml-inference/model"
-	tfpb "github.com/TIBCOSoftware/flogo-contrib/activity/ml-inference/tensorflow/tensorflow/core/protobuf"
 	tf "github.com/tensorflow/tensorflow/tensorflow/go"
 )
 

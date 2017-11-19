@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/TIBCOSoftware/flogo-contrib/activity/ml-inference/utils"
+	"github.com/TIBCOSoftware/flogo-contrib/activity/inference/utils"
 )
 
 // Framework interface used to implement specific ml framework implementations

@@ -3,7 +3,7 @@ package tf
 import (
 	"fmt"
 
-	tensorflow "github.com/TIBCOSoftware/flogo-contrib/activity/ml-inference/tensorflow/tensorflow/core/example"
+	tensorflow "github.com/TIBCOSoftware/flogo-contrib/activity/inference/tensorflow/tensorflow/core/example"
 )
 
 func Example(features map[string]interface{}) (*tensorflow.Example, error) {
