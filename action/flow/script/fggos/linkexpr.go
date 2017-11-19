@@ -93,11 +93,35 @@ func transExpr(s string) ([]string, string) {
 			}
 			i = j
 		} else if s[i] == '$' && s[i+1] == '{' {
-			//variable
+			//variable old
 
 			buffer.WriteString("v[\"${")
 
 			for j := i + 2; j < strLen; j++ {
+
+				if !isPartOfNameOld(s[j]) {
+					//fmt.Printf("\n")
+					vars = append(vars, s[i:j])
+					buffer.WriteString("\"]")
+					buffer.WriteByte(s[j])
+					i = j
+					break
+				} else if j == strLen-1 {
+					//last char
+					vars = append(vars, s[i:j+1])
+					buffer.WriteByte(s[j])
+					buffer.WriteString("\"]")
+					i = j + 1
+					break
+				}
+				buffer.WriteByte(s[j])
+			}
+		} else if s[i] == '$' {
+			//variable
+
+			buffer.WriteString("v[\"$")
+
+			for j := i + 1; j < strLen; j++ {
 
 				if !isPartOfName(s[j]) {
 					//fmt.Printf("\n")
@@ -126,7 +150,16 @@ func transExpr(s string) ([]string, string) {
 
 func isPartOfName(char byte) bool {
 
-	if (char < '0' || char > '9') && (char < 'a' || char > 'z') && (char < 'A' || char > 'Z') && char != '.' && char != '_' && char != '}' {
+	if (char < '0' || char > '9') && (char < 'a' || char > 'z') && (char < 'A' || char > 'Z') && char != '.' && char != '_' && char != '[' && char != ']' {
+		return false
+	}
+
+	return true
+}
+
+func isPartOfNameOld(char byte) bool {
+
+	if (char < '0' || char > '9') && (char < 'a' || char > 'z') && (char < 'A' || char > 'Z') && char != '.' && char != '_' && char != '}' && char != '[' && char != ']' {
 		return false
 	}
 
@@ -203,7 +236,7 @@ func (em *GosLinkExprManager) EvalLinkExpr(link *definition.Link, scope data.Sco
 
 	ctxt["v"] = vals
 
-	f := isDefinedFunc{scope:scope}
+	f := isDefinedFunc{scope: scope}
 	ctxt["isDefined"] = f.isDefined
 
 	logger.Debugf("Vals: %v", vals)
