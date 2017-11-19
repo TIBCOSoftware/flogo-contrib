@@ -45,7 +45,7 @@ func (a *ReplyActivity) Eval(ctx activity.Context) (done bool, err error) {
 	replyMapper := mapper.NewBasicMapper(mapperDef, ctx.ActionContext().GetResolver())
 
 	if err != nil {
-		return false, nil
+		return false, err
 	}
 
 	actionCtx := ctx.ActionContext()
@@ -55,7 +55,7 @@ func (a *ReplyActivity) Eval(ctx activity.Context) (done bool, err error) {
 	err = replyMapper.Apply(inputScope, outputScope)
 
 	if err != nil {
-		return false, nil
+		return false, err
 	}
 
 	actionCtx.Reply(outputScope.GetAttrs(), nil)

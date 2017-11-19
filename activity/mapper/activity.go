@@ -43,7 +43,7 @@ func (a *MapperActivity) Eval(context activity.Context) (done bool, err error) {
 	actionMapper := mapper.NewBasicMapper(mapperDef, context.ActionContext().GetResolver())
 
 	if err != nil {
-		return false, nil
+		return false, err
 	}
 
 	actionCtx := context.ActionContext()
@@ -52,7 +52,7 @@ func (a *MapperActivity) Eval(context activity.Context) (done bool, err error) {
 	err = actionMapper.Apply(actionScope, actionScope)
 
 	if err != nil {
-		return false, nil
+		return false, err
 	}
 
 

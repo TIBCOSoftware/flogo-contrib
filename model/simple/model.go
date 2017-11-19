@@ -118,7 +118,7 @@ func (tb *SimpleTaskBehavior) Eval(context model.TaskContext, evalCode int) (don
 	}
 
 	task := context.Task()
-	log.Debugf("Task Eval: %s\n", task)
+	log.Debugf("Task Eval: %v\n", task)
 
 	if len(task.ChildTasks()) > 0 {
 		log.Debugf("Has Children\n")
