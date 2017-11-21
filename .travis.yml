@@ -14,12 +14,12 @@ git:
 
 jobs:
   include:
-    - stage: test
-      script: go test -v ./...
     - stage: build
       # Do a github login using token
       before_install:
         - "echo -e \"machine github.com\n  login ${GITHUB_USER_TOKEN}\" >> ~/.netrc"
+      install:
+        - "echo \"Install process\""
       script:
         - touch flogo-contrib.tgz
         - tar cvfz flogo-contrib.tgz --exclude=flogo-contrib.tgz .
