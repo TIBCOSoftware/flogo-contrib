@@ -4,10 +4,6 @@ go:
 sudo: required
 services:
   - docker
-cache:
-  bundler: false
-  directories:
-  - .build-cache          # images.txt
 # Handle git submodules yourself
 git:
     submodules: false
