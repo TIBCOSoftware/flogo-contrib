@@ -18,13 +18,15 @@ out/
 .DS_Store
 
 ## Golang
-
 bin/
 pkg/
 **/vendor/src/
 **/vendor/manifest
 
-## Golang
+## flogo
+action_metadata.go
+activity_metadata.go
+trigger_metadata.go
 
 action_metadata.go
 activity_metadata.go

@@ -33,7 +33,7 @@ func NewRequestProcessor() *RequestProcessor {
 
 // StartFlow handles a StartRequest for a FlowInstance.  This will
 // generate an ID for the new FlowInstance and queue a StartRequest.
-func (rp *RequestProcessor) StartFlow(startRequest *StartRequest) (code int, retData interface{}, err error) {
+func (rp *RequestProcessor) StartFlow(startRequest *StartRequest) (results map[string]*data.Attribute, err error) {
 
 	execOptions := &instance.ExecOptions{Interceptor: startRequest.Interceptor, Patch: startRequest.Patch}
 
@@ -59,12 +59,15 @@ func (rp *RequestProcessor) StartFlow(startRequest *StartRequest) (code int, ret
 	ctx := trigger.NewContext(context.Background(), attrs)
 
 	ro := &instance.RunOptions{Op: instance.OpStart, ReturnID: true,  FlowURI: startRequest.FlowURI, ExecOptions: execOptions}
-	return rp.runner.Run(ctx, act, startRequest.FlowURI, ro)
+	newOptions := make(map[string]interface{})
+	newOptions["deprecated_options"] = ro
+
+	return rp.runner.RunAction(ctx, act, newOptions)
 }
 
 // RestartFlow handles a RestartRequest for a FlowInstance.  This will
 // generate an ID for the new FlowInstance and queue a RestartRequest.
-func (rp *RequestProcessor) RestartFlow(restartRequest *RestartRequest) (code int, retData interface{}, err error) {
+func (rp *RequestProcessor) RestartFlow(restartRequest *RestartRequest)  (results map[string]*data.Attribute, err error) {
 
 	execOptions := &instance.ExecOptions{Interceptor: restartRequest.Interceptor, Patch: restartRequest.Patch}
 
@@ -86,12 +89,15 @@ func (rp *RequestProcessor) RestartFlow(restartRequest *RestartRequest) (code in
 	act := factory.New(&action.Config{Id: "flow"})
 
 	ro := &instance.RunOptions{Op: instance.OpRestart, ReturnID: true, FlowURI: restartRequest.InitialState.FlowURI, InitialState: restartRequest.InitialState, ExecOptions: execOptions}
-	return rp.runner.Run(ctx, act, restartRequest.InitialState.FlowURI, ro)
+	newOptions := make(map[string]interface{})
+	newOptions["deprecated_options"] = ro
+
+	return rp.runner.RunAction(ctx, act, newOptions)
 }
 
 // ResumeFlow handles a ResumeRequest for a FlowInstance.  This will
 // queue a RestartRequest.
-func (rp *RequestProcessor) ResumeFlow(resumeRequest *ResumeRequest) (code int, retData interface{}, err error) {
+func (rp *RequestProcessor) ResumeFlow(resumeRequest *ResumeRequest)  (results map[string]*data.Attribute, err error) {
 
 	execOptions := &instance.ExecOptions{Interceptor: resumeRequest.Interceptor, Patch: resumeRequest.Patch}
 
@@ -113,7 +119,10 @@ func (rp *RequestProcessor) ResumeFlow(resumeRequest *ResumeRequest) (code int, 
 	act := factory.New(&action.Config{Id: "flow"})
 
 	ro := &instance.RunOptions{Op: instance.OpResume, ReturnID: true, FlowURI:resumeRequest.State.FlowURI, InitialState : resumeRequest.State, ExecOptions: execOptions}
-	return rp.runner.Run(ctx, act, resumeRequest.State.FlowURI, ro)
+	newOptions := make(map[string]interface{})
+	newOptions["deprecated_options"] = ro
+
+	return rp.runner.RunAction(ctx, act, newOptions)
 }
 
 // StartRequest describes a request for starting a FlowInstance

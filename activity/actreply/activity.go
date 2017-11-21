@@ -42,10 +42,10 @@ func (a *ReplyActivity) Eval(ctx activity.Context) (done bool, err error) {
 	mapperDef, err := mapper.NewMapperDefFromAnyArray(mappings)
 
 	//todo move this to a action instance level initialization, need the notion of static inputs or config
-	replyMapper := mapper.NewBasicMapper(mapperDef)
+	replyMapper := mapper.NewBasicMapper(mapperDef, ctx.ActionContext().GetResolver())
 
 	if err != nil {
-		return false, nil
+		return false, err
 	}
 
 	actionCtx := ctx.ActionContext()
@@ -55,7 +55,7 @@ func (a *ReplyActivity) Eval(ctx activity.Context) (done bool, err error) {
 	err = replyMapper.Apply(inputScope, outputScope)
 
 	if err != nil {
-		return false, nil
+		return false, err
 	}
 
 	actionCtx.Reply(outputScope.GetAttrs(), nil)

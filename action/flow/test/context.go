@@ -4,6 +4,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 )
 
 // NewTestActivityContext creates a new TestActivityContext
@@ -113,6 +114,10 @@ func (ac *TestActionCtx) Return(data map[string]*data.Attribute, err error) {
 
 func (ac *TestActionCtx) WorkingData() data.Scope {
 	return ac.ActionData
+}
+
+func (ac *TestActionCtx) GetResolver() data.Resolver {
+	return definition.GetDataResolver()
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

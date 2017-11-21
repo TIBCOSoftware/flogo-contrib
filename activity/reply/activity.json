@@ -3,9 +3,10 @@
   "type": "flogo:activity",
   "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/reply",
   "version": "0.0.1",
-  "title": "Reply To Trigger",
+  "title": "Reply (Legacy)",
   "description": "Simple Reply Activity",
   "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/reply",
+  "reply": true,
   "inputs":[
     {
       "name": "code",

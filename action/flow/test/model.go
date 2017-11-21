@@ -91,7 +91,7 @@ func (b *SimpleTaskBehavior) Enter(context model.TaskContext, enterCode int) (ev
 func (b *SimpleTaskBehavior) Eval(context model.TaskContext, evalCode int) (done bool, doneCode int, err error) {
 
 	task := context.Task()
-	logger.Debugf("Task Eval: %s\n", task)
+	logger.Debugf("Task Eval: %v\n", task)
 
 	if len(task.ChildTasks()) > 0 {
 		logger.Debugf("Has Children\n")
