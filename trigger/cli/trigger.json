@@ -7,10 +7,16 @@
   "title": "CLI Trigger",
   "description": "Simple CLI Trigger",
   "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/trigger/cli",
-  "outputs": [
+  "output": [
     {
       "name": "args",
       "type": "array"
+    }
+  ],
+  "reply": [
+    {
+      "name": "data",
+      "type": "object"
     }
   ],
   "handler": {

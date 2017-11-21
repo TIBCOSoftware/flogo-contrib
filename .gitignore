@@ -28,6 +28,10 @@ action_metadata.go
 activity_metadata.go
 trigger_metadata.go
 
+action_metadata.go
+activity_metadata.go
+trigger_metadata.go
+
 # Compiled Object files, Static and Dynamic libs (Shared Objects)
 *.o
 *.a

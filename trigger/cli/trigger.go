@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -143,12 +142,22 @@ func (t *CliTrigger) Invoke(actionId string, handlerCfg *trigger.HandlerConfig, 
 	startAttrs, _ := t.metadata.OutputsToAttrs(data, false)
 
 	act := action.Get(actionId)
-	ctx := trigger.NewContextWithData(context.Background(), &trigger.ContextData{Attrs: startAttrs, HandlerCfg: handlerCfg})
-	_, replyData, err := t.runner.Run(ctx, act, actionId, nil)
+
+	ctx := trigger.NewInitialContext(startAttrs, handlerCfg)
+	results, err := t.runner.RunAction(ctx, act, nil)
 
 	if err != nil {
 		log.Debugf("CLI Trigger Error: %s", err.Error())
 		return "", err
+	}
+
+	var replyData interface{}
+
+	if len(results) != 0 {
+		dataAttr, ok := results["data"]
+		if ok {
+			replyData = dataAttr.Value
+		}
 	}
 
 	if replyData != nil {

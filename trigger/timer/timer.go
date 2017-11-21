@@ -111,7 +111,8 @@ func (t *TimerTrigger) scheduleOnce(endpoint *trigger.HandlerConfig) {
 
 		if act != nil {
 			log.Debugf("Running action: %s", endpoint.ActionId)
-			_, _, err := t.runner.Run(context.Background(), act, endpoint.ActionId, nil)
+
+			_, err := t.runner.RunAction(context.Background(), act, nil )
 
 			if err != nil {
 				log.Error("Error running action: ", err.Error())
