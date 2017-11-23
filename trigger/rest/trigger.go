@@ -12,6 +12,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/julienschmidt/httprouter"
+	"github.com/TIBCOSoftware/flogo-lib/core/data"
 )
 
 const (
@@ -144,7 +145,7 @@ func newActionHandler(rt *RestTrigger, actionId string, handlerCfg *trigger.Hand
 			queryParams[key] = strings.Join(value, ",")
 		}
 
-		data := map[string]interface{}{
+		outData := map[string]interface{}{
 			"params":      pathParams,
 			"pathParams":  pathParams,
 			"queryParams": queryParams,
@@ -152,7 +153,7 @@ func newActionHandler(rt *RestTrigger, actionId string, handlerCfg *trigger.Hand
 		}
 
 		//todo handle error
-		startAttrs, _ := rt.metadata.OutputsToAttrs(data, false)
+		startAttrs, _ := rt.metadata.OutputsToAttrs(outData, false)
 
 		act := action.Get(actionId)
 		ctx := trigger.NewInitialContext(startAttrs, handlerCfg)
@@ -168,7 +169,7 @@ func newActionHandler(rt *RestTrigger, actionId string, handlerCfg *trigger.Hand
 			}
 			codeAttr, ok := results["code"]
 			if ok {
-				replyCode = codeAttr.Value.(int)
+				replyCode, _ = data.CoerceToInteger(codeAttr.Value)
 			}
 		}
 
