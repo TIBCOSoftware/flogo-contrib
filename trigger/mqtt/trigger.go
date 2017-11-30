@@ -22,6 +22,7 @@ type MqttTrigger struct {
 	client           mqtt.Client
 	config           *trigger.Config
 	topicToActionURI map[string]string
+	topicToHandlerCfg map[string]*trigger.HandlerConfig
 }
 
 //NewFactory create a new Trigger factory
@@ -72,9 +73,9 @@ func (t *MqttTrigger) Start() error {
 		//TODO we should handle other types, since mqtt message format are data-agnostic
 		payload := string(msg.Payload())
 		log.Debug("Received msg:", payload)
-		actionURI, found := t.topicToActionURI[topic]
+		handlerCfg, found := t.topicToHandlerCfg[topic]
 		if found {
-			t.RunAction(actionURI, payload)
+			t.RunAction(handlerCfg, payload)
 		} else {
 			log.Errorf("Topic %s not found", t.topicToActionURI[topic])
 		}
@@ -104,6 +105,7 @@ func (t *MqttTrigger) Start() error {
 		} else {
 			log.Debugf("Suscribed to topic: %s, will trigger actionId: %s", topic, handlerCfg.ActionId)
 			t.topicToActionURI[topic] = handlerCfg.ActionId
+			t.topicToHandlerCfg[topic] = handlerCfg
 		}
 	}
 
@@ -126,7 +128,7 @@ func (t *MqttTrigger) Stop() error {
 }
 
 // RunAction starts a new Process Instance
-func (t *MqttTrigger) RunAction(actionURI string, payload string) {
+func (t *MqttTrigger) RunAction(handlerCfg *trigger.HandlerConfig, payload string) {
 
 	req := t.constructStartRequest(payload)
 	//err := json.NewDecoder(strings.NewReader(payload)).Decode(req)
@@ -140,16 +142,15 @@ func (t *MqttTrigger) RunAction(actionURI string, payload string) {
 	//todo handle error
 	startAttrs, _ := t.metadata.OutputsToAttrs(req.Data, false)
 
-	act := action.Get(actionURI)
+	act := action.Get(handlerCfg.ActionId)
 
-	//add handlerCfg to handle return mappings
-	ctx := trigger.NewInitialContext(startAttrs, nil)
+	ctx := trigger.NewInitialContext(startAttrs, handlerCfg)
 	results, err := t.runner.RunAction(ctx, act, nil)
 
 	if err != nil {
 		log.Error("Error starting action: ", err.Error())
 	}
-	log.Debugf("Ran action: [%s]", actionURI)
+	log.Debugf("Ran action: [%s]", handlerCfg.ActionId)
 
 	var replyData interface{}
 
