@@ -94,6 +94,7 @@ func (t *MqttTrigger) Start() error {
 	}
 
 	t.topicToActionURI = make(map[string]string)
+	t.topicToHandlerCfg = make(map[string]*trigger.HandlerConfig)
 
 	for _, handlerCfg := range t.config.Handlers {
 
