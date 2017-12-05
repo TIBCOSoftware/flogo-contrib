@@ -5,8 +5,8 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"github.com/quhar/bme280"
-	"golang.org/x/exp/io/i2c"
+	"github.com/kidoman/embd"
+	_ "github.com/kidoman/embd/host/rpi" // Mandatory for embd
 	"strconv"
 	"time"
 )
@@ -126,13 +126,22 @@ func (t *BME280Trigger) scheduleRepeating(endpoint *trigger.HandlerConfig) {
 
 func (t *BME280Trigger) getDataFromSensor(endpoint *trigger.HandlerConfig) (temp, press, hum float64, err error) {
 
-	d, err := i2c.Open(&i2c.Devfs{Dev: "/dev/i2c-1"}, bme280.I2CAddr)
-	if err != nil {
-		panic(err)
+	opt := NewOpt()
+	bme280, errNew := New(embd.NewI2CBus(1), opt)
+
+	if errNew != nil {
+		log.Errorf("Error while creating the sensor reader !' %s'\n", errNew)
+		err = errNew
 	}
 
-	b := bme280.New(d)
-	err = b.Init()
+	data, errRead := bme280.Read()
+	if errRead != nil {
+		log.Errorf("Error while reading the data !!' %s'\n", errRead)
+		err = errRead
+	}
+	temp = data[0]
+	press = data[1]
+	hum = data[2]
 
-	return b.EnvData()
+	return temp, press, hum, err
 }
