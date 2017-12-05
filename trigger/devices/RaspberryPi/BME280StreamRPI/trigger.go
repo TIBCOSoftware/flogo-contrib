@@ -140,8 +140,8 @@ func (t *BME280Trigger) getDataFromSensor(endpoint *trigger.HandlerConfig) (temp
 		err = errRead
 	}
 	temp = data[0]
-	press = data[1]
-	hum = data[2]
+	press = data[1] / 100
+	hum = data[2] 
 
 	return temp, press, hum, err
 }
