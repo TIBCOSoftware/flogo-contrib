@@ -50,12 +50,8 @@ func (t *BME280Trigger) Init(runner action.Runner) {
 
 	if t.config.Settings == nil {
 		log.Infof("No configuration set for the trigger... Using default configuration...")
-	}
-
-	if _, ok := t.config.Settings["delay_ms"]; !ok {
-		log.Infof("No delay has been set. Using default value (", interval, "ms)")
 	} else {
-		if t.config.GetSetting("delay_ms") != "" {
+		if t.config.Settings["delay_ms"] != nil && t.config.Settings["delay_ms"] == "" {
 			interval, _ = strconv.Atoi(t.config.GetSetting("delay_ms"))
 		} else {
 			log.Infof("No delay has been set. Using default value (", interval, "ms)")
