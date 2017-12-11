@@ -1,0 +1,40 @@
+{
+  "name": "JSON Config Reader",
+  "version": "0.0.1",
+  "type": "flogo:activity",
+  "description": "Read configuration from a JSON file",
+  "author": "Philippe GABERT <pgabert@tibco.com>",
+  "ref": "github.com/philippegabert/flogo-contrib/activity/configreader",
+  "homepage": "https://github.com/philippegabert/flogo-contrib/activity/configreader",
+  "inputs":[
+    {
+      "name": "configFile",
+      "type": "string",
+      "required": "true"
+    },
+    {
+      "name": "configName",
+      "type": "string",
+      "required": "true"
+    },
+    {
+      "name": "configType",
+      "type": "string",
+      "allowed" : ["string", "int", "float", "bool"]
+    },
+    {
+      "name": "defaultValue", 
+      "type": "any"
+    },
+    {
+      "name": "readEachTime",
+      "type": "bool"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "configValue",
+      "type": "any"
+    }
+  ]
+}
