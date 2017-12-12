@@ -9,7 +9,7 @@ Trigger for sensor BME280 for Raspberry Pi (Temperature, Humidity, Pressure)
 Example: install **BME280StreamRPI** trigger
 
 ```bash
-flogo install github.com/philippegabert/flogo-contrib/trigger/devices/RaspberryPi/BME280StreamRPI
+flogo install github.com/philippegabert/flogo-contrib/trigger/BME280StreamRPI
 ```
 
 
