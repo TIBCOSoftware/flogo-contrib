@@ -280,7 +280,8 @@ func TestFlowAction_Run_Restart(t *testing.T) {
 		attrs := make([]*data.Attribute, len(req.Data))
 
 		for k, v := range req.Data {
-			attrs = append(attrs, data.NewAttribute(k, data.ANY, v))
+			attr, _ := data.NewAttribute(k, data.ANY, v)
+			attrs = append(attrs, attr)
 		}
 
 		ctx = trigger.NewContext(context.Background(), attrs)
