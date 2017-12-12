@@ -156,7 +156,7 @@ func (t *CliTrigger) Invoke(actionId string, handlerCfg *trigger.HandlerConfig, 
 	if len(results) != 0 {
 		dataAttr, ok := results["data"]
 		if ok {
-			replyData = dataAttr.Value
+			replyData = dataAttr.Value()
 		}
 	}
 

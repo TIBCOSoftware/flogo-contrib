@@ -70,7 +70,8 @@ func newOutputScope(actionCtx action.Context, mapperDef *data.MapperDef) *data.F
 		attrs := make([]*data.Attribute, 0, len(mapperDef.Mappings))
 
 		for _, mappingDef := range mapperDef.Mappings {
-			attrs = append(attrs, data.NewAttribute(mappingDef.MapTo, data.ANY, nil))
+			attr, _ := data.NewAttribute(mappingDef.MapTo, data.ANY, nil)
+			attrs = append(attrs, attr)
 		}
 
 		return data.NewFixedScope(attrs)

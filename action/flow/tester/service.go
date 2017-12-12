@@ -102,7 +102,7 @@ func (et *RestEngineTester) StartFlow(w http.ResponseWriter, r *http.Request, _ 
 
 	if ok {
 
-		idResponse := &instance.IDResponse{ID: idAttr.Value.(string)}
+		idResponse := &instance.IDResponse{ID: idAttr.Value().(string)}
 		//idResponse, ok := data.Value.(*instance.IDResponse)
 
 		if ok {
@@ -151,7 +151,7 @@ func (et *RestEngineTester) RestartFlow(w http.ResponseWriter, r *http.Request, 
 
 	if ok {
 
-		idResponse := &instance.IDResponse{ID: idAttr.Value.(string)}
+		idResponse := &instance.IDResponse{ID: idAttr.Value().(string)}
 
 		logger.Debugf("Restarted Instance [ID:%s] for %s", idResponse.ID, req.InitialState.FlowURI)
 
@@ -194,7 +194,7 @@ func (et *RestEngineTester) ResumeFlow(w http.ResponseWriter, r *http.Request, _
 
 	if ok {
 
-		idResponse := &instance.IDResponse{ID: idAttr.Value.(string)}
+		idResponse := &instance.IDResponse{ID: idAttr.Value().(string)}
 
 		logger.Debugf("Resumed Instance [ID:%s] for %s", idResponse.ID, req.State.FlowURI)
 

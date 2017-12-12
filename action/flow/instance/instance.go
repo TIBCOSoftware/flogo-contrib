@@ -47,8 +47,8 @@ type Instance struct {
 	actionCtx    *ActionCtx //todo after transition to actionCtx, make sure actionCtx isn't null before executing
 
 	forceCompletion bool
-	returnData map[string]*data.Attribute
-	returnError error
+	returnData      map[string]*data.Attribute
+	returnError     error
 }
 
 // New creates a new Flow Instance from the specified Flow
@@ -113,9 +113,11 @@ type SimpleReplyHandler struct {
 // Reply implements ReplyHandler.Reply
 func (rh *SimpleReplyHandler) Reply(code int, replyData interface{}, err error) {
 
+	dataAttr, _ := data.NewAttribute("data", data.OBJECT, replyData)
+	codeAttr, _ := data.NewAttribute("code", data.INTEGER, code)
 	resultData := map[string]*data.Attribute{
-		"data": data.NewAttribute("data", data.OBJECT, replyData),
-		"code":data.NewAttribute("code", data.INTEGER, code),
+		"data": dataAttr,
+		"code": codeAttr,
 	}
 
 	rh.resultHandler.HandleResult(resultData, err)
@@ -123,7 +125,7 @@ func (rh *SimpleReplyHandler) Reply(code int, replyData interface{}, err error) 
 
 // InitActionContext initialize the action context, should be initialized before execution
 func (pi *Instance) InitActionContext(config *action.Config, handler action.ResultHandler) {
-	pi.actionCtx = &ActionCtx{inst:pi, config:config, rh:handler}
+	pi.actionCtx = &ActionCtx{inst: pi, config: config, rh: handler}
 }
 
 // FlowDefinition returns the Flow that the instance is of
@@ -170,7 +172,7 @@ func (pi *Instance) UpdateAttrs(attrs []*data.Attribute) {
 		}
 
 		for _, attr := range attrs {
-			pi.Attrs[attr.Name] = attr
+			pi.Attrs[attr.Name()] = attr
 		}
 	}
 }
@@ -186,7 +188,7 @@ func (pi *Instance) Start(startAttrs []*data.Attribute) bool {
 	}
 
 	for _, attr := range startAttrs {
-		pi.Attrs[attr.Name] = attr
+		pi.Attrs[attr.Name()] = attr
 	}
 
 	logger.Infof("FlowInstance Flow: %v", pi.FlowModel)
@@ -579,7 +581,8 @@ func (pi *Instance) SetAttrValue(attrName string, value interface{}) error {
 
 	//todo: optimize, use existing attr
 	if exists {
-		attr := data.NewAttribute(attrName, existingAttr.Type, value)
+		//todo handle error
+		attr, _ := data.NewAttribute(attrName, existingAttr.Type(), value)
 		pi.Attrs[attrName] = attr
 		pi.ChangeTracker.AttrChange(CtUpd, attr)
 		return nil
@@ -603,7 +606,8 @@ func (pi *Instance) AddAttr(attrName string, attrType data.Type, value interface
 	if exists {
 		attr = existingAttr
 	} else {
-		attr = data.NewAttribute(attrName, attrType, value)
+		//todo handle error
+		attr, _ = data.NewAttribute(attrName, attrType, value)
 		pi.Attrs[attrName] = attr
 		pi.ChangeTracker.AttrChange(CtAdd, attr)
 	}
@@ -647,12 +651,11 @@ func (ac *ActionCtx) WorkingData() data.Scope {
 	return ac.inst
 }
 
-
 func (ac *ActionCtx) GetResolver() data.Resolver {
 	return definition.GetDataResolver()
 }
 
-func (pi *Instance) GetReturnData()  (map[string]*data.Attribute, error) {
+func (pi *Instance) GetReturnData() (map[string]*data.Attribute, error) {
 
 	if pi.returnData == nil {
 
@@ -663,9 +666,9 @@ func (pi *Instance) GetReturnData()  (map[string]*data.Attribute, error) {
 
 			pi.returnData = make(map[string]*data.Attribute)
 			for _, mdAttr := range md.Output {
-				piAttr, exists := pi.Attrs[mdAttr.Name]
+				piAttr, exists := pi.Attrs[mdAttr.Name()]
 				if exists {
-					pi.returnData[piAttr.Name] = piAttr
+					pi.returnData[piAttr.Name()] = piAttr
 				}
 			}
 		}
@@ -673,7 +676,6 @@ func (pi *Instance) GetReturnData()  (map[string]*data.Attribute, error) {
 
 	return pi.returnData, pi.returnError
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Task Environment
@@ -1191,4 +1193,3 @@ func NewWorkItem(id int, taskData *TaskData, execType ExecType, evalCode int) *W
 
 	return &workItem
 }
-

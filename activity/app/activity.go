@@ -69,7 +69,7 @@ func (a *AppActivity) Eval(context activity.Context) (done bool, err error) {
 			return false, activity.NewError(errorMsg, "", nil)
 		}
 
-		context.SetOutput(ovValue, typedVal.Value)
+		context.SetOutput(ovValue, typedVal.Value())
 	case "UPDATE":
 		log.Debug("In UPDATE operation")
 		val := context.GetInput(ivValue)

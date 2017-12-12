@@ -89,18 +89,19 @@ func (ict *InstanceChangeTracker) AttrChange(chgType ChgType, attribute *data.At
 	var attrChange AttributeChange
 	attrChange.ChgType = chgType
 
-	var attr data.Attribute
-	attr.Name = attribute.Name
+	//var attr data.Attribute
+	//attr.Name = attribute.Name
+	//
+	//if chgType == CtAdd {
+	//	attr.Type = attribute.Type
+	//	attr.Value = attribute.Value
+	//} else if chgType == CtUpd {
+	//	attr.Value = attribute.Value
+	//}
 
-	if chgType == CtAdd {
-		attr.Type = attribute.Type
-		attr.Value = attribute.Value
-	} else if chgType == CtUpd {
-		attr.Value = attribute.Value
-	}
+	//attrChange.Attribute = &attr
 
-	attrChange.Attribute = &attr
-
+	attrChange.Attribute = attribute
 	ict.instChange.AttrChanges = append(ict.instChange.AttrChanges, &attrChange)
 }
 

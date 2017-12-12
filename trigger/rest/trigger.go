@@ -165,11 +165,11 @@ func newActionHandler(rt *RestTrigger, actionId string, handlerCfg *trigger.Hand
 		if len(results) != 0 {
 			dataAttr, ok := results["data"]
 			if ok {
-				replyData = dataAttr.Value
+				replyData = dataAttr.Value()
 			}
 			codeAttr, ok := results["code"]
 			if ok {
-				replyCode, _ = data.CoerceToInteger(codeAttr.Value)
+				replyCode, _ = data.CoerceToInteger(codeAttr.Value())
 			}
 		}
 
