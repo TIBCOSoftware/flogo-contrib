@@ -124,7 +124,7 @@ func (a *RESTActivity) Eval(context activity.Context) (done bool, err error) {
 	proxy := context.GetInput(ivProxy)
 	var client *http.Client
 	var proxyValue, ok = proxy.(string)
-	if proxy != nil && ok && proxyValue != "" {
+	if ok && len(proxyValue) > 0 {
 		proxyURL, urlErr := url.Parse(proxyValue)
 		if urlErr != nil {
 			log.Debug("Error parsing proxy url:", urlErr)
