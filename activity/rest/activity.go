@@ -29,6 +29,7 @@ const (
 	ivQueryParams = "queryParams"
 	ivContent     = "content"
 	ivParams      = "params"
+	ivProxy       = "proxy"
 
 	ovResult = "result"
 	ovStatus = "status"
@@ -119,7 +120,22 @@ func (a *RESTActivity) Eval(context activity.Context) (done bool, err error) {
 		req.Header.Set("Content-Type", contentType)
 	}
 
-	client := &http.Client{}
+	// Set the proxy server to use, if supplied
+	proxy := context.GetInput(ivProxy)
+	var client *http.Client
+	var proxyValue, ok = proxy.(string)
+	if ok && len(proxyValue) > 0 {
+		proxyURL, urlErr := url.Parse(proxyValue)
+		if urlErr != nil {
+			log.Debug("Error parsing proxy url:", urlErr)
+			return false, urlErr
+		}
+
+		log.Debug("Setting proxy server:", proxyValue)
+		client = &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxyURL)}}
+	} else {
+		client = &http.Client{}
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		panic(err)

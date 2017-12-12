@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"testing"
 
+	"io/ioutil"
+
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/test"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
-	"io/ioutil"
 )
 
 const reqPostStr string = `{
@@ -73,7 +74,7 @@ func TestSimpleGet(t *testing.T) {
 
 	//setup attrs
 	tc.SetInput("method", "GET")
-	tc.SetInput("uri", "http://petstore.swagger.io/v2/pet/"+petID)
+	tc.SetInput("uri", "http://petstore.swagger.io/v2/pet/16")
 
 	//eval
 	act.Eval(tc)
@@ -180,4 +181,23 @@ func TestBuildURI4(t *testing.T) {
 	newURI := BuildURI(uri, params)
 
 	fmt.Println(newURI)
+}
+
+func TestSimpleGetWithProxy(t *testing.T) {
+
+	act := NewActivity(getActivityMetadata())
+	tc := test.NewTestActivityContext(getActivityMetadata())
+
+	//setup attrs
+	tc.SetInput("method", "GET")
+	tc.SetInput("proxy", "http://localhost:12345")
+	tc.SetInput("uri", "http://petstore.swagger.io/v2/pet/16")
+
+	//eval
+	_, err := act.Eval(tc)
+	if err != nil {
+		fmt.Printf("error: %v\n", err)
+	}
+	val := tc.GetOutput("result")
+	fmt.Printf("result: %v\n", val)
 }
