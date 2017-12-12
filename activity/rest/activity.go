@@ -123,15 +123,16 @@ func (a *RESTActivity) Eval(context activity.Context) (done bool, err error) {
 	// Set the proxy server to use, if supplied
 	proxy := context.GetInput(ivProxy)
 	var client *http.Client
-	if proxy != nil && proxy.(string) != "" {
-		proxyURL, urlErr := url.Parse(proxy.(string))
+	var proxyValue, ok = proxy.(string)
+	if proxy != nil && ok && proxyValue != "" {
+		proxyURL, urlErr := url.Parse(proxyValue)
 		if urlErr != nil {
-			log.Debug("Error parsing proxy url, skipping proxy:", urlErr)
-			client = &http.Client{}
-		} else {
-			log.Debug("Setting proxy server:", proxy.(string))
-			client = &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxyURL)}}
+			log.Debug("Error parsing proxy url:", urlErr)
+			return false, urlErr
 		}
+
+		log.Debug("Setting proxy server:", proxyValue)
+		client = &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxyURL)}}
 	} else {
 		client = &http.Client{}
 	}
