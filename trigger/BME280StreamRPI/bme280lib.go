@@ -1,4 +1,4 @@
-package BME280StreamRPI
+package bme280streamrpi
 
 // Original file coming from https://github.com/taiyoh/go-embd-bme280/blob/master/bme280.go
 import (

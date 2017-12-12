@@ -1,4 +1,4 @@
-# BME280StreamRPI
+# bme280streamrpi
 
 
 Trigger for sensor BME280 for Raspberry Pi (Temperature, Humidity, Pressure)
@@ -6,10 +6,10 @@ Trigger for sensor BME280 for Raspberry Pi (Temperature, Humidity, Pressure)
 ## Installation
 
 #### Install Trigger
-Example: install **BME280StreamRPI** trigger
+Example: install **bme280streamrpi** trigger
 
 ```bash
-flogo install github.com/philippegabert/flogo-contrib/trigger/BME280StreamRPI
+flogo install github.com/philippegabert/flogo-contrib/trigger/bme280streamrpi
 ```
 
 

@@ -1,4 +1,4 @@
-package BME280StreamRPI
+package bme280streamrpi
 
 import (
 	"context"
