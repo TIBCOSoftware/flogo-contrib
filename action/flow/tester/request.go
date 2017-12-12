@@ -49,7 +49,8 @@ func (rp *RequestProcessor) StartFlow(startRequest *StartRequest) (results map[s
 
 			//todo handle error
 			t, _ := data.GetType(v)
-			attrs = append(attrs, data.NewAttribute(k, t, v))
+			attr,_ := data.NewAttribute(k, t, v)
+			attrs = append(attrs, attr)
 		}
 	}
 
@@ -79,7 +80,8 @@ func (rp *RequestProcessor) RestartFlow(restartRequest *RestartRequest)  (result
 		attrs := make([]*data.Attribute, len(restartRequest.Data))
 
 		for k, v := range restartRequest.Data {
-			attrs = append(attrs, data.NewAttribute(k, data.ANY, v))
+			attr,_ := data.NewAttribute(k, data.ANY, v)
+			attrs = append(attrs,attr)
 		}
 
 		ctx = trigger.NewContext(context.Background(), attrs)
@@ -109,7 +111,8 @@ func (rp *RequestProcessor) ResumeFlow(resumeRequest *ResumeRequest)  (results m
 		attrs := make([]*data.Attribute, len(resumeRequest.Data))
 
 		for k, v := range resumeRequest.Data {
-			attrs = append(attrs, data.NewAttribute(k, data.ANY, v))
+			attr,_ := data.NewAttribute(k, data.ANY, v)
+			attrs = append(attrs,attr)
 		}
 
 		ctx = trigger.NewContext(context.Background(), attrs)

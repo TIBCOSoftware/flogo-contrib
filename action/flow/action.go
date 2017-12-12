@@ -279,15 +279,18 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 
 		defer handler.Done()
 
-		if !inst.Flow.ExplicitReply() || retID{
+		if !inst.Flow.ExplicitReply() || retID {
 
-			results := map[string]*data.Attribute {
-				"id": data.NewAttribute("id", data.STRING, inst.ID()),
+			idAttr, _ := data.NewAttribute("id", data.STRING, inst.ID())
+			results := map[string]*data.Attribute{
+				"id": idAttr,
 			}
 
 			if old {
-				results["data"] = data.NewAttribute("data", data.OBJECT, &instance.IDResponse{ID: inst.ID()})
-				results["code"] = data.NewAttribute("code", data.INTEGER, 200)
+				dataAttr, _ := data.NewAttribute("data", data.OBJECT, &instance.IDResponse{ID: inst.ID()})
+				results["data"] = dataAttr
+				codeAttr, _ := data.NewAttribute("code", data.INTEGER, 200)
+				results["code"] = codeAttr
 			}
 
 			handler.HandleResult(results, nil)
@@ -341,12 +344,11 @@ func logInputs(attrs []*data.Attribute) {
 			if attr == nil {
 				logger.Error("Nil Attribute passed as input")
 			} else {
-				logger.Debugf(" Attr:%s, Type:%s, Value:%v", attr.Name, attr.Type.String(), attr.Value)
+				logger.Debugf(" Attr:%s, Type:%s, Value:%v", attr.Name, attr.Type().String(), attr.Value)
 			}
 		}
 	}
 }
-
 
 func extractAttributes(inputs map[string]interface{}) []*data.Attribute {
 
@@ -357,7 +359,7 @@ func extractAttributes(inputs map[string]interface{}) []*data.Attribute {
 	//todo do special handling for complex_object metadata (merge or ref it)
 	for _, value := range inputs {
 
-		attr,_ := value.(*data.Attribute)
+		attr, _ := value.(*data.Attribute)
 		attrs = append(attrs, attr)
 	}
 
