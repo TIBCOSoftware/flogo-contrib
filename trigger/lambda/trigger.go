@@ -82,7 +82,6 @@ func Invoke() (interface{}, error) {
 	actionId := singleton.config.Handlers[0].ActionId
 	log.Debugf("Calling actionid: '%s'\n", actionId)
 
-
 	data := map[string]interface{}{
 		"logStreamName":   lambdaCtx.LogStreamName,
 		"logGroupName":    lambdaCtx.LogGroupName,
