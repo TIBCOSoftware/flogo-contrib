@@ -68,12 +68,12 @@ func TestSimpleReply(t *testing.T) {
 	o1, exists1 := ac.ReplyDataAttr["Output1"]
 	assert.True(t, exists1, "Output1 not set")
 	if exists1 {
-		assert.Equal(t, "1", o1.Value)
+		assert.Equal(t, "1", o1.Value())
 	}
 	o2, exists2 := ac.ReplyDataAttr["Output2"]
 	assert.True(t, exists2, "Output2 not set")
 	if exists2 {
-		assert.Equal(t, 2.0, o2.Value)
+		assert.Equal(t, 2.0, o2.Value())
 	}
 }
 

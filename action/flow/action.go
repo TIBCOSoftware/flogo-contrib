@@ -344,7 +344,7 @@ func logInputs(attrs []*data.Attribute) {
 			if attr == nil {
 				logger.Error("Nil Attribute passed as input")
 			} else {
-				logger.Debugf(" Attr:%s, Type:%s, Value:%v", attr.Name, attr.Type().String(), attr.Value)
+				logger.Debugf(" Attr:%s, Type:%s, Value:%v", attr.Name(), attr.Type().String(), attr.Value())
 			}
 		}
 	}

@@ -41,10 +41,10 @@ func NewTestActivityContextWithAction(metadata *activity.Metadata, actionCtx *Te
 	}
 
 	for _, element := range metadata.Input {
-		tc.inputs[element.Name()] = data.NewZeroAttribute(element.Name(), element.Type)
+		tc.inputs[element.Name()] = data.NewZeroAttribute(element.Name(), element.Type())
 	}
 	for _, element := range metadata.Output {
-		tc.outputs[element.Name()] = data.NewZeroAttribute(element.Name(), element.Type)
+		tc.outputs[element.Name()] = data.NewZeroAttribute(element.Name(), element.Type())
 	}
 
 	return tc
@@ -197,7 +197,7 @@ func (c *TestActivityContext) GetInput(name string) interface{} {
 	attr, found := c.inputs[name]
 
 	if found {
-		return attr.Value
+		return attr.Value()
 	}
 
 	return nil
@@ -221,7 +221,7 @@ func (c *TestActivityContext) GetOutput(name string) interface{} {
 	attr, found := c.outputs[name]
 
 	if found {
-		return attr.Value
+		return attr.Value()
 	}
 
 	return nil

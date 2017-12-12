@@ -158,7 +158,7 @@ func (t *MqttTrigger) RunAction(handlerCfg *trigger.HandlerConfig, payload strin
 	if len(results) != 0 {
 		dataAttr, ok := results["data"]
 		if ok {
-			replyData = dataAttr.Value
+			replyData = dataAttr.Value()
 		}
 	}
 
