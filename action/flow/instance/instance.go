@@ -1095,7 +1095,7 @@ func (td *TaskData) GetInput(name string) interface{} {
 
 	val, found := td.InputScope().GetAttr(name)
 	if found {
-		return val.Value
+		return val.Value()
 	}
 
 	return nil
@@ -1106,7 +1106,7 @@ func (td *TaskData) GetOutput(name string) interface{} {
 
 	val, found := td.OutputScope().GetAttr(name)
 	if found {
-		return val.Value
+		return val.Value()
 	}
 
 	return nil
