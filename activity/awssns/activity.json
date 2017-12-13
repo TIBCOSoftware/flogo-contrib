@@ -1,0 +1,53 @@
+{
+  "name": "awssns",
+  "version": "0.0.1",
+  "type": "flogo:activity",
+  "description": "Send SMS using Amazon Web Services Simple Notification Services",
+  "author": "Phlippe GABERT <pgabert@tibco.com>",
+  "ref": "github.com/philippegabert/flogo-contrib/activity/awssns",
+  "homepage": "https://github.com/philippegabert/flogo-contrib/activity/awssns",
+  "inputs":[
+    {
+      "name": "AWS_ACCESS_KEY_ID",
+      "type": "string",
+      "required": "true"
+    },
+    {
+      "name": "AWS_SECRET_ACCESS_KEY",
+      "type": "string",
+      "required": "true"
+    },
+    {
+      "name": "AWS_DEFAULT_REGION",
+      "type": "string",
+      "required": "true",
+      "allowed" : ["us-east-2","us-east-1","us-west-1","us-west-2","ap-south-1","ap-northeast-2","ap-southeast-1","ap-southeast-2","ap-northeast-1","cn-northwest-1","ca-central-1","eu-central-1","eu-west-1","eu-west-2","sa-east-1"]
+    },
+    {
+      "name": "SMS_TYPE",
+      "type": "string",
+      "allowed" : ["Promotional", "Transactional"]
+    },
+    {
+      "name": "SMS_FROM",
+      "type": "string",
+      "required": "true"
+    },
+    {
+      "name": "SMS_TO",
+      "type": "string",
+      "required": "true"
+    },
+    {
+      "name": "SMS_MESSAGE",
+      "type": "string",
+      "required": "true"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "MESSAGE_ID",
+      "type": "string"
+    }
+  ]
+}
