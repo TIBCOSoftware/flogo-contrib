@@ -1,5 +1,5 @@
 {
-  "name": "awssns",
+  "name": "Amazon SNS - SMS",
   "version": "0.0.1",
   "type": "flogo:activity",
   "description": "Send SMS using Amazon Web Services Simple Notification Services",
