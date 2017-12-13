@@ -4,7 +4,7 @@
   "type": "flogo:activity",
   "description": "Send SMS using Amazon Web Services Simple Notification Services",
   "author": "Phlippe GABERT <pgabert@tibco.com>",
-  "ref": "github.com/philippegabert/flogo-contrib/activity/awssns",
+  "ref": "github.com/philippegabert/flogo-contrib/blob/awssns/activity/awssns",
   "homepage": "https://github.com/philippegabert/flogo-contrib/blob/awssns/activity/awssns",
   "inputs":[
     {
