@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/TIBCOSoftware/flogo-contrib/activity/inference/framework"
+	_ "github.com/TIBCOSoftware/flogo-contrib/activity/inference/framework/tf"
 	"github.com/TIBCOSoftware/flogo-contrib/activity/inference/model"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
