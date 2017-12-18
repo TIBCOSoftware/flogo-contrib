@@ -64,7 +64,7 @@ func (a *WsMsgActivity) Eval(context activity.Context) (done bool, err error) {
 		log.Debugf("Error while sending message to wsHost: [%s]", err)
 		return
 	}
-
+	wsConn.Close()
 	context.SetOutput("result", "OK")
 
 	return true, nil

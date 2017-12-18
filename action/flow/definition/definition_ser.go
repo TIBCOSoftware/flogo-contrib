@@ -12,12 +12,12 @@ import (
 
 // DefinitionRep is a serializable representation of a flow Definition
 type DefinitionRep struct {
-	ExplicitReply    bool               `json:"explicitReply"`
-	Name             string             `json:"name"`
-	ModelID          string             `json:"model"`
-	Attributes       []*data.Attribute  `json:"attributes,omitempty"`
-	RootTask         *TaskRep           `json:"rootTask"`
-	ErrorHandlerTask *TaskRep           `json:"errorHandlerTask"`
+	ExplicitReply    bool              `json:"explicitReply"`
+	Name             string            `json:"name"`
+	ModelID          string            `json:"model"`
+	Attributes       []*data.Attribute `json:"attributes,omitempty"`
+	RootTask         *TaskRep          `json:"rootTask"`
+	ErrorHandlerTask *TaskRep          `json:"errorHandlerTask"`
 }
 
 // TaskRep is a serializable representation of a flow Task
@@ -32,7 +32,7 @@ type TaskRep struct {
 	Tasks []*TaskRep `json:"tasks,omitempty"`
 	Links []*LinkRep `json:"links,omitempty"`
 
-	Mappings    *Mappings `json:"mappings,omitempty"`
+	Mappings    *Mappings              `json:"mappings,omitempty"`
 	InputAttrs  map[string]interface{} `json:"input,omitempty"`
 	OutputAttrs map[string]interface{} `json:"output,omitempty"`
 
@@ -79,7 +79,7 @@ func NewDefinition(rep *DefinitionRep) (def *Definition, err error) {
 		def.attrs = make(map[string]*data.Attribute, len(rep.Attributes))
 
 		for _, value := range rep.Attributes {
-			def.attrs[value.Name] = value
+			def.attrs[value.Name()] = value
 		}
 	}
 
@@ -142,7 +142,7 @@ func addTask(def *Definition, task *Task, rep *TaskRep) {
 		task.inputAttrs = make(map[string]*data.Attribute, len(rep.Attributes))
 
 		for _, value := range rep.Attributes {
-			task.inputAttrs[value.Name] = value
+			task.inputAttrs[value.Name()] = value
 		}
 	}
 
@@ -171,12 +171,9 @@ func addTask(def *Definition, task *Task, rep *TaskRep) {
 				attr := act.Metadata().Input[name]
 
 				if attr != nil {
-					newValue, err := data.CoerceToValue(value, attr.Type)
-					if err != nil {
-						//Todo handle error
-						newValue = value
-					}
-					task.inputAttrs[name] = &data.Attribute{Name: name, Type: attr.Type, Value: newValue}
+					//var err error
+					//todo handle error
+					task.inputAttrs[name], _ = data.NewAttribute(name, attr.Type(), value)
 				}
 			}
 		}
@@ -197,12 +194,9 @@ func addTask(def *Definition, task *Task, rep *TaskRep) {
 				attr := act.Metadata().Output[name]
 
 				if attr != nil {
-					newValue, err := data.CoerceToValue(value, attr.Type)
-					if err != nil {
-						//Todo handle error
-						newValue = value
-					}
-					task.outputAttrs[name] = &data.Attribute{Name: name, Type: attr.Type, Value: newValue}
+					//var err error
+					//todo handle error
+					task.outputAttrs[name], _ = data.NewAttribute(name, attr.Type(), value)
 				}
 			}
 		}

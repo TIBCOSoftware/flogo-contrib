@@ -46,10 +46,10 @@ func applyInputInterceptor(pi *Instance, taskData *TaskData) bool {
 				// override input attributes
 				for _, attribute := range taskInterceptor.Inputs {
 
-					logger.Debugf("Overriding Attr: %s = %s", attribute.Name, attribute.Value)
+					logger.Debugf("Overriding Attr: %s = %s", attribute.Name(), attribute.Value())
 
 					//todo: validation
-					taskData.InputScope().SetAttrValue(attribute.Name, attribute.Value)
+					taskData.InputScope().SetAttrValue(attribute.Name(), attribute.Value())
 				}
 			}
 
@@ -72,7 +72,7 @@ func applyOutputInterceptor(pi *Instance, taskData *TaskData) {
 			for _, attribute := range taskInterceptor.Outputs {
 
 				//todo: validation
-				taskData.OutputScope().SetAttrValue(attribute.Name, attribute.Value)
+				taskData.OutputScope().SetAttrValue(attribute.Name(), attribute.Value())
 			}
 		}
 	}
@@ -167,16 +167,14 @@ func (s *FixedTaskScope) SetAttrValue(attrName string, value interface{}) error 
 
 	attr, found := s.attrs[attrName]
 
+	var err error
 	if found {
-		//todo handle errors
-		coercedVal, _ := data.CoerceToValue(value, attr.Type)
-		attr.Value = coercedVal
+		err = attr.SetValue(value)
 	} else {
 		// look up reference for type
 		attr, found = s.refAttrs[attrName]
 		if found {
-			coercedVal, _ := data.CoerceToValue(value, attr.Type)
-			s.attrs[attrName] = data.NewAttribute(attrName, attr.Type, coercedVal)
+			s.attrs[attrName], err = data.NewAttribute(attrName, attr.Type(), value)
 		} else {
 			logger.Debugf("SetAttr: Attr %s ref not found\n", attrName)
 			logger.Debugf("SetAttr: refs %v\n", s.refAttrs)
@@ -184,5 +182,5 @@ func (s *FixedTaskScope) SetAttrValue(attrName string, value interface{}) error 
 		//todo: else error
 	}
 
-	return nil
+	return err
 }

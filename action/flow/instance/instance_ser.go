@@ -69,7 +69,7 @@ func (pi *Instance) UnmarshalJSON(d []byte) error {
 	pi.Attrs = make(map[string]*data.Attribute)
 
 	for _, value := range ser.Attrs {
-		pi.Attrs[value.Name] = value
+		pi.Attrs[value.Name()] = value
 	}
 
 	pi.RootTaskEnv = ser.RootTaskEnv
@@ -187,7 +187,7 @@ func (td *TaskData) UnmarshalJSON(d []byte) error {
 		td.attrs = make(map[string]*data.Attribute)
 
 		for _, value := range ser.Attrs {
-			td.attrs[value.Name] = value
+			td.attrs[value.Name()] = value
 		}
 	}
 
