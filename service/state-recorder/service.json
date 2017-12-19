@@ -1,8 +1,0 @@
-{
-  "name": "state-recorder",
-  "type": "state-recorder",
-  "version": "0.0.1",
-  "title": "State Service",
-  "author": "Michael Register <mregiste@tibco.com>",
-  "description": "Simple State Service"
-}
