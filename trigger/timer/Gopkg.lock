@@ -5,7 +5,7 @@
   name = "github.com/carlescere/scheduler"
   packages = ["."]
   revision = "ee74d2f83d82cd1d2e92ed3ec3dbaf162ca5ece5"
-  
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
