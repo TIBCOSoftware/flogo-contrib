@@ -1,0 +1,36 @@
+{
+  "name": "tibco-aggregator",
+  "type": "flogo:activity",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/aggregator",
+  "version": "0.0.1",
+  "title": "Aggregate",
+  "description": "Simple Aggregator Activity",
+  "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/aggregator",
+  "inputs":[
+    {
+      "name": "function",
+      "type": "string",
+      "required": true,
+      "allowed" : ["average"]
+    },
+    {
+      "name": "windowSize",
+      "type": "integer",
+      "required": true
+    },
+    {
+      "name": "value",
+      "type": "number"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "result",
+      "type": "number"
+    },
+    {
+      "name": "report",
+      "type": "boolean"
+    }
+  ]
+}
