@@ -1,11 +1,11 @@
 {
   "name": "tibco-aggregator",
   "type": "flogo:activity",
-  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/aggregator",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/aggregate",
   "version": "0.0.1",
   "title": "Aggregate",
   "description": "Simple Aggregator Activity",
-  "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/aggregator",
+  "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/aggregate",
   "inputs":[
     {
       "name": "function",
