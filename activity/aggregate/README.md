@@ -17,7 +17,7 @@ Inputs and Outputs:
     {
       "name": "function",
       "type": "string",
-      "allowed" : ["block_avg, moving_avg, timeblockavg"]
+      "allowed" : ["block_avg", "moving_avg", "timeblockavg"]
     },
     {
       "name": "windowSize",
