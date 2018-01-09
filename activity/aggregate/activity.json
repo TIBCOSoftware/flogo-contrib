@@ -11,7 +11,7 @@
       "name": "function",
       "type": "string",
       "required": true,
-      "allowed" : ["block_avg, moving_avg, timeblockavg"]
+      "allowed" : ["block_avg", "moving_avg", "timeblockavg"]
     },
     {
       "name": "windowSize",
