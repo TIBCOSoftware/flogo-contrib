@@ -3,11 +3,11 @@ package inference
 import (
 	"fmt"
 
-	"github.com/TIBCOSoftware/flogo-contrib/activity/inference/framework"
-	_ "github.com/TIBCOSoftware/flogo-contrib/activity/inference/framework/tf"
-	"github.com/TIBCOSoftware/flogo-contrib/activity/inference/model"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/mellistibco/flogo-contrib/activity/inference/framework"
+	_ "github.com/mellistibco/flogo-contrib/activity/inference/framework/tf"
+	"github.com/mellistibco/flogo-contrib/activity/inference/model"
 )
 
 // log is the default package logger

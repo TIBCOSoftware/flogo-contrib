@@ -1,7 +1,7 @@
 package tf
 
 import (
-	"github.com/TIBCOSoftware/flogo-contrib/activity/inference/framework"
+	"github.com/mellistibco/flogo-contrib/activity/inference/framework"
 )
 
 // TensorflowModel is
