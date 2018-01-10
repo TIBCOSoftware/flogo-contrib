@@ -67,10 +67,12 @@ func (a *InferenceActivity) Eval(context activity.Context) (done bool, err error
 			inputSample[inputName][featureVal[0]] = float32(val)
 		}
 	*/
+
+	log.Debug("Incoming features: ")
+	log.Debug(features)
+
 	featureMap, ok := features.(map[string]interface{})
 	if !ok {
-		log.Error("Cannot parse features, should be of typ map[string]interface{}")
-
 		return false, fmt.Errorf("Cannot parse features, should be map[string]interface{}")
 	}
 
