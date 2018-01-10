@@ -59,15 +59,6 @@ func (a *InferenceActivity) Eval(context activity.Context) (done bool, err error
 	inputSample := make(map[string]map[string]interface{})
 	inputSample[inputName] = make(map[string]interface{})
 
-	/*
-		featureData := strings.Split(features, ",")
-		for i := 0; i < len(featureData); i++ {
-			featureVal := strings.Split(featureData[i], ":")
-			val, _ := strconv.ParseFloat(featureVal[1], 64)
-			inputSample[inputName][featureVal[0]] = float32(val)
-		}
-	*/
-
 	log.Debug("Incoming features: ")
 	log.Debug(features)
 
