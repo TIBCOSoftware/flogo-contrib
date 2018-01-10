@@ -2,8 +2,6 @@ package inference
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/TIBCOSoftware/flogo-contrib/activity/inference/framework"
 	_ "github.com/TIBCOSoftware/flogo-contrib/activity/inference/framework/tf"
@@ -44,7 +42,7 @@ func (a *InferenceActivity) Eval(context activity.Context) (done bool, err error
 
 	modelName := context.GetInput(ivModel).(string)
 	inputName := context.GetInput(ivInputName).(string)
-	features := context.GetInput(ivFeatures).(string)
+	features := context.GetInput(ivFeatures)
 	fw := context.GetInput(ivFramework).(string)
 
 	tfFramework := framework.Get(fw)
@@ -61,13 +59,22 @@ func (a *InferenceActivity) Eval(context activity.Context) (done bool, err error
 	inputSample := make(map[string]map[string]interface{})
 	inputSample[inputName] = make(map[string]interface{})
 
-	featureData := strings.Split(features, ",")
-	for i := 0; i < len(featureData); i++ {
-		featureVal := strings.Split(featureData[i], ":")
-		val, _ := strconv.ParseFloat(featureVal[1], 64)
-		inputSample[inputName][featureVal[0]] = float32(val)
+	/*
+		featureData := strings.Split(features, ",")
+		for i := 0; i < len(featureData); i++ {
+			featureVal := strings.Split(featureData[i], ":")
+			val, _ := strconv.ParseFloat(featureVal[1], 64)
+			inputSample[inputName][featureVal[0]] = float32(val)
+		}
+	*/
+	featureMap, ok := features.(map[string]interface{})
+	if !ok {
+		log.Error("Cannot parse features, should be of typ map[string]interface{}")
+
+		return false, fmt.Errorf("Cannot parse features, should be map[string]interface{}")
 	}
 
+	inputSample[inputName] = featureMap
 	log.Debug("Parsing of features completed")
 
 	model.SetInputs(inputSample)

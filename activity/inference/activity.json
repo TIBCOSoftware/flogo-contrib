@@ -1,7 +1,7 @@
 {
   "name": "flogo-inference",
   "type": "flogo:activity",
-  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/inference",
+  "ref": "github.com/mellistibco/flogo-contrib/activity/inference",
   "version": "0.0.1",
   "title": "Invoke ML Model",
   "description": "Basic inferencing activity to invoke ML model using the flogo-ml framework.",
@@ -19,7 +19,7 @@
     },
     {
       "name": "features",
-      "type": "string",
+      "type": "object",
       "required": true
     },
     {
