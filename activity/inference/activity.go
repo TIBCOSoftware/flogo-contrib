@@ -80,7 +80,11 @@ func (a *InferenceActivity) Eval(context activity.Context) (done bool, err error
 	log.Debug("Parsing of features completed")
 
 	model.SetInputs(inputSample)
-	output, _ := model.Run(tfFramework)
+	output, err := model.Run(tfFramework)
+
+	if err != nil {
+		return false, err
+	}
 
 	log.Debug("Model execution completed with result:")
 	log.Info(output)
