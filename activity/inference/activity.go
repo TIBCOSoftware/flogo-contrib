@@ -4,11 +4,13 @@ import (
 	"fmt"
 
 	"github.com/TIBCOSoftware/flogo-contrib/activity/inference/framework"
-	_ "github.com/TIBCOSoftware/flogo-contrib/activity/inference/framework/tf"
+	"github.com/TIBCOSoftware/flogo-contrib/activity/inference/framework/tf"
 	"github.com/TIBCOSoftware/flogo-contrib/activity/inference/model"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
+
+var _ tf.TensorflowModel
 
 // log is the default package logger
 var log = logger.GetLogger("activity-tibco-inference")
