@@ -37,7 +37,7 @@ func (i *TensorflowModel) Run(model *models.Model) (out map[string]interface{}, 
 	for inputName, inputMap := range inputOps {
 		examplePb, err := createInputExampleTensor(inputName, model)
 		if err != nil {
-			fmt.Println("err")
+			fmt.Println(err)
 		}
 		inputs[inputMap.Output(0)] = examplePb
 	}
