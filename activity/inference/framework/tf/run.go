@@ -37,7 +37,7 @@ func (i *TensorflowModel) Run(model *models.Model) (out map[string]interface{}, 
 	for inputName, inputMap := range inputOps {
 		examplePb, err := createInputExampleTensor(inputName, model)
 		if err != nil {
-			fmt.Println("err")
+			return nil, err
 		}
 		inputs[inputMap.Output(0)] = examplePb
 	}
@@ -73,7 +73,11 @@ func getTensorValue(tensor *tf.Tensor) interface{} {
 }
 
 func createInputExampleTensor(inputName string, model *models.Model) (*tf.Tensor, error) {
-	pb, _ := Example(model.Inputs[inputName])
+	pb, err := Example(model.Inputs[inputName])
+	if err != nil {
+		return nil, fmt.Errorf("Failed to create Example: %s", err)
+	}
+
 	byteList, err := proto.Marshal(pb)
 	if err != nil {
 		return nil, fmt.Errorf("marshaling error: %s", err)
