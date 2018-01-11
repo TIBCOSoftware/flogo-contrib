@@ -1,8 +1,6 @@
 package lambda
 
 import (
-	"bytes"
-	"encoding/binary"
 	"encoding/json"
 	"flag"
 
@@ -76,8 +74,7 @@ func Invoke() (interface{}, error) {
 	var lambdaCtx *lambdacontext.LambdaContext
 
 	// Unmarshal ctx
-	var ctxBuff bytes.Buffer
-	if err := binary.Read(&ctxBuff, binary.BigEndian, []byte(ctxArg.Value.String())); err != nil {
+	if err := json.Unmarshal([]byte(ctxArg.Value.String()), &lambdaCtx); err != nil {
 		return nil, err
 	}
 
