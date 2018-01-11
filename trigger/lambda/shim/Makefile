@@ -39,6 +39,7 @@ all: build pack perm
 .PHONY: all
 build:
 	go build -o $(HANDLER)
+	pack $(HANDLER) $(PACKAGE).zip
 .PHONY: build
 pack:
 	pack $(HANDLER) $(PACKAGE).zip

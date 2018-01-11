@@ -2,7 +2,7 @@
   "name": "tibco-lambda",
   "type": "flogo:trigger",
   "shim": "plugin",
-  "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/lambda",
+  "ref": "github.com/mellistibco/flogo-contrib/trigger/lambda",
   "version": "0.0.1",
   "title": "Start Flow as a function in Lambda",
   "description": "Simple Lambda Trigger",
