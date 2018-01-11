@@ -62,7 +62,7 @@ func Invoke() (interface{}, error) {
 	evtArg := flag.Lookup("evt")
 	//evt := evtArg.Value.String()
 	var evt interface{}
-	// Unmarshall ctx
+	// Unmarshall evt
 	if err := json.Unmarshal([]byte(evtArg.Value.String()), &evt); err != nil {
 		return nil, err
 	}

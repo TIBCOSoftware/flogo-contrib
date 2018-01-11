@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
+	"fmt"
 
 	fl "github.com/TIBCOSoftware/flogo-contrib/trigger/lambda"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -39,7 +40,9 @@ func setupArgs(evt json.RawMessage, ctx *context.Context) error {
 
 	// Setup context argument
 	ctxObj, _ := lambdacontext.FromContext(*ctx)
-	ctxJSON, err := json.Marshal(*ctxObj)
+	fmt.Println(ctxObj)
+	ctxJSON, err := json.Marshal(ctxObj)
+	fmt.Println(string(ctxJSON))
 	if err != nil {
 		return err
 	}
