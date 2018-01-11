@@ -35,30 +35,18 @@ else
 	GOPATH ?= $(HOME)/go
 	RM := rm -f
 endif
-MAKEFILE = $(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
-docker:
-	docker run --rm\
-		-e HANDLER=$(HANDLER)\
-		-e PACKAGE=$(PACKAGE)\
-		-e GOPATH=$(GOPATH)\
-		-e LDFLAGS='$(LDFLAGS)'\
-		-v $(CURDIR):$(CURDIR)\
-		$(foreach GP,$(subst :, ,$(GOPATH)),-v $(GP):$(GP))\
-		-w $(CURDIR)\
-		eawsy/aws-lambda-go-shim:latest make -f $(MAKEFILE) all
-.PHONY: docker
 all: build pack perm
 .PHONY: all
 build:
-	go build -buildmode=plugin -ldflags='-w -s $(LDFLAGS)' -o $(HANDLER).so
+	go build -o $(HANDLER)
 .PHONY: build
 pack:
-	pack $(HANDLER) $(HANDLER).so $(PACKAGE).zip
+	pack $(HANDLER) $(PACKAGE).zip
 .PHONY: pack
 perm:
-	chown $(shell stat -c '%u:%g' .) $(HANDLER).so $(PACKAGE).zip
-	$(RM) $(HANDLER).so
+	chown $(shell stat -c '%u:%g' .) $(HANDLER) $(PACKAGE).zip
+	$(RM) $(HANDLER)
 .PHONY: perm
 clean:
-	$(RM) $(HANDLER).so $(PACKAGE).zip
+	$(RM) $(HANDLER) $(PACKAGE).zip
 .PHONY: clean
