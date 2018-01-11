@@ -1,14 +1,18 @@
 package lambda
 
 import (
+	"bytes"
+	"encoding/binary"
 	"encoding/json"
 	"flag"
+
+	"github.com/aws/aws-lambda-go/lambdacontext"
+
+	syslog "log"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"github.com/eawsy/aws-lambda-go-core/service/lambda/runtime"
-	syslog "log"
 )
 
 // log is the default package logger
@@ -69,10 +73,11 @@ func Invoke() (interface{}, error) {
 	syslog.Printf("Received evt: '%+v'\n", evt)
 
 	ctxArg := flag.Lookup("ctx")
-	var lambdaCtx *runtime.Context
+	var lambdaCtx *lambdacontext.LambdaContext
 
 	// Unmarshal ctx
-	if err := json.Unmarshal([]byte(ctxArg.Value.String()), &lambdaCtx); err != nil {
+	var ctxBuff bytes.Buffer
+	if err := binary.Read(&ctxBuff, binary.BigEndian, []byte(ctxArg.Value.String())); err != nil {
 		return nil, err
 	}
 
@@ -83,10 +88,8 @@ func Invoke() (interface{}, error) {
 	log.Debugf("Calling actionid: '%s'\n", actionId)
 
 	data := map[string]interface{}{
-		"logStreamName":   lambdaCtx.LogStreamName,
-		"logGroupName":    lambdaCtx.LogGroupName,
-		"awsRequestId":    lambdaCtx.AWSRequestID,
-		"memoryLimitInMB": lambdaCtx.MemoryLimitInMB,
+		"awsRequestId":    lambdaCtx.AwsRequestID,
+		"memoryLimitInMB": lambdaCtx.ClientContext.Custom,
 		"evt":             evt,
 	}
 

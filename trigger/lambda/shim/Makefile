@@ -35,19 +35,14 @@ else
 	GOPATH ?= $(HOME)/go
 	RM := rm -f
 endif
-all: build pack perm
+all: build pack
 .PHONY: all
 build:
 	go build -o $(HANDLER)
-	pack $(HANDLER) $(PACKAGE).zip
 .PHONY: build
 pack:
-	pack $(HANDLER) $(PACKAGE).zip
+	zip $(PACKAGE) $(HANDLER).zip
 .PHONY: pack
-perm:
-	chown $(shell stat -c '%u:%g' .) $(HANDLER) $(PACKAGE).zip
-	$(RM) $(HANDLER)
-.PHONY: perm
 clean:
 	$(RM) $(HANDLER) $(PACKAGE).zip
 .PHONY: clean

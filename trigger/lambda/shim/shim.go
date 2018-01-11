@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/binary"
 	"encoding/json"
 	"flag"
 
@@ -39,16 +41,17 @@ func setupArgs(evt json.RawMessage, ctx *context.Context) error {
 
 	// Setup context argument
 	ctxObj, _ := lambdacontext.FromContext(*ctx)
-	ctxJSON, err := json.Marshal(ctxObj)
+	var ctxBuff bytes.Buffer
+	err = binary.Write(&ctxBuff, binary.BigEndian, ctxObj)
 	if err != nil {
 		return err
 	}
 
 	ctxFlag := flag.Lookup("ctx")
 	if ctxFlag == nil {
-		flag.String("ctx", string(ctxJSON), "Lambda Context Arguments")
+		flag.String("ctx", ctxBuff.String(), "Lambda Context Arguments")
 	} else {
-		flag.Set("ctx", string(ctxJSON))
+		flag.Set("ctx", ctxBuff.String())
 	}
 
 	return nil
