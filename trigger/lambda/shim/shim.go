@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
-	"fmt"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-lambda-go/lambdacontext"
@@ -49,7 +48,6 @@ func setupArgs(evt json.RawMessage, ctx *context.Context) error {
 		"memoryLimitInMB": lambdacontext.MemoryLimitInMB,
 	}
 	ctxJSON, err := json.Marshal(lambdaContext)
-	fmt.Println(string(ctxJSON))
 	if err != nil {
 		return err
 	}
