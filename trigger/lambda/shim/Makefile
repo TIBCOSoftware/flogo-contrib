@@ -35,6 +35,7 @@ endif
 all: build pack
 .PHONY: all
 build:
+	export GOOS=linux
 	go build -o $(HANDLER)
 .PHONY: build
 pack:
