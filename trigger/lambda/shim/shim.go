@@ -40,7 +40,6 @@ func setupArgs(evt json.RawMessage, ctx *context.Context) error {
 
 	// Setup context argument
 	ctxObj, _ := lambdacontext.FromContext(*ctx)
-	fmt.Println(ctxObj)
 	ctxJSON, err := json.Marshal(ctxObj)
 	fmt.Println(string(ctxJSON))
 	if err != nil {
