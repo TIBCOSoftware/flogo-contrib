@@ -52,7 +52,6 @@ func (t *LambdaTrigger) Init(runner action.Runner) {
 func Invoke() (interface{}, error) {
 
 	log.Info("Starting AWS Lambda Trigger")
-	// Use syslog since aws logs are still not that good
 	syslog.Println("Starting AWS Lambda Trigger")
 
 	// Parse the flags
@@ -70,11 +69,10 @@ func Invoke() (interface{}, error) {
 	log.Debugf("Received evt: '%+v'\n", evt)
 	syslog.Printf("Received evt: '%+v'\n", evt)
 
+	// Get the context
 	ctxArg := flag.Lookup("ctx")
 	var lambdaCtx *lambdacontext.LambdaContext
 
-	log.Debug("Here")
-	log.Debugf("Context: %s", ctxArg.Value.String())
 	// Unmarshal ctx
 	if err := json.Unmarshal([]byte(ctxArg.Value.String()), &lambdaCtx); err != nil {
 		return nil, err
