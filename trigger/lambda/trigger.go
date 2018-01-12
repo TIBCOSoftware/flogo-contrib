@@ -3,7 +3,6 @@ package lambda
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 
 	"github.com/aws/aws-lambda-go/lambdacontext"
 
@@ -74,7 +73,7 @@ func Invoke() (interface{}, error) {
 	ctxArg := flag.Lookup("ctx")
 	var lambdaCtx lambdacontext.LambdaContext
 
-	fmt.Printf("Context: %s", ctxArg.Value.String())
+	log.Debugf("Context: %s", ctxArg.Value.String())
 	// Unmarshal ctx
 	if err := json.Unmarshal([]byte(ctxArg.Value.String()), &lambdaCtx); err != nil {
 		return nil, err
