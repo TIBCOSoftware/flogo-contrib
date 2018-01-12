@@ -71,8 +71,9 @@ func Invoke() (interface{}, error) {
 	syslog.Printf("Received evt: '%+v'\n", evt)
 
 	ctxArg := flag.Lookup("ctx")
-	var lambdaCtx lambdacontext.LambdaContext
+	var lambdaCtx *lambdacontext.LambdaContext
 
+	log.Debug("Here")
 	log.Debugf("Context: %s", ctxArg.Value.String())
 	// Unmarshal ctx
 	if err := json.Unmarshal([]byte(ctxArg.Value.String()), &lambdaCtx); err != nil {
