@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 
-	"github.com/aws/aws-lambda-go/lambdacontext"
-
 	syslog "log"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
@@ -71,7 +69,7 @@ func Invoke() (interface{}, error) {
 
 	// Get the context
 	ctxArg := flag.Lookup("ctx")
-	var lambdaCtx *lambdacontext.LambdaContext
+	var lambdaCtx interface{}
 
 	// Unmarshal ctx
 	if err := json.Unmarshal([]byte(ctxArg.Value.String()), &lambdaCtx); err != nil {
@@ -85,9 +83,8 @@ func Invoke() (interface{}, error) {
 	log.Debugf("Calling actionid: '%s'\n", actionId)
 
 	data := map[string]interface{}{
-		"awsRequestId":    lambdaCtx.AwsRequestID,
-		"memoryLimitInMB": lambdaCtx.ClientContext.Custom,
-		"evt":             evt,
+		"context": lambdaCtx,
+		"evt":     evt,
 	}
 
 	startAttrs, err := singleton.metadata.OutputsToAttrs(data, false)

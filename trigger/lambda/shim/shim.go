@@ -40,7 +40,15 @@ func setupArgs(evt json.RawMessage, ctx *context.Context) error {
 
 	// Setup context argument
 	ctxObj, _ := lambdacontext.FromContext(*ctx)
-	ctxJSON, err := json.Marshal(ctxObj)
+	lambdaContext := map[string]interface{}{
+		"logStreamName":   lambdacontext.LogStreamName,
+		"logGroupName":    lambdacontext.LogGroupName,
+		"functionName":    lambdacontext.FunctionName,
+		"functionVersion": lambdacontext.FunctionVersion,
+		"awsRequestId":    ctxObj.AwsRequestID,
+		"memoryLimitInMB": lambdacontext.MemoryLimitInMB,
+	}
+	ctxJSON, err := json.Marshal(lambdaContext)
 	fmt.Println(string(ctxJSON))
 	if err != nil {
 		return err

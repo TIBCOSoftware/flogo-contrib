@@ -11,20 +11,8 @@
   ],
   "output": [
     {
-      "name": "logStreamName",
-      "type": "string"
-    },
-    {
-      "name": "logGroupName",
-      "type": "string"
-    },
-    {
-      "name": "awsRequestId",
-      "type": "string"
-    },
-    {
-      "name": "memoryLimitInMB",
-      "type": "string"
+      "name": "context",
+      "type": "object"
     },
     {
       "name": "evt",
