@@ -27,12 +27,9 @@
 HANDLER ?= handler
 PACKAGE ?= $(HANDLER)
 ifeq ($(OS),Windows_NT)
-	GOPATH ?= $(USERPROFILE)/go
-	GOPATH := /$(subst ;,:/,$(subst \,/,$(subst :,,$(GOPATH))))
 	CURDIR := /$(subst :,,$(CURDIR))
 	RM := del /q
 else
-	GOPATH ?= $(HOME)/go
 	RM := rm -f
 endif
 all: build pack
@@ -41,7 +38,7 @@ build:
 	go build -o $(HANDLER)
 .PHONY: build
 pack:
-	zip $(PACKAGE) $(HANDLER).zip
+	zip $(PACKAGE).zip $(HANDLER)
 .PHONY: pack
 clean:
 	$(RM) $(HANDLER) $(PACKAGE).zip
