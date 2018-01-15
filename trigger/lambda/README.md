@@ -16,25 +16,26 @@ Settings, Outputs:
   ],
   "outputs": [
     {
-      "name": "logStreamName",
-      "type": "string"
-    },
-    {
-      "name": "logGroupName",
-      "type": "string"
-    },
-    {
-      "name": "awsRequestId",
-      "type": "string"
-    },
-    {
-      "name": "memoryLimitInMB",
-      "type": "string"
+      "name": "context",
+      "type": "object"
     },
     {
       "name": "evt",
       "type": "string"
     }
   ]
+}
+```
+
+A sample of the context object:
+
+```json
+{
+  "awsRequestId":"",
+  "functionName":"",
+  "functionVersion":"",
+  "logGroupName":"",
+  "logStreamName":"",
+  "memoryLimitInMB":0
 }
 ```

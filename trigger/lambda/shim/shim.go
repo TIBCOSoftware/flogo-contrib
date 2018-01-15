@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"flag"
 
+	fl "github.com/TIBCOSoftware/flogo-contrib/trigger/lambda"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-lambda-go/lambdacontext"
-	fl "github.com/mellistibco/flogo-contrib/trigger/lambda"
 )
 
 // Handle implements the Flogo Function handler
