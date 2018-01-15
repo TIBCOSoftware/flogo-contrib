@@ -1,56 +1,67 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 
-	"github.com/TIBCOSoftware/flogo-contrib/trigger/lambda"
-	"github.com/eawsy/aws-lambda-go-core/service/lambda/runtime"
+	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-lambda-go/lambdacontext"
+	fl "github.com/mellistibco/flogo-contrib/trigger/lambda"
 )
 
-
-func Handle(evt json.RawMessage, ctx *runtime.Context) (interface{}, error) {
-	err := setupArgs(evt, ctx)
+// Handle implements the Flogo Function handler
+func Handle(ctx context.Context, evt json.RawMessage) (interface{}, error) {
+	err := setupArgs(evt, &ctx)
 	if err != nil {
 		return nil, err
 	}
-	result, err := lambda.Invoke()
+	result, err := fl.Invoke()
 	if err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-func setupArgs(evt json.RawMessage, ctx *runtime.Context) error {
+func setupArgs(evt json.RawMessage, ctx *context.Context) error {
 	// Setup environment argument
-	evtJson, err := json.Marshal(&evt)
+	evtJSON, err := json.Marshal(&evt)
 	if err != nil {
 		return err
 	}
-	
+
 	evtFlag := flag.Lookup("evt")
 	if evtFlag == nil {
-		flag.String("evt", string(evtJson), "Lambda Environment Arguments")
+		flag.String("evt", string(evtJSON), "Lambda Environment Arguments")
 	} else {
-		flag.Set("evt", string(evtJson))
+		flag.Set("evt", string(evtJSON))
 	}
-	
+
 	// Setup context argument
-	ctxJson, err := json.Marshal(ctx)
+	ctxObj, _ := lambdacontext.FromContext(*ctx)
+	lambdaContext := map[string]interface{}{
+		"logStreamName":   lambdacontext.LogStreamName,
+		"logGroupName":    lambdacontext.LogGroupName,
+		"functionName":    lambdacontext.FunctionName,
+		"functionVersion": lambdacontext.FunctionVersion,
+		"awsRequestId":    ctxObj.AwsRequestID,
+		"memoryLimitInMB": lambdacontext.MemoryLimitInMB,
+	}
+	ctxJSON, err := json.Marshal(lambdaContext)
 	if err != nil {
 		return err
 	}
-	
+
 	ctxFlag := flag.Lookup("ctx")
 	if ctxFlag == nil {
-		flag.String("ctx", string(ctxJson), "Lambda Context Arguments")
+		flag.String("ctx", string(ctxJSON), "Lambda Context Arguments")
 	} else {
-		flag.Set("ctx", string(ctxJson))
+		flag.Set("ctx", string(ctxJSON))
 	}
-	
+
 	return nil
 }
 
 func main() {
-	// No Op
+	lambda.Start(Handle)
 }
