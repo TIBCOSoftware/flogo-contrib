@@ -34,7 +34,7 @@ func NewTestActivityContextWithAction(metadata *activity.Metadata, actionCtx *Te
 	tc := &TestActivityContext{
 		details:     fd,
 		ACtx:        actionCtx,
-		TaskNameVal: "Test Task",
+		TaskNameVal: "Test TaskOld",
 		Attrs:       make(map[string]*data.Attribute),
 		inputs:      make(map[string]*data.Attribute, len(metadata.Input)),
 		outputs:     make(map[string]*data.Attribute, len(metadata.Output)),

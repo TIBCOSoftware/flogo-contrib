@@ -11,6 +11,9 @@ type FlowContext interface {
 	// FlowDefinition returns the Flow definition associated with this context
 	FlowDefinition() *definition.Definition
 
+	// TaskInsts get the task instances
+	TaskInsts() []TaskInst
+
 	//State gets the state of the Flow instance
 	State() int
 
@@ -39,19 +42,19 @@ type TaskContext interface {
 	// task.
 	ToInstLinks() []LinkInst
 
-	// EnterLeadingChildren enters the set of child Tasks that
-	// do not have any incoming links.
-	// todo: should we allow cross-boundary links?
-	EnterLeadingChildren(enterCode int)
-
-	// EnterChildren enters the set of child Tasks specified,
-	// If single TaskEntry with nil Task is supplied,
-	// all the child tasks are entered with the specified code.
-	EnterChildren(taskEntries []*TaskEntry)
-
-	// ChildTaskInsts gets all the instances of child tasks of the
-	// current task
-	ChildTaskInsts() (taskInsts []TaskInst, hasChildTasks bool)
+	//// EnterLeadingChildren enters the set of child Tasks that
+	//// do not have any incoming links.
+	//// todo: should we allow cross-boundary links?
+	//EnterLeadingChildren(enterCode int)
+	//
+	//// EnterChildren enters the set of child Tasks specified,
+	//// If single TaskEntry with nil Task is supplied,
+	//// all the child tasks are entered with the specified code.
+	//EnterChildren(taskEntries []*TaskEntry)
+	//
+	//// ChildTaskInsts gets all the instances of child tasks of the
+	//// current task
+	//ChildTaskInsts() (taskInsts []TaskInst, hasChildTasks bool)
 
 	// EvalLink evaluates the specified link
 	EvalLink(link *definition.Link) (bool, error)

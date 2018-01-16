@@ -42,7 +42,7 @@ func (pi *Instance) MarshalJSON() ([]byte, error) {
 		Attrs:       attrs,
 		FlowURI:     pi.FlowURI,
 		WorkQueue:   queue,
-		RootTaskEnv: pi.RootTaskEnv,
+		RootTaskEnv: pi.FlowTaskEnv,
 	})
 }
 
@@ -72,13 +72,13 @@ func (pi *Instance) UnmarshalJSON(d []byte) error {
 		pi.Attrs[value.Name()] = value
 	}
 
-	pi.RootTaskEnv = ser.RootTaskEnv
+	pi.FlowTaskEnv = ser.RootTaskEnv
 	//pi.RootTaskEnv.init(pi)
 
 	pi.WorkItemQueue = util.NewSyncQueue()
 
 	for _, workItem := range ser.WorkQueue {
-		workItem.TaskData = pi.RootTaskEnv.TaskDatas[workItem.TaskID]
+		workItem.TaskData = pi.FlowTaskEnv.TaskDatas[workItem.TaskID]
 		pi.WorkItemQueue.Push(workItem)
 	}
 
@@ -88,7 +88,7 @@ func (pi *Instance) UnmarshalJSON(d []byte) error {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Task Env Serialization
+// TaskOld Env Serialization
 
 // MarshalJSON overrides the default MarshalJSON for TaskEnv
 func (te *TaskEnv) MarshalJSON() ([]byte, error) {
@@ -112,7 +112,7 @@ func (te *TaskEnv) MarshalJSON() ([]byte, error) {
 		LinkDatas []*LinkData `json:"linkDatas"`
 	}{
 		ID:        te.ID,
-		TaskID:    te.taskID,
+//		TaskID:    te.taskID,
 		TaskDatas: t,
 		LinkDatas: l,
 	})
@@ -133,7 +133,7 @@ func (te *TaskEnv) UnmarshalJSON(data []byte) error {
 	}
 
 	te.ID = ser.ID
-	te.taskID = ser.TaskID
+	//te.taskID = ser.TaskID
 	te.TaskDatas = make(map[string]*TaskData)
 	te.LinkDatas = make(map[int]*LinkData)
 

@@ -17,39 +17,75 @@ func init() {
 	model.Register(New())
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 func New() *model.FlowModel {
 	m := model.New(MODEL_NAME)
 	m.RegisterFlowBehavior(&SimpleFlowBehavior{})
-	m.RegisterTaskBehavior(1, &SimpleTaskBehavior{})
-	m.RegisterTaskBehavior(2, &SimpleIteratorTaskBehavior{})
+	m.RegisterDefaultTaskBehavior(&SimpleTaskBehavior{})
+	m.RegisterTaskBehavior(2, "iterator", &SimpleIteratorTaskBehavior{})
 	return m
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Flow Behavior
 
 // SimpleFlowBehavior implements model.FlowBehavior
 type SimpleFlowBehavior struct {
 }
 
 // Start implements model.FlowBehavior.Start
-func (pb *SimpleFlowBehavior) Start(context model.FlowContext) (start bool, evalCode int) {
+func (pb *SimpleFlowBehavior) Start(ctx model.FlowContext) (start bool, taskEntries []*model.TaskEntry) {
 	// just schedule the root task
-	return true, 0
+	return true, GetFlowTaskEntries(ctx, false)
 }
 
 // Resume implements model.FlowBehavior.Resume
-func (pb *SimpleFlowBehavior) Resume(context model.FlowContext) bool {
+func (pb *SimpleFlowBehavior) Resume(ctx model.FlowContext) bool {
 	return true
 }
 
 // TasksDone implements model.FlowBehavior.TasksDone
-func (pb *SimpleFlowBehavior) TasksDone(context model.FlowContext, doneCode int) {
-	// all tasks are done
+//todo handler error flow
+func (pb *SimpleFlowBehavior) TaskDone(ctx model.FlowContext, doneCode int) (done bool) {
+	tasks := ctx.TaskInsts()
+
+	for _, taskInst := range tasks {
+
+		if taskInst.State() < STATE_DONE {
+
+			log.Debugf("task %s not done or skipped", taskInst.Task().Name())
+			return false
+		}
+	}
+
+	log.Debug("all tasks done or skipped")
+
+	// our tasks are done, so the flow is done
+	return true
 }
 
 // Done implements model.FlowBehavior.Done
-func (pb *SimpleFlowBehavior) Done(context model.FlowContext) {
+func (pb *SimpleFlowBehavior) Done(ctx model.FlowContext) {
 	log.Debugf("Flow Done\n")
+}
+
+func GetFlowTaskEntries(ctx model.FlowContext, leadingOnly bool) []*model.TaskEntry {
+
+	var taskEntries []*model.TaskEntry
+
+	for _, task := range ctx.FlowDefinition().GetTasks() {
+
+		if len(task.FromLinks()) == 0 || !leadingOnly {
+
+			taskEntry := &model.TaskEntry{Task: task, EnterCode: 0}
+			taskEntries = append(taskEntries, taskEntry)
+		}
+	}
+
+	return taskEntries
+}
+
+func (pb *SimpleFlowBehavior) StartEmbeddedFlow(context model.FlowContext, flow *definition.Definition) (start bool, taskEntries []*model.TaskEntry) {
+	return false, nil
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -59,16 +95,16 @@ type SimpleTaskBehavior struct {
 }
 
 // Enter implements model.TaskBehavior.Enter
-func (tb *SimpleTaskBehavior) Enter(context model.TaskContext, enterCode int) (eval bool, evalCode int) {
+func (tb *SimpleTaskBehavior) Enter(ctx model.TaskContext, enterCode int) (eval bool, evalCode int) {
 
-	task := context.Task()
+	task := ctx.Task()
 	log.Debugf("Task Enter: %s\n", task.Name())
 
-	context.SetState(STATE_ENTERED)
+	ctx.SetState(STATE_ENTERED)
 
 	//check if all predecessor links are done
 
-	linkContexts := context.FromInstLinks()
+	linkContexts := ctx.FromInstLinks()
 
 	ready := true
 	skipped := false
@@ -96,12 +132,12 @@ func (tb *SimpleTaskBehavior) Enter(context model.TaskContext, enterCode int) (e
 
 		if skipped {
 			log.Debugf("Task Skipped\n")
-			context.SetState(STATE_SKIPPED)
+			ctx.SetState(STATE_SKIPPED)
 			//todo hack, wait for explicit skip support from engine
 			return ready, -666
 		} else {
 			log.Debugf("Task Ready\n")
-			context.SetState(STATE_READY)
+			ctx.SetState(STATE_READY)
 		}
 
 	} else {
@@ -112,57 +148,45 @@ func (tb *SimpleTaskBehavior) Enter(context model.TaskContext, enterCode int) (e
 }
 
 // Eval implements model.TaskBehavior.Eval
-func (tb *SimpleTaskBehavior) Eval(context model.TaskContext, evalCode int) (evalResult model.EvalResult, doneCode int, err error) {
+func (tb *SimpleTaskBehavior) Eval(ctx model.TaskContext, evalCode int) (evalResult model.EvalResult, doneCode int, err error) {
 
-	if context.State() == STATE_SKIPPED {
-		return model.EVAL_DONE, EC_SKIP, nil
-	}
-
-	task := context.Task()
-	log.Debugf("Task Eval: %v\n", task)
-
-	if len(task.ChildTasks()) > 0 {
-		log.Debugf("Has Children\n")
-
-		//has children, so set to waiting
-		context.SetState(STATE_WAITING)
-
-		context.EnterLeadingChildren(0)
-
-		return model.EVAL_WAIT, 0, nil
-
-	} else {
-
-		if context.HasActivity() {
-
-			done, err := context.EvalActivity()
-
-			if err != nil {
-				log.Errorf("Error evaluating activity '%s'[%s] - %s", context.Task().Name(), context.Task().ActivityType(), err.Error())
-				context.SetState(STATE_FAILED)
-				return model.EVAL_FAIL, 0, err
-			}
-
-			if done {
-				evalResult = model.EVAL_DONE
-			} else {
-				evalResult = model.EVAL_WAIT
-			}
-
-			return evalResult, 0, nil
-		}
-
-		//no-op
+	if ctx.State() == STATE_SKIPPED {
+		//todo introduce EVAL_SKIPPED?
 		return model.EVAL_DONE, 0, nil
 	}
+
+	task := ctx.Task()
+	log.Debugf("Task Eval: %v\n", task)
+
+	if ctx.HasActivity() {
+
+		done, err := ctx.EvalActivity()
+
+		if err != nil {
+			log.Errorf("Error evaluating activity '%s'[%s] - %s", ctx.Task().Name(), ctx.Task().ActivityConfig().Ref(), err.Error())
+			ctx.SetState(STATE_FAILED)
+			return model.EVAL_FAIL, 0, err
+		}
+
+		if done {
+			evalResult = model.EVAL_DONE
+		} else {
+			evalResult = model.EVAL_WAIT
+		}
+
+		return evalResult, 0, nil
+	}
+
+	//no-op
+	return model.EVAL_DONE, 0, nil
 }
 
 // PostEval implements model.TaskBehavior.PostEval
-func (tb *SimpleTaskBehavior) PostEval(context model.TaskContext, evalCode int, data interface{}) (done bool, doneCode int, err error) {
+func (tb *SimpleTaskBehavior) PostEval(ctx model.TaskContext, evalCode int, data interface{}) (done bool, doneCode int, err error) {
 
 	log.Debugf("Task PostEval\n")
 
-	if context.HasActivity() { //if activity is async
+	if ctx.HasActivity() { //if activity is async
 
 		//done := activity.PostEval(activityContext, data)
 		done := true
@@ -174,14 +198,14 @@ func (tb *SimpleTaskBehavior) PostEval(context model.TaskContext, evalCode int, 
 }
 
 // Done implements model.TaskBehavior.Done
-func (tb *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (notifyParent bool, childDoneCode int, taskEntries []*model.TaskEntry, err error) {
+func (tb *SimpleTaskBehavior) Done(ctx model.TaskContext, doneCode int) (notifiyFlow bool, notifyCode int, taskEntries []*model.TaskEntry, err error) {
 
-	task := context.Task()
+	task := ctx.Task()
 
-	linkInsts := context.ToInstLinks()
+	linkInsts := ctx.ToInstLinks()
 	numLinks := len(linkInsts)
 
-	if context.State() == STATE_SKIPPED {
+	if ctx.State() == STATE_SKIPPED {
 		log.Debugf("skipped task: %s\n", task.Name())
 
 		// skip outgoing links
@@ -204,8 +228,8 @@ func (tb *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (not
 	} else {
 		log.Debugf("done task: %s", task.Name())
 
-		context.SetState(STATE_DONE)
-		//context.SetTaskDone() for task garbage collection
+		ctx.SetState(STATE_DONE)
+		//ctx.SetTaskDone() for task garbage collection
 
 		// process outgoing links
 		if numLinks > 0 {
@@ -223,7 +247,7 @@ func (tb *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (not
 
 				if linkInst.Link().Type() == definition.LtExpression {
 					//todo handle error
-					follow, err = context.EvalLink(linkInst.Link())
+					follow, err = ctx.EvalLink(linkInst.Link())
 
 					if err != nil {
 						return false, 0, nil, err
@@ -248,16 +272,16 @@ func (tb *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (not
 		}
 	}
 
-	log.Debug("notifying parent that task is done")
+	log.Debug("notifying flow that task is done")
 
 	// there are no outgoing links, so just notify parent that we are done
 	return true, 0, nil, nil
 }
 
 // Done implements model.TaskBehavior.Error
-func (tb *SimpleTaskBehavior) Error(context model.TaskContext) (handled bool, taskEntry *model.TaskEntry) {
+func (tb *SimpleTaskBehavior) Error(ctx model.TaskContext) (handled bool, taskEntry *model.TaskEntry) {
 
-	linkInsts := context.ToInstLinks()
+	linkInsts := ctx.ToInstLinks()
 	numLinks := len(linkInsts)
 
 	// process outgoing links
@@ -275,31 +299,6 @@ func (tb *SimpleTaskBehavior) Error(context model.TaskContext) (handled bool, ta
 
 	// there are no outgoing error links, so just return false
 	return false, nil
-}
-
-// ChildDone implements model.TaskBehavior.ChildDone
-func (tb *SimpleTaskBehavior) ChildDone(context model.TaskContext, childTask *definition.Task, childDoneCode int) (done bool, doneCode int) {
-
-	childTasks, hasChildren := context.ChildTaskInsts()
-
-	if !hasChildren {
-		log.Debug("Task ChildDone - No Children")
-		return true, 0
-	}
-
-	for _, taskInst := range childTasks {
-
-		if taskInst.State() < STATE_DONE {
-
-			log.Debugf("task %s not done or skipped", taskInst.Task().Name())
-			return false, 0
-		}
-	}
-
-	log.Debug("all child tasks done or skipped")
-
-	// our children are done, so just transition ourselves to done
-	return true, 0
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////

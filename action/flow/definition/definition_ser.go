@@ -1,6 +1,7 @@
 package definition
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -8,61 +9,67 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/util"
+	flowutil "github.com/TIBCOSoftware/flogo-contrib/action/flow/util"
 )
 
 // DefinitionRep is a serializable representation of a flow Definition
 type DefinitionRep struct {
-	ExplicitReply    bool              `json:"explicitReply"`
-	Name             string            `json:"name"`
-	ModelID          string            `json:"model"`
-	Attributes       []*data.Attribute `json:"attributes,omitempty"`
-	RootTask         *TaskRep          `json:"rootTask"`
-	ErrorHandlerTask *TaskRep          `json:"errorHandlerTask"`
+	ExplicitReply bool              `json:"explicitReply"`
+	Name          string            `json:"name"`
+	ModelID       string            `json:"model"`
+	Attributes    []*data.Attribute `json:"attributes,omitempty"`
+
+	Tasks []*TaskRep `json:"tasks"`
+	Links []*LinkRep `json:"links"`
+
+	ErrorHandlerFlow    *ErrorFlowRep `json:"errorHandlerFlow"`
+	ErrorHandlerFlowRef string        `json:"errorHandlerFlowRef"`
+
+	//deprecated
+	RootTask         *TaskRepOld `json:"rootTask"`
+	ErrorHandlerTask *TaskRepOld `json:"errorHandlerTask"`
 }
 
-// TaskRep is a serializable representation of a flow Task
+// ErrorFlowRep is a serializable representation of the error flow
+type ErrorFlowRep struct {
+	Tasks []*TaskRep `json:"tasks"`
+	Links []*LinkRep `json:"links"`
+}
+
+// TaskRep is a serializable representation of a flow task
 type TaskRep struct {
-	// Using interface{} type to support backward compatibility changes since Id was
-	// int before, change to string once BC is removed
-	ID          interface{} `json:"id"`
-	TypeID      int         `json:"type"`
-	ActivityRef string      `json:"activityRef"`
-	Name        string      `json:"name"`
+	ID       string                 `json:"id"`
+	Type     string                 `json:"type"`
+	Name     string                 `json:"name"`
+	Settings map[string]interface{} `json:"settings"`
 
-	Tasks []*TaskRep `json:"tasks,omitempty"`
-	Links []*LinkRep `json:"links,omitempty"`
+	ActivityCfgRep *ActivityConfigRep `json:"activity"`
+}
 
+// ActivityConfigRep is a serializable representation of an activity configuration
+type ActivityConfigRep struct {
+	Ref         string                 `json:"ref"`
 	Mappings    *Mappings              `json:"mappings,omitempty"`
+	Settings    map[string]interface{} `json:"settings"`
 	InputAttrs  map[string]interface{} `json:"input,omitempty"`
 	OutputAttrs map[string]interface{} `json:"output,omitempty"`
-	Settings    map[string]interface{} `json:"settings"`
-
-	//keep temporarily for backwards compatibility
-	InputAttrsOld  map[string]interface{} `json:"inputs,omitempty"`
-	OutputAttrsOld map[string]interface{} `json:"outputs,omitempty"`
-	InputMappings  []*data.MappingDef     `json:"inputMappings,omitempty"`
-	OutputMappings []*data.MappingDef     `json:"outputMappings,omitempty"`
-	Attributes     []*data.Attribute      `json:"attributes,omitempty"`
-	ActivityType   string                 `json:"activityType"`
 }
 
+// LinkRep is a serializable representation of a flow LinkOld
+type LinkRep struct {
+	ID   int `json:"id"`   //is this really needed?
+	Type int `json:"type"` //is this really needed?
+
+	Name   string `json:"name"`
+	ToID   string `json:"to"`
+	FromID string `json:"from"`
+	Value  string `json:"value"`
+}
+
+// Mappings is a collection of input & output mappings
 type Mappings struct {
 	Input  []*data.MappingDef `json:"input,omitempty"`
 	Output []*data.MappingDef `json:"output,omitempty"`
-}
-
-// LinkRep is a serializable representation of a flow Link
-type LinkRep struct {
-	ID   int    `json:"id"`
-	Type int    `json:"type"`
-	Name string `json:"name"`
-	// Using interface{} type to support backward compatibility changes since Id was
-	// int before, change to string once BC is removed
-	ToID interface{} `json:"to"`
-	// Using interface{} type to support backward compatibility changes since Id was
-	// int before, change to string once BC is removed
-	FromID interface{} `json:"from"`
-	Value  string      `json:"value"`
 }
 
 // NewDefinition creates a flow Definition from a serializable
@@ -74,7 +81,6 @@ func NewDefinition(rep *DefinitionRep) (def *Definition, err error) {
 	def = &Definition{}
 	def.name = rep.Name
 	def.modelID = rep.ModelID
-	def.explicitReply = rep.ExplicitReply
 
 	if len(rep.Attributes) > 0 {
 		def.attrs = make(map[string]*data.Attribute, len(rep.Attributes))
@@ -84,35 +90,95 @@ func NewDefinition(rep *DefinitionRep) (def *Definition, err error) {
 		}
 	}
 
-	def.rootTask = &Task{}
-
 	def.tasks = make(map[string]*Task)
 	def.links = make(map[int]*Link)
 
-	addTask(def, def.rootTask, rep.RootTask)
-	addLinks(def, def.rootTask, rep.RootTask)
+	if len(rep.Tasks) != 0 {
+
+		for _, taskRep := range rep.Tasks {
+
+			task, err := createTask(def, taskRep)
+
+			if err != nil {
+				return nil, err
+			}
+			def.tasks[task.id] = task
+		}
+	}
+
+	if len(rep.Links) != 0 {
+
+		for _, linkRep := range rep.Links {
+
+			link := createLink(def, linkRep)
+			def.links[link.id] = link
+		}
+	}
+
+	// support for deprecated flow format
+	if rep.RootTask != nil {
+		addTasksOld(def, rep.RootTask)
+		addLinksOld(def, rep.RootTask)
+	}
 
 	if rep.ErrorHandlerTask != nil {
-		def.ehTask = &Task{}
 
-		addTask(def, def.ehTask, rep.ErrorHandlerTask)
-		addLinks(def, def.ehTask, rep.ErrorHandlerTask)
+		errorDef := &Definition{}
+		errorDef.name = rep.Name
+		errorDef.modelID = rep.ModelID
+		errorDef.tasks = make(map[string]*Task)
+		errorDef.links = make(map[int]*Link)
+
+		addTasksOld(errorDef, rep.ErrorHandlerTask)
+		addLinksOld(errorDef, rep.ErrorHandlerTask)
 	}
 
 	return def, nil
 }
 
-func addTask(def *Definition, task *Task, rep *TaskRep) {
-	// Workaround to support Backwards compatibility
-	// Remove once rep.ID is string
-	task.id = convertInterfaceToString(rep.ID)
-	task.activityRef = rep.ActivityRef
-	task.typeID = rep.TypeID
+func createTask(def *Definition, rep *TaskRep) (*Task, error) {
+	task := &Task{}
+	task.id = rep.ID
 	task.name = rep.Name
 	task.definition = def
 
-	//temporary support for old configuration
-	task.activityType = rep.ActivityType
+	if rep.Type != "" && rep.Type != "default" {
+		//todo need a better way to do this
+		id, found := flowutil.GetIntFromAlias(def.modelID + "-" + rep.Type)
+
+		if !found {
+			return nil, errors.New("Unsupported task type: " + rep.Type)
+		}
+		task.typeID = id
+	}
+
+	if rep.ActivityCfgRep != nil {
+
+		actCfg, err := createActivityConfig(task, rep.ActivityCfgRep)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if actCfg.Activity.Metadata().ProducesResult || def.explicitReply {
+			def.explicitReply = true
+		}
+
+		task.activityCfg = actCfg
+	}
+
+	return task, nil
+}
+
+func createActivityConfig(task *Task, rep *ActivityConfigRep) (*ActivityConfig, error) {
+
+	act := activity.Get(rep.Ref)
+	if act == nil {
+		return nil, errors.New("Unsupported Activity:" + rep.Ref)
+	}
+
+	activityCfg := &ActivityConfig{}
+	activityCfg.Activity = act
 
 
 	// Keep for now, DEPRECATE "attributes" section from flogo.json
@@ -127,132 +193,272 @@ func addTask(def *Definition, task *Task, rep *TaskRep) {
 	// create mappers
 	if rep.Mappings != nil {
 		if rep.Mappings.Input != nil {
-			fixupMappings(rep.Mappings.Input)
-			task.inputMapper = GetMapperFactory().NewTaskInputMapper(task, &MapperDef{Mappings: rep.Mappings.Input})
+			activityCfg.inputMapper = GetMapperFactory().NewActivityInputMapper(task, &data.MapperDef{Mappings: rep.Mappings.Input})
 		}
 		if rep.Mappings.Output != nil {
-			task.outputMapper = GetMapperFactory().NewTaskOutputMapper(task, &MapperDef{Mappings: rep.Mappings.Output})
+			activityCfg.outputMapper = GetMapperFactory().NewActivityOutputMapper(task, &data.MapperDef{Mappings: rep.Mappings.Output})
+		} else {
+			activityCfg.outputMapper = GetMapperFactory().GetDefaultActivityOutputMapper(task)
+		}
+	}
+
+	inputAttrs := rep.InputAttrs
+
+	if len(inputAttrs) > 0 {
+		activityCfg.inputAttrs = make(map[string]*data.Attribute, len(inputAttrs))
+
+		for name, value := range inputAttrs {
+
+			attr := act.Metadata().Input[name]
+
+			if attr != nil {
+				//var err error
+				//todo handle error
+				activityCfg.inputAttrs[name], _ = data.NewAttribute(name, attr.Type(), value)
+			}
+		}
+	}
+
+	outputAttrs := rep.OutputAttrs
+
+	if len(outputAttrs) > 0 {
+
+		activityCfg.outputAttrs = make(map[string]*data.Attribute, len(outputAttrs))
+
+		for name, value := range outputAttrs {
+
+			attr := act.Metadata().Output[name]
+
+			if attr != nil {
+				//var err error
+				//todo handle error
+				activityCfg.outputAttrs[name], _ = data.NewAttribute(name, attr.Type(), value)
+			}
+		}
+	}
+
+	return activityCfg, nil
+}
+
+func createLink(def *Definition, linkRep *LinkRep) *Link {
+
+	link := &Link{}
+	link.id = linkRep.ID
+	//link.Definition = pd
+	link.linkType = LinkType(linkRep.Type)
+	link.value = linkRep.Value
+	link.fromTask = def.tasks[linkRep.FromID]
+	link.toTask = def.tasks[linkRep.ToID]
+
+	// add this link as predecessor "fromLink" to the "toTask"
+	link.toTask.fromLinks = append(link.toTask.fromLinks, link)
+
+	// add this link as successor "toLink" to the "fromTask"
+	link.fromTask.toLinks = append(link.fromTask.toLinks, link)
+
+	def.links[link.id] = link
+
+	return link
+}
+
+///////////////////////////
+// DEPRECATED
+
+// TaskRepOld is a serializable representation of a flow TaskOld
+//Deprecated
+type TaskRepOld struct {
+	// Using interface{} type to support backward compatibility changes since Id was
+	// int before, change to string once BC is removed
+	ID          interface{} `json:"id"`
+	TypeID      int         `json:"type"`
+	ActivityRef string      `json:"activityRef"`
+	Name        string      `json:"name"`
+
+	Tasks []*TaskRepOld `json:"tasks,omitempty"`
+	Links []*LinkRepOld `json:"links,omitempty"`
+
+	Mappings    *Mappings              `json:"mappings,omitempty"`
+	InputAttrs  map[string]interface{} `json:"input,omitempty"`
+	OutputAttrs map[string]interface{} `json:"output,omitempty"`
+
+	//keep temporarily for backwards compatibility
+	InputAttrsOld  map[string]interface{} `json:"inputs,omitempty"`
+	OutputAttrsOld map[string]interface{} `json:"outputs,omitempty"`
+	InputMappings  []*data.MappingDef     `json:"inputMappings,omitempty"`
+	OutputMappings []*data.MappingDef     `json:"outputMappings,omitempty"`
+	Attributes     []*data.Attribute      `json:"attributes,omitempty"`
+	ActivityType   string                 `json:"activityType"`
+}
+
+// LinkRepOld is a serializable representation of a flow LinkOld
+//Deprecated
+type LinkRepOld struct {
+	ID   int    `json:"id"`
+	Type int    `json:"type"`
+	Name string `json:"name"`
+	// Using interface{} type to support backward compatibility changes since Id was
+	// int before, change to string once BC is removed
+	ToID interface{} `json:"to"`
+	// Using interface{} type to support backward compatibility changes since Id was
+	// int before, change to string once BC is removed
+	FromID interface{} `json:"from"`
+	Value  string      `json:"value"`
+}
+
+//Deprecated
+func addTasksOld(def *Definition, rootTaskRep *TaskRepOld) error {
+	// flow  tasks
+	if len(rootTaskRep.Tasks) > 0 {
+
+		for _, childTaskRep := range rootTaskRep.Tasks {
+
+			task, err := createTaskFromOld(def, childTaskRep)
+
+			if err != nil {
+				return err
+			}
+			def.tasks[task.id] = task
+		}
+	}
+
+	return nil
+}
+
+//Deprecated
+func createTaskFromOld(def *Definition, rep *TaskRepOld) (*Task, error) {
+
+	task := &Task{}
+
+	// Workaround to support Backwards compatibility
+	// Remove once rep.ID is string
+	task.id = convertInterfaceToString(rep.ID)
+	// Workaround to support Backwards compatibility
+	// Remove once rep.ID is string
+	task.typeID = rep.TypeID
+
+	task.name = rep.Name
+	task.definition = def
+
+	actCfg, err := createActivityConfigFromOld(task, rep)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if actCfg.Activity.Metadata().ProducesResult || def.explicitReply {
+		def.explicitReply = true
+	}
+
+	task.activityCfg = actCfg
+
+	return task, nil
+}
+
+//Deprecated
+func createActivityConfigFromOld(task *Task, rep *TaskRepOld) (*ActivityConfig, error) {
+
+	act := activity.Get(rep.ActivityRef)
+	if act == nil {
+		return nil, errors.New("Unsupported Activity:" + rep.ActivityRef)
+	}
+
+	activityCfg := &ActivityConfig{}
+	activityCfg.Activity = act
+
+	// create mappers
+	if rep.Mappings != nil {
+		if rep.Mappings.Input != nil {
+			fixupMappings(rep.Mappings.Input)
+
+			activityCfg.inputMapper = GetMapperFactory().NewActivityInputMapper(task, &data.MapperDef{Mappings: rep.Mappings.Input})
+		}
+		if rep.Mappings.Output != nil {
+			activityCfg.outputMapper = GetMapperFactory().NewActivityOutputMapper(task, &data.MapperDef{Mappings: rep.Mappings.Output})
+		} else {
+			activityCfg.outputMapper = GetMapperFactory().GetDefaultActivityOutputMapper(task)
+		}
+	}
+
+	// create mappers
+	if rep.Mappings != nil {
+		if rep.Mappings.Input != nil {
+			fixupMappings(rep.Mappings.Input)
+			activityCfg.inputMapper = GetMapperFactory().NewActivityInputMapper(task, &data.MapperDef{Mappings: rep.Mappings.Input})
+		}
+		if rep.Mappings.Output != nil {
+			activityCfg.outputMapper = GetMapperFactory().NewActivityOutputMapper(task, &data.MapperDef{Mappings: rep.Mappings.Output})
 		}
 	} else {
 		//temporary support for old configuration
 		if rep.InputMappings != nil {
 			fixupMappings(rep.InputMappings)
-			task.inputMapper = GetMapperFactory().NewTaskInputMapper(task, &MapperDef{Mappings: rep.InputMappings})
+			activityCfg.inputMapper = GetMapperFactory().NewActivityInputMapper(task, &data.MapperDef{Mappings: rep.InputMappings})
 		}
 		if rep.OutputMappings != nil {
-			task.outputMapper = GetMapperFactory().NewTaskOutputMapper(task, &MapperDef{Mappings: rep.OutputMappings})
+			activityCfg.outputMapper = GetMapperFactory().NewActivityOutputMapper(task, &data.MapperDef{Mappings: rep.OutputMappings})
 		}
 	}
 
-	if task.outputMapper == nil {
-		task.outputMapper = GetMapperFactory().GetDefaultTaskOutputMapper(task)
+	if activityCfg.outputMapper == nil {
+		activityCfg.outputMapper = GetMapperFactory().GetDefaultActivityOutputMapper(task)
 	}
 
-	// Keep for now, DEPRECATE "attributes" section from flogo.json
-	if len(rep.Attributes) > 0 {
-		task.inputAttrs = make(map[string]*data.Attribute, len(rep.Attributes))
+	inputAttrs := rep.InputAttrs
 
-		for _, value := range rep.Attributes {
-			task.inputAttrs[value.Name()] = value
-		}
+	//for backwards compatibility
+	if len(inputAttrs) == 0 {
+		inputAttrs = rep.InputAttrsOld
 	}
 
-	act := activity.Get(task.activityRef)
+	if len(inputAttrs) > 0 {
+		activityCfg.inputAttrs = make(map[string]*data.Attribute, len(inputAttrs))
 
-	//todo report error if activity not registered
+		for name, value := range inputAttrs {
 
-	if act != nil {
+			attr := act.Metadata().Input[name]
 
-		inputAttrs := rep.InputAttrs
-
-		if act.Metadata().ProducesResult || def.explicitReply {
-			def.explicitReply = true
-		}
-
-		//for backwards compatibility
-		if len(inputAttrs) == 0 {
-			inputAttrs = rep.InputAttrsOld
-		}
-
-		if len(inputAttrs) > 0 {
-			task.inputAttrs = make(map[string]*data.Attribute, len(inputAttrs))
-
-			for name, value := range inputAttrs {
-
-				attr := act.Metadata().Input[name]
-
-				if attr != nil {
-					//var err error
-					//todo handle error
-					task.inputAttrs[name], _ = data.NewAttribute(name, attr.Type(), value)
-				}
-			}
-		}
-
-		outputAttrs := rep.OutputAttrs
-
-		//for backwards compatibility
-		if len(outputAttrs) == 0 {
-			outputAttrs = rep.OutputAttrsOld
-		}
-
-		if len(outputAttrs) > 0 {
-
-			task.outputAttrs = make(map[string]*data.Attribute, len(outputAttrs))
-
-			for name, value := range outputAttrs {
-
-				attr := act.Metadata().Output[name]
-
-				if attr != nil {
-					//var err error
-					//todo handle error
-					task.outputAttrs[name], _ = data.NewAttribute(name, attr.Type(), value)
-				}
+			if attr != nil {
+				//var err error
+				//todo handle error
+				activityCfg.inputAttrs[name], _ = data.NewAttribute(name, attr.Type(), value)
 			}
 		}
 	}
 
-	def.tasks[task.id] = task
-	numTasks := len(rep.Tasks)
+	outputAttrs := rep.OutputAttrs
 
-	// flow child tasks
-	if numTasks > 0 {
+	//for backwards compatibility
+	if len(outputAttrs) == 0 {
+		outputAttrs = rep.OutputAttrsOld
+	}
 
-		for _, childTaskRep := range rep.Tasks {
+	if len(outputAttrs) > 0 {
 
-			childTask := &Task{}
-			childTask.parent = task
-			task.tasks = append(task.tasks, childTask)
-			addTask(def, childTask, childTaskRep)
+		activityCfg.outputAttrs = make(map[string]*data.Attribute, len(outputAttrs))
+
+		for name, value := range outputAttrs {
+
+			attr := act.Metadata().Output[name]
+
+			if attr != nil {
+				//var err error
+				//todo handle error
+				activityCfg.outputAttrs[name], _ = data.NewAttribute(name, attr.Type(), value)
+			}
 		}
 	}
+
+	return activityCfg, nil
 }
 
-//convertInterfaceToString will identify whether the interface is int or string and return a string in any case
-func convertInterfaceToString(m interface{}) string {
-	if m == nil {
-		panic("Invalid nil activity id found")
-	}
-	switch m.(type) {
-	case string:
-		return m.(string)
-	case float64:
-		return strconv.Itoa(int(m.(float64)))
-	default:
-		panic(fmt.Sprintf("Error parsing Task with Id '%v', invalid type '%T'", m, m))
-	}
-}
-
-func addLinks(def *Definition, task *Task, rep *TaskRep) {
+//Deprecated
+func addLinksOld(def *Definition, rep *TaskRepOld) {
 
 	numLinks := len(rep.Links)
 
 	if numLinks > 0 {
 
-		task.links = make([]*Link, numLinks)
-
-		for i, linkRep := range rep.Links {
+		for _, linkRep := range rep.Links {
 
 			link := &Link{}
 			link.id = linkRep.ID
@@ -269,13 +475,29 @@ func addLinks(def *Definition, task *Task, rep *TaskRep) {
 			// add this link as successor "toLink" to the "fromTask"
 			link.fromTask.toLinks = append(link.fromTask.toLinks, link)
 
-			task.links[i] = link
 			def.links[link.id] = link
 		}
 	}
 }
 
+//convertInterfaceToString will identify whether the interface is int or string and return a string in any case
+//Deprecated
+func convertInterfaceToString(m interface{}) string {
+	if m == nil {
+		panic("Invalid nil activity id found")
+	}
+	switch m.(type) {
+	case string:
+		return m.(string)
+	case float64:
+		return strconv.Itoa(int(m.(float64)))
+	default:
+		panic(fmt.Sprintf("Error parsing TaskOld with Id '%v', invalid type '%T'", m, m))
+	}
+}
+
 //fixupMappings updates old mappings to new syntax
+//Deprecated
 func fixupMappings(mappings []*data.MappingDef) {
 	for _, md := range mappings {
 		if md.Type == data.MtAssign {

@@ -1,8 +1,10 @@
 package instance
 
 import (
+	"errors"
 	"fmt"
 	"runtime/debug"
+	"strings"
 
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
@@ -10,8 +12,6 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"strings"
-	"github.com/pkg/errors"
 )
 
 // TaskData represents data associated with an instance of a Task
@@ -46,7 +46,7 @@ func NewTaskData(taskEnv *TaskEnv, task *definition.Task) *TaskData {
 
 // HasAttrs indicates if the task has attributes
 func (td *TaskData) HasAttrs() bool {
-	return len(td.task.ActivityRef()) > 0 || td.task.IsScope()
+	return len(td.task.ActivityConfig().Ref()) > 0 || td.task.IsScope()
 }
 
 /////////////////////////////////////////
@@ -174,89 +174,89 @@ func (td *TaskData) ToInstLinks() []model.LinkInst {
 	return nil
 }
 
-// ChildTaskInsts implements activity.ActivityContext.ChildTaskInsts method
-func (td *TaskData) ChildTaskInsts() (taskInsts []model.TaskInst, hasChildTasks bool) {
+//// ChildTaskInsts implements activity.ActivityContext.ChildTaskInsts method
+//func (td *TaskData) ChildTaskInsts() (taskInsts []model.TaskInst, hasChildTasks bool) {
+//
+//	if len(td.task.ChildTasks()) == 0 {
+//		return nil, false
+//	}
+//
+//	taskInsts = make([]model.TaskInst, 0)
+//
+//	for _, task := range td.task.ChildTasks() {
+//
+//		taskData, ok := td.taskEnv.TaskDatas[task.ID()]
+//
+//		if ok {
+//			taskInsts = append(taskInsts, taskData)
+//		}
+//	}
+//
+//	return taskInsts, true
+//}
 
-	if len(td.task.ChildTasks()) == 0 {
-		return nil, false
-	}
+//// EnterLeadingChildren implements activity.ActivityContext.EnterLeadingChildren method
+//func (td *TaskData) EnterLeadingChildren(enterCode int) {
+//
+//	//todo optimize
+//	for _, task := range td.task.ChildTasks() {
+//
+//		if len(task.FromLinks()) == 0 {
+//			taskData, _ := td.taskEnv.FindOrCreateTaskData(task)
+//			taskBehavior := td.taskEnv.Instance.FlowModel.GetTaskBehavior(task.TypeID())
+//
+//			eval, evalCode := taskBehavior.Enter(taskData, enterCode)
+//
+//			if eval {
+//				td.taskEnv.Instance.scheduleEval(taskData, evalCode)
+//			}
+//		}
+//	}
+//}
 
-	taskInsts = make([]model.TaskInst, 0)
-
-	for _, task := range td.task.ChildTasks() {
-
-		taskData, ok := td.taskEnv.TaskDatas[task.ID()]
-
-		if ok {
-			taskInsts = append(taskInsts, taskData)
-		}
-	}
-
-	return taskInsts, true
-}
-
-// EnterLeadingChildren implements activity.ActivityContext.EnterLeadingChildren method
-func (td *TaskData) EnterLeadingChildren(enterCode int) {
-
-	//todo optimize
-	for _, task := range td.task.ChildTasks() {
-
-		if len(task.FromLinks()) == 0 {
-			taskData, _ := td.taskEnv.FindOrCreateTaskData(task)
-			taskBehavior := td.taskEnv.Instance.FlowModel.GetTaskBehavior(task.TypeID())
-
-			eval, evalCode := taskBehavior.Enter(taskData, enterCode)
-
-			if eval {
-				td.taskEnv.Instance.scheduleEval(taskData, evalCode)
-			}
-		}
-	}
-}
-
-// EnterChildren implements activity.ActivityContext.EnterChildren method
-func (td *TaskData) EnterChildren(taskEntries []*model.TaskEntry) {
-
-	if (taskEntries == nil) || (len(taskEntries) == 1 && taskEntries[0].Task == nil) {
-
-		var enterCode int
-
-		if taskEntries == nil {
-			enterCode = 0
-		} else {
-			enterCode = taskEntries[0].EnterCode
-		}
-
-		logger.Debugf("Entering '%s' Task's %d children\n", td.task.Name(), len(td.task.ChildTasks()))
-
-		for _, task := range td.task.ChildTasks() {
-
-			taskData, _ := td.taskEnv.FindOrCreateTaskData(task)
-			taskBehavior := td.taskEnv.Instance.FlowModel.GetTaskBehavior(task.TypeID())
-
-			eval, evalCode := taskBehavior.Enter(taskData, enterCode)
-
-			if eval {
-				td.taskEnv.Instance.scheduleEval(taskData, evalCode)
-			}
-		}
-	} else {
-
-		for _, taskEntry := range taskEntries {
-
-			//todo validate if specified task is child? or trust model
-
-			taskData, _ := td.taskEnv.FindOrCreateTaskData(taskEntry.Task)
-			taskBehavior := td.taskEnv.Instance.FlowModel.GetTaskBehavior(taskEntry.Task.TypeID())
-
-			eval, evalCode := taskBehavior.Enter(taskData, taskEntry.EnterCode)
-
-			if eval {
-				td.taskEnv.Instance.scheduleEval(taskData, evalCode)
-			}
-		}
-	}
-}
+//// EnterChildren implements activity.ActivityContext.EnterChildren method
+//func (td *TaskData) EnterChildren(taskEntries []*model.TaskEntry) {
+//
+//	if (taskEntries == nil) || (len(taskEntries) == 1 && taskEntries[0].Task == nil) {
+//
+//		var enterCode int
+//
+//		if taskEntries == nil {
+//			enterCode = 0
+//		} else {
+//			enterCode = taskEntries[0].EnterCode
+//		}
+//
+//		logger.Debugf("Entering '%s' Task's %d children\n", td.task.Name(), len(td.task.ChildTasks()))
+//
+//		for _, task := range td.task.ChildTasks() {
+//
+//			taskData, _ := td.taskEnv.FindOrCreateTaskData(task)
+//			taskBehavior := td.taskEnv.Instance.FlowModel.GetTaskBehavior(task.TypeID())
+//
+//			eval, evalCode := taskBehavior.Enter(taskData, enterCode)
+//
+//			if eval {
+//				td.taskEnv.Instance.scheduleEval(taskData, evalCode)
+//			}
+//		}
+//	} else {
+//
+//		for _, taskEntry := range taskEntries {
+//
+//			//todo validate if specified task is child? or trust model
+//
+//			taskData, _ := td.taskEnv.FindOrCreateTaskData(taskEntry.Task)
+//			taskBehavior := td.taskEnv.Instance.FlowModel.GetTaskBehavior(taskEntry.Task.TypeID())
+//
+//			eval, evalCode := taskBehavior.Enter(taskData, taskEntry.EnterCode)
+//
+//			if eval {
+//				td.taskEnv.Instance.scheduleEval(taskData, evalCode)
+//			}
+//		}
+//	}
+//}
 
 // EvalLink implements activity.ActivityContext.EvalLink method
 func (td *TaskData) EvalLink(link *definition.Link) (result bool, err error) {
@@ -288,7 +288,7 @@ func (td *TaskData) EvalLink(link *definition.Link) (result bool, err error) {
 
 // HasActivity implements activity.ActivityContext.HasActivity method
 func (td *TaskData) HasActivity() bool {
-	return activity.Get(td.task.ActivityRef()) != nil
+	return activity.Get(td.task.ActivityConfig().Ref()) != nil
 }
 
 func NewActivityEvalError(taskName string, errorType string, errorText string) *ActivityEvalError {
@@ -318,7 +318,7 @@ func (td *TaskData) EvalActivity() (done bool, evalErr error) {
 
 	defer func() {
 		if r := recover(); r != nil {
-			logger.Warnf("Unhandled Error executing activity '%s'[%s] : %v\n", td.task.Name(), td.task.ActivityRef(), r)
+			logger.Warnf("Unhandled Error executing activity '%s'[%s] : %v\n", td.task.Name(), td.task.ActivityConfig().Ref(), r)
 
 			// todo: useful for debugging
 			logger.Debugf("StackTrace: %s", debug.Stack())
@@ -335,7 +335,7 @@ func (td *TaskData) EvalActivity() (done bool, evalErr error) {
 
 	eval := true
 
-	if td.task.InputMapper() != nil {
+	if td.task.ActivityConfig().InputMapper() != nil {
 
 		err := applyInputMapper(td)
 
@@ -350,7 +350,7 @@ func (td *TaskData) EvalActivity() (done bool, evalErr error) {
 
 	if eval {
 
-		act := activity.Get(td.task.ActivityRef())
+		act := activity.Get(td.task.ActivityConfig().Ref())
 		done, evalErr = act.Eval(td)
 
 		if evalErr != nil {
@@ -367,7 +367,7 @@ func (td *TaskData) EvalActivity() (done bool, evalErr error) {
 
 	if done {
 
-		if td.task.OutputMapper() != nil {
+		if td.task.ActivityConfig().OutputMapper() != nil {
 			applyOutputInterceptor(td)
 
 			appliedMapper, err := applyOutputMapper(td)
@@ -418,9 +418,9 @@ func (td *TaskData) InputScope() data.Scope {
 		return td.inScope
 	}
 
-	if len(td.task.ActivityRef()) > 0 {
+	if len(td.task.ActivityConfig().Ref()) > 0 {
 
-		act := activity.Get(td.task.ActivityRef())
+		act := activity.Get(td.task.ActivityConfig().Ref())
 		td.inScope = NewFixedTaskScope(act.Metadata().Input, td.task, true)
 
 	} else if td.task.IsScope() {
@@ -438,9 +438,9 @@ func (td *TaskData) OutputScope() data.Scope {
 		return td.outScope
 	}
 
-	if len(td.task.ActivityRef()) > 0 {
+	if len(td.task.ActivityConfig().Ref()) > 0 {
 
-		act := activity.Get(td.task.ActivityRef())
+		act := activity.Get(td.task.ActivityConfig().Ref())
 		td.outScope = NewFixedTaskScope(act.Metadata().Output, td.task, false)
 
 		logger.Debugf("OutputScope: %v\n", td.outScope)
@@ -484,7 +484,7 @@ func (td *TaskData) SetOutput(name string, value interface{}) {
 func applyInputMapper(taskData *TaskData) error {
 
 	// get the input mapper
-	inputMapper := taskData.task.InputMapper()
+	inputMapper := taskData.task.ActivityConfig().InputMapper()
 
 	pi := taskData.taskEnv.Instance
 
@@ -571,8 +571,8 @@ func applyOutputInterceptor(taskData *TaskData) {
 // there was an output mapper
 func applyOutputMapper(taskData *TaskData) (bool, error) {
 
-	// get the Output Mapper for the Task if one exists
-	outputMapper := taskData.task.OutputMapper()
+	// get the Output Mapper for the TaskOld if one exists
+	outputMapper := taskData.task.ActivityConfig().OutputMapper()
 
 	pi := taskData.taskEnv.Instance
 
@@ -670,9 +670,9 @@ func (s *FixedTaskScope) GetAttr(attrName string) (attr *data.Attribute, exists 
 		var found bool
 
 		if s.isInput {
-			attr, found = s.task.GetInputAttr(attrName)
+			attr, found = s.task.ActivityConfig().GetInputAttr(attrName)
 		} else {
-			attr, found = s.task.GetOutputAttr(attrName)
+			attr, found = s.task.ActivityConfig().GetOutputAttr(attrName)
 		}
 
 		if !found {

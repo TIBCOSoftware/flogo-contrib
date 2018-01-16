@@ -15,23 +15,25 @@ type TaskEntry struct {
 type FlowBehavior interface {
 
 	// Start the flow instance.  Returning true indicates that the
-	// flow can start and eval will be scheduled on the Root Task.
+	// flow can start and enter the specified tasks.
 	// Return false indicates that the flow could not be started
 	// at this time.
-	Start(context FlowContext) (start bool, evalCode int)
+	Start(context FlowContext) (start bool, taskEntries []*TaskEntry)
 
 	// Resume the flow instance.  Returning true indicates that the
 	// flow can resume.  Return false indicates that the flow
 	// could not be resumed at this time.
-	Resume(context FlowContext) bool //<---
+	Resume(context FlowContext) bool
 
-	//do we need the following two
-
-	// TasksDone is called when the RootTask is Done.
-	TasksDone(context FlowContext, doneCode int)
+	// TasksDone is called when a terminal task is Done.
+	TaskDone(context FlowContext, doneCode int) (flowDone bool)
 
 	// Done is called when the flow is done.
-	Done(context FlowContext) //maybe return something to the state server?
+	Done(context FlowContext)
+
+	StartEmbeddedFlow(context FlowContext, flow *definition.Definition) (start bool, taskEntries []*TaskEntry)
+
+	//HandleError(context FlowContext) (start bool, taskEntries []*TaskEntry)
 }
 
 type EvalResult int
@@ -66,7 +68,7 @@ type TaskBehavior interface {
 	// determine the next set of tasks to be entered.  Returning true indicates
 	// that the parent task should be notified.  Also returns the set of Tasks
 	// that should be entered next.
-	Done(context TaskContext, doneCode int) (notifyParent bool, childDoneCode int, taskEntries []*TaskEntry, err error)
+	Done(context TaskContext, doneCode int) (notifyFlow bool, notifyCode int, taskEntries []*TaskEntry, err error)
 
 	// Error is called when there is an issue executing Eval, it returns a boolean indicating
 	// if it handled the error, otherwise the error is handled by the global error handler
@@ -75,5 +77,5 @@ type TaskBehavior interface {
 	// ChildDone is called when child task is Done and has indicated that its
 	// parent should be notified.  Returning true indicates that the task
 	// is done.
-	ChildDone(context TaskContext, childTask *definition.Task, childDoneCode int) (done bool, doneCode int)
+	//ChildDone(context TaskContext, childTask *definition.Task, childDoneCode int) (done bool, doneCode int)
 }
