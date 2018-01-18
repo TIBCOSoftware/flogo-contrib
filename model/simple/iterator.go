@@ -86,7 +86,7 @@ func (tb *SimpleIteratorTaskBehavior) Eval(context model.TaskContext, evalCode i
 			itx = value.(Iterator)
 		} else {
 
-			iterateOn, ok := context.GetSetting("iterateOn")
+			iterateOn, ok := context.GetSetting("iterate")
 
 			//todo if iterateOn is not defined, what should we do?
 
