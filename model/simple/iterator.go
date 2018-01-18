@@ -86,32 +86,34 @@ func (tb *SimpleIteratorTaskBehavior) Eval(context model.TaskContext, evalCode i
 			itx = value.(Iterator)
 		} else {
 
-			iterateOn, ok := context.Task().GetSetting("iterateOn")
-			//assume resolved
+			iterateOn, ok := context.GetSetting("iterateOn")
 
-			if ok {
-				switch t := iterateOn.(type) {
-				case string:
-					count, err := data.CoerceToInteger(iterateOn)
-					if err != nil {
-						return model.EVAL_FAIL, 0, err
-					}
-					itx = NewIntIterator(count)
-				case int:
-					count := iterateOn.(int)
-					itx = NewIntIterator(count)
-				case map[string]interface{}:
-					itx = NewObjectIterator(t)
-				case []interface{}:
-					itx = NewArrayIterator(t)
-				default:
-					return model.EVAL_FAIL, 0, fmt.Errorf("unsupported type '%s' for iterateOn", t)
+			//todo if iterateOn is not defined, what should we do?
+
+			if !ok {
+				//just skip for now
+				return model.EVAL_DONE, 0, nil
+			}
+
+			switch t := iterateOn.(type) {
+			case string:
+				count, err := data.CoerceToInteger(iterateOn)
+				if err != nil {
+					return model.EVAL_FAIL, 0, err
 				}
-
+				itx = NewIntIterator(count)
+			case int:
+				count := iterateOn.(int)
+				itx = NewIntIterator(count)
+			case map[string]interface{}:
+				itx = NewObjectIterator(t)
+			case []interface{}:
+				itx = NewArrayIterator(t)
+			default:
+				return model.EVAL_FAIL, 0, fmt.Errorf("unsupported type '%s' for iterateOn", t)
 			}
 
 			context.SetBlah("itx", itx)
-
 		}
 
 		repeat := itx.next()
@@ -304,7 +306,6 @@ type ArrayIterator struct {
 func (itx *ArrayIterator) Key() interface{} {
 	return itx.current
 }
-
 
 func (itx *ArrayIterator) Value() interface{} {
 	return itx.data[itx.current]

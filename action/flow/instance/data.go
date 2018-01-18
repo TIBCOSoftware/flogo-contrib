@@ -68,9 +68,17 @@ func (td *TaskData) HasBlah() bool {
 
 func (td *TaskData) GetSetting(setting string) (value interface{}, exists bool) {
 
-	if setting[0] == '$' {
+	value, exists = td.task.GetSetting(setting)
 
-		v, err := definition.GetDataResolver().Resolve(setting, td.taskEnv.Instance)
+	if !exists {
+		return nil, false
+	}
+
+	strValue, ok := value.(string)
+
+	if ok && strValue[0] == '$' {
+
+		v, err := definition.GetDataResolver().Resolve(strValue, td.taskEnv.Instance)
 		if err != nil {
 			return nil, false
 		}
@@ -78,11 +86,11 @@ func (td *TaskData) GetSetting(setting string) (value interface{}, exists bool) 
 		return v, true
 
 	} else {
-		return td.task.GetSetting(setting)
+		return value, true
 	}
 }
 
-func (td *TaskData) SetBlah(s string, v interface{})  {
+func (td *TaskData) SetBlah(s string, v interface{}) {
 
 	if td.blah == nil {
 		td.blah = make(map[string]interface{})
@@ -95,10 +103,9 @@ func (td *TaskData) GetBlah(s string) (interface{}, bool) {
 		return nil, false
 	}
 
-	v,ok := td.blah[s]
+	v, ok := td.blah[s]
 	return v, ok
 }
-
 
 // Task implements model.TaskContext.Task, by returning the Task associated with this
 // TaskData object
@@ -690,8 +697,8 @@ func (s *FixedTaskScope) SetAttrValue(attrName string, value interface{}) error 
 
 // BlahScope is scope restricted by the set of reference attrs and backed by the specified Task
 type BlahScope struct {
-	parent  data.Scope
-	blah    map[string]interface{}
+	parent data.Scope
+	blah   map[string]interface{}
 }
 
 // NewFixedTaskScope creates a FixedTaskScope
@@ -699,7 +706,7 @@ func NewBlahScope(parentScope data.Scope, blah map[string]interface{}) data.Scop
 
 	scope := &BlahScope{
 		parent: parentScope,
-		blah:     blah,
+		blah:   blah,
 	}
 
 	return scope
@@ -724,6 +731,3 @@ func (s *BlahScope) GetAttr(attrName string) (attr *data.Attribute, exists bool)
 func (s *BlahScope) SetAttrValue(attrName string, value interface{}) error {
 	return s.parent.SetAttrValue(attrName, value)
 }
-
-
-
