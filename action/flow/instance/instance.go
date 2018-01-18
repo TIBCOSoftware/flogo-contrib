@@ -287,7 +287,7 @@ func (pi *Instance) execTask(workItem *WorkItem) {
 			// todo: useful for debugging
 			logger.Debugf("StackTrace: %s", debug.Stack())
 
-			pi.appendActivityErrorData(workItem.TaskData, activity.NewError(err.Error(), "", nil))
+			pi.appendErrorData(NewActivityEvalError(workItem.TaskData.task.Name(), "unhandled", err.Error()))
 			if workItem.TaskData.taskEnv.ID != idEhTasEnv {
 				//not already in global handler, so handle it
 				pi.HandleGlobalError()
@@ -304,30 +304,19 @@ func (pi *Instance) execTask(workItem *WorkItem) {
 
 	//todo: should validate process activities
 
+	var evalResult model.EvalResult
+
 	if workItem.ExecType == EtEval {
 
-		eval := true
+		evalResult, doneCode, err = taskBehavior.Eval(taskData, workItem.EvalCode)
 
-		if taskData.HasAttrs() {
-
-			err := applyInputMapper(pi, taskData)
-
-			if err != nil {
-				pi.appendMapperErrorData(err)
-				pi.HandleGlobalError()
-				return
-			}
-
-			eval = applyInputInterceptor(pi, taskData)
-		}
-
-		if eval {
-			done, doneCode, err = pi.evalTask(taskBehavior, taskData, workItem.EvalCode)
-		} else {
-			done = true
-		}
 	} else {
 		done, doneCode, err = taskBehavior.PostEval(taskData, workItem.EvalCode, nil)
+		if done {
+			evalResult = model.EVAL_DONE
+		} else {
+			evalResult = model.EVAL_WAIT
+		}
 	}
 
 	if err != nil {
@@ -335,49 +324,117 @@ func (pi *Instance) execTask(workItem *WorkItem) {
 		return
 	}
 
-	if done {
-
-		if taskData.HasAttrs() {
-			applyOutputInterceptor(pi, taskData)
-
-			appliedMapper, err := applyOutputMapper(pi, taskData)
-
-			if err != nil {
-				pi.appendMapperErrorData(err)
-				pi.HandleGlobalError()
-				return
-			}
-
-			if !appliedMapper && !taskData.task.IsScope() {
-
-				logger.Debug("Mapper not applied")
-			}
-		}
-
+	if evalResult == model.EVAL_DONE {
 		pi.handleTaskDone(taskBehavior, taskData, doneCode)
+	} else if evalResult == model.EVAL_REPEAT {
+		//iterate or retry
+		pi.scheduleEval(taskData, workItem.EvalCode)
 	}
 }
 
-func (pi *Instance) evalTask(taskBehavior model.TaskBehavior, taskData *TaskData, evalCode int) (done bool, doneCode int, err error) {
+//// execTask executes the specified Work Item of the Flow Instance
+//func (pi *Instance) execTaskOld(workItem *WorkItem) {
+//
+//	defer func() {
+//		if r := recover(); r != nil {
+//
+//			err := fmt.Errorf("Unhandled Error executing task '%s' : %v\n", workItem.TaskData.task.Name(), r)
+//			logger.Error(err)
+//
+//			// todo: useful for debugging
+//			logger.Debugf("StackTrace: %s", debug.Stack())
+//
+//			pi.appendActivityErrorData(workItem.TaskData, activity.NewError(err.Error(), "", nil))
+//			if workItem.TaskData.taskEnv.ID != idEhTasEnv {
+//				//not already in global handler, so handle it
+//				pi.HandleGlobalError()
+//			}
+//		}
+//	}()
+//
+//	taskData := workItem.TaskData
+//	taskBehavior := pi.FlowModel.GetTaskBehavior(taskData.task.TypeID())
+//
+//	var done bool
+//	var doneCode int
+//	var err error
+//
+//	//todo: should validate process activities
+//
+//	if workItem.ExecType == EtEval {
+//
+//		eval := true
+//
+//		if taskData.HasAttrs() {
+//
+//			err := applyInputMapper(taskData)
+//
+//			if err != nil {
+//				pi.appendMapperErrorData(err)
+//				pi.HandleGlobalError()
+//				return
+//			}
+//
+//			eval = applyInputInterceptor(taskData)
+//		}
+//
+//		if eval {
+//			done, doneCode, err = pi.evalTask(taskBehavior, taskData, workItem.EvalCode)
+//		} else {
+//			done = true
+//		}
+//	} else {
+//		done, doneCode, err = taskBehavior.PostEval(taskData, workItem.EvalCode, nil)
+//	}
+//
+//	if err != nil {
+//		pi.handleTaskError(taskBehavior, taskData, err)
+//		return
+//	}
+//
+//	if done {
+//
+//		if taskData.HasAttrs() {
+//			applyOutputInterceptor(taskData)
+//
+//			appliedMapper, err := applyOutputMapper(taskData)
+//
+//			if err != nil {
+//				pi.appendMapperErrorData(err)
+//				pi.HandleGlobalError()
+//				return
+//			}
+//
+//			if !appliedMapper && !taskData.task.IsScope() {
+//
+//				logger.Debug("Mapper not applied")
+//			}
+//		}
+//
+//		pi.handleTaskDone(taskBehavior, taskData, doneCode)
+//	}
+//}
 
-	defer func() {
-		if r := recover(); r != nil {
-
-			err = fmt.Errorf("Unhandled Error evaluating task '%s' : %v\n", taskData.task.Name(), r)
-			logger.Error(err)
-
-			// todo: useful for debugging
-			logger.Debugf("StackTrace: %s", debug.Stack())
-
-			done = false
-			doneCode = 0
-		}
-	}()
-
-	done, doneCode, err = taskBehavior.Eval(taskData, evalCode)
-
-	return done, doneCode, err
-}
+//func (pi *Instance) evalTask(taskBehavior model.TaskBehavior, taskData *TaskData, evalCode int) (done bool, doneCode int, err error) {
+//
+//	defer func() {
+//		if r := recover(); r != nil {
+//
+//			err = fmt.Errorf("Unhandled Error evaluating task '%s' : %v\n", taskData.task.Name(), r)
+//			logger.Error(err)
+//
+//			// todo: useful for debugging
+//			logger.Debugf("StackTrace: %s", debug.Stack())
+//
+//			done = false
+//			doneCode = 0
+//		}
+//	}()
+//
+//	done, doneCode, err = taskBehavior.Eval(taskData, evalCode)
+//
+//	return done, doneCode, err
+//}
 
 // handleTaskDone handles the completion of a task in the Flow Instance
 func (pi *Instance) handleTaskDone(taskBehavior model.TaskBehavior, taskData *TaskData, doneCode int) {
@@ -449,10 +506,22 @@ func (pi *Instance) handleTaskDone(taskBehavior model.TaskBehavior, taskData *Ta
 
 func (pi *Instance) appendErrorData(err error) {
 
-	switch err.(type) {
+	switch e := err.(type) {
 	case *definition.LinkExprError:
 		pi.AddAttr("{Error.type}", data.STRING, "link_expr")
 		pi.AddAttr("{Error.message}", data.STRING, err.Error())
+	case *activity.Error:
+		pi.AddAttr("{Error.message}", data.STRING, err.Error())
+		pi.AddAttr("{Error.data}", data.OBJECT, e.Data())
+		pi.AddAttr("{Error.code}", data.STRING, e.Code())
+
+		if e.ActivityName() != "" {
+			pi.AddAttr("{Error.activity}", data.STRING, e.ActivityName())
+		}
+	case *ActivityEvalError:
+		pi.AddAttr("{Error.activity}", data.STRING, e.TaskName())
+		pi.AddAttr("{Error.message}", data.STRING, err.Error())
+		pi.AddAttr("{Error.type}", data.STRING, e.Type())
 	default:
 		pi.AddAttr("{Error.message}", data.STRING, err.Error())
 	}
@@ -460,22 +529,22 @@ func (pi *Instance) appendErrorData(err error) {
 	//todo add case for *dataMapperError & *activity.Error
 }
 
-func (pi *Instance) appendMapperErrorData(err error) {
-
-	pi.AddAttr("{Error.type}", data.STRING, "mapper")
-	pi.AddAttr("{Error.message}", data.STRING, err.Error())
-}
-
-func (pi *Instance) appendActivityErrorData(taskData *TaskData, err error) {
-
-	pi.AddAttr("{Error.activity}", data.STRING, taskData.TaskName())
-	pi.AddAttr("{Error.message}", data.STRING, err.Error())
-
-	if aerr, ok := err.(*activity.Error); ok {
-		pi.AddAttr("{Error.data}", data.OBJECT, aerr.Data())
-		pi.AddAttr("{Error.code}", data.STRING, aerr.Code())
-	}
-}
+//func (pi *Instance) appendMapperErrorData(err error) {
+//
+//	pi.AddAttr("{Error.type}", data.STRING, "mapper")
+//	pi.AddAttr("{Error.message}", data.STRING, err.Error())
+//}
+//
+//func (pi *Instance) appendActivityErrorData(taskData *TaskData, err error) {
+//
+//	pi.AddAttr("{Error.activity}", data.STRING, taskData.TaskName())
+//	pi.AddAttr("{Error.message}", data.STRING, err.Error())
+//
+//	if aerr, ok := err.(*activity.Error); ok {
+//		pi.AddAttr("{Error.data}", data.OBJECT, aerr.Data())
+//		pi.AddAttr("{Error.code}", data.STRING, aerr.Code())
+//	}
+//}
 
 // handleTaskError handles the completion of a task in the Flow Instance
 func (pi *Instance) handleTaskError(taskBehavior model.TaskBehavior, taskData *TaskData, err error) {
@@ -483,7 +552,7 @@ func (pi *Instance) handleTaskError(taskBehavior model.TaskBehavior, taskData *T
 	handled, taskEntry := taskBehavior.Error(taskData)
 
 	if !handled {
-		pi.appendActivityErrorData(taskData, err)
+		pi.appendErrorData(err)
 		if taskData.taskEnv.ID != idEhTasEnv {
 			//not already in global handler, so handle it
 			pi.HandleGlobalError()
@@ -781,380 +850,6 @@ func (te *TaskEnv) releaseTask(task *definition.Task) {
 		delete(te.LinkDatas, link.ID())
 		te.Instance.ChangeTracker.trackLinkData(&LinkDataChange{ChgType: CtDel, ID: link.ID()})
 	}
-}
-
-// TaskData represents data associated with an instance of a Task
-type TaskData struct {
-	taskEnv *TaskEnv
-	task    *definition.Task
-	state   int
-	done    bool
-	attrs   map[string]*data.Attribute
-
-	inScope  data.Scope
-	outScope data.Scope
-
-	changes int
-
-	taskID string //needed for serialization
-}
-
-// NewTaskData creates a TaskData for the specified task in the specified task
-// environment
-func NewTaskData(taskEnv *TaskEnv, task *definition.Task) *TaskData {
-	var taskData TaskData
-
-	taskData.taskEnv = taskEnv
-	taskData.task = task
-
-	//taskData.TaskID = task.ID
-
-	return &taskData
-}
-
-// HasAttrs indicates if the task has attributes
-func (td *TaskData) HasAttrs() bool {
-	return len(td.task.ActivityRef()) > 0 || td.task.IsScope()
-}
-
-/////////////////////////////////////////
-// TaskData - TaskContext Implementation
-
-// State implements flow.TaskContext.GetState
-func (td *TaskData) State() int {
-	return td.state
-}
-
-// SetState implements flow.TaskContext.SetState
-func (td *TaskData) SetState(state int) {
-	td.state = state
-	td.taskEnv.Instance.ChangeTracker.trackTaskData(&TaskDataChange{ChgType: CtUpd, ID: td.task.ID(), TaskData: td})
-}
-
-// Task implements model.TaskContext.Task, by returning the Task associated with this
-// TaskData object
-func (td *TaskData) Task() *definition.Task {
-	return td.task
-}
-
-// FromInstLinks implements model.TaskContext.FromInstLinks
-func (td *TaskData) FromInstLinks() []model.LinkInst {
-
-	logger.Debugf("FromInstLinks: task=%v\n", td.Task)
-
-	links := td.task.FromLinks()
-
-	numLinks := len(links)
-
-	if numLinks > 0 {
-		linkCtxs := make([]model.LinkInst, numLinks)
-
-		for i, link := range links {
-			linkCtxs[i], _ = td.taskEnv.FindOrCreateLinkData(link)
-		}
-		return linkCtxs
-	}
-
-	return nil
-}
-
-// ToInstLinks implements model.TaskContext.ToInstLinks,
-func (td *TaskData) ToInstLinks() []model.LinkInst {
-
-	logger.Debugf("ToInstLinks: task=%v\n", td.Task)
-
-	links := td.task.ToLinks()
-
-	numLinks := len(links)
-
-	if numLinks > 0 {
-		linkCtxs := make([]model.LinkInst, numLinks)
-
-		for i, link := range links {
-			linkCtxs[i], _ = td.taskEnv.FindOrCreateLinkData(link)
-		}
-		return linkCtxs
-	}
-
-	return nil
-}
-
-// ChildTaskInsts implements activity.ActivityContext.ChildTaskInsts method
-func (td *TaskData) ChildTaskInsts() (taskInsts []model.TaskInst, hasChildTasks bool) {
-
-	if len(td.task.ChildTasks()) == 0 {
-		return nil, false
-	}
-
-	taskInsts = make([]model.TaskInst, 0)
-
-	for _, task := range td.task.ChildTasks() {
-
-		taskData, ok := td.taskEnv.TaskDatas[task.ID()]
-
-		if ok {
-			taskInsts = append(taskInsts, taskData)
-		}
-	}
-
-	return taskInsts, true
-}
-
-// EnterLeadingChildren implements activity.ActivityContext.EnterLeadingChildren method
-func (td *TaskData) EnterLeadingChildren(enterCode int) {
-
-	//todo optimize
-	for _, task := range td.task.ChildTasks() {
-
-		if len(task.FromLinks()) == 0 {
-			taskData, _ := td.taskEnv.FindOrCreateTaskData(task)
-			taskBehavior := td.taskEnv.Instance.FlowModel.GetTaskBehavior(task.TypeID())
-
-			eval, evalCode := taskBehavior.Enter(taskData, enterCode)
-
-			if eval {
-				td.taskEnv.Instance.scheduleEval(taskData, evalCode)
-			}
-		}
-	}
-}
-
-// EnterChildren implements activity.ActivityContext.EnterChildren method
-func (td *TaskData) EnterChildren(taskEntries []*model.TaskEntry) {
-
-	if (taskEntries == nil) || (len(taskEntries) == 1 && taskEntries[0].Task == nil) {
-
-		var enterCode int
-
-		if taskEntries == nil {
-			enterCode = 0
-		} else {
-			enterCode = taskEntries[0].EnterCode
-		}
-
-		logger.Debugf("Entering '%s' Task's %d children\n", td.task.Name(), len(td.task.ChildTasks()))
-
-		for _, task := range td.task.ChildTasks() {
-
-			taskData, _ := td.taskEnv.FindOrCreateTaskData(task)
-			taskBehavior := td.taskEnv.Instance.FlowModel.GetTaskBehavior(task.TypeID())
-
-			eval, evalCode := taskBehavior.Enter(taskData, enterCode)
-
-			if eval {
-				td.taskEnv.Instance.scheduleEval(taskData, evalCode)
-			}
-		}
-	} else {
-
-		for _, taskEntry := range taskEntries {
-
-			//todo validate if specified task is child? or trust model
-
-			taskData, _ := td.taskEnv.FindOrCreateTaskData(taskEntry.Task)
-			taskBehavior := td.taskEnv.Instance.FlowModel.GetTaskBehavior(taskEntry.Task.TypeID())
-
-			eval, evalCode := taskBehavior.Enter(taskData, taskEntry.EnterCode)
-
-			if eval {
-				td.taskEnv.Instance.scheduleEval(taskData, evalCode)
-			}
-		}
-	}
-}
-
-// EvalLink implements activity.ActivityContext.EvalLink method
-func (td *TaskData) EvalLink(link *definition.Link) (result bool, err error) {
-
-	logger.Debugf("TaskContext.EvalLink: %d\n", link.ID())
-
-	defer func() {
-		if r := recover(); r != nil {
-			logger.Warnf("Unhandled Error evaluating link '%s' : %v\n", link.ID(), r)
-
-			// todo: useful for debugging
-			logger.Debugf("StackTrace: %s", debug.Stack())
-
-			if err != nil {
-				err = fmt.Errorf("%v", r)
-			}
-		}
-	}()
-
-	mgr := td.taskEnv.Instance.Flow.GetLinkExprManager()
-
-	if mgr != nil {
-		result, err = mgr.EvalLinkExpr(link, td.taskEnv.Instance)
-		return result, err
-	}
-
-	return true, nil
-}
-
-// HasActivity implements activity.ActivityContext.HasActivity method
-func (td *TaskData) HasActivity() bool {
-	return activity.Get(td.task.ActivityRef()) != nil
-}
-
-// EvalActivity implements activity.ActivityContext.EvalActivity method
-func (td *TaskData) EvalActivity() (done bool, evalErr error) {
-
-	act := activity.Get(td.task.ActivityRef())
-
-	//todo: if act == nil, return TaskDoesntHaveActivity error or something like that
-
-	defer func() {
-		if r := recover(); r != nil {
-			logger.Warnf("Unhandled Error executing activity '%s'[%s] : %v\n", td.task.Name(), td.task.ActivityRef(), r)
-
-			// todo: useful for debugging
-			logger.Debugf("StackTrace: %s", debug.Stack())
-
-			if evalErr == nil {
-				evalErr = activity.NewError(fmt.Sprintf("%v", r), "", nil)
-				done = false
-			}
-		}
-		if evalErr != nil {
-			logger.Errorf("Execution failed for Activity[%s] in Flow[%s] - %s", td.task.Name(), td.taskEnv.Instance.Name(), evalErr.Error())
-		}
-	}()
-
-	done, evalErr = act.Eval(td)
-
-	return done, evalErr
-}
-
-// Failed marks the Activity as failed
-func (td *TaskData) Failed(err error) {
-
-	errorMsgAttr := "[A" + td.task.ID() + "._errorMsg]"
-	td.taskEnv.Instance.AddAttr(errorMsgAttr, data.STRING, err.Error())
-	errorMsgAttr2 := "[activity." + td.task.ID() + "._errorMsg]"
-	td.taskEnv.Instance.AddAttr(errorMsgAttr2, data.STRING, err.Error())
-}
-
-// FlowDetails implements activity.Context.FlowName method
-func (td *TaskData) FlowDetails() activity.FlowDetails {
-	return td.taskEnv.Instance
-}
-
-// FlowDetails implements activity.Context.FlowName method
-func (td *TaskData) ActionContext() action.Context {
-	return td.taskEnv.Instance.ActionContext()
-}
-
-// TaskName implements activity.Context.TaskName method
-func (td *TaskData) TaskName() string {
-	return td.task.Name()
-}
-
-// InputScope get the InputScope of the task instance
-func (td *TaskData) InputScope() data.Scope {
-
-	if td.inScope != nil {
-		return td.inScope
-	}
-
-	if len(td.task.ActivityRef()) > 0 {
-
-		act := activity.Get(td.task.ActivityRef())
-		td.inScope = NewFixedTaskScope(act.Metadata().Input, td.task, true)
-
-	} else if td.task.IsScope() {
-
-		//add flow scope
-	}
-
-	return td.inScope
-}
-
-// OutputScope get the InputScope of the task instance
-func (td *TaskData) OutputScope() data.Scope {
-
-	if td.outScope != nil {
-		return td.outScope
-	}
-
-	if len(td.task.ActivityRef()) > 0 {
-
-		act := activity.Get(td.task.ActivityRef())
-		td.outScope = NewFixedTaskScope(act.Metadata().Output, td.task, false)
-
-		logger.Debugf("OutputScope: %v\n", td.outScope)
-	} else if td.task.IsScope() {
-
-		//add flow scope
-	}
-
-	return td.outScope
-}
-
-// GetInput implements activity.Context.GetInput
-func (td *TaskData) GetInput(name string) interface{} {
-
-	val, found := td.InputScope().GetAttr(name)
-	if found {
-		return val.Value()
-	}
-
-	return nil
-}
-
-// GetOutput implements activity.Context.GetOutput
-func (td *TaskData) GetOutput(name string) interface{} {
-
-	val, found := td.OutputScope().GetAttr(name)
-	if found {
-		return val.Value()
-	}
-
-	return nil
-}
-
-// SetOutput implements activity.Context.SetOutput
-func (td *TaskData) SetOutput(name string, value interface{}) {
-
-	logger.Debugf("SET OUTPUT: %s = %v\n", name, value)
-	td.OutputScope().SetAttrValue(name, value)
-}
-
-// LinkData represents data associated with an instance of a Link
-type LinkData struct {
-	taskEnv *TaskEnv
-	link    *definition.Link
-	state   int
-
-	changes int
-
-	linkID int //needed for serialization
-}
-
-// NewLinkData creates a LinkData for the specified link in the specified task
-// environment
-func NewLinkData(taskEnv *TaskEnv, link *definition.Link) *LinkData {
-	var linkData LinkData
-
-	linkData.taskEnv = taskEnv
-	linkData.link = link
-
-	return &linkData
-}
-
-// State returns the current state indicator for the LinkData
-func (ld *LinkData) State() int {
-	return ld.state
-}
-
-// SetState sets the current state indicator for the LinkData
-func (ld *LinkData) SetState(state int) {
-	ld.state = state
-	ld.taskEnv.Instance.ChangeTracker.trackLinkData(&LinkDataChange{ChgType: CtUpd, ID: ld.link.ID(), LinkData: ld})
-}
-
-// Link returns the Link associated with ld context
-func (ld *LinkData) Link() *definition.Link {
-	return ld.link
 }
 
 // ExecType is the type of execution to perform

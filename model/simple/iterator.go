@@ -1,65 +1,21 @@
 package simple
 
 import (
+	"fmt"
+
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
-	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/TIBCOSoftware/flogo-lib/core/data"
 )
 
-// log is the default package logger
-var log = logger.GetLogger("model-tibco-simple")
-
-const (
-	MODEL_NAME = "tibco-simple"
-)
-
-func init() {
-	model.Register(New())
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-func New() *model.FlowModel {
-	m := model.New(MODEL_NAME)
-	m.RegisterFlowBehavior(&SimpleFlowBehavior{})
-	m.RegisterTaskBehavior(1, &SimpleTaskBehavior{})
-	m.RegisterTaskBehavior(2, &SimpleIteratorTaskBehavior{})
-	return m
-}
-
-// SimpleFlowBehavior implements model.FlowBehavior
-type SimpleFlowBehavior struct {
-}
-
-// Start implements model.FlowBehavior.Start
-func (pb *SimpleFlowBehavior) Start(context model.FlowContext) (start bool, evalCode int) {
-	// just schedule the root task
-	return true, 0
-}
-
-// Resume implements model.FlowBehavior.Resume
-func (pb *SimpleFlowBehavior) Resume(context model.FlowContext) bool {
-	return true
-}
-
-// TasksDone implements model.FlowBehavior.TasksDone
-func (pb *SimpleFlowBehavior) TasksDone(context model.FlowContext, doneCode int) {
-	// all tasks are done
-}
-
-// Done implements model.FlowBehavior.Done
-func (pb *SimpleFlowBehavior) Done(context model.FlowContext) {
-	log.Debugf("Flow Done\n")
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// SimpleTaskBehavior implements model.TaskBehavior
-type SimpleTaskBehavior struct {
+// SimpleIteratorTaskBehavior implements model.TaskBehavior
+type SimpleIteratorTaskBehavior struct {
 }
 
 // Enter implements model.TaskBehavior.Enter
-func (tb *SimpleTaskBehavior) Enter(context model.TaskContext, enterCode int) (eval bool, evalCode int) {
+func (tb *SimpleIteratorTaskBehavior) Enter(context model.TaskContext, enterCode int) (eval bool, evalCode int) {
+
+	//todo reuse this code
 
 	task := context.Task()
 	log.Debugf("Task Enter: %s\n", task.Name())
@@ -112,7 +68,7 @@ func (tb *SimpleTaskBehavior) Enter(context model.TaskContext, enterCode int) (e
 }
 
 // Eval implements model.TaskBehavior.Eval
-func (tb *SimpleTaskBehavior) Eval(context model.TaskContext, evalCode int) (evalResult model.EvalResult, doneCode int, err error) {
+func (tb *SimpleIteratorTaskBehavior) Eval(context model.TaskContext, evalCode int) (evalResult model.EvalResult, doneCode int, err error) {
 
 	if context.State() == STATE_SKIPPED {
 		return model.EVAL_DONE, EC_SKIP, nil
@@ -121,44 +77,73 @@ func (tb *SimpleTaskBehavior) Eval(context model.TaskContext, evalCode int) (eva
 	task := context.Task()
 	log.Debugf("Task Eval: %v\n", task)
 
-	if len(task.ChildTasks()) > 0 {
-		log.Debugf("Has Children\n")
+	if context.HasActivity() {
 
-		//has children, so set to waiting
-		context.SetState(STATE_WAITING)
+		var itx Iterator
 
-		context.EnterLeadingChildren(0)
+		value, ok := context.GetBlah("itx")
+		if ok {
+			itx = value.(Iterator)
+		} else {
 
-		return model.EVAL_WAIT, 0, nil
+			iterateOn, ok := context.Task().GetSetting("iterateOn")
+			//assume resolved
 
-	} else {
+			if ok {
+				switch t := iterateOn.(type) {
+				case string:
+					count, err := data.CoerceToInteger(iterateOn)
+					if err != nil {
+						return model.EVAL_FAIL, 0, err
+					}
+					itx = NewIntIterator(count)
+				case int:
+					count := iterateOn.(int)
+					itx = NewIntIterator(count)
+				case map[string]interface{}:
+					itx = NewObjectIterator(t)
+				case []interface{}:
+					itx = NewArrayIterator(t)
+				default:
+					return model.EVAL_FAIL, 0, fmt.Errorf("unsupported type '%s' for iterateOn", t)
+				}
 
-		if context.HasActivity() {
-
-			done, err := context.EvalActivity()
-
-			if err != nil {
-				log.Errorf("Error evaluating activity '%s'[%s] - %s", context.Task().Name(), context.Task().ActivityType(), err.Error())
-				context.SetState(STATE_FAILED)
-				return model.EVAL_FAIL, 0, err
 			}
 
-			if done {
-				evalResult = model.EVAL_DONE
-			} else {
-				evalResult = model.EVAL_WAIT
-			}
+			context.SetBlah("itx", itx)
 
-			return evalResult, 0, nil
 		}
 
-		//no-op
-		return model.EVAL_DONE, 0, nil
+		repeat := itx.next()
+
+		log.Debugf("Repeat:%s, Key:%s, Value:%v", repeat, itx.Key(), itx.Value())
+		context.SetBlah("itx.key", itx.Key())
+		context.SetBlah("itx.value", itx.Value())
+
+		_, err := context.EvalActivity()
+
+		//what to do if eval isn't "done"?
+		if err != nil {
+			log.Errorf("Error evaluating activity '%s'[%s] - %s", context.Task().Name(), context.Task().ActivityType(), err.Error())
+			context.SetState(STATE_FAILED)
+			return model.EVAL_FAIL, 0, err
+		}
+
+		if repeat {
+			evalResult = model.EVAL_REPEAT
+		} else {
+			evalResult = model.EVAL_DONE
+		}
+
+		return evalResult, 0, nil
 	}
+
+	//no-op
+	return model.EVAL_DONE, 0, nil
 }
 
 // PostEval implements model.TaskBehavior.PostEval
-func (tb *SimpleTaskBehavior) PostEval(context model.TaskContext, evalCode int, data interface{}) (done bool, doneCode int, err error) {
+func (tb *SimpleIteratorTaskBehavior) PostEval(context model.TaskContext, evalCode int, data interface{}) (done bool, doneCode int, err error) {
 
 	log.Debugf("Task PostEval\n")
 
@@ -174,7 +159,7 @@ func (tb *SimpleTaskBehavior) PostEval(context model.TaskContext, evalCode int, 
 }
 
 // Done implements model.TaskBehavior.Done
-func (tb *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (notifyParent bool, childDoneCode int, taskEntries []*model.TaskEntry, err error) {
+func (tb *SimpleIteratorTaskBehavior) Done(context model.TaskContext, doneCode int) (notifyParent bool, childDoneCode int, taskEntries []*model.TaskEntry, err error) {
 
 	task := context.Task()
 
@@ -255,7 +240,7 @@ func (tb *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (not
 }
 
 // Done implements model.TaskBehavior.Error
-func (tb *SimpleTaskBehavior) Error(context model.TaskContext) (handled bool, taskEntry *model.TaskEntry) {
+func (tb *SimpleIteratorTaskBehavior) Error(context model.TaskContext) (handled bool, taskEntry *model.TaskEntry) {
 
 	linkInsts := context.ToInstLinks()
 	numLinks := len(linkInsts)
@@ -278,7 +263,7 @@ func (tb *SimpleTaskBehavior) Error(context model.TaskContext) (handled bool, ta
 }
 
 // ChildDone implements model.TaskBehavior.ChildDone
-func (tb *SimpleTaskBehavior) ChildDone(context model.TaskContext, childTask *definition.Task, childDoneCode int) (done bool, doneCode int) {
+func (tb *SimpleIteratorTaskBehavior) ChildDone(context model.TaskContext, childTask *definition.Task, childDoneCode int) (done bool, doneCode int) {
 
 	childTasks, hasChildren := context.ChildTaskInsts()
 
@@ -302,21 +287,95 @@ func (tb *SimpleTaskBehavior) ChildDone(context model.TaskContext, childTask *de
 	return true, 0
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-// State
-const (
-	EC_SKIP = 1
+///////////////////////////////////
+// Iterators
 
-	STATE_NOT_STARTED int = 0
+type Iterator interface {
+	Key() interface{}
+	Value() interface{}
+	next() bool
+}
 
-	STATE_LINK_FALSE   int = 1
-	STATE_LINK_TRUE    int = 2
-	STATE_LINK_SKIPPED int = 3
+type ArrayIterator struct {
+	current int
+	data    []interface{}
+}
 
-	STATE_ENTERED int = 10
-	STATE_READY   int = 20
-	STATE_WAITING int = 30
-	STATE_DONE    int = 40
-	STATE_SKIPPED int = 50
-	STATE_FAILED  int = 100
-)
+func (itx *ArrayIterator) Key() interface{} {
+	return itx.current
+}
+
+
+func (itx *ArrayIterator) Value() interface{} {
+	return itx.data[itx.current]
+}
+func (itx *ArrayIterator) next() bool {
+	itx.current++
+	if itx.current >= len(itx.data) {
+		return false
+	}
+	return true
+}
+
+func NewArrayIterator(data []interface{}) *ArrayIterator {
+	return &ArrayIterator{data: data, current: -1}
+}
+
+type IntIterator struct {
+	current int
+	count   int
+}
+
+func (itx *IntIterator) Key() interface{} {
+	return itx.current
+}
+
+func (itx *IntIterator) Value() interface{} {
+	return itx.current
+}
+
+func (itx *IntIterator) next() bool {
+	itx.current++
+	if itx.current >= itx.count {
+		return false
+	}
+	return true
+}
+
+func NewIntIterator(count int) *IntIterator {
+	return &IntIterator{count: count, current: -1}
+}
+
+type ObjectIterator struct {
+	current int
+	keyMap  map[int]string
+	data    map[string]interface{}
+}
+
+func (itx *ObjectIterator) Key() interface{} {
+	return itx.keyMap[itx.current]
+}
+
+func (itx *ObjectIterator) Value() interface{} {
+	key := itx.keyMap[itx.current]
+	return itx.data[key]
+}
+
+func (itx *ObjectIterator) next() bool {
+	itx.current++
+	if itx.current >= len(itx.data) {
+		return false
+	}
+	return true
+}
+
+func NewObjectIterator(data map[string]interface{}) *ObjectIterator {
+	keyMap := make(map[int]string, len(data))
+	i := 0
+	for key := range data {
+		keyMap[i] = key
+		i++
+	}
+
+	return &ObjectIterator{keyMap: keyMap, data: data, current: -1}
+}

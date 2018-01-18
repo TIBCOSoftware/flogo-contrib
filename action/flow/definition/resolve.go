@@ -76,6 +76,12 @@ func (r *FlowResolver) Resolve(toResolve string, scope data.Scope) (value interf
 			return nil, fmt.Errorf("failed to resolve flow attr: '%s', not found in flow", details.Property)
 		}
 		value = attr.Value()
+	case "blah":
+		attr, exists := scope.GetAttr(toResolve)
+		if !exists {
+			return nil, fmt.Errorf("failed to resolve blah attr: '%s', not found in scope", details.Property)
+		}
+		value = attr.Value()
 	default:
 		return nil, fmt.Errorf("unsupported resolver: %s", details.ResolverName)
 	}

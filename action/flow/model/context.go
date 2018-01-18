@@ -63,6 +63,11 @@ type TaskContext interface {
 
 	// Failed marks the Activity as failed
 	Failed(err error)
+
+	//todo rename
+	SetBlah(s string, value interface{})
+
+	GetBlah(s string) (interface{}, bool)
 }
 
 // LinkInst is the instance of a link
