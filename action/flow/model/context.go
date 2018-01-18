@@ -64,6 +64,8 @@ type TaskContext interface {
 	// Failed marks the Activity as failed
 	Failed(err error)
 
+	GetSetting(setting string) (value interface{}, exists bool)
+
 	//todo rename
 	SetBlah(s string, value interface{})
 

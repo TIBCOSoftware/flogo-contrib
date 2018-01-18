@@ -66,6 +66,22 @@ func (td *TaskData) HasBlah() bool {
 	return td.blah != nil
 }
 
+func (td *TaskData) GetSetting(setting string) (value interface{}, exists bool) {
+
+	if setting[0] == '$' {
+
+		v, err := definition.GetDataResolver().Resolve(setting, td.taskEnv.Instance)
+		if err != nil {
+			return nil, false
+		}
+
+		return v, true
+
+	} else {
+		return td.task.GetSetting(setting)
+	}
+}
+
 func (td *TaskData) SetBlah(s string, v interface{})  {
 
 	if td.blah == nil {
