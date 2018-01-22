@@ -15,7 +15,7 @@ type SimpleIteratorTaskBehavior struct {
 // Enter implements model.TaskBehavior.Enter
 func (tb *SimpleIteratorTaskBehavior) Enter(context model.TaskContext, enterCode int) (eval bool, evalCode int) {
 
-	//todo reuse this code
+	//todo inherit this code from base task
 
 	task := context.Task()
 	log.Debugf("Task Enter: %s\n", task.Name())
@@ -81,16 +81,16 @@ func (tb *SimpleIteratorTaskBehavior) Eval(context model.TaskContext, evalCode i
 
 		var itx Iterator
 
-		value, ok := context.GetBlah("itx")
+		value, ok := context.GetBlah("_iterator")
+
 		if ok {
 			itx = value.(Iterator)
 		} else {
 
 			iterateOn, ok := context.GetSetting("iterate")
 
-			//todo if iterateOn is not defined, what should we do?
-
 			if !ok {
+				//todo if iterateOn is not defined, what should we do?
 				//just skip for now
 				return model.EVAL_DONE, 0, nil
 			}
@@ -113,14 +113,14 @@ func (tb *SimpleIteratorTaskBehavior) Eval(context model.TaskContext, evalCode i
 				return model.EVAL_FAIL, 0, fmt.Errorf("unsupported type '%s' for iterateOn", t)
 			}
 
-			context.SetBlah("itx", itx)
+			context.SetBlah("_iterator", itx)
 		}
 
 		repeat := itx.next()
 
 		log.Debugf("Repeat:%s, Key:%s, Value:%v", repeat, itx.Key(), itx.Value())
-		context.SetBlah("itx.key", itx.Key())
-		context.SetBlah("itx.value", itx.Value())
+		context.SetBlah("iteration.key", itx.Key())
+		context.SetBlah("iteration.value", itx.Value())
 
 		_, err := context.EvalActivity()
 

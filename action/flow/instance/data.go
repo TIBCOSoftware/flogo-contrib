@@ -90,20 +90,20 @@ func (td *TaskData) GetSetting(setting string) (value interface{}, exists bool) 
 	}
 }
 
-func (td *TaskData) SetBlah(s string, v interface{}) {
+func (td *TaskData) SetBlah(key string, value interface{}) {
 
 	if td.blah == nil {
 		td.blah = make(map[string]interface{})
 	}
-	td.blah[s] = v
+	td.blah[key] = value
 }
 
-func (td *TaskData) GetBlah(s string) (interface{}, bool) {
+func (td *TaskData) GetBlah(key string) (interface{}, bool) {
 	if td.blah == nil {
 		return nil, false
 	}
 
-	v, ok := td.blah[s]
+	v, ok := td.blah[key]
 	return v, ok
 }
 

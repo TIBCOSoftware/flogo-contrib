@@ -67,9 +67,9 @@ type TaskContext interface {
 	GetSetting(setting string) (value interface{}, exists bool)
 
 	//todo rename
-	SetBlah(s string, value interface{})
+	SetBlah(key string, value interface{})
 
-	GetBlah(s string) (interface{}, bool)
+	GetBlah(key string) (interface{}, bool)
 }
 
 // LinkInst is the instance of a link
