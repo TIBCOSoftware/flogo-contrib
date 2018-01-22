@@ -67,6 +67,11 @@ func (tb *SimpleIteratorTaskBehavior) Enter(context model.TaskContext, enterCode
 	return ready, 0
 }
 
+type Iteration struct {
+	Key interface{}
+	Value interface{}
+}
+
 // Eval implements model.TaskBehavior.Eval
 func (tb *SimpleIteratorTaskBehavior) Eval(context model.TaskContext, evalCode int) (evalResult model.EvalResult, doneCode int, err error) {
 
@@ -81,10 +86,11 @@ func (tb *SimpleIteratorTaskBehavior) Eval(context model.TaskContext, evalCode i
 
 		var itx Iterator
 
-		value, ok := context.GetBlah("_iterator")
+		itxAttr, ok := context.GetWorkingData("_iterator")
+		iterationAttr, _ := context.GetWorkingData("iteration")
 
 		if ok {
-			itx = value.(Iterator)
+			itx = itxAttr.Value().(Iterator)
 		} else {
 
 			iterateOn, ok := context.GetSetting("iterate")
@@ -113,25 +119,36 @@ func (tb *SimpleIteratorTaskBehavior) Eval(context model.TaskContext, evalCode i
 				return model.EVAL_FAIL, 0, fmt.Errorf("unsupported type '%s' for iterateOn", t)
 			}
 
-			context.SetBlah("_iterator", itx)
+			itxAttr, _ = data.NewAttribute("_iterator", data.ANY, itx)
+			context.AddWorkingData(itxAttr)
+
+			iteration := map[string]interface{}{
+				"key": nil,
+				"value":   nil,
+			}
+
+			iterationAttr, _ = data.NewAttribute("iteration", data.OBJECT, iteration)
+			context.AddWorkingData(iterationAttr)
 		}
 
 		repeat := itx.next()
 
-		log.Debugf("Repeat:%s, Key:%s, Value:%v", repeat, itx.Key(), itx.Value())
-		context.SetBlah("iteration.key", itx.Key())
-		context.SetBlah("iteration.value", itx.Value())
-
-		_, err := context.EvalActivity()
-
-		//what to do if eval isn't "done"?
-		if err != nil {
-			log.Errorf("Error evaluating activity '%s'[%s] - %s", context.Task().Name(), context.Task().ActivityType(), err.Error())
-			context.SetState(STATE_FAILED)
-			return model.EVAL_FAIL, 0, err
-		}
-
 		if repeat {
+			log.Debugf("Repeat:%s, Key:%s, Value:%v", repeat, itx.Key(), itx.Value())
+
+			iteration,_ := iterationAttr.Value().(map[string]interface{})
+			iteration["key"] = itx.Key()
+			iteration["value"] = itx.Value()
+
+			_, err := context.EvalActivity()
+
+			//what to do if eval isn't "done"?
+			if err != nil {
+				log.Errorf("Error evaluating activity '%s'[%s] - %s", context.Task().Name(), context.Task().ActivityType(), err.Error())
+				context.SetState(STATE_FAILED)
+				return model.EVAL_FAIL, 0, err
+			}
+
 			evalResult = model.EVAL_REPEAT
 		} else {
 			evalResult = model.EVAL_DONE

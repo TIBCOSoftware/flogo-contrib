@@ -11,6 +11,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"strings"
+	"github.com/pkg/errors"
 )
 
 // TaskData represents data associated with an instance of a Task
@@ -20,7 +21,7 @@ type TaskData struct {
 	state   int
 	done    bool
 	attrs   map[string]*data.Attribute
-	blah    map[string]interface{}
+	workingData    map[string]*data.Attribute
 
 	inScope  data.Scope
 	outScope data.Scope
@@ -62,8 +63,8 @@ func (td *TaskData) SetState(state int) {
 	td.taskEnv.Instance.ChangeTracker.trackTaskData(&TaskDataChange{ChgType: CtUpd, ID: td.task.ID(), TaskData: td})
 }
 
-func (td *TaskData) HasBlah() bool {
-	return td.blah != nil
+func (td *TaskData) HasWorkingData() bool {
+	return td.workingData != nil
 }
 
 func (td *TaskData) GetSetting(setting string) (value interface{}, exists bool) {
@@ -90,20 +91,38 @@ func (td *TaskData) GetSetting(setting string) (value interface{}, exists bool) 
 	}
 }
 
-func (td *TaskData) SetBlah(key string, value interface{}) {
+func (td *TaskData) AddWorkingData(attr *data.Attribute) {
 
-	if td.blah == nil {
-		td.blah = make(map[string]interface{})
+	if td.workingData == nil {
+		td.workingData = make(map[string]*data.Attribute)
 	}
-	td.blah[key] = value
+	td.workingData[attr.Name()] = attr
 }
 
-func (td *TaskData) GetBlah(key string) (interface{}, bool) {
-	if td.blah == nil {
+
+func (td *TaskData) UpdateWorkingData(key string, value interface{}) error {
+
+	if td.workingData == nil {
+		return errors.New("working data '" + key + "' not defined")
+	}
+
+	attr, ok := td.workingData[key]
+
+	if ok {
+		attr.SetValue(value)
+	} else {
+		return errors.New("working data '" + key + "' not defined")
+	}
+
+	return nil
+}
+
+func (td *TaskData) GetWorkingData(key string) (*data.Attribute, bool) {
+	if td.workingData == nil {
 		return nil, false
 	}
 
-	v, ok := td.blah[key]
+	v, ok := td.workingData[key]
 	return v, ok
 }
 
@@ -483,8 +502,8 @@ func applyInputMapper(taskData *TaskData) error {
 		var inputScope data.Scope
 		inputScope = pi
 
-		if taskData.blah != nil {
-			inputScope = NewBlahScope(pi, taskData.blah)
+		if taskData.workingData != nil {
+			inputScope = NewWorkingDataScope(pi, taskData.workingData)
 		}
 
 		err := inputMapper.Apply(inputScope, taskData.InputScope())
@@ -695,31 +714,32 @@ func (s *FixedTaskScope) SetAttrValue(attrName string, value interface{}) error 
 	return err
 }
 
-// BlahScope is scope restricted by the set of reference attrs and backed by the specified Task
-type BlahScope struct {
-	parent data.Scope
-	blah   map[string]interface{}
+// WorkingDataScope is scope restricted by the set of reference attrs and backed by the specified Task
+type WorkingDataScope struct {
+	parent      data.Scope
+	workingData map[string]*data.Attribute
 }
 
 // NewFixedTaskScope creates a FixedTaskScope
-func NewBlahScope(parentScope data.Scope, blah map[string]interface{}) data.Scope {
+func NewWorkingDataScope(parentScope data.Scope, workingData map[string]*data.Attribute) data.Scope {
 
-	scope := &BlahScope{
-		parent: parentScope,
-		blah:   blah,
+	scope := &WorkingDataScope{
+		parent:      parentScope,
+		workingData: workingData,
 	}
 
 	return scope
 }
 
 // GetAttr implements Scope.GetAttr
-func (s *BlahScope) GetAttr(attrName string) (attr *data.Attribute, exists bool) {
+func (s *WorkingDataScope) GetAttr(attrName string) (attr *data.Attribute, exists bool) {
 
-	if strings.HasPrefix(attrName, "$blah.") {
-		val, ok := s.blah[attrName[6:]]
+	if strings.HasPrefix(attrName, "$current.") {
+		val, ok := s.workingData[attrName[9:]]
 		if ok {
-			attr, _ = data.NewAttribute(attrName[6:], data.ANY, val)
-			return attr, true
+			return val, true
+			//attr, _ = data.NewAttribute(attrName[6:], data.ANY, val)
+			//return attr, true
 		}
 		return nil, false
 	} else {
@@ -728,6 +748,6 @@ func (s *BlahScope) GetAttr(attrName string) (attr *data.Attribute, exists bool)
 }
 
 // SetAttrValue implements Scope.SetAttrValue
-func (s *BlahScope) SetAttrValue(attrName string, value interface{}) error {
+func (s *WorkingDataScope) SetAttrValue(attrName string, value interface{}) error {
 	return s.parent.SetAttrValue(attrName, value)
 }

@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
+	"github.com/TIBCOSoftware/flogo-lib/core/data"
 )
 
 // FlowContext is the execution context of the Flow when executing
@@ -66,10 +67,11 @@ type TaskContext interface {
 
 	GetSetting(setting string) (value interface{}, exists bool)
 
-	//todo rename
-	SetBlah(key string, value interface{})
+	AddWorkingData(attr *data.Attribute)
 
-	GetBlah(key string) (interface{}, bool)
+	UpdateWorkingData(key string, value interface{}) error
+
+	GetWorkingData(key string) (*data.Attribute, bool)
 }
 
 // LinkInst is the instance of a link
