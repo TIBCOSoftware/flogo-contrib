@@ -34,6 +34,15 @@ type FlowBehavior interface {
 	Done(context FlowContext) //maybe return something to the state server?
 }
 
+type EvalResult int
+
+const (
+	EVAL_FAIL EvalResult = iota
+	EVAL_DONE
+	EVAL_REPEAT
+	EVAL_WAIT
+)
+
 // TaskBehavior is the execution behavior of a Task.
 type TaskBehavior interface {
 
@@ -44,7 +53,7 @@ type TaskBehavior interface {
 	// Eval is called when a Task is being evaluated.  Returning true indicates
 	// that the task is done.  If err is set, it indicates that the
 	// behavior intends for the flow ErrorHandler to handle the error
-	Eval(context TaskContext, evalCode int) (done bool, doneCode int, err error)
+	Eval(context TaskContext, evalCode int) (evalResult EvalResult, doneCode int, err error)
 
 	// PostEval is called when a task that didn't complete during the Eval
 	// needs to be notified.  Returning true indicates that the task is done.
