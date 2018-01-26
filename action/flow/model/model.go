@@ -9,6 +9,8 @@ import (
 type FlowModel struct {
 	name                string
 	flowBehavior        FlowBehavior
+	defaultTaskBehavior TaskBehavior
+
 	taskBehaviors       map[int]TaskBehavior
 	taskBehaviorAliases map[string]int
 }
@@ -19,6 +21,7 @@ func New(name string) *FlowModel {
 	var flowModel FlowModel
 	flowModel.name = name
 	flowModel.taskBehaviors = make(map[int]TaskBehavior)
+
 
 	return &flowModel
 }
@@ -41,14 +44,30 @@ func (fm *FlowModel) GetFlowBehavior() FlowBehavior {
 
 // RegisterDefaultTaskBehavior registers the default TaskBehavior for the Model
 func (fm *FlowModel) RegisterDefaultTaskBehavior(taskBehavior TaskBehavior) {
+	fm.defaultTaskBehavior = taskBehavior
+
 	fm.taskBehaviors[0] = taskBehavior
 	fm.taskBehaviors[1] = taskBehavior //for backwards compatibility
 	util.RegisterIntAlias(fm.name + "-" + "default", 0)
 	util.RegisterIntAlias(fm.name + "-" + "default", 1) //for backwards compatibility
 }
 
+// RegisterDefaultTaskBehavior registers the default TaskBehavior for the Model
+func (fm *FlowModel) GetDefaultTaskBehavior() TaskBehavior {
+	return fm.defaultTaskBehavior
+}
+
+
 // RegisterTaskBehavior registers the specified TaskBehavior with the Model
 func (fm *FlowModel) RegisterTaskBehavior(id int, alias string, taskBehavior TaskBehavior) {
+	if id > 1 {
+		fm.taskBehaviors[id] = taskBehavior
+
+		if alias != "" {
+			util.RegisterIntAlias(fm.name + "-" + alias, id)
+		}
+	}
+
 	fm.taskBehaviors[id] = taskBehavior
 	if alias != "" {
 		util.RegisterIntAlias(fm.name + "-" + alias, id)
@@ -57,6 +76,10 @@ func (fm *FlowModel) RegisterTaskBehavior(id int, alias string, taskBehavior Tas
 
 // GetTaskBehavior returns TaskBehavior with the specified ID in he FlowModel
 func (fm *FlowModel) GetTaskBehavior(id int) TaskBehavior {
+	if id < 2 {
+		return fm.defaultTaskBehavior
+	}
+
 	return fm.taskBehaviors[id]
 }
 

@@ -57,7 +57,7 @@ func (b *SimpleTaskBehavior) Enter(context model.TaskContext, enterCode int) (ev
 	//check if all predecessor links are done
 	logger.Debugf("Task Enter: %s\n", task.Name())
 
-	context.SetState(STATE_ENTERED)
+	context.SetStatus(STATE_ENTERED)
 
 	linkContexts := context.FromInstLinks()
 
@@ -71,7 +71,7 @@ func (b *SimpleTaskBehavior) Enter(context model.TaskContext, enterCode int) (ev
 		for _, linkContext := range linkContexts {
 
 			logger.Debugf("Task: %s, linkData: %v\n", task.Name(), linkContext)
-			if linkContext.State() != STATE_LINK_TRUE {
+			if linkContext.Status() != STATE_LINK_TRUE {
 				ready = false
 				break
 			}
@@ -80,7 +80,7 @@ func (b *SimpleTaskBehavior) Enter(context model.TaskContext, enterCode int) (ev
 
 	if ready {
 		logger.Debugf("Task Ready\n")
-		context.SetState(STATE_READY)
+		context.SetStatus(STATE_READY)
 	} else {
 		logger.Debugf("Task Not Ready\n")
 	}
@@ -96,7 +96,7 @@ func (b *SimpleTaskBehavior) Eval(context model.TaskContext, evalCode int) (eval
 	if len(task.ChildTasks()) > 0 {
 		logger.Debugf("Has Children\n")
 
-		context.SetState(STATE_WAITING)
+		context.SetStatus(STATE_WAITING)
 
 		//for now enter all children (bpel style) - costly
 		context.EnterChildren(nil)
@@ -137,7 +137,7 @@ func (b *SimpleTaskBehavior) PostEval(context model.TaskContext, evalCode int, d
 
 func (b *SimpleTaskBehavior) Done(context model.TaskContext, doneCode int) (notifyParent bool, childDoneCode int, taskEntries []*model.TaskEntry, err error) {
 
-	context.SetState(STATE_DONE)
+	context.SetStatus(STATE_DONE)
 	//context.SetTaskDone() for task garbage collection
 
 	task := context.Task()
@@ -190,11 +190,11 @@ func (b *SimpleLinkBehavior) Eval(context model.LinkInst, evalCode int) {
 
 	logger.Debugf("Link Eval\n")
 
-	context.SetState(STATE_LINK_TRUE)
+	context.SetStatus(STATE_LINK_TRUE)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// State
+// Status
 const (
 	STATE_NOT_STARTED int = 0
 

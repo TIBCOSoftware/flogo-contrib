@@ -16,9 +16,9 @@ import (
 
 // TaskData represents data associated with an instance of a Task
 type TaskData struct {
-	taskEnv *TaskEnv
+	execEnv *ExecEnv
 	task    *definition.Task
-	state   int
+	status  int
 	done    bool
 	attrs   map[string]*data.Attribute
 	workingData    map[string]*data.Attribute
@@ -33,10 +33,10 @@ type TaskData struct {
 
 // NewTaskData creates a TaskData for the specified task in the specified task
 // environment
-func NewTaskData(taskEnv *TaskEnv, task *definition.Task) *TaskData {
+func NewTaskData(execEnv *ExecEnv, task *definition.Task) *TaskData {
 	var taskData TaskData
 
-	taskData.taskEnv = taskEnv
+	taskData.execEnv = execEnv
 	taskData.task = task
 
 	//taskData.TaskID = task.ID
@@ -52,15 +52,15 @@ func (td *TaskData) HasAttrs() bool {
 /////////////////////////////////////////
 // TaskData - TaskContext Implementation
 
-// State implements flow.TaskContext.GetState
-func (td *TaskData) State() int {
-	return td.state
+// Status implements flow.TaskContext.GetState
+func (td *TaskData) Status() int {
+	return td.status
 }
 
-// SetState implements flow.TaskContext.SetState
-func (td *TaskData) SetState(state int) {
-	td.state = state
-	td.taskEnv.Instance.ChangeTracker.trackTaskData(&TaskDataChange{ChgType: CtUpd, ID: td.task.ID(), TaskData: td})
+// SetStatus implements flow.TaskContext.SetStatus
+func (td *TaskData) SetStatus(status int) {
+	td.status = status
+	td.execEnv.Instance.ChangeTracker.trackTaskData(&TaskDataChange{ChgType: CtUpd, ID: td.task.ID(), TaskData: td})
 }
 
 func (td *TaskData) HasWorkingData() bool {
@@ -79,7 +79,7 @@ func (td *TaskData) GetSetting(setting string) (value interface{}, exists bool) 
 
 	if ok && strValue[0] == '$' {
 
-		v, err := definition.GetDataResolver().Resolve(strValue, td.taskEnv.Instance)
+		v, err := definition.GetDataResolver().Resolve(strValue, td.execEnv.Instance)
 		if err != nil {
 			return nil, false
 		}
@@ -145,7 +145,7 @@ func (td *TaskData) FromInstLinks() []model.LinkInst {
 		linkCtxs := make([]model.LinkInst, numLinks)
 
 		for i, link := range links {
-			linkCtxs[i], _ = td.taskEnv.FindOrCreateLinkData(link)
+			linkCtxs[i], _ = td.execEnv.FindOrCreateLinkData(link)
 		}
 		return linkCtxs
 	}
@@ -166,7 +166,7 @@ func (td *TaskData) ToInstLinks() []model.LinkInst {
 		linkCtxs := make([]model.LinkInst, numLinks)
 
 		for i, link := range links {
-			linkCtxs[i], _ = td.taskEnv.FindOrCreateLinkData(link)
+			linkCtxs[i], _ = td.execEnv.FindOrCreateLinkData(link)
 		}
 		return linkCtxs
 	}
@@ -185,7 +185,7 @@ func (td *TaskData) ToInstLinks() []model.LinkInst {
 //
 //	for _, task := range td.task.ChildTasks() {
 //
-//		taskData, ok := td.taskEnv.TaskDatas[task.ID()]
+//		taskData, ok := td.execEnv.TaskDatas[task.ID()]
 //
 //		if ok {
 //			taskInsts = append(taskInsts, taskData)
@@ -202,13 +202,13 @@ func (td *TaskData) ToInstLinks() []model.LinkInst {
 //	for _, task := range td.task.ChildTasks() {
 //
 //		if len(task.FromLinks()) == 0 {
-//			taskData, _ := td.taskEnv.FindOrCreateTaskData(task)
-//			taskBehavior := td.taskEnv.Instance.FlowModel.GetTaskBehavior(task.TypeID())
+//			taskData, _ := td.execEnv.FindOrCreateTaskData(task)
+//			taskBehavior := td.execEnv.Instance.FlowModel.GetTaskBehavior(task.TypeID())
 //
 //			eval, evalCode := taskBehavior.Enter(taskData, enterCode)
 //
 //			if eval {
-//				td.taskEnv.Instance.scheduleEval(taskData, evalCode)
+//				td.execEnv.Instance.scheduleEval(taskData, evalCode)
 //			}
 //		}
 //	}
@@ -231,13 +231,13 @@ func (td *TaskData) ToInstLinks() []model.LinkInst {
 //
 //		for _, task := range td.task.ChildTasks() {
 //
-//			taskData, _ := td.taskEnv.FindOrCreateTaskData(task)
-//			taskBehavior := td.taskEnv.Instance.FlowModel.GetTaskBehavior(task.TypeID())
+//			taskData, _ := td.execEnv.FindOrCreateTaskData(task)
+//			taskBehavior := td.execEnv.Instance.FlowModel.GetTaskBehavior(task.TypeID())
 //
 //			eval, evalCode := taskBehavior.Enter(taskData, enterCode)
 //
 //			if eval {
-//				td.taskEnv.Instance.scheduleEval(taskData, evalCode)
+//				td.execEnv.Instance.scheduleEval(taskData, evalCode)
 //			}
 //		}
 //	} else {
@@ -246,13 +246,13 @@ func (td *TaskData) ToInstLinks() []model.LinkInst {
 //
 //			//todo validate if specified task is child? or trust model
 //
-//			taskData, _ := td.taskEnv.FindOrCreateTaskData(taskEntry.Task)
-//			taskBehavior := td.taskEnv.Instance.FlowModel.GetTaskBehavior(taskEntry.Task.TypeID())
+//			taskData, _ := td.execEnv.FindOrCreateTaskData(taskEntry.Task)
+//			taskBehavior := td.execEnv.Instance.FlowModel.GetTaskBehavior(taskEntry.Task.TypeID())
 //
 //			eval, evalCode := taskBehavior.Enter(taskData, taskEntry.EnterCode)
 //
 //			if eval {
-//				td.taskEnv.Instance.scheduleEval(taskData, evalCode)
+//				td.execEnv.Instance.scheduleEval(taskData, evalCode)
 //			}
 //		}
 //	}
@@ -276,10 +276,10 @@ func (td *TaskData) EvalLink(link *definition.Link) (result bool, err error) {
 		}
 	}()
 
-	mgr := td.taskEnv.Instance.Flow.GetLinkExprManager()
+	mgr := td.execEnv.Instance.Flow.GetLinkExprManager()
 
 	if mgr != nil {
-		result, err = mgr.EvalLinkExpr(link, td.taskEnv.Instance)
+		result, err = mgr.EvalLinkExpr(link, td.execEnv.Instance)
 		return result, err
 	}
 
@@ -329,7 +329,7 @@ func (td *TaskData) EvalActivity() (done bool, evalErr error) {
 			}
 		}
 		if evalErr != nil {
-			logger.Errorf("Execution failed for Activity[%s] in Flow[%s] - %s", td.task.Name(), td.taskEnv.Instance.Name(), evalErr.Error())
+			logger.Errorf("Execution failed for Activity[%s] in Flow[%s] - %s", td.task.Name(), td.execEnv.Instance.Name(), evalErr.Error())
 		}
 	}()
 
@@ -391,19 +391,19 @@ func (td *TaskData) EvalActivity() (done bool, evalErr error) {
 func (td *TaskData) Failed(err error) {
 
 	errorMsgAttr := "[A" + td.task.ID() + "._errorMsg]"
-	td.taskEnv.Instance.AddAttr(errorMsgAttr, data.STRING, err.Error())
+	td.execEnv.Instance.AddAttr(errorMsgAttr, data.STRING, err.Error())
 	errorMsgAttr2 := "[activity." + td.task.ID() + "._errorMsg]"
-	td.taskEnv.Instance.AddAttr(errorMsgAttr2, data.STRING, err.Error())
+	td.execEnv.Instance.AddAttr(errorMsgAttr2, data.STRING, err.Error())
 }
 
 // FlowDetails implements activity.Context.FlowName method
 func (td *TaskData) FlowDetails() activity.FlowDetails {
-	return td.taskEnv.Instance
+	return td.execEnv.Instance
 }
 
 // FlowDetails implements activity.Context.FlowName method
 func (td *TaskData) ActionContext() action.Context {
-	return td.taskEnv.Instance.ActionContext()
+	return td.execEnv.Instance.ActionContext()
 }
 
 // TaskName implements activity.Context.TaskName method
@@ -486,7 +486,7 @@ func applyInputMapper(taskData *TaskData) error {
 	// get the input mapper
 	inputMapper := taskData.task.ActivityConfig().InputMapper()
 
-	pi := taskData.taskEnv.Instance
+	pi := taskData.execEnv.Instance
 
 	if pi.Patch != nil {
 		// check if the patch has a overriding mapper
@@ -518,7 +518,7 @@ func applyInputMapper(taskData *TaskData) error {
 
 func applyInputInterceptor(taskData *TaskData) bool {
 
-	pi := taskData.taskEnv.Instance
+	pi := taskData.execEnv.Instance
 
 	if pi.Interceptor != nil {
 
@@ -550,7 +550,7 @@ func applyInputInterceptor(taskData *TaskData) bool {
 
 func applyOutputInterceptor(taskData *TaskData) {
 
-	pi := taskData.taskEnv.Instance
+	pi := taskData.execEnv.Instance
 
 	if pi.Interceptor != nil {
 
@@ -574,7 +574,7 @@ func applyOutputMapper(taskData *TaskData) (bool, error) {
 	// get the Output Mapper for the TaskOld if one exists
 	outputMapper := taskData.task.ActivityConfig().OutputMapper()
 
-	pi := taskData.taskEnv.Instance
+	pi := taskData.execEnv.Instance
 
 	if pi.Patch != nil {
 		// check if the patch overrides the Output Mapper
@@ -596,7 +596,7 @@ func applyOutputMapper(taskData *TaskData) (bool, error) {
 
 // LinkData represents data associated with an instance of a Link
 type LinkData struct {
-	taskEnv *TaskEnv
+	execEnv *ExecEnv
 	link    *definition.Link
 	state   int
 
@@ -607,24 +607,24 @@ type LinkData struct {
 
 // NewLinkData creates a LinkData for the specified link in the specified task
 // environment
-func NewLinkData(taskEnv *TaskEnv, link *definition.Link) *LinkData {
+func NewLinkData(execEnv *ExecEnv, link *definition.Link) *LinkData {
 	var linkData LinkData
 
-	linkData.taskEnv = taskEnv
+	linkData.execEnv = execEnv
 	linkData.link = link
 
 	return &linkData
 }
 
-// State returns the current state indicator for the LinkData
+// Status returns the current state indicator for the LinkData
 func (ld *LinkData) State() int {
 	return ld.state
 }
 
-// SetState sets the current state indicator for the LinkData
+// SetStatus sets the current state indicator for the LinkData
 func (ld *LinkData) SetState(state int) {
 	ld.state = state
-	ld.taskEnv.Instance.ChangeTracker.trackLinkData(&LinkDataChange{ChgType: CtUpd, ID: ld.link.ID(), LinkData: ld})
+	ld.execEnv.Instance.ChangeTracker.trackLinkData(&LinkDataChange{ChgType: CtUpd, ID: ld.link.ID(), LinkData: ld})
 }
 
 // Link returns the Link associated with ld context

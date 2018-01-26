@@ -69,7 +69,7 @@ func NewInstanceChangeTracker() *InstanceChangeTracker {
 	return &changes
 }
 
-// SetState is called to track a state change on an instance
+// SetStatus is called to track a state change on an instance
 func (ict *InstanceChangeTracker) SetState(state int) {
 
 	ict.instChange.State = state

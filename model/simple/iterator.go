@@ -21,7 +21,7 @@ func (tb *SimpleIteratorTaskBehavior) Enter(ctx model.TaskContext, enterCode int
 	task := ctx.Task()
 	log.Debugf("Task Enter: %s\n", task.Name())
 
-	ctx.SetState(STATE_ENTERED)
+	ctx.SetStatus(STATE_ENTERED)
 
 	//check if all predecessor links are done
 
@@ -41,10 +41,10 @@ func (tb *SimpleIteratorTaskBehavior) Enter(ctx model.TaskContext, enterCode int
 
 			log.Debugf("Task: %s, linkData: %v\n", task.Name(), linkContext)
 
-			if linkContext.State() < STATE_LINK_FALSE {
+			if linkContext.Status() < STATE_LINK_FALSE {
 				ready = false
 				break
-			} else if linkContext.State() == STATE_LINK_TRUE {
+			} else if linkContext.Status() == STATE_LINK_TRUE {
 				skipped = false
 			}
 		}
@@ -54,12 +54,12 @@ func (tb *SimpleIteratorTaskBehavior) Enter(ctx model.TaskContext, enterCode int
 
 		if skipped {
 			log.Debugf("Task Skipped\n")
-			ctx.SetState(STATE_SKIPPED)
+			ctx.SetStatus(STATE_SKIPPED)
 			//todo hack, wait for explicit skip support from engine
 			return ready, -666
 		} else {
 			log.Debugf("Task Ready\n")
-			ctx.SetState(STATE_READY)
+			ctx.SetStatus(STATE_READY)
 		}
 
 	} else {
@@ -77,7 +77,7 @@ type Iteration struct {
 // Eval implements model.TaskBehavior.Eval
 func (tb *SimpleIteratorTaskBehavior) Eval(ctx model.TaskContext, evalCode int) (evalResult model.EvalResult, doneCode int, err error) {
 
-	if ctx.State() == STATE_SKIPPED {
+	if ctx.Status() == STATE_SKIPPED {
 		return model.EVAL_DONE, EC_SKIP, nil
 	}
 
@@ -147,7 +147,7 @@ func (tb *SimpleIteratorTaskBehavior) Eval(ctx model.TaskContext, evalCode int) 
 			//what to do if eval isn't "done"?
 			if err != nil {
 				log.Errorf("Error evaluating activity '%s'[%s] - %s", ctx.Task().Name(), ctx.Task().ActivityConfig().Ref(), err.Error())
-				ctx.SetState(STATE_FAILED)
+				ctx.SetStatus(STATE_FAILED)
 				return model.EVAL_FAIL, 0, err
 			}
 
@@ -187,7 +187,7 @@ func (tb *SimpleIteratorTaskBehavior) Done(ctx model.TaskContext, doneCode int) 
 	linkInsts := ctx.ToInstLinks()
 	numLinks := len(linkInsts)
 
-	if ctx.State() == STATE_SKIPPED {
+	if ctx.Status() == STATE_SKIPPED {
 		log.Debugf("skipped task: %s\n", task.Name())
 
 		// skip outgoing links
@@ -196,7 +196,7 @@ func (tb *SimpleIteratorTaskBehavior) Done(ctx model.TaskContext, doneCode int) 
 			taskEntries = make([]*model.TaskEntry, 0, numLinks)
 			for _, linkInst := range linkInsts {
 
-				linkInst.SetState(STATE_LINK_SKIPPED)
+				linkInst.SetStatus(STATE_LINK_SKIPPED)
 
 				//todo: engine should not eval mappings for skipped tasks, skip
 				//todo: needs to be a state/op understood by the engine
@@ -210,7 +210,7 @@ func (tb *SimpleIteratorTaskBehavior) Done(ctx model.TaskContext, doneCode int) 
 	} else {
 		log.Debugf("done task: %s", task.Name())
 
-		ctx.SetState(STATE_DONE)
+		ctx.SetStatus(STATE_DONE)
 		//ctx.SetTaskDone() for task garbage collection
 
 		// process outgoing links
@@ -237,12 +237,12 @@ func (tb *SimpleIteratorTaskBehavior) Done(ctx model.TaskContext, doneCode int) 
 				}
 
 				if follow {
-					linkInst.SetState(STATE_LINK_TRUE)
+					linkInst.SetStatus(STATE_LINK_TRUE)
 
 					taskEntry := &model.TaskEntry{Task: linkInst.Link().ToTask(), EnterCode: 0}
 					taskEntries = append(taskEntries, taskEntry)
 				} else {
-					linkInst.SetState(STATE_LINK_FALSE)
+					linkInst.SetStatus(STATE_LINK_FALSE)
 
 					taskEntry := &model.TaskEntry{Task: linkInst.Link().ToTask(), EnterCode: EC_SKIP}
 					taskEntries = append(taskEntries, taskEntry)
@@ -272,7 +272,7 @@ func (tb *SimpleIteratorTaskBehavior) Error(ctx model.TaskContext) (handled bool
 		for _, linkInst := range linkInsts {
 
 			if linkInst.Link().Type() == definition.LtError {
-				linkInst.SetState(STATE_LINK_TRUE)
+				linkInst.SetStatus(STATE_LINK_TRUE)
 				taskEntry := &model.TaskEntry{Task: linkInst.Link().ToTask(), EnterCode: 0}
 				return true, taskEntry
 			}

@@ -100,7 +100,7 @@ func (tb *SimpleTaskBehavior) Enter(ctx model.TaskContext, enterCode int) (eval 
 	task := ctx.Task()
 	log.Debugf("Task Enter: %s\n", task.Name())
 
-	ctx.SetState(STATE_ENTERED)
+	ctx.SetStatus(STATE_ENTERED)
 
 	//check if all predecessor links are done
 
@@ -119,10 +119,10 @@ func (tb *SimpleTaskBehavior) Enter(ctx model.TaskContext, enterCode int) (eval 
 		for _, linkContext := range linkContexts {
 
 			log.Debugf("Task: %s, linkData: %v\n", task.Name(), linkContext)
-			if linkContext.State() < STATE_LINK_FALSE {
+			if linkContext.Status() < STATE_LINK_FALSE {
 				ready = false
 				break
-			} else if linkContext.State() == STATE_LINK_TRUE {
+			} else if linkContext.Status() == STATE_LINK_TRUE {
 				skipped = false
 			}
 		}
@@ -132,12 +132,12 @@ func (tb *SimpleTaskBehavior) Enter(ctx model.TaskContext, enterCode int) (eval 
 
 		if skipped {
 			log.Debugf("Task Skipped\n")
-			ctx.SetState(STATE_SKIPPED)
+			ctx.SetStatus(STATE_SKIPPED)
 			//todo hack, wait for explicit skip support from engine
 			return ready, -666
 		} else {
 			log.Debugf("Task Ready\n")
-			ctx.SetState(STATE_READY)
+			ctx.SetStatus(STATE_READY)
 		}
 
 	} else {
@@ -150,7 +150,7 @@ func (tb *SimpleTaskBehavior) Enter(ctx model.TaskContext, enterCode int) (eval 
 // Eval implements model.TaskBehavior.Eval
 func (tb *SimpleTaskBehavior) Eval(ctx model.TaskContext, evalCode int) (evalResult model.EvalResult, doneCode int, err error) {
 
-	if ctx.State() == STATE_SKIPPED {
+	if ctx.Status() == STATE_SKIPPED {
 		//todo introduce EVAL_SKIPPED?
 		return model.EVAL_DONE, 0, nil
 	}
@@ -164,7 +164,7 @@ func (tb *SimpleTaskBehavior) Eval(ctx model.TaskContext, evalCode int) (evalRes
 
 		if err != nil {
 			log.Errorf("Error evaluating activity '%s'[%s] - %s", ctx.Task().Name(), ctx.Task().ActivityConfig().Ref(), err.Error())
-			ctx.SetState(STATE_FAILED)
+			ctx.SetStatus(STATE_FAILED)
 			return model.EVAL_FAIL, 0, err
 		}
 
@@ -205,7 +205,7 @@ func (tb *SimpleTaskBehavior) Done(ctx model.TaskContext, doneCode int) (notifiy
 	linkInsts := ctx.ToInstLinks()
 	numLinks := len(linkInsts)
 
-	if ctx.State() == STATE_SKIPPED {
+	if ctx.Status() == STATE_SKIPPED {
 		log.Debugf("skipped task: %s\n", task.Name())
 
 		// skip outgoing links
@@ -214,7 +214,7 @@ func (tb *SimpleTaskBehavior) Done(ctx model.TaskContext, doneCode int) (notifiy
 			taskEntries = make([]*model.TaskEntry, 0, numLinks)
 			for _, linkInst := range linkInsts {
 
-				linkInst.SetState(STATE_LINK_SKIPPED)
+				linkInst.SetStatus(STATE_LINK_SKIPPED)
 
 				//todo: engine should not eval mappings for skipped tasks, skip
 				//todo: needs to be a state/op understood by the engine
@@ -228,7 +228,7 @@ func (tb *SimpleTaskBehavior) Done(ctx model.TaskContext, doneCode int) (notifiy
 	} else {
 		log.Debugf("done task: %s", task.Name())
 
-		ctx.SetState(STATE_DONE)
+		ctx.SetStatus(STATE_DONE)
 		//ctx.SetTaskDone() for task garbage collection
 
 		// process outgoing links
@@ -255,12 +255,12 @@ func (tb *SimpleTaskBehavior) Done(ctx model.TaskContext, doneCode int) (notifiy
 				}
 
 				if follow {
-					linkInst.SetState(STATE_LINK_TRUE)
+					linkInst.SetStatus(STATE_LINK_TRUE)
 
 					taskEntry := &model.TaskEntry{Task: linkInst.Link().ToTask(), EnterCode: 0}
 					taskEntries = append(taskEntries, taskEntry)
 				} else {
-					linkInst.SetState(STATE_LINK_FALSE)
+					linkInst.SetStatus(STATE_LINK_FALSE)
 
 					taskEntry := &model.TaskEntry{Task: linkInst.Link().ToTask(), EnterCode: EC_SKIP}
 					taskEntries = append(taskEntries, taskEntry)
@@ -290,7 +290,7 @@ func (tb *SimpleTaskBehavior) Error(ctx model.TaskContext) (handled bool, taskEn
 		for _, linkInst := range linkInsts {
 
 			if linkInst.Link().Type() == definition.LtError {
-				linkInst.SetState(STATE_LINK_TRUE)
+				linkInst.SetStatus(STATE_LINK_TRUE)
 				taskEntry := &model.TaskEntry{Task: linkInst.Link().ToTask(), EnterCode: 0}
 				return true, taskEntry
 			}
@@ -302,7 +302,7 @@ func (tb *SimpleTaskBehavior) Error(ctx model.TaskContext) (handled bool, taskEn
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// State
+// Status
 const (
 	EC_SKIP = 1
 

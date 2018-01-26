@@ -14,10 +14,10 @@ type FlowContext interface {
 	// TaskInsts get the task instances
 	TaskInsts() []TaskInst
 
-	//State gets the state of the Flow instance
+	//Status gets the state of the Flow instance
 	State() int
 
-	//SetState sets the state of the Flow instance
+	//SetStatus sets the state of the Flow instance
 	SetState(state int)
 }
 
@@ -25,11 +25,11 @@ type FlowContext interface {
 // a Task Behavior function
 type TaskContext interface {
 
-	// State gets the state of the Task instance
-	State() int
+	// Status gets the state of the Task instance
+	Status() int
 
-	// SetState sets the state of the Task instance
-	SetState(state int)
+	// SetStatus sets the state of the Task instance
+	SetStatus(status int)
 
 	// Task returns the Task associated with this context
 	Task() *definition.Task
@@ -41,20 +41,6 @@ type TaskContext interface {
 	// ToInstLinks returns the instances of successor Links of the current
 	// task.
 	ToInstLinks() []LinkInst
-
-	//// EnterLeadingChildren enters the set of child Tasks that
-	//// do not have any incoming links.
-	//// todo: should we allow cross-boundary links?
-	//EnterLeadingChildren(enterCode int)
-	//
-	//// EnterChildren enters the set of child Tasks specified,
-	//// If single TaskEntry with nil Task is supplied,
-	//// all the child tasks are entered with the specified code.
-	//EnterChildren(taskEntries []*TaskEntry)
-	//
-	//// ChildTaskInsts gets all the instances of child tasks of the
-	//// current task
-	//ChildTaskInsts() (taskInsts []TaskInst, hasChildTasks bool)
 
 	// EvalLink evaluates the specified link
 	EvalLink(link *definition.Link) (bool, error)
@@ -83,11 +69,11 @@ type LinkInst interface {
 	// Link returns the Link associated with this Link Instance
 	Link() *definition.Link
 
-	// State gets the state of the Link instance
-	State() int
+	// Status gets the state of the Link instance
+	Status() int
 
-	// SetState sets the state of the Link instance
-	SetState(state int)
+	// SetStatus sets the state of the Link instance
+	SetStatus(status int)
 }
 
 type TaskInst interface {
@@ -95,6 +81,6 @@ type TaskInst interface {
 	// Task returns the Task associated with this Task Instance
 	Task() *definition.Task
 
-	// State gets the state of the Task instance
-	State() int
+	// Status gets the state of the Task instance
+	Status() int
 }

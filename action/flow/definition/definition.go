@@ -5,6 +5,7 @@ import (
 
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
 )
 
 // Definition is the object that describes the definition of
@@ -14,6 +15,7 @@ type Definition struct {
 	name          string
 	modelID       string
 	explicitReply bool
+	flowModel     model.FlowModel
 
 	attrs map[string]*data.Attribute
 
@@ -186,7 +188,7 @@ type Task struct {
 	isScope      bool
 
 	definition *Definition
-	//parent     *Task
+
 
 	settings    map[string]interface{}
 	inputAttrs  map[string]*data.Attribute
@@ -213,6 +215,7 @@ func (task *Task) Name() string {
 func (task *Task) TypeID() int {
 	return task.typeID
 }
+
 
 //// ActivityRef gets the activity ref
 //func (task *Task) ActivityRef() string {
