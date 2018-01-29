@@ -1,28 +1,36 @@
 package instance2
 
 import (
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"fmt"
-	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"runtime/debug"
+
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
+	"github.com/TIBCOSoftware/flogo-lib/core/activity"
+	"github.com/TIBCOSoftware/flogo-lib/core/data"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Execution Environment
 
-func (env *Instance) NewExecEnv(parentEnv *ExecEnv, flow *definition.Definition) *ExecEnv {
+func (inst *Instance) NewExecEnv(parentEnv *ExecEnv, flow *definition.Definition) *ExecEnv {
 	var execEnv *ExecEnv
-	execEnv.ID = env.execEnvId
-	execEnv.Instance = env
+	execEnv.ID = inst.execEnvId
+	execEnv.Instance = inst
 	execEnv.flowDef = flow
 
-	env.execEnvId++
+	execEnv.TaskDatas = make(map[string]*TaskData)
+	execEnv.LinkDatas = make(map[int]*LinkData)
+
+	inst.execEnvId++
+
+
+
 	////execEnv.Task = flow.RootTask()
 	////execEnv.taskID = flow.RootTask().ID()
 	//execEnv.Instance = &env
-	//execEnv.TaskDatas = make(map[string]*TaskData)
-	//execEnv.LinkDatas = make(map[int]*LinkData)
+
 
 	return execEnv
 }
@@ -30,22 +38,28 @@ func (env *Instance) NewExecEnv(parentEnv *ExecEnv, flow *definition.Definition)
 // ExecEnv is a structure that describes the execution environment for a flow
 type ExecEnv struct {
 	ParentEnv *ExecEnv
+	ErrorEnv *ExecEnv
 	ID        int
 	flowDef   *definition.Definition
 	Instance  *Instance
 
 	//Task      *definition.Task
 
-	//Attrs         map[string]*data.Attribute
+	Attrs         map[string]*data.Attribute
 
 	TaskDatas map[string]*TaskData
 	LinkDatas map[int]*LinkData
 
-	//returnData      map[string]*data.Attribute
-	//returnError     error
+	status Status
+
+	isErrorHandler bool
+	forceCompletion bool
+	returnData      map[string]*data.Attribute
+	returnError     error
 
 	//taskID string // for deserialization
 }
+
 
 // FindOrCreateTaskData finds an existing TaskData or creates ones if not found for the
 // specified task the task environment
@@ -158,9 +172,10 @@ func ExecTask(behavior model.TaskBehavior, taskData *TaskData) {
 	}
 
 	if evalResult == model.EVAL_DONE {
+		//task was done
 		env.handleTaskDone(behavior, taskData, doneCode)
 	} else if evalResult == model.EVAL_REPEAT {
-		//iterate or retry
+		//task needs to iterate or retry
 		env.Instance.scheduleEval(taskData, 0)
 	}
 }
@@ -171,8 +186,8 @@ func (env *ExecEnv) handleTaskDone(taskBehavior model.TaskBehavior, taskData *Ta
 	notifyFlow, notifyCode, taskEntries, err := taskBehavior.Done(taskData, doneCode)
 
 	if err != nil {
-		pi.appendErrorData(err)
-		pi.HandleGlobalError()
+		env.appendErrorData(err)
+		env.HandleGlobalError()
 		return
 	}
 
@@ -181,29 +196,29 @@ func (env *ExecEnv) handleTaskDone(taskBehavior model.TaskBehavior, taskData *Ta
 
 	if notifyFlow {
 
-		flowBehavior := pi.FlowModel.GetFlowBehavior()
-		flowDone = flowBehavior.TaskDone(pi, notifyCode)
+		flowBehavior := env.Instance.flowModel.GetFlowBehavior()
+		flowDone = flowBehavior.TaskDone(env, notifyCode)
 	}
 
-	if flowDone || pi.forceCompletion {
+	if flowDone || env.forceCompletion {
 		//flow completed or return was called explicitly, so lets complete the flow
-		flowBehavior := pi.FlowModel.GetFlowBehavior()
-		flowBehavior.Done(pi)
+		flowBehavior := env.Instance.flowModel.GetFlowBehavior()
+		flowBehavior.Done(env)
 		flowDone = true
-		pi.setStatus(StatusCompleted)
+		env.setStatus(StatusCompleted)
 
 	} else {
 		for _, taskEntry := range taskEntries {
 
 			logger.Debugf("execTask - TaskEntry: %v\n", taskEntry)
-			taskToEnterBehavior := pi.FlowModel.GetTaskBehavior(taskEntry.Task.TypeID())
+			taskToEnterBehavior := env.Instance.flowModel.GetTaskBehavior(taskEntry.Task.TypeID())
 
 			enterTaskData, _ := taskData.execEnv.FindOrCreateTaskData(taskEntry.Task)
 
 			eval, evalCode := taskToEnterBehavior.Enter(enterTaskData, taskEntry.EnterCode)
 
 			if eval {
-				pi.scheduleEval(enterTaskData, evalCode)
+				env.Instance.scheduleEval(enterTaskData, evalCode)
 			}
 		}
 	}
@@ -217,26 +232,26 @@ func (env *ExecEnv) handleTaskError(taskBehavior model.TaskBehavior, taskData *T
 	handled, taskEntry := taskBehavior.Error(taskData)
 
 	if !handled {
-		pi.appendErrorData(err)
-		if taskData.execEnv.ID != idEhExecEnv {
-			pi.HandleGlobalError()
+		if env.isErrorHandler {
+			//fail
+		} else {
+			env.appendErrorData(err)
+			env.HandleGlobalError()
 		}
 		return
 	}
 
-	//todo add error data for task to flow
-
 	if taskEntry != nil {
 
 		logger.Debugf("execTask - TaskEntry: %v\n", taskEntry)
-		taskToEnterBehavior := pi.FlowModel.GetTaskBehavior(taskEntry.Task.TypeID())
+		taskToEnterBehavior := env.Instance.flowModel.GetTaskBehavior(taskEntry.Task.TypeID())
 
 		enterTaskData, _ := taskData.execEnv.FindOrCreateTaskData(taskEntry.Task)
 
 		eval, evalCode := taskToEnterBehavior.Enter(enterTaskData, taskEntry.EnterCode)
 
 		if eval {
-			pi.scheduleEval(enterTaskData, evalCode)
+			env.Instance.scheduleEval(enterTaskData, evalCode)
 		}
 	}
 
@@ -245,50 +260,196 @@ func (env *ExecEnv) handleTaskError(taskBehavior model.TaskBehavior, taskData *T
 }
 
 // HandleGlobalError handles instance errors
-func (pi *Instance) HandleGlobalError() {
+func (env *ExecEnv) HandleGlobalError() {
 
-	if pi.Flow.GetErrorHandlerFlow() != nil {
+	if env.flowDef.GetErrorHandlerFlow() != nil {
 
 		// if embedded run in the context of this instance
 		// special case, when this sub-flow is done, process is done
-		// todo: should we clear out the existing workitem queue?
+		// todo: should we clear out the existing workitem queue for items from this exec env?
 
-		ehFlow := pi.Flow.GetErrorHandlerFlow()
+		ehFlow := env.flowDef.GetErrorHandlerFlow()
 
-		if pi.EhFlowExecEnv == nil {
+		if env.ErrorEnv == nil {
 			var execEnv ExecEnv
-			execEnv.ID = idEhExecEnv
-			//execEnv.Task = ehTask
-			//execEnv.taskID = ehTask.ID()
-			execEnv.Instance = pi
+			execEnv.ParentEnv = env
+			execEnv.isErrorHandler = true
+			execEnv.Instance = env.Instance
 			execEnv.TaskDatas = make(map[string]*TaskData)
 			execEnv.LinkDatas = make(map[int]*LinkData)
+			execEnv.flowDef = ehFlow
 
-			pi.EhFlowExecEnv = &execEnv
+			env.ErrorEnv = &execEnv
 		}
 
-		flowBehavior := pi.FlowModel.GetFlowBehavior()
-		ok, taskEntries := flowBehavior.StartEmbeddedFlow(pi, ehFlow)
+		flowBehavior := env.Instance.flowModel.GetFlowBehavior()
+		ok, taskEntries := flowBehavior.StartEmbeddedFlow(env.ErrorEnv, ehFlow)
 
 		if ok {
 
 			for _, taskEntry := range taskEntries {
 
 				logger.Debugf("execTask - TaskEntry: %v\n", taskEntry)
-				taskToEnterBehavior := pi.FlowModel.GetTaskBehavior(taskEntry.Task.TypeID())
+				taskToEnterBehavior := env.Instance.flowModel.GetTaskBehavior(taskEntry.Task.TypeID())
 
-				enterTaskData, _ := pi.EhFlowExecEnv.FindOrCreateTaskData(taskEntry.Task)
+				enterTaskData, _ := env.ErrorEnv.FindOrCreateTaskData(taskEntry.Task)
 
 				eval, evalCode := taskToEnterBehavior.Enter(enterTaskData, taskEntry.EnterCode)
 
 				if eval {
-					pi.scheduleEval(enterTaskData, evalCode)
+					env.Instance.scheduleEval(enterTaskData, evalCode)
 				}
 			}
 		}
 	} else {
 
 		//todo: log error information
-		pi.setStatus(StatusFailed)
+		env.setStatus(StatusFailed)
 	}
+}
+
+func (env *ExecEnv) appendErrorData(err error) {
+
+	switch e := err.(type) {
+	case *definition.LinkExprError:
+		env.AddAttr("{Error.type}", data.STRING, "link_expr")
+		env.AddAttr("{Error.message}", data.STRING, err.Error())
+	case *activity.Error:
+		env.AddAttr("{Error.message}", data.STRING, err.Error())
+		env.AddAttr("{Error.data}", data.OBJECT, e.Data())
+		env.AddAttr("{Error.code}", data.STRING, e.Code())
+
+		if e.ActivityName() != "" {
+			env.AddAttr("{Error.activity}", data.STRING, e.ActivityName())
+		}
+	case *ActivityEvalError:
+		env.AddAttr("{Error.activity}", data.STRING, e.TaskName())
+		env.AddAttr("{Error.message}", data.STRING, err.Error())
+		env.AddAttr("{Error.type}", data.STRING, e.Type())
+	default:
+		env.AddAttr("{Error.message}", data.STRING, err.Error())
+	}
+
+	//todo add case for *dataMapperError & *activity.Error
+}
+
+/////////////////////////////////////////
+// ExecEnv - FlowContext Implementation
+
+// Status returns the current status of the Flow Instance
+func (env *ExecEnv) Status() Status {
+	return env.status
+}
+
+func (env *ExecEnv) setStatus(status Status) {
+
+	env.status = status
+	//inst.ChangeTracker.SetStatus(status)
+}
+
+// FlowDefinition returns the Flow definition associated with this context
+func (env *ExecEnv)  FlowDefinition() *definition.Definition {
+	return env.flowDef
+}
+
+// TaskInsts get the task instances
+func (env *ExecEnv) TaskInsts() []model.TaskInst {
+	return nil
+}
+
+/////////////////////////////////////////
+// ExecEnv - data.Scope Implementation
+
+//func (env *ExecEnv) ID() string {
+//
+//}
+//
+//// The action reference
+//func (env *ExecEnv) Ref() string {
+//
+//}
+
+func (env *ExecEnv) Reply(replyData map[string]*data.Attribute, err error) {
+	//ac.rh.HandleResult(replyData, err)
+	//only allow reply if top level flow (parent == nil)
+
+}
+
+// Return is used to complete the action and return the results of the execution
+func (env *ExecEnv) Return(returnData map[string]*data.Attribute, err error) {
+	env.forceCompletion = true
+	env.returnData = returnData
+	env.returnError = err
+}
+
+func (env *ExecEnv) WorkingData() data.Scope {
+	return env
+}
+
+
+func (env *ExecEnv) GetResolver() data.Resolver {
+	return definition.GetDataResolver()
+}
+
+/////////////////////////////////////////
+// ExecEnv - data.Scope Implementation
+
+// GetAttr implements data.Scope.GetAttr
+func (env *ExecEnv) GetAttr(attrName string) (value *data.Attribute, exists bool) {
+
+	if env.Attrs != nil {
+		attr, found := env.Attrs[attrName]
+
+		if found {
+			return attr, true
+		}
+	}
+
+	return env.flowDef.GetAttr(attrName)
+}
+
+// SetAttrValue implements api.Scope.SetAttrValue
+func (env *ExecEnv) SetAttrValue(attrName string, value interface{}) error {
+	if env.Attrs == nil {
+		env.Attrs = make(map[string]*data.Attribute)
+	}
+
+	logger.Debugf("SetAttr - name: %s, value:%v\n", attrName, value)
+
+	existingAttr, exists := env.GetAttr(attrName)
+
+	//todo: optimize, use existing attr
+	if exists {
+		//todo handle error
+		attr, _ := data.NewAttribute(attrName, existingAttr.Type(), value)
+		env.Attrs[attrName] = attr
+		//env.ChangeTracker.AttrChange(CtUpd, attr)
+		return nil
+	}
+
+	return fmt.Errorf("Attr [%s] does not exists", attrName)
+}
+
+// AddAttr add a new attribute to the instance
+func (env *ExecEnv) AddAttr(attrName string, attrType data.Type, value interface{}) *data.Attribute {
+	if env.Attrs == nil {
+		env.Attrs = make(map[string]*data.Attribute)
+	}
+
+	logger.Debugf("AddAttr - name: %s, type: %s, value:%v\n", attrName, attrType, value)
+
+	var attr *data.Attribute
+
+	existingAttr, exists := env.GetAttr(attrName)
+
+	if exists {
+		attr = existingAttr
+	} else {
+		//todo handle error
+		attr, _ = data.NewAttribute(attrName, attrType, value)
+		env.Attrs[attrName] = attr
+		//env.ChangeTracker.AttrChange(CtAdd, attr)
+	}
+
+	return attr
 }

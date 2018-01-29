@@ -14,11 +14,11 @@ type FlowContext interface {
 	// TaskInsts get the task instances
 	TaskInsts() []TaskInst
 
-	//Status gets the state of the Flow instance
-	State() int
-
-	//SetStatus sets the state of the Flow instance
-	SetState(state int)
+	////Status gets the state of the Flow instance
+	//Status() int
+	//
+	////SetStatus sets the state of the Flow instance
+	//SetStatus(status int)
 }
 
 // TaskContext is the execution context of the Task when executing
@@ -84,3 +84,22 @@ type TaskInst interface {
 	// Status gets the state of the Task instance
 	Status() int
 }
+
+//type Status int
+//
+//const (
+//	// StatusNotStarted indicates that the FlowInstance has not started
+//	StatusNotStarted Status = 0
+//
+//	// StatusActive indicates that the FlowInstance is active
+//	StatusActive Status = 100
+//
+//	// StatusCompleted indicates that the FlowInstance has been completed
+//	StatusCompleted Status = 500
+//
+//	// StatusCancelled indicates that the FlowInstance has been cancelled
+//	StatusCancelled Status = 600
+//
+//	// StatusFailed indicates that the FlowInstance has failed
+//	StatusFailed Status = 700
+//)

@@ -9,7 +9,20 @@ import (
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"errors"
+	"strings"
+	"github.com/TIBCOSoftware/flogo-lib/core/action"
 )
+
+func NewTaskData(execEnv *ExecEnv, task *definition.Task) *TaskData {
+	var taskData TaskData
+
+	taskData.execEnv = execEnv
+	taskData.task = task
+
+	//taskData.TaskID = task.ID
+
+	return &taskData
+}
 
 type TaskData struct {
 	execEnv *ExecEnv
@@ -23,25 +36,100 @@ type TaskData struct {
 	//done    bool
 	//attrs   map[string]*data.Attribute
 	//
-	//inScope  data.Scope
-	//outScope data.Scope
+	inScope  data.Scope
+	outScope data.Scope
 	//
 	//changes int
 	//
 	//taskID string //needed for serialization
 }
 
-func NewTaskData(execEnv *ExecEnv, task *definition.Task) *TaskData {
-	var taskData TaskData
+// InputScope get the InputScope of the task instance
+func (td *TaskData) InputScope() data.Scope {
 
-	taskData.execEnv = execEnv
-	taskData.task = task
+	if td.inScope != nil {
+		return td.inScope
+	}
 
-	//taskData.TaskID = task.ID
+	if len(td.task.ActivityConfig().Ref()) > 0 {
 
-	return &taskData
+		act := activity.Get(td.task.ActivityConfig().Ref())
+		td.inScope = NewFixedTaskScope(act.Metadata().Input, td.task, true)
+
+	} else if td.task.IsScope() {
+
+		//add flow scope
+	}
+
+	return td.inScope
 }
 
+// OutputScope get the InputScope of the task instance
+func (td *TaskData) OutputScope() data.Scope {
+
+	if td.outScope != nil {
+		return td.outScope
+	}
+
+	if len(td.task.ActivityConfig().Ref()) > 0 {
+
+		act := activity.Get(td.task.ActivityConfig().Ref())
+		td.outScope = NewFixedTaskScope(act.Metadata().Output, td.task, false)
+
+		logger.Debugf("OutputScope: %v\n", td.outScope)
+	} else if td.task.IsScope() {
+
+		//add flow scope
+	}
+
+	return td.outScope
+}
+
+/////////////////////////////////////////
+// TaskData - activity.Context Implementation
+
+func (td *TaskData) ActionContext() action.Context {
+	return td.execEnv.Instance.ActionContext()
+}
+
+// TaskName implements activity.Context.TaskName method
+func (td *TaskData) TaskName() string {
+	return td.task.Name()
+}
+
+// GetInput implements activity.Context.GetInput
+func (td *TaskData) GetInput(name string) interface{} {
+
+	val, found := td.InputScope().GetAttr(name)
+	if found {
+		return val.Value()
+	}
+
+	return nil
+}
+
+// GetOutput implements activity.Context.GetOutput
+func (td *TaskData) GetOutput(name string) interface{} {
+
+	val, found := td.OutputScope().GetAttr(name)
+	if found {
+		return val.Value()
+	}
+
+	return nil
+}
+
+// SetOutput implements activity.Context.SetOutput
+func (td *TaskData) SetOutput(name string, value interface{}) {
+
+	logger.Debugf("SET OUTPUT: %s = %v\n", name, value)
+	td.OutputScope().SetAttrValue(name, value)
+}
+
+// FlowDetails implements activity.Context.FlowName method
+func (td *TaskData) FlowDetails() activity.FlowDetails {
+	return nil //td.execEnv.Instance
+}
 
 /////////////////////////////////////////
 // TaskData - TaskContext Implementation
@@ -73,7 +161,7 @@ func (td *TaskData) GetSetting(setting string) (value interface{}, exists bool) 
 
 	if ok && strValue[0] == '$' {
 
-		v, err := definition.GetDataResolver().Resolve(strValue, td.execEnv.Instance)
+		v, err := definition.GetDataResolver().Resolve(strValue, td.execEnv)
 		if err != nil {
 			return nil, false
 		}
@@ -189,7 +277,7 @@ func (td *TaskData) EvalLink(link *definition.Link) (result bool, err error) {
 	mgr := td.execEnv.flowDef.GetLinkExprManager()
 
 	if mgr != nil {
-		result, err = mgr.EvalLinkExpr(link, td.execEnv.Instance)
+		result, err = mgr.EvalLinkExpr(link, td.execEnv)
 		return result, err
 	}
 
@@ -201,6 +289,88 @@ func (td *TaskData) HasActivity() bool {
 	return activity.Get(td.task.ActivityConfig().Ref()) != nil
 }
 
+// EvalActivity implements activity.ActivityContext.EvalActivity method
+func (td *TaskData) EvalActivity() (done bool, evalErr error) {
+
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Warnf("Unhandled Error executing activity '%s'[%s] : %v\n", td.task.Name(), td.task.ActivityConfig().Ref(), r)
+
+			// todo: useful for debugging
+			logger.Debugf("StackTrace: %s", debug.Stack())
+
+			if evalErr == nil {
+				evalErr = NewActivityEvalError(td.task.Name(), "unhandled", fmt.Sprintf("%v", r))
+				done = false
+			}
+		}
+		if evalErr != nil {
+			logger.Errorf("Execution failed for Activity[%s] in Flow[%s] - %s", td.task.Name(), td.execEnv.flowDef.Name(), evalErr.Error())
+		}
+	}()
+
+	eval := true
+
+	if td.task.ActivityConfig().InputMapper() != nil {
+
+		err := applyInputMapper(td)
+
+		if err != nil {
+
+			evalErr = NewActivityEvalError(td.task.Name(), "mapper", err.Error())
+			return false, evalErr
+		}
+
+		eval = applyInputInterceptor(td)
+	}
+
+	if eval {
+
+		act := activity.Get(td.task.ActivityConfig().Ref())
+		done, evalErr = act.Eval(td)
+
+		if evalErr != nil {
+			e, ok := evalErr.(*activity.Error)
+			if ok {
+				e.SetActivityName(td.task.Name())
+			}
+
+			return false, evalErr
+		}
+	} else {
+		done = true
+	}
+
+	if done {
+
+		if td.task.ActivityConfig().OutputMapper() != nil {
+			applyOutputInterceptor(td)
+
+			appliedMapper, err := applyOutputMapper(td)
+
+			if err != nil {
+				evalErr = NewActivityEvalError(td.task.Name(), "mapper", err.Error())
+				return done, evalErr
+			}
+
+			if !appliedMapper && !td.task.IsScope() {
+
+				logger.Debug("Mapper not applied")
+			}
+		}
+	}
+
+	return done, nil
+}
+
+// Failed marks the Activity as failed
+func (td *TaskData) Failed(err error) {
+
+	errorMsgAttr := "[A" + td.task.ID() + "._errorMsg]"
+	td.execEnv.AddAttr(errorMsgAttr, data.STRING, err.Error())
+	errorMsgAttr2 := "[activity." + td.task.ID() + "._errorMsg]"
+	td.execEnv.AddAttr(errorMsgAttr2, data.STRING, err.Error())
+}
 
 
 // LinkData represents data associated with an instance of a Link
@@ -239,4 +409,147 @@ func (ld *LinkData) SetStatus(status int) {
 // Link returns the Link associated with ld context
 func (ld *LinkData) Link() *definition.Link {
 	return ld.link
+}
+
+// WorkingDataScope is scope restricted by the set of reference attrs and backed by the specified Task
+type WorkingDataScope struct {
+	parent      data.Scope
+	workingData map[string]*data.Attribute
+}
+
+// NewFixedTaskScope creates a FixedTaskScope
+func NewWorkingDataScope(parentScope data.Scope, workingData map[string]*data.Attribute) data.Scope {
+
+	scope := &WorkingDataScope{
+		parent:      parentScope,
+		workingData: workingData,
+	}
+
+	return scope
+}
+
+// GetAttr implements Scope.GetAttr
+func (s *WorkingDataScope) GetAttr(attrName string) (attr *data.Attribute, exists bool) {
+
+	if strings.HasPrefix(attrName, "$current.") {
+		val, ok := s.workingData[attrName[9:]]
+		if ok {
+			return val, true
+			//attr, _ = data.NewAttribute(attrName[6:], data.ANY, val)
+			//return attr, true
+		}
+		return nil, false
+	} else {
+		return s.parent.GetAttr(attrName)
+	}
+}
+
+// SetAttrValue implements Scope.SetAttrValue
+func (s *WorkingDataScope) SetAttrValue(attrName string, value interface{}) error {
+	return s.parent.SetAttrValue(attrName, value)
+}
+
+// FixedTaskScope is scope restricted by the set of reference attrs and backed by the specified Task
+type FixedTaskScope struct {
+	attrs    map[string]*data.Attribute
+	refAttrs map[string]*data.Attribute
+	task     *definition.Task
+	isInput  bool
+}
+
+// NewFixedTaskScope creates a FixedTaskScope
+func NewFixedTaskScope(refAttrs map[string]*data.Attribute, task *definition.Task, isInput bool) data.Scope {
+
+	scope := &FixedTaskScope{
+		refAttrs: refAttrs,
+		task:     task,
+		isInput:  isInput,
+	}
+
+	return scope
+}
+
+// GetAttr implements Scope.GetAttr
+func (s *FixedTaskScope) GetAttr(attrName string) (attr *data.Attribute, exists bool) {
+
+	if len(s.attrs) > 0 {
+
+		attr, found := s.attrs[attrName]
+
+		if found {
+			return attr, true
+		}
+	}
+
+	if s.task != nil {
+
+		var attr *data.Attribute
+		var found bool
+
+		if s.isInput {
+			attr, found = s.task.ActivityConfig().GetInputAttr(attrName)
+		} else {
+			attr, found = s.task.ActivityConfig().GetOutputAttr(attrName)
+		}
+
+		if !found {
+			attr, found = s.refAttrs[attrName]
+		}
+
+		return attr, found
+	}
+
+	return nil, false
+}
+
+// SetAttrValue implements Scope.SetAttrValue
+func (s *FixedTaskScope) SetAttrValue(attrName string, value interface{}) error {
+
+	if len(s.attrs) == 0 {
+		s.attrs = make(map[string]*data.Attribute)
+	}
+
+	logger.Debugf("SetAttr: %s = %v\n", attrName, value)
+
+	attr, found := s.attrs[attrName]
+
+	var err error
+	if found {
+		err = attr.SetValue(value)
+	} else {
+		// look up reference for type
+		attr, found = s.refAttrs[attrName]
+		if found {
+			s.attrs[attrName], err = data.NewAttribute(attrName, attr.Type(), value)
+		} else {
+			logger.Debugf("SetAttr: Attr %s ref not found\n", attrName)
+			logger.Debugf("SetAttr: refs %v\n", s.refAttrs)
+		}
+		//todo: else error
+	}
+
+	return err
+}
+
+
+func NewActivityEvalError(taskName string, errorType string, errorText string) *ActivityEvalError {
+	return &ActivityEvalError{taskName: taskName, errType: errorType, errText: errorText}
+}
+
+type ActivityEvalError struct {
+	taskName string
+	errType  string
+	errText  string
+}
+
+func (e *ActivityEvalError) TaskName() string {
+	return e.taskName
+}
+
+func (e *ActivityEvalError) Type() string {
+	return e.errType
+}
+
+func (e *ActivityEvalError) Error() string {
+	return e.errText
 }

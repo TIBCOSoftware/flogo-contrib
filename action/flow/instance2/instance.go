@@ -55,7 +55,7 @@ func (inst *Instance) Status() Status {
 	return inst.status
 }
 
-func (inst *Instance) setStatus(status Status) {
+func (inst *Instance) SetStatus(status Status) {
 
 	inst.status = status
 	//inst.ChangeTracker.SetStatus(status)
@@ -79,7 +79,7 @@ func (inst *Instance) DoStep() bool {
 			workItem := item.(*WorkItem)
 
 			behavior := inst.flowModel.GetDefaultTaskBehavior()
-			if typeID := workItem.TaskData.task.TypeID()  > 1 {
+			if typeID := workItem.TaskData.task.TypeID(); typeID > 1 {
 				behavior = inst.flowModel.GetTaskBehavior(typeID)
 			}
 			//inst.ChangeTracker.trackWorkItem(&WorkItemQueueChange{ChgType: CtDel, ID: workItem.ID, WorkItem: workItem})

@@ -24,11 +24,18 @@ type Definition struct {
 
 	//ehLinks       map[int]*Link
 	//ehTasks       map[string]*Task
+	metadata   *Metadata
 
 	linkExprMgr LinkExprManager
 
 	errorHandlerFlow *Definition
 }
+
+type Metadata struct {
+	Input  []*data.Attribute `json:"input"`
+	Output []*data.Attribute `json:"output"`
+}
+
 
 // Name returns the name of the definition
 func (pd *Definition) Name() string {

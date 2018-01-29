@@ -208,7 +208,7 @@ func (pi *Instance) Start(startAttrs []*data.Attribute) bool {
 		for _, taskEntry := range taskEntries {
 
 			logger.Debugf("execTask - TaskEntry: %v\n", taskEntry)
-			taskToEnterBehavior := pi.FlowModel.GetTaskBehavior(taskEntry.Task.TypeID())
+			taskToEnterBehavior := pi.FlowModel.IBehavior(taskEntry.Task.TypeID())
 
 			enterTaskData, _ := pi.FlowExecEnv.FindOrCreateTaskData(taskEntry.Task)
 
