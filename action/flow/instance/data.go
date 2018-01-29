@@ -2,7 +2,9 @@ package instance
 
 import (
 	"fmt"
+	"errors"
 	"runtime/debug"
+	"strings"
 
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
@@ -10,8 +12,6 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"strings"
-	"github.com/pkg/errors"
 )
 
 // TaskData represents data associated with an instance of a Task
