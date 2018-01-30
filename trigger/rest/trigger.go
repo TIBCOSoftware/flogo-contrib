@@ -9,10 +9,10 @@ import (
 
 	"github.com/TIBCOSoftware/flogo-contrib/trigger/rest/cors"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
+	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/julienschmidt/httprouter"
-	"github.com/TIBCOSoftware/flogo-lib/core/data"
 )
 
 const (
@@ -140,6 +140,11 @@ func newActionHandler(rt *RestTrigger, actionId string, handlerCfg *trigger.Hand
 
 		queryValues := r.URL.Query()
 		queryParams := make(map[string]string, len(queryValues))
+		header := make(map[string]string, len(r.Header))
+
+		for key, value := range r.Header {
+			header[key] = strings.Join(value, ",")
+		}
 
 		for key, value := range queryValues {
 			queryParams[key] = strings.Join(value, ",")
@@ -149,6 +154,7 @@ func newActionHandler(rt *RestTrigger, actionId string, handlerCfg *trigger.Hand
 			"params":      pathParams,
 			"pathParams":  pathParams,
 			"queryParams": queryParams,
+			"header":      header,
 			"content":     content,
 		}
 
