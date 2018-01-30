@@ -79,9 +79,8 @@ func (a *RESTActivity) Eval(context activity.Context) (done bool, err error) {
 		uri = BuildURI(uri, pathParams)
 	}
 
-	if context.GetInput(ivQueryParams) != nil {
-		queryParams := context.GetInput(ivQueryParams).(map[string]string)
-
+	queryParams, okQp := context.GetInput(ivQueryParams).(map[string]string)
+	if okQp && len(queryParams) > 0 {
 		qp := url.Values{}
 
 		for key, value := range queryParams {
