@@ -74,7 +74,7 @@ func TestSimpleGet(t *testing.T) {
 
 	//setup attrs
 	tc.SetInput("method", "GET")
-	tc.SetInput("uri", "http://petstore.swagger.io/v2/pet/16")
+	tc.SetInput("uri", "http://petstore.swagger.io/v2/pet/1")
 
 	//eval
 	act.Eval(tc)
