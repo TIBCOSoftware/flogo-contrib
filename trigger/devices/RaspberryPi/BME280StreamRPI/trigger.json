@@ -1,0 +1,31 @@
+{
+   "name":"BME280 RPI Trigger",
+   "type":"flogo:trigger",
+   "ref":"github.com/philippegabert/flogo-contrib/trigger/devices/RaspberryPi/BME280StreamRPI",
+   "version":"0.0.2",
+   "title":"BME280 Stream Trigger for RPI",
+   "description":"BME280 Stream Trigger for Raspberry PI",
+   "homepage":"https://github.com/philippegabert/flogo-contrib/tree/master/trigger/devices/RaspberryPi/BME280StreamRPI",
+   "author":"Philippe GABERT <pgabert@tibco.com>",
+   "settings":[
+      {
+         "name":"delay_ms",
+         "type":"integer",
+         "value":"500"
+      }
+   ],
+   "output":[
+      {
+         "name":"Temperature",
+         "type":"number"
+      },
+      {
+         "name":"Pressure",
+         "type":"number"
+      },
+      {
+         "name":"Humidity",
+         "type":"number"
+      }
+   ]
+}
