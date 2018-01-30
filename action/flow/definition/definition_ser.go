@@ -35,6 +35,7 @@ type TaskRep struct {
 	Mappings    *Mappings              `json:"mappings,omitempty"`
 	InputAttrs  map[string]interface{} `json:"input,omitempty"`
 	OutputAttrs map[string]interface{} `json:"output,omitempty"`
+	Settings    map[string]interface{} `json:"settings"`
 
 	//keep temporarily for backwards compatibility
 	InputAttrsOld  map[string]interface{} `json:"inputs,omitempty"`
@@ -112,6 +113,16 @@ func addTask(def *Definition, task *Task, rep *TaskRep) {
 
 	//temporary support for old configuration
 	task.activityType = rep.ActivityType
+
+
+	// Keep for now, DEPRECATE "attributes" section from flogo.json
+	if len(rep.Settings) > 0 {
+		task.settings = make(map[string]interface{}, len(rep.Settings))
+
+		for name, value := range rep.Settings {
+			task.settings[name] = value
+		}
+	}
 
 	// create mappers
 	if rep.Mappings != nil {
