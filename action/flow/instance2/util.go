@@ -10,7 +10,7 @@ func applyInputMapper(taskData *TaskData) error {
 	// get the input mapper
 	inputMapper := taskData.task.ActivityConfig().InputMapper()
 
-	pi := taskData.execEnv.Instance
+	//pi := taskData.execEnv.Instance
 
 	//if pi.Patch != nil {
 	//	// check if the patch has a overriding mapper

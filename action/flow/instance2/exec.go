@@ -25,41 +25,33 @@ func (inst *Instance) NewExecEnv(parentEnv *ExecEnv, flow *definition.Definition
 
 	inst.execEnvId++
 
-
-
-	////execEnv.Task = flow.RootTask()
-	////execEnv.taskID = flow.RootTask().ID()
-	//execEnv.Instance = &env
-
-
 	return execEnv
 }
 
 // ExecEnv is a structure that describes the execution environment for a flow
 type ExecEnv struct {
 	ParentEnv *ExecEnv
-	ErrorEnv *ExecEnv
+	ErrorEnv  *ExecEnv
 	ID        int
 	flowDef   *definition.Definition
 	Instance  *Instance
 
 	//Task      *definition.Task
 
-	Attrs         map[string]*data.Attribute
+	Attrs map[string]*data.Attribute
 
 	TaskDatas map[string]*TaskData
 	LinkDatas map[int]*LinkData
 
-	status Status
+	status model.FlowStatus
 
-	isErrorHandler bool
+	isErrorHandler  bool
 	forceCompletion bool
 	returnData      map[string]*data.Attribute
 	returnError     error
 
 	//taskID string // for deserialization
 }
-
 
 // FindOrCreateTaskData finds an existing TaskData or creates ones if not found for the
 // specified task the task environment
@@ -72,22 +64,12 @@ func (env *ExecEnv) FindOrCreateTaskData(task *definition.Task) (taskData *TaskD
 	if !ok {
 		taskData = NewTaskData(env, task)
 		env.TaskDatas[task.ID()] = taskData
-		//env.Instance.ChangeTracker.trackTaskData(&TaskDataChange{ChgType: CtAdd, ID: task.ID(), TaskData: taskData})
+		env.Instance.ChangeTracker.trackTaskData(&TaskDataChange{ChgType: CtAdd, ID: task.ID(), TaskData: taskData})
 
 		created = true
 	}
 
 	return taskData, created
-}
-
-// NewTaskData creates a new TaskData object
-func (env *ExecEnv) NewTaskData(task *definition.Task) *TaskData {
-
-	taskData := NewTaskData(env, task)
-	env.TaskDatas[task.ID()] = taskData
-	//env.Instance.ChangeTracker.trackTaskData(&TaskDataChange{ChgType: CtAdd, ID: task.ID(), TaskData: taskData})
-
-	return taskData
 }
 
 // FindOrCreateLinkData finds an existing LinkData or creates ones if not found for the
@@ -100,7 +82,7 @@ func (env *ExecEnv) FindOrCreateLinkData(link *definition.Link) (linkData *LinkD
 	if !ok {
 		linkData = NewLinkData(env, link)
 		env.LinkDatas[link.ID()] = linkData
-		//env.Instance.ChangeTracker.trackLinkData(&LinkDataChange{ChgType: CtAdd, ID: link.ID(), LinkData: linkData})
+		env.Instance.ChangeTracker.trackLinkData(&LinkDataChange{ChgType: CtAdd, ID: link.ID(), LinkData: linkData})
 		created = true
 	}
 
@@ -109,12 +91,12 @@ func (env *ExecEnv) FindOrCreateLinkData(link *definition.Link) (linkData *LinkD
 
 func (env *ExecEnv) releaseTask(task *definition.Task) {
 	delete(env.TaskDatas, task.ID())
-	//env.Instance.ChangeTracker.trackTaskData(&TaskDataChange{ChgType: CtDel, ID: task.ID()})
+	env.Instance.ChangeTracker.trackTaskData(&TaskDataChange{ChgType: CtDel, ID: task.ID()})
 	links := task.FromLinks()
 
 	for _, link := range links {
 		delete(env.LinkDatas, link.ID())
-		//env.Instance.ChangeTracker.trackLinkData(&LinkDataChange{ChgType: CtDel, ID: link.ID()})
+		env.Instance.ChangeTracker.trackLinkData(&LinkDataChange{ChgType: CtDel, ID: link.ID()})
 	}
 }
 
@@ -205,7 +187,7 @@ func (env *ExecEnv) handleTaskDone(taskBehavior model.TaskBehavior, taskData *Ta
 		flowBehavior := env.Instance.flowModel.GetFlowBehavior()
 		flowBehavior.Done(env)
 		flowDone = true
-		env.setStatus(StatusCompleted)
+		env.setStatus(model.FlowStatusCompleted)
 
 	} else {
 		for _, taskEntry := range taskEntries {
@@ -304,7 +286,7 @@ func (env *ExecEnv) HandleGlobalError() {
 	} else {
 
 		//todo: log error information
-		env.setStatus(StatusFailed)
+		env.setStatus(model.FlowStatusFailed)
 	}
 }
 
@@ -337,18 +319,18 @@ func (env *ExecEnv) appendErrorData(err error) {
 // ExecEnv - FlowContext Implementation
 
 // Status returns the current status of the Flow Instance
-func (env *ExecEnv) Status() Status {
+func (env *ExecEnv) Status() model.FlowStatus {
 	return env.status
 }
 
-func (env *ExecEnv) setStatus(status Status) {
+func (env *ExecEnv) setStatus(status model.FlowStatus) {
 
 	env.status = status
-	//inst.ChangeTracker.SetStatus(status)
+	env.Instance.ChangeTracker.SetStatus(status) //should this be at the exec level?
 }
 
 // FlowDefinition returns the Flow definition associated with this context
-func (env *ExecEnv)  FlowDefinition() *definition.Definition {
+func (env *ExecEnv) FlowDefinition() *definition.Definition {
 	return env.flowDef
 }
 
@@ -386,7 +368,6 @@ func (env *ExecEnv) WorkingData() data.Scope {
 	return env
 }
 
-
 func (env *ExecEnv) GetResolver() data.Resolver {
 	return definition.GetDataResolver()
 }
@@ -423,7 +404,7 @@ func (env *ExecEnv) SetAttrValue(attrName string, value interface{}) error {
 		//todo handle error
 		attr, _ := data.NewAttribute(attrName, existingAttr.Type(), value)
 		env.Attrs[attrName] = attr
-		//env.ChangeTracker.AttrChange(CtUpd, attr)
+		env.Instance.ChangeTracker.AttrChange(CtUpd, attr)
 		return nil
 	}
 
@@ -448,8 +429,30 @@ func (env *ExecEnv) AddAttr(attrName string, attrType data.Type, value interface
 		//todo handle error
 		attr, _ = data.NewAttribute(attrName, attrType, value)
 		env.Attrs[attrName] = attr
-		//env.ChangeTracker.AttrChange(CtAdd, attr)
+		env.Instance.ChangeTracker.AttrChange(CtAdd, attr)
 	}
 
 	return attr
+}
+
+func NewActivityEvalError(taskName string, errorType string, errorText string) *ActivityEvalError {
+	return &ActivityEvalError{taskName: taskName, errType: errorType, errText: errorText}
+}
+
+type ActivityEvalError struct {
+	taskName string
+	errType  string
+	errText  string
+}
+
+func (e *ActivityEvalError) TaskName() string {
+	return e.taskName
+}
+
+func (e *ActivityEvalError) Type() string {
+	return e.errType
+}
+
+func (e *ActivityEvalError) Error() string {
+	return e.errText
 }

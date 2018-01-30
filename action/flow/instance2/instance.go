@@ -10,18 +10,25 @@ import (
 )
 
 type Instance struct {
-	id string
-	stepID int
-	status Status
-	flowModel *model.FlowModel
+	id          string
+	stepID      int
+	status      model.FlowStatus
+	flowModel   *model.FlowModel
 	RootExecEnv *ExecEnv
-	execEnvId  int
-	
-	WorkItemQueue *util.SyncQueue //todo: change to faster non-threadsafe queue
-	wiCounter int
+	execEnvId   int
 
-	//ChangeTracker *InstanceChangeTracker `json:"-"` 
-	actionCtx    *ActionCtx //todo after transition to actionCtx, make sure actionCtx isn't null before executing
+	WorkItemQueue *util.SyncQueue //todo: change to faster non-threadsafe queue
+	wiCounter     int
+	ChangeTracker *InstanceChangeTracker
+
+	actionCtx *ActionCtx //todo after transition to actionCtx, make sure actionCtx isn't null before executing
+
+	instId int
+	parentId int
+
+	//ret to owner/parent //to tell owner you are done or failed
+	//ref to master
+
 }
 
 // New creates a new Flow Instance from the specified Flow
@@ -30,14 +37,19 @@ func New(instanceID string, flow *definition.Definition, flowModel *model.FlowMo
 	inst.id = instanceID
 	inst.stepID = 0
 	inst.flowModel = flowModel
-	inst.status = StatusNotStarted
-	
+	inst.status = model.FlowStatusNotStarted
+
 	inst.WorkItemQueue = util.NewSyncQueue()
 	//inst.ChangeTracker = NewInstanceChangeTracker()
-	
+
 	inst.RootExecEnv = inst.NewExecEnv(nil, flow)
 
 	return &inst
+}
+
+func (inst *Instance) NewEmbeddedInstance(flow *definition.Definition) *Instance {
+
+	return inst.id
 }
 
 // ID returns the ID of the Flow Instance
@@ -51,11 +63,11 @@ func (inst *Instance) StepID() int {
 }
 
 // Status returns the current status of the Flow Instance
-func (inst *Instance) Status() Status {
+func (inst *Instance) Status() model.FlowStatus {
 	return inst.status
 }
 
-func (inst *Instance) SetStatus(status Status) {
+func (inst *Instance) SetStatus(status model.FlowStatus) {
 
 	inst.status = status
 	//inst.ChangeTracker.SetStatus(status)
@@ -69,7 +81,7 @@ func (inst *Instance) DoStep() bool {
 
 	inst.stepID++
 
-	if inst.status == StatusActive {
+	if inst.status == model.FlowStatusActive {
 
 		item, ok := inst.WorkItemQueue.Pop()
 
@@ -105,7 +117,6 @@ func (inst *Instance) scheduleEval(taskData *TaskData, evalCode int) {
 	//inst.ChangeTracker.trackWorkItem(&WorkItemQueueChange{ChgType: CtAdd, ID: workItem.ID, WorkItem: workItem})
 }
 
-
 //////////////////////////////////////////////////////////////
 // ActionCtx
 
@@ -136,13 +147,13 @@ func (ac *ActionCtx) Reply(replyData map[string]*data.Attribute, err error) {
 }
 
 func (ac *ActionCtx) Return(returnData map[string]*data.Attribute, err error) {
-	ac.inst.forceCompletion = true
-	ac.inst.returnData = returnData
-	ac.inst.returnError = err
+	//	ac.inst.forceCompletion = true
+	//	ac.inst.returnData = returnData
+	//	ac.inst.returnError = err
 }
 
 func (ac *ActionCtx) WorkingData() data.Scope {
-	return ac.inst
+	return nil //ac.inst
 }
 
 func (ac *ActionCtx) GetResolver() data.Resolver {
@@ -154,7 +165,7 @@ type WorkItem struct {
 	ID       int       `json:"id"`
 	TaskData *TaskData `json:"-"`
 	//ExecType ExecType  `json:"execType"`
-	EvalCode int       `json:"code"`
+	EvalCode int `json:"code"`
 
 	//TaskID string `json:"taskID"` //for now need for ser
 	//taskCtxID int `json:"taskCtxID"` //not needed for now

@@ -5,7 +5,7 @@ import (
 
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
+	//"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
 )
 
 // Definition is the object that describes the definition of
@@ -15,7 +15,7 @@ type Definition struct {
 	name          string
 	modelID       string
 	explicitReply bool
-	flowModel     model.FlowModel
+	//flowModel     model.FlowModel
 
 	attrs map[string]*data.Attribute
 

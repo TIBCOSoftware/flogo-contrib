@@ -1,16 +1,16 @@
 package instance2
 
 import (
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
-	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"runtime/debug"
 	"fmt"
-	"github.com/TIBCOSoftware/flogo-lib/core/activity"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
-	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"errors"
-	"strings"
+	"runtime/debug"
+
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
+	"github.com/TIBCOSoftware/flogo-lib/core/activity"
+	"github.com/TIBCOSoftware/flogo-lib/core/data"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
 func NewTaskData(execEnv *ExecEnv, task *definition.Task) *TaskData {
@@ -27,17 +27,15 @@ func NewTaskData(execEnv *ExecEnv, task *definition.Task) *TaskData {
 type TaskData struct {
 	execEnv *ExecEnv
 	task    *definition.Task
-	status  int
+	status  model.TaskStatus
 
+	workingData map[string]*data.Attribute
 
-	workingData    map[string]*data.Attribute
-
-	//state   int
-	//done    bool
-	//attrs   map[string]*data.Attribute
-	//
 	inScope  data.Scope
 	outScope data.Scope
+
+	//done    bool
+	//attrs   map[string]*data.Attribute
 	//
 	//changes int
 	//
@@ -135,14 +133,14 @@ func (td *TaskData) FlowDetails() activity.FlowDetails {
 // TaskData - TaskContext Implementation
 
 // Status implements flow.TaskContext.GetState
-func (td *TaskData) Status() int {
+func (td *TaskData) Status() model.TaskStatus {
 	return td.status
 }
 
 // SetStatus implements flow.TaskContext.SetStatus
-func (td *TaskData) SetStatus(status int) {
+func (td *TaskData) SetStatus(status model.TaskStatus) {
 	td.status = status
-	//td.execEnv.Instance.ChangeTracker.trackTaskData(&TaskDataChange{ChgType: CtUpd, ID: td.task.ID(), TaskData: td})
+	td.execEnv.Instance.ChangeTracker.trackTaskData(&TaskDataChange{ChgType: CtUpd, ID: td.task.ID(), TaskData: td})
 }
 
 func (td *TaskData) HasWorkingData() bool {
@@ -180,7 +178,6 @@ func (td *TaskData) AddWorkingData(attr *data.Attribute) {
 	}
 	td.workingData[attr.Name()] = attr
 }
-
 
 func (td *TaskData) UpdateWorkingData(key string, value interface{}) error {
 
@@ -370,186 +367,4 @@ func (td *TaskData) Failed(err error) {
 	td.execEnv.AddAttr(errorMsgAttr, data.STRING, err.Error())
 	errorMsgAttr2 := "[activity." + td.task.ID() + "._errorMsg]"
 	td.execEnv.AddAttr(errorMsgAttr2, data.STRING, err.Error())
-}
-
-
-// LinkData represents data associated with an instance of a Link
-type LinkData struct {
-	execEnv *ExecEnv
-	link    *definition.Link
-	status  int
-
-	changes int
-
-	linkID int //needed for serialization
-}
-
-// NewLinkData creates a LinkData for the specified link in the specified task
-// environment
-func NewLinkData(execEnv *ExecEnv, link *definition.Link) *LinkData {
-	var linkData LinkData
-
-	linkData.execEnv = execEnv
-	linkData.link = link
-
-	return &linkData
-}
-
-// Status returns the current state indicator for the LinkData
-func (ld *LinkData) Status() int {
-	return ld.status
-}
-
-// SetStatus sets the current state indicator for the LinkData
-func (ld *LinkData) SetStatus(status int) {
-	ld.status = status
-	//ld.execEnv.Instance.ChangeTracker.trackLinkData(&LinkDataChange{ChgType: CtUpd, ID: ld.link.ID(), LinkData: ld})
-}
-
-// Link returns the Link associated with ld context
-func (ld *LinkData) Link() *definition.Link {
-	return ld.link
-}
-
-// WorkingDataScope is scope restricted by the set of reference attrs and backed by the specified Task
-type WorkingDataScope struct {
-	parent      data.Scope
-	workingData map[string]*data.Attribute
-}
-
-// NewFixedTaskScope creates a FixedTaskScope
-func NewWorkingDataScope(parentScope data.Scope, workingData map[string]*data.Attribute) data.Scope {
-
-	scope := &WorkingDataScope{
-		parent:      parentScope,
-		workingData: workingData,
-	}
-
-	return scope
-}
-
-// GetAttr implements Scope.GetAttr
-func (s *WorkingDataScope) GetAttr(attrName string) (attr *data.Attribute, exists bool) {
-
-	if strings.HasPrefix(attrName, "$current.") {
-		val, ok := s.workingData[attrName[9:]]
-		if ok {
-			return val, true
-			//attr, _ = data.NewAttribute(attrName[6:], data.ANY, val)
-			//return attr, true
-		}
-		return nil, false
-	} else {
-		return s.parent.GetAttr(attrName)
-	}
-}
-
-// SetAttrValue implements Scope.SetAttrValue
-func (s *WorkingDataScope) SetAttrValue(attrName string, value interface{}) error {
-	return s.parent.SetAttrValue(attrName, value)
-}
-
-// FixedTaskScope is scope restricted by the set of reference attrs and backed by the specified Task
-type FixedTaskScope struct {
-	attrs    map[string]*data.Attribute
-	refAttrs map[string]*data.Attribute
-	task     *definition.Task
-	isInput  bool
-}
-
-// NewFixedTaskScope creates a FixedTaskScope
-func NewFixedTaskScope(refAttrs map[string]*data.Attribute, task *definition.Task, isInput bool) data.Scope {
-
-	scope := &FixedTaskScope{
-		refAttrs: refAttrs,
-		task:     task,
-		isInput:  isInput,
-	}
-
-	return scope
-}
-
-// GetAttr implements Scope.GetAttr
-func (s *FixedTaskScope) GetAttr(attrName string) (attr *data.Attribute, exists bool) {
-
-	if len(s.attrs) > 0 {
-
-		attr, found := s.attrs[attrName]
-
-		if found {
-			return attr, true
-		}
-	}
-
-	if s.task != nil {
-
-		var attr *data.Attribute
-		var found bool
-
-		if s.isInput {
-			attr, found = s.task.ActivityConfig().GetInputAttr(attrName)
-		} else {
-			attr, found = s.task.ActivityConfig().GetOutputAttr(attrName)
-		}
-
-		if !found {
-			attr, found = s.refAttrs[attrName]
-		}
-
-		return attr, found
-	}
-
-	return nil, false
-}
-
-// SetAttrValue implements Scope.SetAttrValue
-func (s *FixedTaskScope) SetAttrValue(attrName string, value interface{}) error {
-
-	if len(s.attrs) == 0 {
-		s.attrs = make(map[string]*data.Attribute)
-	}
-
-	logger.Debugf("SetAttr: %s = %v\n", attrName, value)
-
-	attr, found := s.attrs[attrName]
-
-	var err error
-	if found {
-		err = attr.SetValue(value)
-	} else {
-		// look up reference for type
-		attr, found = s.refAttrs[attrName]
-		if found {
-			s.attrs[attrName], err = data.NewAttribute(attrName, attr.Type(), value)
-		} else {
-			logger.Debugf("SetAttr: Attr %s ref not found\n", attrName)
-			logger.Debugf("SetAttr: refs %v\n", s.refAttrs)
-		}
-		//todo: else error
-	}
-
-	return err
-}
-
-
-func NewActivityEvalError(taskName string, errorType string, errorText string) *ActivityEvalError {
-	return &ActivityEvalError{taskName: taskName, errType: errorType, errText: errorText}
-}
-
-type ActivityEvalError struct {
-	taskName string
-	errType  string
-	errText  string
-}
-
-func (e *ActivityEvalError) TaskName() string {
-	return e.taskName
-}
-
-func (e *ActivityEvalError) Type() string {
-	return e.errType
-}
-
-func (e *ActivityEvalError) Error() string {
-	return e.errText
 }

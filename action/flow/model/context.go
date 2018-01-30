@@ -15,7 +15,7 @@ type FlowContext interface {
 	TaskInsts() []TaskInst
 
 	////Status gets the state of the Flow instance
-	//Status() int
+	Status() FlowStatus
 	//
 	////SetStatus sets the state of the Flow instance
 	//SetStatus(status int)
@@ -26,10 +26,10 @@ type FlowContext interface {
 type TaskContext interface {
 
 	// Status gets the state of the Task instance
-	Status() int
+	Status() TaskStatus
 
 	// SetStatus sets the state of the Task instance
-	SetStatus(status int)
+	SetStatus(status TaskStatus)
 
 	// Task returns the Task associated with this context
 	Task() *definition.Task
@@ -70,10 +70,10 @@ type LinkInst interface {
 	Link() *definition.Link
 
 	// Status gets the state of the Link instance
-	Status() int
+	Status() LinkStatus
 
 	// SetStatus sets the state of the Link instance
-	SetStatus(status int)
+	SetStatus(status LinkStatus)
 }
 
 type TaskInst interface {
@@ -82,24 +82,5 @@ type TaskInst interface {
 	Task() *definition.Task
 
 	// Status gets the state of the Task instance
-	Status() int
+	Status() TaskStatus
 }
-
-//type Status int
-//
-//const (
-//	// StatusNotStarted indicates that the FlowInstance has not started
-//	StatusNotStarted Status = 0
-//
-//	// StatusActive indicates that the FlowInstance is active
-//	StatusActive Status = 100
-//
-//	// StatusCompleted indicates that the FlowInstance has been completed
-//	StatusCompleted Status = 500
-//
-//	// StatusCancelled indicates that the FlowInstance has been cancelled
-//	StatusCancelled Status = 600
-//
-//	// StatusFailed indicates that the FlowInstance has failed
-//	StatusFailed Status = 700
-//)
