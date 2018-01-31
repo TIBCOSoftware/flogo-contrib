@@ -48,13 +48,13 @@ func TestStringConfig(t *testing.T) {
 	tc := test.NewTestActivityContext(getActivityMetadata())
 
 	//setup attrs
-	tc.SetInput("AWS_ACCESS_KEY_ID", "")
-	tc.SetInput("AWS_SECRET_ACCESS_KEY", "")
-	tc.SetInput("AWS_DEFAULT_REGION", "ap-southeast-2")
-	tc.SetInput("SMS_TYPE", "Promotional")
-	tc.SetInput("SMS_FROM", "Sender")
-	tc.SetInput("SMS_TO", "+XXXXXXXXXXXX")
-	tc.SetInput("SMS_MESSAGE", "Hello world !")
+	tc.SetInput("accessKey", "")
+	tc.SetInput("secretKey", "")
+	tc.SetInput("region", "ap-southeast-2")
+	tc.SetInput("smsType", "Promotional")
+	tc.SetInput("from", "Sender")
+	tc.SetInput("to", "+XXXXXXXXXXXX")
+	tc.SetInput("message", "Hello world !")
 
 	success, err := act.Eval(tc)
 
@@ -64,7 +64,7 @@ func TestStringConfig(t *testing.T) {
 		return
 	}
 	if success {
-		val := tc.GetOutput("MESSAGE_ID")
+		val := tc.GetOutput("messageId")
 		fmt.Printf("Message ID : %v\n", val)
 	} else {
 		t.Error("Error while sending SMS")
