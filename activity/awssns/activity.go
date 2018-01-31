@@ -12,14 +12,14 @@ import (
 
 // List of input and output variables names
 const (
-	ConfAWSAccessKeyID     = "AWS_ACCESS_KEY_ID"
-	ConfAWSSecretAccessKey = "AWS_SECRET_ACCESS_KEY"
-	ConfAWSDefaultRegion   = "AWS_DEFAULT_REGION"
-	ConfSMSType            = "SMS_TYPE"
-	ConfSMSFrom            = "SMS_FROM"
-	ConfSMSTo              = "SMS_TO"
-	ConfSMSMessage         = "SMS_MESSAGE"
-	OUTMessageID           = "MESSAGE_ID"
+	ConfAWSAccessKeyID     = "accessKey"
+	ConfAWSSecretAccessKey = "secretAccessKey"
+	ConfAWSDefaultRegion   = "region"
+	ConfSMSType            = "smsType"
+	ConfSMSFrom            = "from"
+	ConfSMSTo              = "to"
+	ConfSMSMessage         = "message"
+	OUTMessageID           = "messageId"
 )
 
 // log is the default package logger
