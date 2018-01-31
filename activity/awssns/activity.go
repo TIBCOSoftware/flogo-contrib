@@ -13,7 +13,7 @@ import (
 // List of input and output variables names
 const (
 	ConfAWSAccessKeyID     = "accessKey"
-	ConfAWSSecretAccessKey = "secretAccessKey"
+	ConfAWSSecretAccessKey = "secretKey"
 	ConfAWSDefaultRegion   = "region"
 	ConfSMSType            = "smsType"
 	ConfSMSFrom            = "from"
