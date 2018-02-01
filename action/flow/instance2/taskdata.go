@@ -7,16 +7,15 @@ import (
 
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
-	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
-func NewTaskData(execEnv *ExecEnv, task *definition.Task) *TaskData {
+func NewTaskData(inst *Instance, task *definition.Task) *TaskData {
 	var taskData TaskData
 
-	taskData.execEnv = execEnv
+	taskData.inst = inst
 	taskData.task = task
 
 	//taskData.TaskID = task.ID
@@ -25,7 +24,7 @@ func NewTaskData(execEnv *ExecEnv, task *definition.Task) *TaskData {
 }
 
 type TaskData struct {
-	execEnv *ExecEnv
+	inst *Instance
 	task    *definition.Task
 	status  model.TaskStatus
 
@@ -34,11 +33,6 @@ type TaskData struct {
 	inScope  data.Scope
 	outScope data.Scope
 
-	//done    bool
-	//attrs   map[string]*data.Attribute
-	//
-	//changes int
-	//
 	//taskID string //needed for serialization
 }
 
@@ -86,12 +80,12 @@ func (td *TaskData) OutputScope() data.Scope {
 /////////////////////////////////////////
 // TaskData - activity.Context Implementation
 
-func (td *TaskData) ActionContext() action.Context {
-	return td.execEnv.Instance.ActionContext()
+func (td *TaskData) Host() activity.Host {
+	return td.inst
 }
 
-// TaskName implements activity.Context.TaskName method
-func (td *TaskData) TaskName() string {
+// Name implements activity.Context.Name method
+func (td *TaskData) Name() string {
 	return td.task.Name()
 }
 
@@ -124,9 +118,10 @@ func (td *TaskData) SetOutput(name string, value interface{}) {
 	td.OutputScope().SetAttrValue(name, value)
 }
 
-// FlowDetails implements activity.Context.FlowName method
-func (td *TaskData) FlowDetails() activity.FlowDetails {
-	return nil //td.execEnv.Instance
+// TaskName implements activity.Context.TaskName method
+// Deprecated
+func (td *TaskData) TaskName() string {
+	return td.task.Name()
 }
 
 /////////////////////////////////////////
@@ -140,7 +135,7 @@ func (td *TaskData) Status() model.TaskStatus {
 // SetStatus implements flow.TaskContext.SetStatus
 func (td *TaskData) SetStatus(status model.TaskStatus) {
 	td.status = status
-	td.execEnv.Instance.ChangeTracker.trackTaskData(&TaskDataChange{ChgType: CtUpd, ID: td.task.ID(), TaskData: td})
+	td.inst.ChangeTracker.trackTaskData(&TaskDataChange{ChgType: CtUpd, ID: td.task.ID(), TaskData: td})
 }
 
 func (td *TaskData) HasWorkingData() bool {
@@ -159,7 +154,7 @@ func (td *TaskData) GetSetting(setting string) (value interface{}, exists bool) 
 
 	if ok && strValue[0] == '$' {
 
-		v, err := definition.GetDataResolver().Resolve(strValue, td.execEnv)
+		v, err := definition.GetDataResolver().Resolve(strValue, td.inst)
 		if err != nil {
 			return nil, false
 		}
@@ -224,7 +219,7 @@ func (td *TaskData) FromInstLinks() []model.LinkInst {
 		linkCtxs := make([]model.LinkInst, numLinks)
 
 		for i, link := range links {
-			linkCtxs[i], _ = td.execEnv.FindOrCreateLinkData(link)
+			linkCtxs[i], _ = td.inst.FindOrCreateLinkData(link)
 		}
 		return linkCtxs
 	}
@@ -245,7 +240,7 @@ func (td *TaskData) ToInstLinks() []model.LinkInst {
 		linkCtxs := make([]model.LinkInst, numLinks)
 
 		for i, link := range links {
-			linkCtxs[i], _ = td.execEnv.FindOrCreateLinkData(link)
+			linkCtxs[i], _ = td.inst.FindOrCreateLinkData(link)
 		}
 		return linkCtxs
 	}
@@ -271,10 +266,10 @@ func (td *TaskData) EvalLink(link *definition.Link) (result bool, err error) {
 		}
 	}()
 
-	mgr := td.execEnv.flowDef.GetLinkExprManager()
+	mgr := td.inst.flowDef.GetLinkExprManager()
 
 	if mgr != nil {
-		result, err = mgr.EvalLinkExpr(link, td.execEnv)
+		result, err = mgr.EvalLinkExpr(link, td.inst)
 		return result, err
 	}
 
@@ -302,7 +297,7 @@ func (td *TaskData) EvalActivity() (done bool, evalErr error) {
 			}
 		}
 		if evalErr != nil {
-			logger.Errorf("Execution failed for Activity[%s] in Flow[%s] - %s", td.task.Name(), td.execEnv.flowDef.Name(), evalErr.Error())
+			logger.Errorf("Execution failed for Activity[%s] in Flow[%s] - %s", td.task.Name(), td.inst.flowDef.Name(), evalErr.Error())
 		}
 	}()
 
@@ -360,11 +355,11 @@ func (td *TaskData) EvalActivity() (done bool, evalErr error) {
 	return done, nil
 }
 
-// Failed marks the Activity as failed
-func (td *TaskData) Failed(err error) {
-
-	errorMsgAttr := "[A" + td.task.ID() + "._errorMsg]"
-	td.execEnv.AddAttr(errorMsgAttr, data.STRING, err.Error())
-	errorMsgAttr2 := "[activity." + td.task.ID() + "._errorMsg]"
-	td.execEnv.AddAttr(errorMsgAttr2, data.STRING, err.Error())
-}
+//// Failed marks the Activity as failed
+//func (td *TaskData) Failed(err error) {
+//
+//	errorMsgAttr := "[A" + td.task.ID() + "._errorMsg]"
+//	td.inst.AddAttr(errorMsgAttr, data.STRING, err.Error())
+//	errorMsgAttr2 := "[activity." + td.task.ID() + "._errorMsg]"
+//	td.inst.AddAttr(errorMsgAttr2, data.STRING, err.Error())
+//}

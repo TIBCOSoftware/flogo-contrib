@@ -18,22 +18,18 @@ type FlowBehavior interface {
 	// flow can start and enter the specified tasks.
 	// Return false indicates that the flow could not be started
 	// at this time.
-	Start(context FlowContext) (start bool, taskEntries []*TaskEntry)
+	Start(context FlowContext) (started bool, taskEntries []*TaskEntry)
 
 	// Resume the flow instance.  Returning true indicates that the
 	// flow can resume.  Return false indicates that the flow
 	// could not be resumed at this time.
-	Resume(context FlowContext) bool
+	Resume(context FlowContext) (resumed bool)
 
 	// TasksDone is called when a terminal task is Done.
-	TaskDone(context FlowContext, doneCode int) (flowDone bool)
+	TaskDone(context FlowContext) (flowDone bool)
 
 	// Done is called when the flow is done.
 	Done(context FlowContext)
-
-	StartEmbeddedFlow(context FlowContext, flow *definition.Definition) (start bool, taskEntries []*TaskEntry)
-
-	//HandleError(context FlowContext) (start bool, taskEntries []*TaskEntry)
 }
 
 type EvalResult int
@@ -45,37 +41,42 @@ const (
 	EVAL_WAIT
 )
 
+type EnterResult int
+
+const (
+	ENTER_NOTREADY EnterResult = iota
+	ENTER_EVAL
+	ENTER_SKIP
+)
+
 // TaskBehavior is the execution behavior of a Task.
 type TaskBehavior interface {
 
-	// Enter determines if a Task is ready to be evaluated, returning true
-	// indicates that the task is ready to be evaluated.
-	Enter(context TaskContext, enterCode int) (eval bool, evalCode int)
+	// Enter determines if a Task is ready to be evaluated, or needs to be
+	// skipped
+	Enter(context TaskContext) (enterResult EnterResult)
 
 	// Eval is called when a Task is being evaluated.  Returning true indicates
 	// that the task is done.  If err is set, it indicates that the
 	// behavior intends for the flow ErrorHandler to handle the error
-	Eval(context TaskContext, evalCode int) (evalResult EvalResult, doneCode int, err error)
+	Eval(context TaskContext) (evalResult EvalResult, err error)
 
-	// PostEval is called when a task that didn't complete during the Eval
-	// needs to be notified.  Returning true indicates that the task is done.
-	// If err is set, it indicates that the  behavior intends for the
+	// PostEval is called when a task that is waiting needs to be notified.
+	// If err is set, it indicates that the behavior intends for the
 	// flow ErrorHandler to handle the error
-	PostEval(context TaskContext, evalCode int, data interface{}) (done bool, doneCode int, err error)
+	PostEval(context TaskContext) (evalResult EvalResult, err error)
 
-	// Done is called when Eval, PostEval or ChildDone return true, indicating
+	// Done is called when Eval or PostEval return a result of DONE, indicating
 	// that the task is done.  This step is used to finalize the task and
-	// determine the next set of tasks to be entered.  Returning true indicates
-	// that the parent task should be notified.  Also returns the set of Tasks
-	// that should be entered next.
-	Done(context TaskContext, doneCode int) (notifyFlow bool, notifyCode int, taskEntries []*TaskEntry, err error)
+	// determine the next set of tasks to be entered.
+	Done(context TaskContext) (notifyFlow bool, taskEntries []*TaskEntry, err error)
+
+	// Skip is called when Enter returns a result of SKIP, indicating
+	// that the task should be skipped.  This step is used to skip the task and
+	// determine the next set of tasks to be entered.
+	Skip(context TaskContext) (notifyFlow bool, taskEntries []*TaskEntry)
 
 	// Error is called when there is an issue executing Eval, it returns a boolean indicating
 	// if it handled the error, otherwise the error is handled by the global error handler
-	Error(context TaskContext) (handled bool, taskEntry *TaskEntry)
-
-	// ChildDone is called when child task is Done and has indicated that its
-	// parent should be notified.  Returning true indicates that the task
-	// is done.
-	//ChildDone(context TaskContext, childTask *definition.Task, childDoneCode int) (done bool, doneCode int)
+	Error(context TaskContext, err error) (handled bool, taskEntries []*TaskEntry)
 }

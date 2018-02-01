@@ -34,25 +34,20 @@ type TaskContext interface {
 	// Task returns the Task associated with this context
 	Task() *definition.Task
 
-	// FromInstLinks returns the instances of predecessor Links of the current
-	// task.
+	// FromInstLinks returns the instances of predecessor Links of the current task.
 	FromInstLinks() []LinkInst
 
-	// ToInstLinks returns the instances of successor Links of the current
-	// task.
+	// ToInstLinks returns the instances of successor Links of the current task.
 	ToInstLinks() []LinkInst
 
 	// EvalLink evaluates the specified link
 	EvalLink(link *definition.Link) (bool, error)
 
-	// HasActivity flag indicating if the task has an Activity
-	HasActivity() bool
-
 	// EvalActivity evaluates the Activity associated with the Task
 	EvalActivity() (done bool, err error)
 
 	// Failed marks the Activity as failed
-	Failed(err error)
+	//Failed(err error)
 
 	GetSetting(setting string) (value interface{}, exists bool)
 
@@ -83,4 +78,30 @@ type TaskInst interface {
 
 	// Status gets the state of the Task instance
 	Status() TaskStatus
+}
+
+
+type FlowHost interface {
+	// ID returns the ID of the Action Instance
+	ID() string
+
+	// The action reference
+	Ref() string
+
+	// Get metadata of the action instance
+	//InstanceMetadata() *ConfigMetadata
+
+	// Reply is used to reply with the results of the instance execution
+	Reply(replyData map[string]*data.Attribute, err error)
+
+	// Return is used to complete the action and return the results of the execution
+	Return(returnData map[string]*data.Attribute, err error)
+
+	//todo rename, essentially the flow's attrs for now
+	WorkingData() data.Scope
+
+	//Map with action specific details/properties, flowId, etc.
+	//GetDetails() map[string]string
+
+	GetResolver() data.Resolver
 }

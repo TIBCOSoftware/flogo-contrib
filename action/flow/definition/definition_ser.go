@@ -17,10 +17,13 @@ type DefinitionRep struct {
 	ExplicitReply bool              `json:"explicitReply"`
 	Name          string            `json:"name"`
 	ModelID       string            `json:"model"`
+	Metadata *Metadata `json:"metadata"`
+
 	Attributes    []*data.Attribute `json:"attributes,omitempty"`
 
 	Tasks []*TaskRep `json:"tasks"`
 	Links []*LinkRep `json:"links"`
+
 
 	ErrorHandlerFlow    *ErrorFlowRep `json:"errorHandlerFlow"`
 	ErrorHandlerFlowRef string        `json:"errorHandlerFlowRef"`
@@ -81,6 +84,7 @@ func NewDefinition(rep *DefinitionRep) (def *Definition, err error) {
 	def = &Definition{}
 	def.name = rep.Name
 	def.modelID = rep.ModelID
+	def.metadata = rep.Metadata
 
 	if len(rep.Attributes) > 0 {
 		def.attrs = make(map[string]*data.Attribute, len(rep.Attributes))

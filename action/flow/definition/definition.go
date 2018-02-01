@@ -47,10 +47,10 @@ func (pd *Definition) ModelID() string {
 	return pd.modelID
 }
 
-//// RootTask returns the root task of the definition
-//func (pd *Definition) RootTask() *TaskOld {
-//	return pd.rootTask
-//}
+// Metadata returns IO metadata for the flow
+func (pd *Definition) Metadata() *Metadata {
+	return pd.metadata
+}
 
 // GetTask returns the task with the specified ID
 func (pd *Definition) GetTask(taskID string) *Task {
@@ -91,12 +91,8 @@ func (pd *Definition) GetErrorHandlerFlow() *Definition {
 	return pd.errorHandlerFlow
 }
 
-//// ErrorHandler returns the error handler task of the definition
-//func (pd *Definition) ErrorHandlerTask() *TaskOld {
-//	return pd.ehTask
-//}
-//
-//// GetAttr gets the specified attribute
+
+// GetAttr gets the specified attribute
 func (pd *Definition) GetAttr(attrName string) (attr *data.Attribute, exists bool) {
 
 	if pd.attrs != nil {

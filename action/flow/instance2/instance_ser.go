@@ -47,41 +47,63 @@ func (pi *Instance) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON overrides the default UnmarshalJSON for FlowInstance
-func (pi *Instance) UnmarshalJSON(d []byte) error {
+func (inst *IndependentInstance) UnmarshalJSON(d []byte) error {
 
 	//if pi.flowProvider == nil {
 	//	panic("flow.Provider not specified, required for unmarshalling")
 	//}
+	ser := &struct {
+		ID        int         `json:"id"`
+		TaskID    string      `json:"taskId"`
+		TaskDatas []*TaskData `json:"taskDatas"`
+		LinkDatas []*LinkData `json:"linkDatas"`
+	}{}
 
 	ser := &serInstance{}
 	if err := json.Unmarshal(d, ser); err != nil {
 		return err
 	}
 
-	pi.id = ser.ID
-	pi.status = ser.Status
+	inst.id = ser.ID
+	inst.status = ser.Status
 
-	pi.FlowURI = ser.FlowURI
+	//inst.FlowURI = ser.FlowURI
 	//pi.Flow = pi.flowProvider.GetFlow(pi.FlowURI)
 	//pi.FlowModel = flowmodel.Get(pi.Flow.ModelID())
 
-	pi.Attrs = make(map[string]*data.Attribute)
+	inst.Attrs = make(map[string]*data.Attribute)
 
 	for _, value := range ser.Attrs {
-		pi.Attrs[value.Name()] = value
+		inst.Attrs[value.Name()] = value
 	}
 
-	pi.RootExecEnv = ser.RootExecEnv
+
+	inst.ChangeTracker = NewInstanceChangeTracker()
+
+	//te.taskID = ser.TaskID
+	inst.TaskDatas = make(map[string]*TaskData, len(ser.TaskDatas))
+	inst.LinkDatas = make(map[int]*LinkData,  len(ser.LinkDatas))
+
+	for _, value := range ser.TaskDatas {
+		inst.TaskDatas[value.taskID] = value
+	}
+
+	for _, value := range ser.LinkDatas {
+		inst.LinkDatas[value.linkID] = value
+	}
+
+
+	//pi.RootExecEnv = ser.RootExecEnv
 	//pi.RootTaskEnv.init(pi)
 
-	pi.WorkItemQueue = util.NewSyncQueue()
+	inst.WorkItemQueue = util.NewSyncQueue()
 
 	for _, workItem := range ser.WorkQueue {
 		workItem.TaskData = pi.RootExecEnv.TaskDatas[workItem.TaskID]
 		pi.WorkItemQueue.Push(workItem)
 	}
 
-	pi.ChangeTracker = NewInstanceChangeTracker()
+
 
 	return nil
 }

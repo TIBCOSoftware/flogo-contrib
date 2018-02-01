@@ -7,7 +7,7 @@ import (
 
 // LinkData represents data associated with an instance of a Link
 type LinkData struct {
-	execEnv *ExecEnv
+	inst *Instance
 	link    *definition.Link
 	status  model.LinkStatus
 
@@ -17,10 +17,10 @@ type LinkData struct {
 
 // NewLinkData creates a LinkData for the specified link in the specified task
 // environment
-func NewLinkData(execEnv *ExecEnv, link *definition.Link) *LinkData {
+func NewLinkData(inst *Instance, link *definition.Link) *LinkData {
 	var linkData LinkData
 
-	linkData.execEnv = execEnv
+	linkData.inst = inst
 	linkData.link = link
 
 	return &linkData
@@ -34,7 +34,7 @@ func (ld *LinkData) Status() model.LinkStatus {
 // SetStatus sets the current state indicator for the LinkData
 func (ld *LinkData) SetStatus(status model.LinkStatus) {
 	ld.status = status
-	ld.execEnv.Instance.ChangeTracker.trackLinkData(&LinkDataChange{ChgType: CtUpd, ID: ld.link.ID(), LinkData: ld})
+	ld.inst.ChangeTracker.trackLinkData(&LinkDataChange{ChgType: CtUpd, ID: ld.link.ID(), LinkData: ld})
 }
 
 // Link returns the Link associated with ld context
