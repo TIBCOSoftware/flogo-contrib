@@ -111,6 +111,9 @@ func (tb *SimpleIteratorTaskBehavior) Eval(context model.TaskContext, evalCode i
 			case int:
 				count := iterateOn.(int)
 				itx = NewIntIterator(count)
+			case float64:
+				count := int(iterateOn.(float64))
+				itx = NewIntIterator(count)
 			case map[string]interface{}:
 				itx = NewObjectIterator(t)
 			case []interface{}:
