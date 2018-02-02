@@ -34,7 +34,7 @@ func (ld *LinkData) Status() model.LinkStatus {
 // SetStatus sets the current state indicator for the LinkData
 func (ld *LinkData) SetStatus(status model.LinkStatus) {
 	ld.status = status
-	ld.inst.ChangeTracker.trackLinkData(&LinkDataChange{ChgType: CtUpd, ID: ld.link.ID(), LinkData: ld})
+	ld.inst.master.ChangeTracker.trackLinkData(&LinkDataChange{ChgType: CtUpd, ID: ld.link.ID(), LinkData: ld})
 }
 
 // Link returns the Link associated with ld context

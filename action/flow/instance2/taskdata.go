@@ -33,7 +33,7 @@ type TaskData struct {
 	inScope  data.Scope
 	outScope data.Scope
 
-	//taskID string //needed for serialization
+	taskID string //needed for serialization
 }
 
 // InputScope get the InputScope of the task instance
@@ -135,7 +135,7 @@ func (td *TaskData) Status() model.TaskStatus {
 // SetStatus implements flow.TaskContext.SetStatus
 func (td *TaskData) SetStatus(status model.TaskStatus) {
 	td.status = status
-	td.inst.ChangeTracker.trackTaskData(&TaskDataChange{ChgType: CtUpd, ID: td.task.ID(), TaskData: td})
+	td.inst.master.ChangeTracker.trackTaskData(&TaskDataChange{ChgType: CtUpd, ID: td.task.ID(), TaskData: td})
 }
 
 func (td *TaskData) HasWorkingData() bool {

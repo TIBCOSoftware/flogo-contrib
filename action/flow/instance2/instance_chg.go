@@ -26,28 +26,39 @@ type WorkItemQueueChange struct {
 
 // TaskDataChange represents a change to a TaskData
 type TaskDataChange struct {
-	ChgType  ChgType
-	ID       string
-	TaskData *TaskData
+	SubFlowID int
+	ChgType   ChgType
+	ID        string
+	TaskData  *TaskData
 }
 
 // LinkDataChange represents a change to a LinkData
 type LinkDataChange struct {
-	ChgType  ChgType
-	ID       int
-	LinkData *LinkData
+	SubFlowID int
+	ChgType   ChgType
+	ID        int
+	LinkData  *LinkData
 }
 
 // InstanceChange represents a change to the instance
 type InstanceChange struct {
+	SubFlowID   int
 	State       int
 	Status      model.FlowStatus
-	Changes     int
 	AttrChanges []*AttributeChange
+	SubFlowChg  *SubFlowChange
+}
+
+// InstanceChange represents a change to the instance
+type SubFlowChange struct {
+	SubFlowID int
+	TaskID    string
+	ChgType   ChgType
 }
 
 // AttributeChange represents a change to an Attribute
 type AttributeChange struct {
+	SubFlowID int
 	ChgType   ChgType
 	Attribute *data.Attribute
 }
@@ -56,53 +67,51 @@ type AttributeChange struct {
 type InstanceChangeTracker struct {
 	wiqChanges map[int]*WorkItemQueueChange
 
-	tdChanges map[string]*TaskDataChange
-	ldChanges map[int]*LinkDataChange
-	instChange *InstanceChange
+	tdChanges  map[string]*TaskDataChange
+	ldChanges  map[int]*LinkDataChange
+
+	instChanges map[int]*InstanceChange //at most 2
 }
 
 // NewInstanceChangeTracker creates an InstanceChangeTracker
 func NewInstanceChangeTracker() *InstanceChangeTracker {
 
-	var changes InstanceChangeTracker
-	changes.instChange = new(InstanceChange)
-	return &changes
+	var tracker InstanceChangeTracker
+	tracker.instChanges =make(map[int]*InstanceChange)
+	return &tracker
 }
 
 // SetStatus is called to track a state change on an instance
-func (ict *InstanceChangeTracker) SetState(state int) {
+func (ict *InstanceChangeTracker) SetState(subFlowId int, state int) {
 
-	ict.instChange.State = state
-	//ict.ctxChanges.Changes |= CHG_STATE
+	ict.instChanges[subFlowId].State = state
 }
 
 // SetStatus is called to track a status change on an instance
-func (ict *InstanceChangeTracker) SetStatus(status model.FlowStatus) {
+func (ict *InstanceChangeTracker) SetStatus(subFlowId int, status model.FlowStatus) {
 
-	ict.instChange.Status = status
-	//ict.ctxChanges.Changes |= CHG_STATUS
+	ict.instChanges[subFlowId].Status = status
 }
 
 // AttrChange is called to track a status change of an Attribute
-func (ict *InstanceChangeTracker) AttrChange(chgType ChgType, attribute *data.Attribute) {
+func (ict *InstanceChangeTracker) AttrChange(subFlowId int, chgType ChgType, attribute *data.Attribute) {
 
 	var attrChange AttributeChange
 	attrChange.ChgType = chgType
 
-	//var attr data.Attribute
-	//attr.Name = attribute.Name
-	//
-	//if chgType == CtAdd {
-	//	attr.Type = attribute.Type
-	//	attr.Value = attribute.Value
-	//} else if chgType == CtUpd {
-	//	attr.Value = attribute.Value
-	//}
-
-	//attrChange.Attribute = &attr
-
 	attrChange.Attribute = attribute
-	ict.instChange.AttrChanges = append(ict.instChange.AttrChanges, &attrChange)
+	ict.instChanges[subFlowId].AttrChanges = append(ict.instChanges[subFlowId].AttrChanges, &attrChange)
+}
+
+// AttrChange is called to track a status change of an Attribute
+func (ict *InstanceChangeTracker) SubFlowChange(parentFlowId int, chgType ChgType, subFlowId int, taskID string) {
+
+	var change SubFlowChange
+	change.ChgType = chgType
+	change.SubFlowID = subFlowId
+	change.TaskID = taskID
+
+	ict.instChanges[parentFlowId].SubFlowChg = &change
 }
 
 // trackWorkItem records a WorkItem Queue change

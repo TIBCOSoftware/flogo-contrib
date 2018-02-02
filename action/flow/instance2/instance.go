@@ -9,64 +9,43 @@ import (
 	"fmt"
 )
 
-
 type Instance struct {
+	subFlowId int
 
-	ChangeTracker *InstanceChangeTracker
+	master    *IndependentInstance //needed for change tracker
 
-	RootInstance *Instance
-	ErrorInstance *Instance
+	//parent, should it be the taskdata?  Is this also the host context?
 	//hostContext HostContext
-	
-	flowModel *model.FlowModel //todo remove reference
 
-	status      model.FlowStatus
-	flowDef   *definition.Definition
+	isErrorHandler bool
+	ErrorInstance *Instance
 
-	Attrs map[string]*data.Attribute
+	status  model.FlowStatus
+	flowDef *definition.Definition
+	flowURI string //needed for serialization
 
-	TaskDatas map[string]*TaskData
-	LinkDatas map[int]*LinkData
+	attrs map[string]*data.Attribute
 
-	isErrorHandler  bool
+	taskDataMap map[string]*TaskData
+	linkDataMap map[int]*LinkData
 
 	forceCompletion bool
 	returnData      map[string]*data.Attribute
 	returnError     error
-	
-	subflows map[int]*Instance
 }
-
-
-// ID returns the ID of the Flow Instance
-func (inst *Instance) ID() string {
-	return ""
-}
-
-func (inst *Instance) NewEmbeddedInstance(flow *definition.Definition) *EmbeddedInstance {
-
-	var embeddedInst EmbeddedInstance
-	embeddedInst.id = instanceID
-
-	embeddedInst.status = model.FlowStatusNotStarted
-	embeddedInst.ChangeTracker = NewInstanceChangeTracker()
-
-	return &embeddedInst
-}
-
 
 // FindOrCreateTaskData finds an existing TaskData or creates ones if not found for the
 // specified task the task environment
 func (inst *Instance) FindOrCreateTaskData(task *definition.Task) (taskData *TaskData, created bool) {
 
-	taskData, ok := inst.TaskDatas[task.ID()]
+	taskData, ok := inst.taskDataMap[task.ID()]
 
 	created = false
 
 	if !ok {
 		taskData = NewTaskData(inst, task)
-		inst.TaskDatas[task.ID()] = taskData
-		inst.ChangeTracker.trackTaskData(&TaskDataChange{ChgType: CtAdd, ID: task.ID(), TaskData: taskData})
+		inst.taskDataMap[task.ID()] = taskData
+		inst.master.ChangeTracker.trackTaskData(&TaskDataChange{ChgType: CtAdd, SubFlowID: inst.subFlowId, ID: task.ID(), TaskData: taskData})
 
 		created = true
 	}
@@ -78,13 +57,13 @@ func (inst *Instance) FindOrCreateTaskData(task *definition.Task) (taskData *Tas
 // specified link the task environment
 func (inst *Instance) FindOrCreateLinkData(link *definition.Link) (linkData *LinkData, created bool) {
 
-	linkData, ok := inst.LinkDatas[link.ID()]
+	linkData, ok := inst.linkDataMap[link.ID()]
 	created = false
 
 	if !ok {
 		linkData = NewLinkData(inst, link)
-		inst.LinkDatas[link.ID()] = linkData
-		inst.ChangeTracker.trackLinkData(&LinkDataChange{ChgType: CtAdd, ID: link.ID(), LinkData: linkData})
+		inst.linkDataMap[link.ID()] = linkData
+		inst.master.ChangeTracker.trackLinkData(&LinkDataChange{ChgType: CtAdd, SubFlowID: inst.subFlowId, ID: link.ID(), LinkData: linkData})
 		created = true
 	}
 
@@ -92,30 +71,14 @@ func (inst *Instance) FindOrCreateLinkData(link *definition.Link) (linkData *Lin
 }
 
 func (inst *Instance) releaseTask(task *definition.Task) {
-	delete(inst.TaskDatas, task.ID())
-	inst.ChangeTracker.trackTaskData(&TaskDataChange{ChgType: CtDel, ID: task.ID()})
+	delete(inst.taskDataMap, task.ID())
+	inst.master.ChangeTracker.trackTaskData(&TaskDataChange{ChgType: CtDel, SubFlowID: inst.subFlowId, ID: task.ID()})
 	links := task.FromLinks()
 
 	for _, link := range links {
-		delete(inst.LinkDatas, link.ID())
-		inst.ChangeTracker.trackLinkData(&LinkDataChange{ChgType: CtDel, ID: link.ID()})
+		delete(inst.linkDataMap, link.ID())
+		inst.master.ChangeTracker.trackLinkData(&LinkDataChange{ChgType: CtDel, SubFlowID: inst.subFlowId, ID: link.ID()})
 	}
-}
-
-// GetChanges returns the Change Tracker object
-func (inst *Instance) GetChanges() *InstanceChangeTracker {
-	return inst.ChangeTracker
-}
-
-// ResetChanges resets an changes that were being tracked
-func (inst *Instance) ResetChanges() {
-
-	if inst.ChangeTracker != nil {
-		inst.ChangeTracker.ResetChanges()
-	}
-
-	//todo: can we reuse this to avoid gc
-	inst.ChangeTracker = NewInstanceChangeTracker()
 }
 
 func (inst *Instance) appendErrorData(err error) {
@@ -142,7 +105,6 @@ func (inst *Instance) appendErrorData(err error) {
 
 	//todo add case for *dataMapperError & *activity.Error
 }
-
 
 /////////////////////////////////////////
 // Instance - activity.Host Implementation
@@ -176,7 +138,7 @@ func (inst *Instance) GetReturnData() (map[string]*data.Attribute, error) {
 
 			inst.returnData = make(map[string]*data.Attribute)
 			for _, mdAttr := range md.Output {
-				piAttr, exists := inst.Attrs[mdAttr.Name()]
+				piAttr, exists := inst.attrs[mdAttr.Name()]
 				if exists {
 					inst.returnData[piAttr.Name()] = piAttr
 				}
@@ -198,7 +160,7 @@ func (inst *Instance) Status() model.FlowStatus {
 func (inst *Instance) SetStatus(status model.FlowStatus) {
 
 	inst.status = status
-	inst.ChangeTracker.SetStatus(status)
+	inst.master.ChangeTracker.SetStatus(inst.subFlowId, status)
 }
 
 // FlowDefinition returns the Flow definition associated with this context
@@ -209,8 +171,8 @@ func (inst *Instance) FlowDefinition() *definition.Definition {
 // TaskInsts get the task instances
 func (inst *Instance) TaskInsts() []model.TaskInst {
 
-	taskInsts := make([]model.TaskInst, 0, len(inst.TaskDatas))
-	for _, value := range inst.TaskDatas {
+	taskInsts := make([]model.TaskInst, 0, len(inst.taskDataMap))
+	for _, value := range inst.taskDataMap {
 		taskInsts = append(taskInsts, value)
 	}
 	return taskInsts
@@ -222,8 +184,8 @@ func (inst *Instance) TaskInsts() []model.TaskInst {
 // GetAttr implements data.Scope.GetAttr
 func (inst *Instance) GetAttr(attrName string) (value *data.Attribute, exists bool) {
 
-	if inst.Attrs != nil {
-		attr, found := inst.Attrs[attrName]
+	if inst.attrs != nil {
+		attr, found := inst.attrs[attrName]
 
 		if found {
 			return attr, true
@@ -235,8 +197,8 @@ func (inst *Instance) GetAttr(attrName string) (value *data.Attribute, exists bo
 
 // SetAttrValue implements api.Scope.SetAttrValue
 func (inst *Instance) SetAttrValue(attrName string, value interface{}) error {
-	if inst.Attrs == nil {
-		inst.Attrs = make(map[string]*data.Attribute)
+	if inst.attrs == nil {
+		inst.attrs = make(map[string]*data.Attribute)
 	}
 
 	logger.Debugf("SetAttr - name: %s, value:%v\n", attrName, value)
@@ -247,8 +209,8 @@ func (inst *Instance) SetAttrValue(attrName string, value interface{}) error {
 	if exists {
 		//todo handle error
 		attr, _ := data.NewAttribute(attrName, existingAttr.Type(), value)
-		inst.Attrs[attrName] = attr
-		inst.ChangeTracker.AttrChange(CtUpd, attr)
+		inst.attrs[attrName] = attr
+		inst.master.ChangeTracker.AttrChange(inst.subFlowId, CtUpd, attr)
 		return nil
 	}
 
@@ -257,8 +219,8 @@ func (inst *Instance) SetAttrValue(attrName string, value interface{}) error {
 
 // AddAttr add a new attribute to the instance
 func (inst *Instance) AddAttr(attrName string, attrType data.Type, value interface{}) *data.Attribute {
-	if inst.Attrs == nil {
-		inst.Attrs = make(map[string]*data.Attribute)
+	if inst.attrs == nil {
+		inst.attrs = make(map[string]*data.Attribute)
 	}
 
 	logger.Debugf("AddAttr - name: %s, type: %s, value:%v\n", attrName, attrType, value)
@@ -272,10 +234,9 @@ func (inst *Instance) AddAttr(attrName string, attrType data.Type, value interfa
 	} else {
 		//todo handle error
 		attr, _ = data.NewAttribute(attrName, attrType, value)
-		inst.Attrs[attrName] = attr
-		inst.ChangeTracker.AttrChange(CtAdd, attr)
+		inst.attrs[attrName] = attr
+		inst.master.ChangeTracker.AttrChange(inst.subFlowId, CtAdd, attr)
 	}
 
 	return attr
 }
-
