@@ -5,16 +5,16 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 )
 
-func applyInputMapper(taskData *TaskData) error {
+func applyInputMapper(taskInst *TaskInst) error {
 
 	// get the input mapper
-	inputMapper := taskData.task.ActivityConfig().InputMapper()
+	inputMapper := taskInst.task.ActivityConfig().InputMapper()
 
-	master := taskData.inst.master
+	master := taskInst.flowInst.master
 
 	if master.patch != nil {
 		// check if the patch has a overriding mapper
-		mapper := master.patch.GetInputMapper(taskData.task.ID())
+		mapper := master.patch.GetInputMapper(taskInst.task.ID())
 		if mapper != nil {
 			inputMapper = mapper
 		}
@@ -24,13 +24,13 @@ func applyInputMapper(taskData *TaskData) error {
 		logger.Debug("Applying InputMapper")
 
 		var inputScope data.Scope
-		inputScope = taskData.inst
+		inputScope = taskInst.flowInst
 
-		if taskData.workingData != nil {
-			inputScope = NewWorkingDataScope(taskData.inst, taskData.workingData)
+		if taskInst.workingData != nil {
+			inputScope = NewWorkingDataScope(taskInst.flowInst, taskInst.workingData)
 		}
 
-		err := inputMapper.Apply(inputScope, taskData.InputScope())
+		err := inputMapper.Apply(inputScope, taskInst.InputScope())
 
 		if err != nil {
 			return err
@@ -40,14 +40,14 @@ func applyInputMapper(taskData *TaskData) error {
 	return nil
 }
 
-func applyInputInterceptor(taskData *TaskData) bool {
+func applyInputInterceptor(taskInst *TaskInst) bool {
 
-	master := taskData.inst.master
+	master := taskInst.flowInst.master
 
 	if master.interceptor != nil {
 
 		// check if this task as an interceptor
-		taskInterceptor := master.interceptor.GetTaskInterceptor(taskData.task.ID())
+		taskInterceptor := master.interceptor.GetTaskInterceptor(taskInst.task.ID())
 
 		if taskInterceptor != nil {
 
@@ -60,7 +60,7 @@ func applyInputInterceptor(taskData *TaskData) bool {
 					logger.Debugf("Overriding Attr: %s = %s", attribute.Name(), attribute.Value())
 
 					//todo: validation
-					taskData.InputScope().SetAttrValue(attribute.Name(), attribute.Value())
+					taskInst.InputScope().SetAttrValue(attribute.Name(), attribute.Value())
 				}
 			}
 
@@ -72,20 +72,20 @@ func applyInputInterceptor(taskData *TaskData) bool {
 	return true
 }
 
-func applyOutputInterceptor(taskData *TaskData) {
+func applyOutputInterceptor(taskInst *TaskInst) {
 
-	master := taskData.inst.master
+	master := taskInst.flowInst.master
 
 	if master.interceptor != nil {
 
 		// check if this task as an interceptor and overrides ouputs
-		taskInterceptor := master.interceptor.GetTaskInterceptor(taskData.task.ID())
+		taskInterceptor := master.interceptor.GetTaskInterceptor(taskInst.task.ID())
 		if taskInterceptor != nil && len(taskInterceptor.Outputs) > 0 {
 			// override output attributes
 			for _, attribute := range taskInterceptor.Outputs {
 
 				//todo: validation
-				taskData.OutputScope().SetAttrValue(attribute.Name(), attribute.Value())
+				taskInst.OutputScope().SetAttrValue(attribute.Name(), attribute.Value())
 			}
 		}
 	}
@@ -93,16 +93,16 @@ func applyOutputInterceptor(taskData *TaskData) {
 
 // applyOutputMapper applies the output mapper, returns flag indicating if
 // there was an output mapper
-func applyOutputMapper(taskData *TaskData) (bool, error) {
+func applyOutputMapper(taskInst *TaskInst) (bool, error) {
 
 	// get the Output Mapper for the TaskOld if one exists
-	outputMapper := taskData.task.ActivityConfig().OutputMapper()
+	outputMapper := taskInst.task.ActivityConfig().OutputMapper()
 
-	master := taskData.inst.master
+	master := taskInst.flowInst.master
 
 	if master.patch != nil {
 		// check if the patch overrides the Output Mapper
-		mapper := master.patch.GetOutputMapper(taskData.task.ID())
+		mapper := master.patch.GetOutputMapper(taskInst.task.ID())
 		if mapper != nil {
 			outputMapper = mapper
 		}
@@ -110,7 +110,7 @@ func applyOutputMapper(taskData *TaskData) (bool, error) {
 
 	if outputMapper != nil {
 		logger.Debug("Applying OutputMapper")
-		err := outputMapper.Apply(taskData.OutputScope(), taskData.inst)
+		err := outputMapper.Apply(taskInst.OutputScope(), taskInst.flowInst)
 
 		return true, err
 	}

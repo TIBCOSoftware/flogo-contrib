@@ -160,8 +160,8 @@ func (pi *Instance) SetState(state int) {
 	pi.ChangeTracker.SetState(state)
 }
 
-// TaskInsts get the task instances
-func (pi *Instance) TaskInsts() []model.TaskInst {
+// TaskInstances get the task instances
+func (pi *Instance) TaskInsts() []model.TaskInstance {
 	return nil
 }
 

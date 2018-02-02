@@ -59,7 +59,7 @@ func (b *SimpleTaskBehavior) Enter(context model.TaskContext, enterCode int) (ev
 
 	context.SetStatus(STATE_ENTERED)
 
-	linkContexts := context.FromInstLinks()
+	linkContexts := context.GetFromLinkInstances()
 
 	ready := true
 
@@ -186,7 +186,7 @@ func (b *SimpleTaskBehavior) Error(context model.TaskContext) (handled bool, tas
 type SimpleLinkBehavior struct {
 }
 
-func (b *SimpleLinkBehavior) Eval(context model.LinkInst, evalCode int) {
+func (b *SimpleLinkBehavior) Eval(context model.LinkInstance, evalCode int) {
 
 	logger.Debugf("Link Eval\n")
 

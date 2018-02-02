@@ -1,24 +1,25 @@
 package instance2
 
 import (
+	"fmt"
+
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"fmt"
 )
 
 type Instance struct {
 	subFlowId int
 
-	master    *IndependentInstance //needed for change tracker
+	master *IndependentInstance //needed for change tracker
 
-	//parent, should it be the taskdata?  Is this also the host context?
+	//parent, should it be the taskinst?  Is this also the host context?
 	//hostContext HostContext
 
 	isErrorHandler bool
-	ErrorInstance *Instance
+	ErrorInstance  *Instance
 
 	status  model.FlowStatus
 	flowDef *definition.Definition
@@ -26,58 +27,58 @@ type Instance struct {
 
 	attrs map[string]*data.Attribute
 
-	taskDataMap map[string]*TaskData
-	linkDataMap map[int]*LinkData
+	taskInsts map[string]*TaskInst
+	linkInsts map[int]*LinkInst
 
 	forceCompletion bool
 	returnData      map[string]*data.Attribute
 	returnError     error
 }
 
-// FindOrCreateTaskData finds an existing TaskData or creates ones if not found for the
+// FindOrCreateTaskData finds an existing TaskInst or creates ones if not found for the
 // specified task the task environment
-func (inst *Instance) FindOrCreateTaskData(task *definition.Task) (taskData *TaskData, created bool) {
+func (inst *Instance) FindOrCreateTaskData(task *definition.Task) (taskInst *TaskInst, created bool) {
 
-	taskData, ok := inst.taskDataMap[task.ID()]
+	taskInst, ok := inst.taskInsts[task.ID()]
 
 	created = false
 
 	if !ok {
-		taskData = NewTaskData(inst, task)
-		inst.taskDataMap[task.ID()] = taskData
-		inst.master.ChangeTracker.trackTaskData(&TaskDataChange{ChgType: CtAdd, SubFlowID: inst.subFlowId, ID: task.ID(), TaskData: taskData})
+		taskInst = NewTaskInst(inst, task)
+		inst.taskInsts[task.ID()] = taskInst
+		inst.master.ChangeTracker.trackTaskData(inst.subFlowId, &TaskInstChange{ChgType: CtAdd, ID: task.ID(), TaskInst: taskInst})
 
 		created = true
 	}
 
-	return taskData, created
+	return taskInst, created
 }
 
-// FindOrCreateLinkData finds an existing LinkData or creates ones if not found for the
+// FindOrCreateLinkData finds an existing LinkInst or creates ones if not found for the
 // specified link the task environment
-func (inst *Instance) FindOrCreateLinkData(link *definition.Link) (linkData *LinkData, created bool) {
+func (inst *Instance) FindOrCreateLinkData(link *definition.Link) (linkInst *LinkInst, created bool) {
 
-	linkData, ok := inst.linkDataMap[link.ID()]
+	linkInst, ok := inst.linkInsts[link.ID()]
 	created = false
 
 	if !ok {
-		linkData = NewLinkData(inst, link)
-		inst.linkDataMap[link.ID()] = linkData
-		inst.master.ChangeTracker.trackLinkData(&LinkDataChange{ChgType: CtAdd, SubFlowID: inst.subFlowId, ID: link.ID(), LinkData: linkData})
+		linkInst = NewLinkInst(inst, link)
+		inst.linkInsts[link.ID()] = linkInst
+		inst.master.ChangeTracker.trackLinkData(inst.subFlowId, &LinkInstChange{ChgType: CtAdd, ID: link.ID(), LinkInst: linkInst})
 		created = true
 	}
 
-	return linkData, created
+	return linkInst, created
 }
 
 func (inst *Instance) releaseTask(task *definition.Task) {
-	delete(inst.taskDataMap, task.ID())
-	inst.master.ChangeTracker.trackTaskData(&TaskDataChange{ChgType: CtDel, SubFlowID: inst.subFlowId, ID: task.ID()})
+	delete(inst.taskInsts, task.ID())
+	inst.master.ChangeTracker.trackTaskData(inst.subFlowId, &TaskInstChange{ChgType: CtDel, ID: task.ID()})
 	links := task.FromLinks()
 
 	for _, link := range links {
-		delete(inst.linkDataMap, link.ID())
-		inst.master.ChangeTracker.trackLinkData(&LinkDataChange{ChgType: CtDel, SubFlowID: inst.subFlowId, ID: link.ID()})
+		delete(inst.linkInsts, link.ID())
+		inst.master.ChangeTracker.trackLinkData(inst.subFlowId, &LinkInstChange{ChgType: CtDel, ID: link.ID()})
 	}
 }
 
@@ -168,11 +169,11 @@ func (inst *Instance) FlowDefinition() *definition.Definition {
 	return inst.flowDef
 }
 
-// TaskInsts get the task instances
-func (inst *Instance) TaskInsts() []model.TaskInst {
+// TaskInstances get the task instances
+func (inst *Instance) TaskInstances() []model.TaskInstance {
 
-	taskInsts := make([]model.TaskInst, 0, len(inst.taskDataMap))
-	for _, value := range inst.taskDataMap {
+	taskInsts := make([]model.TaskInstance, 0, len(inst.taskInsts))
+	for _, value := range inst.taskInsts {
 		taskInsts = append(taskInsts, value)
 	}
 	return taskInsts

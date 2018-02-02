@@ -6,10 +6,10 @@ import (
 
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/support"
+	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/TIBCOSoftware/flogo-lib/util"
-	"github.com/TIBCOSoftware/flogo-lib/core/data"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/support"
 )
 
 type IndependentInstance struct {
@@ -57,8 +57,8 @@ func NewIndependentInstance(instanceID string, flow *definition.Definition) *Ind
 	inst.status = model.FlowStatusNotStarted
 	inst.ChangeTracker = NewInstanceChangeTracker()
 
-	inst.taskDataMap = make(map[string]*TaskData)
-	inst.linkDataMap = make(map[int]*LinkData)
+	inst.taskInsts = make(map[string]*TaskInst)
+	inst.linkInsts = make(map[int]*LinkInst)
 
 	return &inst
 }
@@ -154,12 +154,12 @@ func (inst *IndependentInstance) DoStep() bool {
 			workItem := item.(*WorkItem)
 
 			behavior := inst.flowModel.GetDefaultTaskBehavior()
-			if typeID := workItem.TaskData.task.TypeID(); typeID > 1 {
+			if typeID := workItem.taskInst.task.TypeID(); typeID > 1 {
 				behavior = inst.flowModel.GetTaskBehavior(typeID)
 			}
 
 			inst.ChangeTracker.trackWorkItem(&WorkItemQueueChange{ChgType: CtDel, ID: workItem.ID, WorkItem: workItem})
-			inst.execTask(behavior, workItem.TaskData)
+			inst.execTask(behavior, workItem.taskInst)
 			hasNext = true
 		} else {
 			logger.Debug("flow instance work queue empty")
@@ -169,33 +169,33 @@ func (inst *IndependentInstance) DoStep() bool {
 	return hasNext
 }
 
-func (inst *IndependentInstance) scheduleEval(taskData *TaskData) {
+func (inst *IndependentInstance) scheduleEval(taskInst *TaskInst) {
 
 	inst.wiCounter++
 
-	workItem := NewWorkItem(inst.wiCounter, taskData)
-	logger.Debugf("Scheduling task: %s\n", taskData.task.Name())
+	workItem := NewWorkItem(inst.wiCounter, taskInst)
+	logger.Debugf("Scheduling task: %s\n", taskInst.task.Name())
 
 	inst.workItemQueue.Push(workItem)
 	inst.ChangeTracker.trackWorkItem(&WorkItemQueueChange{ChgType: CtAdd, ID: workItem.ID, WorkItem: workItem})
 }
 
 // execTask executes the specified Work Item of the Flow Instance
-func (inst *IndependentInstance) execTask(behavior model.TaskBehavior, taskData *TaskData) {
+func (inst *IndependentInstance) execTask(behavior model.TaskBehavior, taskInst *TaskInst) {
 
 	defer func() {
 		if r := recover(); r != nil {
 
-			err := fmt.Errorf("Unhandled Error executing task '%s' : %v\n", taskData.task.Name(), r)
+			err := fmt.Errorf("Unhandled Error executing task '%s' : %v\n", taskInst.task.Name(), r)
 			logger.Error(err)
 
 			// todo: useful for debugging
 			logger.Debugf("StackTrace: %s", debug.Stack())
 
-			if !taskData.inst.isErrorHandler {
+			if !taskInst.flowInst.isErrorHandler {
 
-				taskData.inst.appendErrorData(NewActivityEvalError(taskData.task.Name(), "unhandled", err.Error()))
-				inst.HandleGlobalError(taskData.inst)
+				taskInst.flowInst.appendErrorData(NewActivityEvalError(taskInst.task.Name(), "unhandled", err.Error()))
+				inst.HandleGlobalError(taskInst.flowInst)
 			}
 			// else what should we do?
 		}
@@ -205,34 +205,34 @@ func (inst *IndependentInstance) execTask(behavior model.TaskBehavior, taskData 
 
 	var evalResult model.EvalResult
 
-	if taskData.status == model.TaskStatusWaiting {
+	if taskInst.status == model.TaskStatusWaiting {
 
-		evalResult, err = behavior.PostEval(taskData)
+		evalResult, err = behavior.PostEval(taskInst)
 
 	} else {
-		evalResult, err = behavior.Eval(taskData)
+		evalResult, err = behavior.Eval(taskInst)
 	}
 
 	if err != nil {
-		inst.handleTaskError(behavior, taskData, err)
+		inst.handleTaskError(behavior, taskInst, err)
 		return
 	}
 
 	if evalResult == model.EVAL_DONE {
 		//task was done
-		inst.handleTaskDone(behavior, taskData)
+		inst.handleTaskDone(behavior, taskInst)
 	} else if evalResult == model.EVAL_REPEAT {
 		//task needs to iterate or retry
-		inst.scheduleEval(taskData)
+		inst.scheduleEval(taskInst)
 	}
 }
 
 // handleTaskDone handles the completion of a task in the Flow Instance
-func (inst *IndependentInstance) handleTaskDone(taskBehavior model.TaskBehavior, taskData *TaskData) {
+func (inst *IndependentInstance) handleTaskDone(taskBehavior model.TaskBehavior, taskInst *TaskInst) {
 
-	notifyFlow, taskEntries, err := taskBehavior.Done(taskData)
+	notifyFlow, taskEntries, err := taskBehavior.Done(taskInst)
 
-	containerInst := taskData.inst
+	containerInst := taskInst.flowInst
 
 	if err != nil {
 		containerInst.appendErrorData(err)
@@ -241,7 +241,7 @@ func (inst *IndependentInstance) handleTaskDone(taskBehavior model.TaskBehavior,
 	}
 
 	flowDone := false
-	task := taskData.Task()
+	task := taskInst.Task()
 
 	if notifyFlow {
 
@@ -265,31 +265,31 @@ func (inst *IndependentInstance) handleTaskDone(taskBehavior model.TaskBehavior,
 		inst.enterTasks(containerInst, taskEntries)
 	}
 
-	//inst.releaseTask(taskData)
+	//inst.releaseTask(taskInst)
 	containerInst.releaseTask(task)
 }
 
-//func (inst *IndependentInstance) releaseTask(taskData *TaskData) {
+//func (inst *IndependentInstance) releaseTask(taskInst *TaskInst) {
 //
-//	task := taskData.Task()
+//	task := taskInst.Task()
 //
-//	delete(taskData.inst.TaskDatas, task.ID())
+//	delete(taskInst.inst.TaskDatas, task.ID())
 //
-//	inst.ChangeTracker.trackTaskData(&TaskDataChange{ChgType: CtDel, SubFlowID: taskData.inst.subFlowId, ID: task.ID()})
+//	inst.ChangeTracker.trackTaskData(&TaskInstChange{ChgType: CtDel, SubFlowID: taskInst.inst.subFlowId, ID: task.ID()})
 //	links := task.FromLinks()
 //
 //	for _, link := range links {
-//		delete(taskData.inst.LinkDatas, link.ID())
-//		inst.ChangeTracker.trackLinkData(&LinkDataChange{ChgType: CtDel, SubFlowID: taskData.inst.subFlowId,ID: link.ID()})
+//		delete(taskInst.inst.LinkDatas, link.ID())
+//		inst.ChangeTracker.trackLinkData(&LinkInstChange{ChgType: CtDel, SubFlowID: taskInst.inst.subFlowId,ID: link.ID()})
 //	}
 //}
 
 // handleTaskError handles the completion of a task in the Flow Instance
-func (inst *IndependentInstance) handleTaskError(taskBehavior model.TaskBehavior, taskData *TaskData, err error) {
+func (inst *IndependentInstance) handleTaskError(taskBehavior model.TaskBehavior, taskInst *TaskInst, err error) {
 
-	handled, taskEntries := taskBehavior.Error(taskData, err)
+	handled, taskEntries := taskBehavior.Error(taskInst, err)
 
-	containerInst := taskData.inst
+	containerInst := taskInst.flowInst
 
 	if !handled {
 		if containerInst.isErrorHandler {
@@ -306,7 +306,7 @@ func (inst *IndependentInstance) handleTaskError(taskBehavior model.TaskBehavior
 		inst.enterTasks(containerInst, taskEntries)
 	}
 
-	containerInst.releaseTask(taskData.Task())
+	containerInst.releaseTask(taskInst.Task())
 }
 
 // HandleGlobalError handles instance errors
@@ -378,21 +378,21 @@ func (inst *IndependentInstance) enterTasks(activeInst *Instance, taskEntries []
 // WorkItem describes an item of work (event for a Task) that should be executed on Step
 type WorkItem struct {
 	ID       int       `json:"id"`
-	TaskData *TaskData `json:"-"`
+	taskInst *TaskInst `json:"-"`
 
 	TaskID    string `json:"taskID"`
 	SubFlowID int    `json:"subFlowId"`
 }
 
-// NewWorkItem constructs a new WorkItem for the specified TaskData
-func NewWorkItem(id int, taskData *TaskData) *WorkItem {
+// NewWorkItem constructs a new WorkItem for the specified TaskInst
+func NewWorkItem(id int, taskInst *TaskInst) *WorkItem {
 
 	var workItem WorkItem
 
 	workItem.ID = id
-	workItem.TaskData = taskData
-	workItem.TaskID = taskData.task.ID()
-	workItem.SubFlowID = taskData.inst.subFlowId
+	workItem.taskInst = taskInst
+	workItem.TaskID = taskInst.task.ID()
+	workItem.SubFlowID = taskInst.flowInst.subFlowId
 
 	return &workItem
 }

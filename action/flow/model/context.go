@@ -11,8 +11,8 @@ type FlowContext interface {
 	// FlowDefinition returns the Flow definition associated with this context
 	FlowDefinition() *definition.Definition
 
-	// TaskInsts get the task instances
-	TaskInsts() []TaskInst
+	// TaskInstances get the task instances
+	TaskInstances() []TaskInstance
 
 	////Status gets the state of the Flow instance
 	Status() FlowStatus
@@ -34,11 +34,11 @@ type TaskContext interface {
 	// Task returns the Task associated with this context
 	Task() *definition.Task
 
-	// FromInstLinks returns the instances of predecessor Links of the current task.
-	FromInstLinks() []LinkInst
+	// GetFromLinkInstances returns the instances of predecessor Links of the current task.
+	GetFromLinkInstances() []LinkInstance
 
-	// ToInstLinks returns the instances of successor Links of the current task.
-	ToInstLinks() []LinkInst
+	// GetToLinkInstances returns the instances of successor Links of the current task.
+	GetToLinkInstances() []LinkInstance
 
 	// EvalLink evaluates the specified link
 	EvalLink(link *definition.Link) (bool, error)
@@ -58,8 +58,8 @@ type TaskContext interface {
 	GetWorkingData(key string) (*data.Attribute, bool)
 }
 
-// LinkInst is the instance of a link
-type LinkInst interface {
+// LinkInstance is the instance of a link
+type LinkInstance interface {
 
 	// Link returns the Link associated with this Link Instance
 	Link() *definition.Link
@@ -71,7 +71,7 @@ type LinkInst interface {
 	SetStatus(status LinkStatus)
 }
 
-type TaskInst interface {
+type TaskInstance interface {
 
 	// Task returns the Task associated with this Task Instance
 	Task() *definition.Task

@@ -20,7 +20,7 @@ func (tb *Task) Enter(ctx model.TaskContext) (enterResult model.EnterResult) {
 	ctx.SetStatus(model.TaskStatusEntered)
 
 	//check if all predecessor links are done
-	linkContexts := ctx.FromInstLinks()
+	linkContexts := ctx.GetFromLinkInstances()
 
 	ready := true
 	skipped := false
@@ -104,7 +104,7 @@ func (tb *Task) PostEval(ctx model.TaskContext) (evalResult model.EvalResult, er
 // Done implements model.Task.Done
 func (tb *Task) Done(ctx model.TaskContext) (notifyFlow bool, taskEntries []*model.TaskEntry, err error) {
 
-	linkInsts := ctx.ToInstLinks()
+	linkInsts := ctx.GetToLinkInstances()
 	numLinks := len(linkInsts)
 
 	ctx.SetStatus(model.TaskStatusDone)
@@ -159,7 +159,7 @@ func (tb *Task) Done(ctx model.TaskContext) (notifyFlow bool, taskEntries []*mod
 
 // Done implements model.Task.Skip
 func (tb *Task) Skip(ctx model.TaskContext) (notifyFlow bool, taskEntries []*model.TaskEntry) {
-	linkInsts := ctx.ToInstLinks()
+	linkInsts := ctx.GetToLinkInstances()
 	numLinks := len(linkInsts)
 
 	ctx.SetStatus(model.TaskStatusSkipped)
@@ -184,7 +184,7 @@ func (tb *Task) Skip(ctx model.TaskContext) (notifyFlow bool, taskEntries []*mod
 // Done implements model.Task.Error
 func (tb *Task) Error(ctx model.TaskContext, err error) (handled bool, taskEntries []*model.TaskEntry) {
 
-	linkInsts := ctx.ToInstLinks()
+	linkInsts := ctx.GetToLinkInstances()
 	numLinks := len(linkInsts)
 
 	handled = false

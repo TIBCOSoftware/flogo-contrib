@@ -24,7 +24,7 @@ func (fb *Flow) Resume(ctx model.FlowContext) (resumed bool) {
 
 // TasksDone implements model.Flow.TasksDone
 func (fb *Flow) TaskDone(ctx model.FlowContext) (flowDone bool) {
-	tasks := ctx.TaskInsts()
+	tasks := ctx.TaskInstances()
 
 	for _, taskInst := range tasks {
 

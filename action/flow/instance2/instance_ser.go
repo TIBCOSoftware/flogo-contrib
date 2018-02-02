@@ -3,9 +3,9 @@ package instance2
 import (
 	"encoding/json"
 
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/util"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
 )
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -18,8 +18,8 @@ type serIndependentInstance struct {
 	FlowURI   string              `json:"flowUri"`
 	Attrs     []*data.Attribute   `json:"attrs"`
 	WorkQueue []*WorkItem         `json:"workQueue"`
-	TaskDatas []*TaskData         `json:"taskDatas"`
-	LinkDatas []*LinkData         `json:"linkDatas"`
+	TaskInsts []*TaskInst         `json:"tasks"`
+	LinkInsts []*LinkInst         `json:"links"`
 	SubFlows  []*EmbeddedInstance `json:"subFlows,omitempty"`
 }
 
@@ -38,16 +38,16 @@ func (inst *IndependentInstance) MarshalJSON() ([]byte, error) {
 		attrs = append(attrs, value)
 	}
 
-	tds := make([]*TaskData, 0, len(inst.taskDataMap))
+	tis := make([]*TaskInst, 0, len(inst.taskInsts))
 
-	for _, value := range inst.taskDataMap {
-		tds = append(tds, value)
+	for _, value := range inst.taskInsts {
+		tis = append(tis, value)
 	}
 
-	lds := make([]*LinkData, 0, len(inst.linkDataMap))
+	lis := make([]*LinkInst, 0, len(inst.linkInsts))
 
-	for _, value := range inst.linkDataMap {
-		lds = append(lds, value)
+	for _, value := range inst.linkInsts {
+		lis = append(lis, value)
 	}
 
 	sfs := make([]*EmbeddedInstance, 0, len(inst.subFlows))
@@ -64,9 +64,9 @@ func (inst *IndependentInstance) MarshalJSON() ([]byte, error) {
 		Attrs:     attrs,
 		FlowURI:   inst.flowURI,
 		WorkQueue: queue,
-		TaskDatas: tds,
-		LinkDatas: lds,
-		SubFlows: sfs,
+		TaskInsts: tis,
+		LinkInsts: lis,
+		SubFlows:  sfs,
 	})
 }
 
@@ -90,15 +90,15 @@ func (inst *IndependentInstance) UnmarshalJSON(d []byte) error {
 
 	inst.ChangeTracker = NewInstanceChangeTracker()
 
-	inst.taskDataMap = make(map[string]*TaskData, len(ser.TaskDatas))
-	inst.linkDataMap = make(map[int]*LinkData, len(ser.LinkDatas))
+	inst.taskInsts = make(map[string]*TaskInst, len(ser.TaskInsts))
+	inst.linkInsts = make(map[int]*LinkInst, len(ser.LinkInsts))
 
-	for _, value := range ser.TaskDatas {
-		inst.taskDataMap[value.taskID] = value
+	for _, value := range ser.TaskInsts {
+		inst.taskInsts[value.taskID] = value
 	}
 
-	for _, value := range ser.LinkDatas {
-		inst.linkDataMap[value.linkID] = value
+	for _, value := range ser.LinkInsts {
+		inst.linkInsts[value.linkID] = value
 	}
 
 	subFlowCtr := 0
@@ -122,13 +122,13 @@ func (inst *IndependentInstance) UnmarshalJSON(d []byte) error {
 
 	for _, workItem := range ser.WorkQueue {
 
-		taskDatas := inst.taskDataMap
+		taskInsts := inst.taskInsts
 
 		if workItem.SubFlowID > 0 {
-			taskDatas = inst.subFlows[workItem.SubFlowID].taskDataMap
+			taskInsts = inst.subFlows[workItem.SubFlowID].taskInsts
 		}
 
-		workItem.TaskData = taskDatas[workItem.TaskID]
+		workItem.taskInst = taskInsts[workItem.TaskID]
 		inst.workItemQueue.Push(workItem)
 	}
 
@@ -140,11 +140,11 @@ func (inst *IndependentInstance) UnmarshalJSON(d []byte) error {
 
 type serEmbeddedInstance struct {
 	SubFlowId int
-	Status    model.FlowStatus    `json:"status"`
-	FlowURI   string              `json:"flowUri"`
-	Attrs     []*data.Attribute   `json:"attrs"`
-	TaskDatas []*TaskData         `json:"taskDatas"`
-	LinkDatas []*LinkData         `json:"linkDatas"`
+	Status    model.FlowStatus  `json:"status"`
+	FlowURI   string            `json:"flowUri"`
+	Attrs     []*data.Attribute `json:"attrs"`
+	TaskDatas []*TaskInst       `json:"taskDatas"`
+	LinkDatas []*LinkInst       `json:"linkDatas"`
 }
 
 // MarshalJSON overrides the default MarshalJSON for FlowInstance
@@ -156,22 +156,22 @@ func (inst *EmbeddedInstance) MarshalJSON() ([]byte, error) {
 		attrs = append(attrs, value)
 	}
 
-	tds := make([]*TaskData, 0, len(inst.taskDataMap))
+	tds := make([]*TaskInst, 0, len(inst.taskInsts))
 
-	for _, value := range inst.taskDataMap {
+	for _, value := range inst.taskInsts {
 		tds = append(tds, value)
 	}
 
-	lds := make([]*LinkData, 0, len(inst.linkDataMap))
+	lds := make([]*LinkInst, 0, len(inst.linkInsts))
 
-	for _, value := range inst.linkDataMap {
+	for _, value := range inst.linkInsts {
 		lds = append(lds, value)
 	}
 
 	//serialize all the subFlows
 
 	return json.Marshal(&serEmbeddedInstance{
-		SubFlowId:        inst.subFlowId,
+		SubFlowId: inst.subFlowId,
 		Status:    inst.status,
 		Attrs:     attrs,
 		FlowURI:   inst.flowURI,
@@ -198,39 +198,39 @@ func (inst *EmbeddedInstance) UnmarshalJSON(d []byte) error {
 		inst.attrs[value.Name()] = value
 	}
 
-	inst.taskDataMap = make(map[string]*TaskData, len(ser.TaskDatas))
-	inst.linkDataMap = make(map[int]*LinkData, len(ser.LinkDatas))
+	inst.taskInsts = make(map[string]*TaskInst, len(ser.TaskDatas))
+	inst.linkInsts = make(map[int]*LinkInst, len(ser.LinkDatas))
 
 	for _, value := range ser.TaskDatas {
-		inst.taskDataMap[value.taskID] = value
+		inst.taskInsts[value.taskID] = value
 	}
 
 	for _, value := range ser.LinkDatas {
-		inst.linkDataMap[value.linkID] = value
+		inst.linkInsts[value.linkID] = value
 	}
 
 	return nil
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TaskData Serialization
+// TaskInst Serialization
 
-// MarshalJSON overrides the default MarshalJSON for TaskData
-func (td *TaskData) MarshalJSON() ([]byte, error) {
+// MarshalJSON overrides the default MarshalJSON for TaskInst
+func (ti *TaskInst) MarshalJSON() ([]byte, error) {
 
 	return json.Marshal(&struct {
 		TaskID string `json:"taskId"`
 		State  int    `json:"state"`
 		Status int    `json:"status"`
 	}{
-		TaskID: td.task.ID(),
-		State:  int(td.status),
-		Status: int(td.status),
+		TaskID: ti.task.ID(),
+		State:  int(ti.status),
+		Status: int(ti.status),
 	})
 }
 
-// UnmarshalJSON overrides the default UnmarshalJSON for TaskData
-func (td *TaskData) UnmarshalJSON(d []byte) error {
+// UnmarshalJSON overrides the default UnmarshalJSON for TaskInst
+func (ti *TaskInst) UnmarshalJSON(d []byte) error {
 	ser := &struct {
 		TaskID string `json:"taskId"`
 		State  int    `json:"state"`
@@ -241,17 +241,17 @@ func (td *TaskData) UnmarshalJSON(d []byte) error {
 		return err
 	}
 
-	td.status = model.TaskStatus(ser.Status)
-	td.taskID = ser.TaskID
+	ti.status = model.TaskStatus(ser.Status)
+	ti.taskID = ser.TaskID
 
 	return nil
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// LinkData Serialization
+// LinkInst Serialization
 
-// MarshalJSON overrides the default MarshalJSON for LinkData
-func (ld *LinkData) MarshalJSON() ([]byte, error) {
+// MarshalJSON overrides the default MarshalJSON for LinkInst
+func (ld *LinkInst) MarshalJSON() ([]byte, error) {
 
 	return json.Marshal(&struct {
 		LinkID int `json:"linkId"`
@@ -264,8 +264,8 @@ func (ld *LinkData) MarshalJSON() ([]byte, error) {
 	})
 }
 
-// UnmarshalJSON overrides the default UnmarshalJSON for LinkData
-func (ld *LinkData) UnmarshalJSON(d []byte) error {
+// UnmarshalJSON overrides the default UnmarshalJSON for LinkInst
+func (ld *LinkInst) UnmarshalJSON(d []byte) error {
 	ser := &struct {
 		LinkID int `json:"linkId"`
 		State  int `json:"state"`
@@ -301,41 +301,127 @@ func (ict *InstanceChangeTracker) MarshalJSON() ([]byte, error) {
 		wqc = nil
 	}
 
-	var tdc []*TaskDataChange
+	// for backwards compatibility //
+	var tdc []*TaskInstChange
+	var ldc []*LinkInstChange
+	var attrs []*AttributeChange
+	var status model.FlowStatus
+	/////////////////////////////////
 
-	if ict.tdChanges != nil {
-		tdc = make([]*TaskDataChange, 0, len(ict.tdChanges))
+	var instChanges []*InstanceChange
 
-		for _, value := range ict.tdChanges {
+	if ict.instChanges != nil {
+		instChanges = make([]*InstanceChange, 0, len(ict.instChanges))
+
+		for _, value := range ict.instChanges {
+			instChanges = append(instChanges, value)
+		}
+
+		// for backwards compatibility
+		masterChg, ok := ict.instChanges[0]
+		if ok {
+			status = masterChg.Status
+			attrs = masterChg.AttrChanges
+		}
+
+		if masterChg.tiChanges != nil {
+			tdc = make([]*TaskInstChange, 0, len(masterChg.tiChanges))
+
+			for _, value := range masterChg.tiChanges {
+				tdc = append(tdc, value)
+			}
+		} else {
+			tdc = nil
+		}
+
+		if masterChg.liChanges != nil {
+			ldc = make([]*LinkInstChange, 0, len(masterChg.liChanges))
+
+			for _, value := range masterChg.liChanges {
+				ldc = append(ldc, value)
+			}
+		} else {
+			ldc = nil
+		}
+	} else {
+		instChanges = nil
+	}
+
+	//backwards compatibility
+	return json.Marshal(&struct {
+		Status      model.FlowStatus       `json:"status,omitempty"`
+		AttrChanges []*AttributeChange     `json:"attrs,omitempty"`
+		WqChanges   []*WorkItemQueueChange `json:"wqChanges,omitempty"`
+		TdChanges   []*TaskInstChange      `json:"tdChanges,omitempty"`
+		LdChanges   []*LinkInstChange      `json:"ldChanges,omitempty"`
+		InstChanges []*InstanceChange      `json:"ldChanges,omitempty"`
+	}{
+		Status:      status,
+		AttrChanges: attrs,
+		WqChanges:   wqc,
+		TdChanges:   tdc,
+		LdChanges:   ldc,
+		InstChanges: instChanges,
+	})
+}
+
+// MarshalJSON overrides the default MarshalJSON for InstanceChangeTracker
+func (ic *InstanceChange) MarshalJSON() ([]byte, error) {
+
+	var tdc []*TaskInstChange
+
+	if ic.tiChanges != nil {
+		tdc = make([]*TaskInstChange, 0, len(ic.tiChanges))
+
+		for _, value := range ic.tiChanges {
 			tdc = append(tdc, value)
 		}
 	} else {
 		tdc = nil
 	}
 
-	var ldc []*LinkDataChange
+	var ldc []*LinkInstChange
 
-	if ict.ldChanges != nil {
-		ldc = make([]*LinkDataChange, 0, len(ict.ldChanges))
+	if ic.liChanges != nil {
+		ldc = make([]*LinkInstChange, 0, len(ic.liChanges))
 
-		for _, value := range ict.ldChanges {
+		for _, value := range ic.liChanges {
 			ldc = append(ldc, value)
 		}
 	} else {
 		ldc = nil
 	}
 
+	if ic.Status > -1 {
+		//backwards compatibility
+		return json.Marshal(&struct {
+			FlowID      int                `json:"flowId"`
+			Status      model.FlowStatus   `json:"status"`
+			AttrChanges []*AttributeChange `json:"attrs,omitempty"`
+			TdChanges   []*TaskInstChange  `json:"tasks,omitempty"`
+			LdChanges   []*LinkInstChange  `json:"links,omitempty"`
+			SfChange    *SubFlowChange     `json:"subFlow,omitempty"`
+		}{
+			FlowID:      ic.SubFlowID,
+			Status:      ic.Status,
+			AttrChanges: ic.AttrChanges,
+			TdChanges:   tdc,
+			LdChanges:   ldc,
+			SfChange:    ic.SubFlowChg,
+		})
+	}
+
 	return json.Marshal(&struct {
-		Status      model.FlowStatus       `json:"status"`
-		AttrChanges []*AttributeChange     `json:"attrs"`
-		WqChanges   []*WorkItemQueueChange `json:"wqChanges"`
-		TdChanges   []*TaskDataChange      `json:"tdChanges"`
-		LdChanges   []*LinkDataChange      `json:"ldChanges"`
+		FlowID      int                `json:"flowId"`
+		AttrChanges []*AttributeChange `json:"attrs,omitempty"`
+		TdChanges   []*TaskInstChange  `json:"tasks,omitempty"`
+		LdChanges   []*LinkInstChange  `json:"links,omitempty"`
+		SfChange    *SubFlowChange     `json:"subFlow,omitempty"`
 	}{
-		Status:      ict.instChange.Status,
-		AttrChanges: ict.instChange.AttrChanges,
-		WqChanges:   wqc,
+		FlowID:      ic.SubFlowID,
+		AttrChanges: ic.AttrChanges,
 		TdChanges:   tdc,
 		LdChanges:   ldc,
+		SfChange:    ic.SubFlowChg,
 	})
 }

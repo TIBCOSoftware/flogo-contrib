@@ -42,7 +42,7 @@ type InstanceChange struct {
 	State       int
 	Status      Status
 	Changes     int
-	AttrChanges []*AttributeChange
+	AttrChanges []*AttributeChange `json:"attrs,omitempty"`
 }
 
 // AttributeChange represents a change to an Attribute

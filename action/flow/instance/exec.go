@@ -166,9 +166,9 @@ func (te *ExecEnv) FlowDefinition() *definition.Definition {
 	return te.flowDef
 }
 
-// TaskInsts get the task instances
-func (te *ExecEnv)  TaskInsts() []model.TaskInst {
-	insts := make([]model.TaskInst, len(te.TaskDatas))
+// TaskInstances get the task instances
+func (te *ExecEnv)  TaskInsts() []model.TaskInstance {
+	insts := make([]model.TaskInstance, len(te.TaskDatas))
 
 	for _, taskData := range te.TaskDatas {
 		insts = append(insts, taskData)

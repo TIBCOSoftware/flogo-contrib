@@ -132,17 +132,17 @@ func (td *TaskData) Task() *definition.Task {
 	return td.task
 }
 
-// FromInstLinks implements model.TaskContext.FromInstLinks
-func (td *TaskData) FromInstLinks() []model.LinkInst {
+// GetFromLinkInstances implements model.TaskContext.GetFromLinkInstances
+func (td *TaskData) FromInstLinks() []model.LinkInstance {
 
-	logger.Debugf("FromInstLinks: task=%v\n", td.Task)
+	logger.Debugf("GetFromLinkInstances: task=%v\n", td.Task)
 
 	links := td.task.FromLinks()
 
 	numLinks := len(links)
 
 	if numLinks > 0 {
-		linkCtxs := make([]model.LinkInst, numLinks)
+		linkCtxs := make([]model.LinkInstance, numLinks)
 
 		for i, link := range links {
 			linkCtxs[i], _ = td.execEnv.FindOrCreateLinkData(link)
@@ -153,17 +153,17 @@ func (td *TaskData) FromInstLinks() []model.LinkInst {
 	return nil
 }
 
-// ToInstLinks implements model.TaskContext.ToInstLinks,
-func (td *TaskData) ToInstLinks() []model.LinkInst {
+// GetToLinkInstances implements model.TaskContext.GetToLinkInstances,
+func (td *TaskData) ToInstLinks() []model.LinkInstance {
 
-	logger.Debugf("ToInstLinks: task=%v\n", td.Task)
+	logger.Debugf("GetToLinkInstances: task=%v\n", td.Task)
 
 	links := td.task.ToLinks()
 
 	numLinks := len(links)
 
 	if numLinks > 0 {
-		linkCtxs := make([]model.LinkInst, numLinks)
+		linkCtxs := make([]model.LinkInstance, numLinks)
 
 		for i, link := range links {
 			linkCtxs[i], _ = td.execEnv.FindOrCreateLinkData(link)
@@ -175,13 +175,13 @@ func (td *TaskData) ToInstLinks() []model.LinkInst {
 }
 
 //// ChildTaskInsts implements activity.ActivityContext.ChildTaskInsts method
-//func (td *TaskData) ChildTaskInsts() (taskInsts []model.TaskInst, hasChildTasks bool) {
+//func (td *TaskData) ChildTaskInsts() (taskInsts []model.TaskInstance, hasChildTasks bool) {
 //
 //	if len(td.task.ChildTasks()) == 0 {
 //		return nil, false
 //	}
 //
-//	taskInsts = make([]model.TaskInst, 0)
+//	taskInsts = make([]model.TaskInstance, 0)
 //
 //	for _, task := range td.task.ChildTasks() {
 //

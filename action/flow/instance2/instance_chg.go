@@ -24,29 +24,30 @@ type WorkItemQueueChange struct {
 	WorkItem *WorkItem
 }
 
-// TaskDataChange represents a change to a TaskData
-type TaskDataChange struct {
-	SubFlowID int
-	ChgType   ChgType
-	ID        string
-	TaskData  *TaskData
+// TaskInstChange represents a change to a TaskInst
+type TaskInstChange struct {
+	ChgType  ChgType
+	ID       string
+	TaskInst *TaskInst
 }
 
-// LinkDataChange represents a change to a LinkData
-type LinkDataChange struct {
-	SubFlowID int
-	ChgType   ChgType
-	ID        int
-	LinkData  *LinkData
+// LinkInstChange represents a change to a LinkInst
+type LinkInstChange struct {
+	ChgType  ChgType
+	ID       int
+	LinkInst *LinkInst
 }
 
 // InstanceChange represents a change to the instance
 type InstanceChange struct {
 	SubFlowID   int
-	State       int
 	Status      model.FlowStatus
 	AttrChanges []*AttributeChange
+	tiChanges   map[string]*TaskInstChange
+	liChanges   map[int]*LinkInstChange
 	SubFlowChg  *SubFlowChange
+
+	State int
 }
 
 // InstanceChange represents a change to the instance
@@ -65,53 +66,62 @@ type AttributeChange struct {
 
 // InstanceChangeTracker is used to track all changes to an instance
 type InstanceChangeTracker struct {
-	wiqChanges map[int]*WorkItemQueueChange
-
-	tdChanges  map[string]*TaskDataChange
-	ldChanges  map[int]*LinkDataChange
-
+	wiqChanges  map[int]*WorkItemQueueChange
 	instChanges map[int]*InstanceChange //at most 2
 }
 
 // NewInstanceChangeTracker creates an InstanceChangeTracker
 func NewInstanceChangeTracker() *InstanceChangeTracker {
+	return &InstanceChangeTracker{instChanges: make(map[int]*InstanceChange)}
+}
 
-	var tracker InstanceChangeTracker
-	tracker.instChanges =make(map[int]*InstanceChange)
-	return &tracker
+func (ict *InstanceChangeTracker) getInstChange(flowId int) *InstanceChange {
+
+	change, exists := ict.instChanges[flowId]
+	if !exists {
+		change = &InstanceChange{}
+		ict.instChanges[flowId] = change
+	}
+
+	return change
 }
 
 // SetStatus is called to track a state change on an instance
 func (ict *InstanceChangeTracker) SetState(subFlowId int, state int) {
 
-	ict.instChanges[subFlowId].State = state
+	ic := ict.getInstChange(subFlowId)
+	ic.State = state
 }
 
 // SetStatus is called to track a status change on an instance
 func (ict *InstanceChangeTracker) SetStatus(subFlowId int, status model.FlowStatus) {
-
-	ict.instChanges[subFlowId].Status = status
+	ic := ict.getInstChange(subFlowId)
+	ic.Status = status
 }
 
 // AttrChange is called to track a status change of an Attribute
 func (ict *InstanceChangeTracker) AttrChange(subFlowId int, chgType ChgType, attribute *data.Attribute) {
 
+	ic := ict.getInstChange(subFlowId)
+
 	var attrChange AttributeChange
 	attrChange.ChgType = chgType
 
 	attrChange.Attribute = attribute
-	ict.instChanges[subFlowId].AttrChanges = append(ict.instChanges[subFlowId].AttrChanges, &attrChange)
+	ic.AttrChanges = append(ic.AttrChanges, &attrChange)
 }
 
 // AttrChange is called to track a status change of an Attribute
 func (ict *InstanceChangeTracker) SubFlowChange(parentFlowId int, chgType ChgType, subFlowId int, taskID string) {
+
+	ic := ict.getInstChange(parentFlowId)
 
 	var change SubFlowChange
 	change.ChgType = chgType
 	change.SubFlowID = subFlowId
 	change.TaskID = taskID
 
-	ict.instChanges[parentFlowId].SubFlowChg = &change
+	ic.SubFlowChg = &change
 }
 
 // trackWorkItem records a WorkItem Queue change
@@ -123,43 +133,47 @@ func (ict *InstanceChangeTracker) trackWorkItem(wiChange *WorkItemQueueChange) {
 	ict.wiqChanges[wiChange.ID] = wiChange
 }
 
-// trackTaskData records a TaskData change
-func (ict *InstanceChangeTracker) trackTaskData(tdChange *TaskDataChange) {
+// trackTaskData records a TaskInst change
+func (ict *InstanceChangeTracker) trackTaskData(subFlowId int, tdChange *TaskInstChange) {
 
-	if ict.tdChanges == nil {
-		ict.tdChanges = make(map[string]*TaskDataChange)
+	ic := ict.getInstChange(subFlowId)
+
+	if ic.tiChanges == nil {
+		ic.tiChanges = make(map[string]*TaskInstChange)
 	}
 
-	ict.tdChanges[tdChange.ID] = tdChange
+	ic.tiChanges[tdChange.ID] = tdChange
 }
 
-// trackLinkData records a LinkData change
-func (ict *InstanceChangeTracker) trackLinkData(ldChange *LinkDataChange) {
+// trackLinkData records a LinkInst change
+func (ict *InstanceChangeTracker) trackLinkData(subFlowId int, ldChange *LinkInstChange) {
 
-	if ict.ldChanges == nil {
-		ict.ldChanges = make(map[int]*LinkDataChange)
+	ic := ict.getInstChange(subFlowId)
+
+	if ic.liChanges == nil {
+		ic.liChanges = make(map[int]*LinkInstChange)
 	}
-	ict.ldChanges[ldChange.ID] = ldChange
+	ic.liChanges[ldChange.ID] = ldChange
 }
 
 // ResetChanges is used to reset any tracking data stored on instance objects
 func (ict *InstanceChangeTracker) ResetChanges() {
 
-	// reset TaskData objects
-	if ict.tdChanges != nil {
-		for _, v := range ict.tdChanges {
-			if v.TaskData != nil {
-				//v.TaskData.ResetChanges()
-			}
-		}
-	}
-
-	// reset LinkData objects
-	if ict.ldChanges != nil {
-		for _, v := range ict.ldChanges {
-			if v.LinkData != nil {
-				//v.LinkData.ResetChanges()
-			}
-		}
-	}
+	//// reset TaskInst objects
+	//if ict.tdChanges != nil {
+	//	for _, v := range ict.tdChanges {
+	//		if v.TaskInst != nil {
+	//			//v.TaskInst.ResetChanges()
+	//		}
+	//	}
+	//}
+	//
+	//// reset LinkInst objects
+	//if ict.ldChanges != nil {
+	//	for _, v := range ict.ldChanges {
+	//		if v.LinkInst != nil {
+	//			//v.LinkInst.ResetChanges()
+	//		}
+	//	}
+	//}
 }
