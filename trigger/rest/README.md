@@ -28,6 +28,10 @@ Settings, Outputs and Endpoint:
       "type": "params"
     },
     {
+      "name": "header",
+      "type": "params"
+    },
+    {
       "name": "content",
       "type": "object"
     }
