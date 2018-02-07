@@ -1,4 +1,4 @@
-package instance2
+package instance
 
 import (
 	"fmt"
@@ -71,6 +71,13 @@ func (inst *IndependentInstance) NewEmbeddedInstance(containerInst *Instance, fl
 	embeddedInst.flowDef = flow
 	embeddedInst.subFlowId = inst.subFlowCtr
 	embeddedInst.master = inst
+
+	if flow.IsErrorHandler() {
+
+	} else {
+
+	}
+
 	embeddedInst.parent = containerInst
 
 	if inst.subFlows == nil {
@@ -256,10 +263,10 @@ func (inst *IndependentInstance) handleTaskDone(taskBehavior model.TaskBehavior,
 		flowDone = true
 		containerInst.SetStatus(model.FlowStatusCompleted)
 
-		//if error flow, return
-		//else if containerInst != inst
-		//  notify activity that flow is done (schedule post eval)
-		//  in top level case inform action -- copy return values to activity output
+		// if error flow, we should mark the parent instance as done
+		// else if containerInst != inst
+		//   if flow was started by an activity, we should schedule the post-eval
+		//   -- copy return values to activity output
 
 	} else {
 		inst.enterTasks(containerInst, taskEntries)

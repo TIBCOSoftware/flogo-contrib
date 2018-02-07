@@ -1,4 +1,4 @@
-package instance2
+package instance
 
 import (
 	"fmt"
@@ -77,7 +77,7 @@ func (ti *TaskInst) OutputScope() data.Scope {
 /////////////////////////////////////////
 // TaskInst - activity.Context Implementation
 
-func (ti *TaskInst) Host() activity.Host {
+func (ti *TaskInst) ActivityHost() activity.Host {
 	return ti.flowInst
 }
 

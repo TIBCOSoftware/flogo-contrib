@@ -1,4 +1,4 @@
-package instance2
+package instanceold
 
 import (
 	"bytes"
@@ -15,10 +15,10 @@ import (
 // snapshots and steps of a Flow Instance
 type StateRecorder interface {
 	// RecordSnapshot records a Snapshot of the FlowInstance
-	RecordSnapshot(instance *IndependentInstance)
+	RecordSnapshot(instance *Instance)
 
 	// RecordStep records the changes for the current Step of the Flow Instance
-	RecordStep(instance *IndependentInstance)
+	RecordStep(instance *Instance)
 }
 
 // RemoteStateRecorder is an implementation of StateRecorder service
@@ -64,7 +64,7 @@ func (sr *RemoteStateRecorder) init(settings map[string]string) {
 	port, set := settings["port"]
 
 	if !set {
-		panic("RemoteStateRecorder: required setting 'host' not set")
+		panic("RemoteStateRecorder: requried setting 'host' not set")
 	}
 
 	if strings.Index(host, "http") != 0 {
@@ -73,15 +73,16 @@ func (sr *RemoteStateRecorder) init(settings map[string]string) {
 		sr.host = host + ":" + port
 	}
 
-	logger.Debugf("RemoteStateRecorder: StateRecorder Server = %s", sr.host)
+	logger.Debugf("RemoteStateRecorder: StateRecoder Server = %s", sr.host)
 }
 
 // RecordSnapshot implements instance.StateRecorder.RecordSnapshot
-func (sr *RemoteStateRecorder) RecordSnapshot(instance *IndependentInstance) {
+func (sr *RemoteStateRecorder) RecordSnapshot(instance *Instance) {
 
 	storeReq := &RecordSnapshotReq{
 		ID:           instance.StepID(),
 		FlowID:       instance.ID(),
+		State:        instance.State(),
 		Status:       int(instance.Status()),
 		SnapshotData: instance,
 	}
@@ -112,11 +113,12 @@ func (sr *RemoteStateRecorder) RecordSnapshot(instance *IndependentInstance) {
 }
 
 // RecordStep implements instance.StateRecorder.RecordStep
-func (sr *RemoteStateRecorder) RecordStep(instance *IndependentInstance) {
+func (sr *RemoteStateRecorder) RecordStep(instance *Instance) {
 
 	storeReq := &RecordStepReq{
 		ID:       instance.StepID(),
 		FlowID:   instance.ID(),
+		State:    instance.State(),
 		Status:   int(instance.Status()),
 		StepData: instance.ChangeTracker,
 	}
@@ -153,7 +155,7 @@ type RecordSnapshotReq struct {
 	State  int    `json:"state"`
 	Status int    `json:"status"`
 
-	SnapshotData *IndependentInstance `json:"snapshotData"`
+	SnapshotData *Instance `json:"snapshotData"`
 }
 
 // RecordStepReq serializable representation of the RecordStep request

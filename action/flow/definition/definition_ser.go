@@ -14,17 +14,17 @@ import (
 
 // DefinitionRep is a serializable representation of a flow Definition
 type DefinitionRep struct {
-	ExplicitReply bool              `json:"explicitReply"`
-	Name          string            `json:"name"`
-	ModelID       string            `json:"model"`
-	Metadata *Metadata `json:"metadata"`
+	ExplicitReply bool      `json:"explicitReply"`
+	Name          string    `json:"name"`
+	ModelID       string    `json:"model"`
+	Metadata      *Metadata `json:"metadata"`
 
-	Attributes    []*data.Attribute `json:"attributes,omitempty"`
+	Attributes []*data.Attribute `json:"attributes,omitempty"`
 
 	Tasks []*TaskRep `json:"tasks"`
 	Links []*LinkRep `json:"links"`
 
-
+	IsErrorHandler      bool          `json:"isErrorHandler"`
 	ErrorHandlerFlow    *ErrorFlowRep `json:"errorHandlerFlow"`
 	ErrorHandlerFlowRef string        `json:"errorHandlerFlowRef"`
 
@@ -97,44 +97,82 @@ func NewDefinition(rep *DefinitionRep) (def *Definition, err error) {
 	def.tasks = make(map[string]*Task)
 	def.links = make(map[int]*Link)
 
-	if len(rep.Tasks) != 0 {
+	if rep.RootTask == nil {
 
-		for _, taskRep := range rep.Tasks {
+		if len(rep.Tasks) != 0 {
 
-			task, err := createTask(def, taskRep)
+			for _, taskRep := range rep.Tasks {
 
-			if err != nil {
-				return nil, err
+				task, err := createTask(def, taskRep)
+
+				if err != nil {
+					return nil, err
+				}
+				def.tasks[task.id] = task
 			}
-			def.tasks[task.id] = task
 		}
-	}
 
-	if len(rep.Links) != 0 {
+		if len(rep.Links) != 0 {
 
-		for _, linkRep := range rep.Links {
+			for _, linkRep := range rep.Links {
 
-			link := createLink(def, linkRep)
-			def.links[link.id] = link
+				link := createLink(def, linkRep)
+				def.links[link.id] = link
+			}
 		}
-	}
 
-	// support for deprecated flow format
-	if rep.RootTask != nil {
+		if rep.ErrorHandlerFlow != nil {
+
+			errorDef := &Definition{}
+			errorDef.name = "ErrorHandler"
+			errorDef.modelID = rep.ModelID
+			errorDef.tasks = make(map[string]*Task)
+			errorDef.links = make(map[int]*Link)
+			errorDef.isErrorHandler = true
+			def.errorHandlerFlow = errorDef
+
+			if len(rep.ErrorHandlerFlow.Tasks) != 0 {
+
+				for _, taskRep := range rep.ErrorHandlerFlow.Tasks {
+
+					task, err := createTask(errorDef, taskRep)
+
+					if err != nil {
+						return nil, err
+					}
+					errorDef.tasks[task.id] = task
+				}
+			}
+
+			if len(rep.ErrorHandlerFlow.Links) != 0 {
+
+				for _, linkRep := range rep.ErrorHandlerFlow.Links {
+
+					link := createLink(errorDef, linkRep)
+					errorDef.links[link.id] = link
+				}
+			}
+
+		}
+
+	} else {
+		// support for deprecated flow format
 		addTasksOld(def, rep.RootTask)
 		addLinksOld(def, rep.RootTask)
-	}
 
-	if rep.ErrorHandlerTask != nil {
+		if rep.ErrorHandlerTask != nil {
 
-		errorDef := &Definition{}
-		errorDef.name = rep.Name
-		errorDef.modelID = rep.ModelID
-		errorDef.tasks = make(map[string]*Task)
-		errorDef.links = make(map[int]*Link)
+			errorDef := &Definition{}
+			errorDef.name = rep.Name
+			errorDef.modelID = rep.ModelID
+			errorDef.tasks = make(map[string]*Task)
+			errorDef.links = make(map[int]*Link)
+			errorDef.isErrorHandler = true
+			def.errorHandlerFlow = errorDef
 
-		addTasksOld(errorDef, rep.ErrorHandlerTask)
-		addLinksOld(errorDef, rep.ErrorHandlerTask)
+			addTasksOld(errorDef, rep.ErrorHandlerTask)
+			addLinksOld(errorDef, rep.ErrorHandlerTask)
+		}
 	}
 
 	return def, nil
@@ -183,7 +221,6 @@ func createActivityConfig(task *Task, rep *ActivityConfigRep) (*ActivityConfig, 
 
 	activityCfg := &ActivityConfig{}
 	activityCfg.Activity = act
-
 
 	// Keep for now, DEPRECATE "attributes" section from flogo.json
 	if len(rep.Settings) > 0 {

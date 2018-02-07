@@ -1,4 +1,4 @@
-package instance
+package instanceold
 
 // Status is value that indicates the status of a Flow Instance
 type Status int

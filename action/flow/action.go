@@ -176,7 +176,7 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 
 	op := instance.OpStart
 	retID := false
-	var initialState *instance.Instance
+	var initialState *instance.IndependentInstance
 	var flowURI string
 	mh := data.GetMapHelper()
 
@@ -207,7 +207,7 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 			flowURI = v
 		}
 		if v, ok := options["initialState"]; ok {
-			if v, ok := v.(*instance.Instance); ok {
+			if v, ok := v.(*instance.IndependentInstance); ok {
 				initialState = v
 			}
 		}
@@ -222,7 +222,7 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 	//todo: catch panic
 	//todo: consider switch to URI to dictate flow operation (ex. flow://blah/resume)
 
-	var inst *instance.Instance
+	var inst *instance.IndependentInstance
 
 	switch op {
 	case instance.OpStart:
@@ -234,7 +234,7 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 		instanceID := fa.idGenerator.NextAsString()
 		logger.Debug("Creating Instance: ", instanceID)
 
-		inst = instance.New(instanceID, flowURI, flowDef, ep.GetFlowModel())
+		inst = instance.NewIndependentInstance(instanceID, flowDef)//(flowURI, flowDef, ep.GetFlowModel())
 	case instance.OpResume:
 		if initialState != nil {
 			inst = initialState
@@ -279,7 +279,7 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 
 		defer handler.Done()
 
-		if !inst.Flow.ExplicitReply() || retID {
+		if !inst.FlowDefinition().ExplicitReply() || retID {
 
 			idAttr, _ := data.NewAttribute("id", data.STRING, inst.ID())
 			results := map[string]*data.Attribute{
@@ -296,7 +296,7 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 			handler.HandleResult(results, nil)
 		}
 
-		for hasWork && inst.Status() < instance.StatusCompleted && stepCount < fa.actionOptions.MaxStepCount {
+		for hasWork && inst.Status() < model.FlowStatusCompleted && stepCount < fa.actionOptions.MaxStepCount {
 			stepCount++
 			logger.Debugf("Step: %d\n", stepCount)
 			hasWork = inst.DoStep()
@@ -307,7 +307,7 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 			}
 		}
 
-		if inst.Status() == instance.StatusCompleted {
+		if inst.Status() ==  model.FlowStatusCompleted {
 			returnData, err := inst.GetReturnData()
 			handler.HandleResult(returnData, err)
 		}
@@ -328,7 +328,7 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 
 		logger.Debugf("Done Executing A.instance [%s] - Status: %d\n", inst.ID(), inst.Status())
 
-		if inst.Status() == instance.StatusCompleted {
+		if inst.Status() ==  model.FlowStatusCompleted {
 			logger.Infof("Flow [%s] Completed", inst.ID())
 		}
 	}()

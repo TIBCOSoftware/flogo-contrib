@@ -295,7 +295,7 @@ func TestFlowAction_Run_Restart(t *testing.T) {
 }
 
 type RestartRequest struct {
-	InitialState *instance.Instance     `json:"initialState"`
+	InitialState *instance.Instance  `json:"initialState"`
 	Data         map[string]interface{} `json:"data"`
 	Interceptor  *support.Interceptor   `json:"interceptor"`
 	Patch        *support.Patch         `json:"patch"`

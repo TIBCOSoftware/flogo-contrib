@@ -1,4 +1,4 @@
-package instance2
+package instanceold
 
 import (
 	"os"

@@ -1,4 +1,4 @@
-package instance2
+package instance
 
 import (
 	"github.com/TIBCOSoftware/flogo-lib/logger"

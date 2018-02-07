@@ -13,7 +13,7 @@ type IteratorTask struct {
 }
 
 // Eval implements model.TaskBehavior.Eval
-func (tb *IteratorTask) Eval(ctx model.TaskContext, evalCode int) (evalResult model.EvalResult, err error) {
+func (tb *IteratorTask) Eval(ctx model.TaskContext) (evalResult model.EvalResult, err error) {
 
 	if ctx.Status() == model.TaskStatusSkipped {
 		return model.EVAL_DONE, nil //todo introduce EVAL_SKIP?

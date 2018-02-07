@@ -90,7 +90,7 @@ func (rp *RequestProcessor) RestartFlow(restartRequest *RestartRequest)  (result
 	factory := action.GetFactory(FLOW_REF)
 	act := factory.New(&action.Config{Id: "flow"})
 
-	ro := &instance.RunOptions{Op: instance.OpRestart, ReturnID: true, FlowURI: restartRequest.InitialState.FlowURI, InitialState: restartRequest.InitialState, ExecOptions: execOptions}
+	ro := &instance.RunOptions{Op: instance.OpRestart, ReturnID: true, FlowURI: restartRequest.InitialState.FlowURI(), InitialState: restartRequest.InitialState, ExecOptions: execOptions}
 	newOptions := make(map[string]interface{})
 	newOptions["deprecated_options"] = ro
 
@@ -121,7 +121,7 @@ func (rp *RequestProcessor) ResumeFlow(resumeRequest *ResumeRequest)  (results m
 	factory := action.GetFactory(FLOW_REF)
 	act := factory.New(&action.Config{Id: "flow"})
 
-	ro := &instance.RunOptions{Op: instance.OpResume, ReturnID: true, FlowURI:resumeRequest.State.FlowURI, InitialState : resumeRequest.State, ExecOptions: execOptions}
+	ro := &instance.RunOptions{Op: instance.OpResume, ReturnID: true, FlowURI:resumeRequest.State.FlowURI(), InitialState : resumeRequest.State, ExecOptions: execOptions}
 	newOptions := make(map[string]interface{})
 	newOptions["deprecated_options"] = ro
 
@@ -141,7 +141,7 @@ type StartRequest struct {
 // RestartRequest describes a request for restarting a FlowInstance
 // todo: can be merged into StartRequest
 type RestartRequest struct {
-	InitialState *instance.Instance     `json:"initialState"`
+	InitialState *instance.IndependentInstance  `json:"initialState"`
 	Data         map[string]interface{} `json:"data"`
 	Interceptor  *support.Interceptor   `json:"interceptor"`
 	Patch        *support.Patch         `json:"patch"`
@@ -150,7 +150,7 @@ type RestartRequest struct {
 // ResumeRequest describes a request for resuming a FlowInstance
 //todo: Data for resume request should be directed to waiting task
 type ResumeRequest struct {
-	State       *instance.Instance     `json:"state"`
+	State       *instance.IndependentInstance  `json:"state"`
 	Data        map[string]interface{} `json:"data"`
 	Interceptor *support.Interceptor   `json:"interceptor"`
 	Patch       *support.Patch         `json:"patch"`

@@ -22,12 +22,11 @@ type Definition struct {
 	links       map[int]*Link
 	tasks       map[string]*Task
 
-	//ehLinks       map[int]*Link
-	//ehTasks       map[string]*Task
 	metadata   *Metadata
 
 	linkExprMgr LinkExprManager
 
+	isErrorHandler bool
 	errorHandlerFlow *Definition
 }
 
@@ -85,6 +84,10 @@ func (pd *Definition) GetLinks() []*Link {
 
 func (pd *Definition) ExplicitReply() bool {
 	return pd.explicitReply
+}
+
+func (pd *Definition) IsErrorHandler() bool {
+	return pd.isErrorHandler
 }
 
 func (pd *Definition) GetErrorHandlerFlow() *Definition {
