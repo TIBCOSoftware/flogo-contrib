@@ -56,7 +56,7 @@ func (a *HistoCompareActivity) Eval(context activity.Context) (done bool, err er
 	StoreIfInRange := context.GetInput(ivStoreIfInRange).(bool)
 	StoreIfExceed := context.GetInput(ivStoreIfExceed).(bool)
 	
-	log.Debugf("Compare Histo [Variable = %s, Value = %s, Threshold = %s, Threshold unit = %s, StoreIfInRange = %s, StoreIfExceed = %s]", VarName, VarValue, Threshold, ThresholdUnit, StoreIfInRange, StoreIfExceed)
+	log.Infof("Compare Histo [Variable = %s, Value = %s, Threshold = %s, Threshold unit = %s, StoreIfInRange = %s, StoreIfExceed = %s]", VarName, VarValue, Threshold, ThresholdUnit, StoreIfInRange, StoreIfExceed)
 	
 	storedValue, exceedThreshold, err := a.compareHistoValue(VarName, VarValue, Threshold, ThresholdUnit, StoreIfInRange, StoreIfExceed)
 	
@@ -79,10 +79,10 @@ func (a *HistoCompareActivity) compareHistoValue(varName string, varNewValue flo
 	
 	if valInMem, exists := a.storedVars[varName]; exists {
 		storedValue = valInMem
-		log.Debugf("Variable [%s] is already stored with value [%v]", varName, storedValue)
+		log.Infof("Variable [%s] is already stored with value [%v]", varName, storedValue)
 	} else {
 		a.storedVars[varName] = varNewValue
-		log.Debugf("Variable [%s] didn't exist. Storing it with value [%v]", varName, storedValue)
+		log.Infof("Variable [%s] didn't exist. Storing it with value [%v]", varName, storedValue)
 	}
 
 	if thresholdUnit == "%" {
@@ -90,13 +90,13 @@ func (a *HistoCompareActivity) compareHistoValue(varName string, varNewValue flo
 	}
 
 	if  math.Abs(varNewValue - storedValue) > threshold {
-		log.Debugf("Value [%v] exceed threshold (Stored value = [%v])", varNewValue, storedValue)
+		log.Infof("Value [%v] exceed threshold (Stored value = [%v])", varNewValue, storedValue)
 		exceedThreshold = true
 		if StoreIfExceed {
 			a.storedVars[varName] = varNewValue
 		} 
 	} else {
-		log.Debugf("Value [%v] in range.", varNewValue)
+		log.Infof("Value [%v] in range.", varNewValue)
 	}
 
 	if StoreIfInRange {
