@@ -26,7 +26,7 @@
 	{
       "name": "thresholdUnit",
       "type": "string",
-	  "allowed" : ["percentage"]
+	  "allowed" : ["%"]
     },
 	{
       "name": "storeIfInRange",
