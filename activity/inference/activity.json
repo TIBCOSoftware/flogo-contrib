@@ -19,7 +19,7 @@
     },
     {
       "name": "features",
-      "type": "string",
+      "type": "object",
       "required": true
     },
     {
@@ -31,7 +31,7 @@
   "output": [
     {
       "name": "result",
-      "type": "any"
+      "type": "object"
     }
   ]
 }

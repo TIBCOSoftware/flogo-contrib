@@ -86,10 +86,10 @@ func (m *DefaultOutputMapper) Apply(inputScope data.Scope, outputScope data.Scop
 
 	for _, attr := range act.Metadata().Output {
 
-		oAttr, _ := inputScope.GetAttr(attr.Name)
+		oAttr, _ := inputScope.GetAttr(attr.Name())
 
 		if oAttr != nil {
-			oscope.AddAttr(attrNS+attr.Name, attr.Type, oAttr.Value)
+			oscope.AddAttr(attrNS+attr.Name(), attr.Type(), oAttr.Value())
 		}
 	}
 

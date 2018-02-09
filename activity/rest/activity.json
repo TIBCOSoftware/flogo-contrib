@@ -19,11 +19,20 @@
       "required": true
     },
     {
+      "name": "proxy",
+      "type": "string",
+      "required": false
+    },
+    {
       "name": "pathParams",
       "type": "params"
     },
     {
       "name": "queryParams",
+      "type": "params"
+    },
+    {
+      "name": "header",
       "type": "params"
     },
     {

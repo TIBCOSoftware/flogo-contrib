@@ -65,21 +65,21 @@ func TestSimpleReply(t *testing.T) {
 	act.Eval(tc)
 
 	assert.Nil(t, ac.ReplyErr)
-	o1,exists1 := ac.ReplyDataAttr["Output1"]
+	o1, exists1 := ac.ReplyDataAttr["Output1"]
 	assert.True(t, exists1, "Output1 not set")
 	if exists1 {
-		assert.Equal(t, "1", o1.Value)
+		assert.Equal(t, "1", o1.Value())
 	}
-	o2,exists2 := ac.ReplyDataAttr["Output2"]
+	o2, exists2 := ac.ReplyDataAttr["Output2"]
 	assert.True(t, exists2, "Output2 not set")
 	if exists2 {
-		assert.Equal(t, 2.0, o2.Value)
+		assert.Equal(t, 2.0, o2.Value())
 	}
 }
 
 func newActionContext() *test.TestActionCtx {
-	input := []*data.Attribute{{Name: "Input1", Type: data.STRING}}
-	output := []*data.Attribute{{Name: "Output1", Type: data.STRING}, {Name: "Output2", Type: data.INTEGER}}
+	input := []*data.Attribute{data.NewZeroAttribute("Input1", data.STRING)}
+	output := []*data.Attribute{data.NewZeroAttribute("Output1", data.STRING), data.NewZeroAttribute("Output2", data.INTEGER)}
 
 	ac := &test.TestActionCtx{
 		ActionId:   "1",

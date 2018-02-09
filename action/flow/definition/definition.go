@@ -103,6 +103,7 @@ type Task struct {
 	definition *Definition
 	parent     *Task
 
+	settings    map[string]interface{}
 	inputAttrs  map[string]*data.Attribute
 	outputAttrs map[string]*data.Attribute
 
@@ -151,6 +152,11 @@ func (task *Task) ChildTasks() []*Task {
 // ChildLinks gets the child tasks of the task
 func (task *Task) ChildLinks() []*Link {
 	return task.links
+}
+
+func (task *Task) GetSetting(attrName string) (value interface{}, exists bool) {
+	value, exists = task.settings[attrName]
+	return value,exists
 }
 
 // GetAttr gets the specified attribute

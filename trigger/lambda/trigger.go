@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"flag"
 
+	syslog "log"
+
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"github.com/eawsy/aws-lambda-go-core/service/lambda/runtime"
-	syslog "log"
 )
 
 // log is the default package logger
@@ -50,7 +50,6 @@ func (t *LambdaTrigger) Init(runner action.Runner) {
 func Invoke() (interface{}, error) {
 
 	log.Info("Starting AWS Lambda Trigger")
-	// Use syslog since aws logs are still not that good
 	syslog.Println("Starting AWS Lambda Trigger")
 
 	// Parse the flags
@@ -58,9 +57,8 @@ func Invoke() (interface{}, error) {
 
 	// Looking up the arguments
 	evtArg := flag.Lookup("evt")
-	//evt := evtArg.Value.String()
 	var evt interface{}
-	// Unmarshall ctx
+	// Unmarshall evt
 	if err := json.Unmarshal([]byte(evtArg.Value.String()), &evt); err != nil {
 		return nil, err
 	}
@@ -68,8 +66,9 @@ func Invoke() (interface{}, error) {
 	log.Debugf("Received evt: '%+v'\n", evt)
 	syslog.Printf("Received evt: '%+v'\n", evt)
 
+	// Get the context
 	ctxArg := flag.Lookup("ctx")
-	var lambdaCtx *runtime.Context
+	var lambdaCtx interface{}
 
 	// Unmarshal ctx
 	if err := json.Unmarshal([]byte(ctxArg.Value.String()), &lambdaCtx); err != nil {
@@ -82,13 +81,9 @@ func Invoke() (interface{}, error) {
 	actionId := singleton.config.Handlers[0].ActionId
 	log.Debugf("Calling actionid: '%s'\n", actionId)
 
-
 	data := map[string]interface{}{
-		"logStreamName":   lambdaCtx.LogStreamName,
-		"logGroupName":    lambdaCtx.LogGroupName,
-		"awsRequestId":    lambdaCtx.AWSRequestID,
-		"memoryLimitInMB": lambdaCtx.MemoryLimitInMB,
-		"evt":             evt,
+		"context": lambdaCtx,
+		"evt":     evt,
 	}
 
 	startAttrs, err := singleton.metadata.OutputsToAttrs(data, false)
@@ -107,7 +102,7 @@ func Invoke() (interface{}, error) {
 	if len(results) != 0 {
 		dataAttr, ok := results["data"]
 		if ok {
-			replyData = dataAttr.Value
+			replyData = dataAttr.Value()
 		}
 	}
 

@@ -10,8 +10,8 @@ import (
 // NewTestActivityContext creates a new TestActivityContext
 func NewTestActivityContext(metadata *activity.Metadata) *TestActivityContext {
 
-	input := []*data.Attribute{{Name: "Input1", Type: data.STRING}}
-	output := []*data.Attribute{{Name: "Output1", Type: data.STRING}}
+	input := []*data.Attribute{data.NewZeroAttribute("Input1", data.STRING)}
+	output := []*data.Attribute{data.NewZeroAttribute("Output1", data.STRING)}
 
 	ac := &TestActionCtx{
 		ActionId:   "1",
@@ -41,10 +41,10 @@ func NewTestActivityContextWithAction(metadata *activity.Metadata, actionCtx *Te
 	}
 
 	for _, element := range metadata.Input {
-		tc.inputs[element.Name] = data.NewAttribute(element.Name, element.Type, nil)
+		tc.inputs[element.Name()] = data.NewZeroAttribute(element.Name(), element.Type())
 	}
 	for _, element := range metadata.Output {
-		tc.outputs[element.Name] = data.NewAttribute(element.Name, element.Type, nil)
+		tc.outputs[element.Name()] = data.NewZeroAttribute(element.Name(), element.Type())
 	}
 
 	return tc
@@ -151,7 +151,7 @@ func (c *TestActivityContext) GetAttrType(attrName string) (attrType data.Type, 
 	attr, found := c.Attrs[attrName]
 
 	if found {
-		return attr.Type, true
+		return attr.Type(), true
 	}
 
 	return 0, false
@@ -163,7 +163,7 @@ func (c *TestActivityContext) GetAttrValue(attrName string) (value string, exist
 	attr, found := c.Attrs[attrName]
 
 	if found {
-		return attr.Value.(string), true
+		return attr.Value().(string), true
 	}
 
 	return "", false
@@ -175,7 +175,7 @@ func (c *TestActivityContext) SetAttrValue(attrName string, value string) {
 	attr, found := c.Attrs[attrName]
 
 	if found {
-		attr.Value = value
+		attr.SetValue(value)
 	}
 }
 
@@ -185,7 +185,7 @@ func (c *TestActivityContext) SetInput(name string, value interface{}) {
 	attr, found := c.inputs[name]
 
 	if found {
-		attr.Value = value
+		attr.SetValue(value)
 	} else {
 		//error?
 	}
@@ -197,7 +197,7 @@ func (c *TestActivityContext) GetInput(name string) interface{} {
 	attr, found := c.inputs[name]
 
 	if found {
-		return attr.Value
+		return attr.Value()
 	}
 
 	return nil
@@ -209,7 +209,7 @@ func (c *TestActivityContext) SetOutput(name string, value interface{}) {
 	attr, found := c.outputs[name]
 
 	if found {
-		attr.Value = value
+		attr.SetValue(value)
 	} else {
 		//error?
 	}
@@ -221,7 +221,7 @@ func (c *TestActivityContext) GetOutput(name string) interface{} {
 	attr, found := c.outputs[name]
 
 	if found {
-		return attr.Value
+		return attr.Value()
 	}
 
 	return nil
