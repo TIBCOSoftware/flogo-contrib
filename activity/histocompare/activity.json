@@ -30,11 +30,13 @@
     },
 	{
       "name": "storeIfInRange",
-      "type": "bool"
+      "type": "boolean", 
+	  "value": "false"
     },
 	{
       "name": "storeIfExceed",
-      "type": "bool"
+      "type": "boolean",
+	  "value": "true"
     }
   ],
   "outputs": [
@@ -44,7 +46,7 @@
     },
 	{
       "name": "exceedThreshold",
-      "type": "bool"
+      "type": "boolean"
     }
   ]
 }
