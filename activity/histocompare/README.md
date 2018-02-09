@@ -69,7 +69,7 @@ Inputs and Outputs:
 | varName        | Name of the variable you want to store. |         
 | varValue        | Current value of the variable |
 | threshold        | Threshold value |
-| thresholdUnit        | Threshold unit. Can be either empty or "%". <br/><ul><li>If empty, values are compared <ul><li>( absolute_value(oldValue - newValue) > threshold )</li></ul> </li><li>If %, percentage are calculated before comparing values  <ul><li>( absolute_value(oldValue - newValue) > (oldValue * threshold/100) )</li></ul></li></ul><ul></ul><br/>. |
+| thresholdUnit        | Threshold unit. Can be either empty or "%". <br/><ul><li>If empty, values are compared <ul><li>( absolute_value(oldValue - newValue) > threshold )</li></ul> </li><li>If %, percentage are calculated before comparing values  <ul><li>( absolute_value(oldValue - newValue) > (oldValue * threshold/100) )</li></ul></li></ul><ul></ul>|
 | storeIfInRange        | New value is stored even if in range. Be careful, if set to true, you may not be able to detect slight changes ! |
 | storeIfExceed        | New value is stored if threshold is exceeded |
 | prevStoredValue        | Return the value that was previously stored. |
