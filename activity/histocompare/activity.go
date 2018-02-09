@@ -63,8 +63,8 @@ func (a *HistoCompareActivity) Eval(context activity.Context) (done bool, err er
 	if err != nil {
 		return false, err
 	}
-	context.SetOutput(ovPrevStoredValue, storedValue) // !! TO CHANGE !!
-	context.SetOutput(ovExceedThreshold, exceedThreshold) // !! TO CHANGE !!
+	context.SetOutput(ovPrevStoredValue, storedValue)
+	context.SetOutput(ovExceedThreshold, exceedThreshold)
 	return true, nil
 }
 
@@ -92,6 +92,8 @@ func (a *HistoCompareActivity) compareHistoValue(varName string, varNewValue flo
 		if StoreIfExceed {
 			a.storedVars[varName] = varNewValue
 		} 
+	} else {
+		log.Debugf("Value [%v] in range.", varNewValue)
 	}
 
 	if StoreIfInRange {
