@@ -27,7 +27,8 @@
     {
       "name": "smsType",
       "type": "string",
-      "allowed" : ["Promotional", "Transactional"]
+      "allowed" : ["Promotional", "Transactional"],
+	  "value": "Promotional"
     },
     {
       "name": "from",
