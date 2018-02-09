@@ -6,7 +6,7 @@
   "description": "This activity allows you to store a variable in memory (shared across process instances) and compare values between the value stored in memory and the one given as input",
   "author": "Philippe GABERT <pgabert@tibco.com>",
   "ref": "github.com/philippegabert/flogo-contrib/activity/histocompare",
-  "homepage": "https://github.com/philippegabert/flogo-contrib/tree/master/activity/histocompare",
+  "homepage": "https://github.com/philippegabert/flogo-contrib/tree/histocompare/activity/histocompare",
   "inputs":[
     {
       "name": "varName",
