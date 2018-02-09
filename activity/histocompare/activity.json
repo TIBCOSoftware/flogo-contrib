@@ -1,0 +1,50 @@
+{
+  "name": "histocompare",
+  "title": "Compare historical variable value",
+  "version": "0.0.1",
+  "type": "flogo:activity",
+  "description": "This activity allows you to store a variable in memory (shared across process instances) and compare values between the value stored in memory and the one given as input",
+  "author": "Philippe GABERT <pgabert@tibco.com>",
+  "ref": "github.com/philippegabert/flogo-contrib/activity/histocompare",
+  "homepage": "https://github.com/philippegabert/flogo-contrib/tree/histocompare/activity/histocompare",
+  "inputs":[
+    {
+      "name": "varName",
+      "type": "string",
+	  "required": "true"
+    },
+	{
+      "name": "varValue",
+      "type": "number",
+	  "required": "true"
+    },
+	{
+      "name": "threshold",
+      "type": "number",
+	  "required": "true"
+    },
+	{
+      "name": "thresholdUnit",
+      "type": "string",
+	  "allowed" : ["percentage"]
+    },
+	{
+      "name": "storeIfInRange",
+      "type": "bool"
+    },
+	{
+      "name": "storeIfExceed",
+      "type": "bool"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "prevStoredValue",
+      "type": "number"
+    },
+	{
+      "name": "exceedThreshold",
+      "type": "bool"
+    }
+  ]
+}
