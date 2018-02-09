@@ -1,23 +1,23 @@
 package histocompare
 
 import (
+	"fmt"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"fmt"
-	"sync"
 	"math"
+	"sync"
 )
 
 // List of input and output variables names
 const (
-	ivVarName     = "varName"
-	ivVarValue = "varValue"
-	ivThreshold   = "threshold"
-	ivThresholdUnit            = "thresholdUnit"
-	ivStoreIfInRange          = "storeIfInRange"
-	ivStoreIfExceed            = "storeIfExceed"
-	ovPrevStoredValue              = "prevStoredValue"
-	ovExceedThreshold         = "exceedThreshold"
+	ivVarName         = "varName"
+	ivVarValue        = "varValue"
+	ivThreshold       = "threshold"
+	ivThresholdUnit   = "thresholdUnit"
+	ivStoreIfInRange  = "storeIfInRange"
+	ivStoreIfExceed   = "storeIfExceed"
+	ovPrevStoredValue = "prevStoredValue"
+	ovExceedThreshold = "exceedThreshold"
 )
 
 // log is the default package logger
@@ -41,25 +41,24 @@ func (a *HistoCompareActivity) Metadata() *activity.Metadata {
 }
 
 // Eval implements activity.Activity.Eval
-func (a *HistoCompareActivity) Eval(context activity.Context) (done bool, err error)  {
+func (a *HistoCompareActivity) Eval(context activity.Context) (done bool, err error) {
 
 	if context.GetInput(ivVarName) == nil || context.GetInput(ivVarValue) == nil || context.GetInput(ivThreshold) == nil {
 		log.Error("Required variables have not been set !")
 		return false, fmt.Errorf("required variables have not been set")
 	}
 
-	
 	VarName := context.GetInput(ivVarName).(string)
 	VarValue := context.GetInput(ivVarValue).(float64)
 	Threshold := context.GetInput(ivThreshold).(float64)
 	ThresholdUnit := context.GetInput(ivThresholdUnit).(string)
 	StoreIfInRange := context.GetInput(ivStoreIfInRange).(bool)
 	StoreIfExceed := context.GetInput(ivStoreIfExceed).(bool)
-	
-	log.Infof("Compare Histo [Variable = %s, Value = %s, Threshold = %s, Threshold unit = %s, StoreIfInRange = %s, StoreIfExceed = %s]", VarName, VarValue, Threshold, ThresholdUnit, StoreIfInRange, StoreIfExceed)
-	
+
+	log.Debugf("Compare Histo [Variable = %s, Value = %v, Threshold = %v, Threshold unit = %s, StoreIfInRange = %t, StoreIfExceed = %t]", VarName, VarValue, Threshold, ThresholdUnit, StoreIfInRange, StoreIfExceed)
+
 	storedValue, exceedThreshold, err := a.compareHistoValue(VarName, VarValue, Threshold, ThresholdUnit, StoreIfInRange, StoreIfExceed)
-	
+
 	if err != nil {
 		return false, err
 	}
@@ -68,35 +67,34 @@ func (a *HistoCompareActivity) Eval(context activity.Context) (done bool, err er
 	return true, nil
 }
 
-
-func (a *HistoCompareActivity) compareHistoValue(varName string, varNewValue float64, threshold float64, thresholdUnit string, StoreIfInRange bool, StoreIfExceed bool) (storedValue float64, exceedThreshold bool, err error)  {
+func (a *HistoCompareActivity) compareHistoValue(varName string, varNewValue float64, threshold float64, thresholdUnit string, StoreIfInRange bool, StoreIfExceed bool) (storedValue float64, exceedThreshold bool, err error) {
 	a.Lock()
 	defer a.Unlock()
 
 	exceedThreshold = false
-	
+
 	storedValue = varNewValue
-	
+
 	if valInMem, exists := a.storedVars[varName]; exists {
 		storedValue = valInMem
-		log.Infof("Variable [%s] is already stored with value [%v]", varName, storedValue)
+		log.Debugf("Variable [%s] is already stored with value [%v]", varName, storedValue)
 	} else {
 		a.storedVars[varName] = varNewValue
-		log.Infof("Variable [%s] didn't exist. Storing it with value [%v]", varName, storedValue)
+		log.Debugf("Variable [%s] didn't exist. Storing it with value [%v]", varName, storedValue)
 	}
 
 	if thresholdUnit == "%" {
 		threshold = storedValue * (threshold / 100)
 	}
 
-	if  math.Abs(varNewValue - storedValue) > threshold {
-		log.Infof("Value [%v] exceed threshold (Stored value = [%v])", varNewValue, storedValue)
+	if math.Abs(varNewValue-storedValue) > threshold {
+		log.Debugf("Value [%v] exceed threshold (Stored value = [%v])", varNewValue, storedValue)
 		exceedThreshold = true
 		if StoreIfExceed {
 			a.storedVars[varName] = varNewValue
-		} 
+		}
 	} else {
-		log.Infof("Value [%v] in range.", varNewValue)
+		log.Debugf("Value [%v] in range.", varNewValue)
 	}
 
 	if StoreIfInRange {
