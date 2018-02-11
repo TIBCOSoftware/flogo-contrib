@@ -1,4 +1,4 @@
-package VL53L0XStreamRPI
+package vl53l0xstreamrpi
 
 import (
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
