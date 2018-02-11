@@ -114,7 +114,7 @@ func NewDriver(bus embd.I2CBus) *VL530LXDriver {
 		bus:     bus,
 		address: VL53L0XAddress,
 	}
-	d.bus.WriteByteToReg(d.address, 0x00, 0x01)
+	//d.bus.WriteByteToReg(d.address, 0x00, 0x01)
 	return d
 }
 
@@ -129,7 +129,7 @@ func (d *VL530LXDriver) Measure() (distance int , err error) {
 		log.Error(err)
 	}
 
-	//d.bus.WriteByteToReg(d.address, 0x00, 0x01)
+	d.bus.WriteByteToReg(d.address, 0x00, 0x01)
 
 	distance = int(binary.BigEndian.Uint16([]byte{byteA, byteB}))
 
