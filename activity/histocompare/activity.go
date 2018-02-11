@@ -80,6 +80,7 @@ func (a *HistoCompareActivity) compareHistoValue(varName string, varNewValue flo
 		log.Debugf("Variable [%s] is already stored with value [%v]", varName, storedValue)
 	} else {
 		a.storedVars[varName] = varNewValue
+		exceedThreshold = true
 		log.Debugf("Variable [%s] didn't exist. Storing it with value [%v]", varName, storedValue)
 	}
 
