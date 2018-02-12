@@ -95,8 +95,14 @@ func (tb *Task) PostEval(ctx model.TaskContext) (evalResult model.EvalResult, er
 
 	log.Debugf("Task PostEval\n")
 
-	//if activity is async
-	//done := activity.PostEval(activityContext, data)
+	_, err = ctx.PostEvalActivity()
+
+	//what to do if eval isn't "done"?
+	if err != nil {
+		log.Errorf("Error post evaluating activity '%s'[%s] - %s", ctx.Task().Name(), ctx.Task().ActivityConfig().Ref(), err.Error())
+		ctx.SetStatus(model.TaskStatusFailed)
+		return model.EVAL_FAIL, err
+	}
 
 	return model.EVAL_DONE, nil
 }

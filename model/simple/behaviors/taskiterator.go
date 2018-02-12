@@ -80,7 +80,6 @@ func (tb *IteratorTask) Eval(ctx model.TaskContext) (evalResult model.EvalResult
 
 		done, err := ctx.EvalActivity()
 
-		//what to do if eval isn't "done"?
 		if err != nil {
 			log.Errorf("Error evaluating activity '%s'[%s] - %s", ctx.Task().Name(), ctx.Task().ActivityConfig().Ref(), err.Error())
 			ctx.SetStatus(model.TaskStatusFailed)
@@ -88,9 +87,8 @@ func (tb *IteratorTask) Eval(ctx model.TaskContext) (evalResult model.EvalResult
 		}
 
 		if !done {
-			//todo check if activity is async
 			ctx.SetStatus(model.TaskStatusWaiting)
-			evalResult = model.EVAL_WAIT
+			return model.EVAL_WAIT, nil
 		}
 
 		evalResult = model.EVAL_REPEAT
@@ -107,8 +105,14 @@ func (tb *IteratorTask) PostEval(ctx model.TaskContext) (evalResult model.EvalRe
 
 	log.Debugf("Task PostEval\n")
 
-	//if activity is async
-	//done := activity.PostEval(activityContext, data)
+	_, err = ctx.PostEvalActivity()
+
+	//what to do if eval isn't "done"?
+	if err != nil {
+		log.Errorf("Error post evaluating activity '%s'[%s] - %s", ctx.Task().Name(), ctx.Task().ActivityConfig().Ref(), err.Error())
+		ctx.SetStatus(model.TaskStatusFailed)
+		return model.EVAL_FAIL, err
+	}
 
 	itxAttr, _ := ctx.GetWorkingData("_iterator")
 	itx := itxAttr.Value().(Iterator)

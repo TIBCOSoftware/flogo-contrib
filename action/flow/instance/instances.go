@@ -10,6 +10,8 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/TIBCOSoftware/flogo-lib/util"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/provider"
+	"github.com/TIBCOSoftware/flogo-lib/core/action"
 )
 
 type IndependentInstance struct {
@@ -30,20 +32,13 @@ type IndependentInstance struct {
 	subFlows map[int]*EmbeddedInstance
 }
 
+//todo can probably remove
 type EmbeddedInstance struct {
 	*Instance
 
-	instId   int
-	parentId int
+	//parentId int
 	//master *Instance //to access queue
-	parent *Instance // could change to "container" and move to instance
-}
-
-func NewEmbeddedInstance() {
-	//ref to the flow
-	//Host
-	//set pass along inputs
-
+	//parent *Instance // could change to "container" and move to instance
 }
 
 // New creates a new Flow Instance from the specified Flow
@@ -63,7 +58,11 @@ func NewIndependentInstance(instanceID string, flow *definition.Definition) *Ind
 	return &inst
 }
 
-func (inst *IndependentInstance) NewEmbeddedInstance(containerInst *Instance, flow *definition.Definition) *EmbeddedInstance {
+func (inst *IndependentInstance) NewEmbeddedErrorInstance(containerInst *Instance, flow *definition.Definition) *EmbeddedInstance {
+
+	if !flow.IsErrorHandler() {
+		//throw an error
+	}
 
 	inst.subFlowCtr++
 
@@ -71,14 +70,10 @@ func (inst *IndependentInstance) NewEmbeddedInstance(containerInst *Instance, fl
 	embeddedInst.flowDef = flow
 	embeddedInst.subFlowId = inst.subFlowCtr
 	embeddedInst.master = inst
+	embeddedInst.isErrorHandler = true
+	embeddedInst.host = containerInst
 
-	if flow.IsErrorHandler() {
-
-	} else {
-
-	}
-
-	embeddedInst.parent = containerInst
+	//embeddedInst.parent = containerInst
 
 	if inst.subFlows == nil {
 		inst.subFlows = make(map[int]*EmbeddedInstance)
@@ -90,10 +85,32 @@ func (inst *IndependentInstance) NewEmbeddedInstance(containerInst *Instance, fl
 	return &embeddedInst
 }
 
-// ID returns the ID of the Flow Instance
-func (inst *IndependentInstance) ID() string {
-	return inst.id
+func (inst *IndependentInstance) NewEmbeddedInstance (taskInst *TaskInst, flow *definition.Definition) *EmbeddedInstance {
+
+	inst.subFlowCtr++
+
+	var embeddedInst EmbeddedInstance
+	embeddedInst.flowDef = flow
+	embeddedInst.subFlowId = inst.subFlowCtr
+	embeddedInst.master = inst
+	embeddedInst.host = taskInst
+
+	//embeddedInst.parent = taskInst.flowInst
+
+	if inst.subFlows == nil {
+		inst.subFlows = make(map[int]*EmbeddedInstance)
+	}
+	inst.subFlows[embeddedInst.subFlowId] = &embeddedInst
+
+	inst.ChangeTracker.SubFlowChange(taskInst.flowInst.subFlowId, CtAdd, embeddedInst.subFlowId, "")
+
+	return &embeddedInst
 }
+
+//// ID returns the ID of the Flow Instance
+//func (inst *IndependentInstance) ID() string {
+//	return inst.id
+//}
 
 func (inst *IndependentInstance) Start(startAttrs []*data.Attribute) bool {
 
@@ -153,6 +170,7 @@ func (inst *IndependentInstance) DoStep() bool {
 
 	if inst.status == model.FlowStatusActive {
 
+		// get item to be worked on
 		item, ok := inst.workItemQueue.Pop()
 
 		if ok {
@@ -160,13 +178,17 @@ func (inst *IndependentInstance) DoStep() bool {
 
 			workItem := item.(*WorkItem)
 
+			// get the corresponding behavior
 			behavior := inst.flowModel.GetDefaultTaskBehavior()
 			if typeID := workItem.taskInst.task.TypeID(); typeID > 1 {
 				behavior = inst.flowModel.GetTaskBehavior(typeID)
 			}
 
+			// track the fact that the work item was removed from the queue
 			inst.ChangeTracker.trackWorkItem(&WorkItemQueueChange{ChgType: CtDel, ID: workItem.ID, WorkItem: workItem})
+
 			inst.execTask(behavior, workItem.taskInst)
+
 			hasNext = true
 		} else {
 			logger.Debug("flow instance work queue empty")
@@ -184,6 +206,8 @@ func (inst *IndependentInstance) scheduleEval(taskInst *TaskInst) {
 	logger.Debugf("Scheduling task: %s\n", taskInst.task.Name())
 
 	inst.workItemQueue.Push(workItem)
+
+	// track the fact that the work item was added to the queue
 	inst.ChangeTracker.trackWorkItem(&WorkItemQueueChange{ChgType: CtAdd, ID: workItem.ID, WorkItem: workItem})
 }
 
@@ -251,7 +275,6 @@ func (inst *IndependentInstance) handleTaskDone(taskBehavior model.TaskBehavior,
 	task := taskInst.Task()
 
 	if notifyFlow {
-
 		flowBehavior := inst.flowModel.GetFlowBehavior()
 		flowDone = flowBehavior.TaskDone(containerInst)
 	}
@@ -263,33 +286,46 @@ func (inst *IndependentInstance) handleTaskDone(taskBehavior model.TaskBehavior,
 		flowDone = true
 		containerInst.SetStatus(model.FlowStatusCompleted)
 
-		// if error flow, we should mark the parent instance as done
-		// else if containerInst != inst
-		//   if flow was started by an activity, we should schedule the post-eval
-		//   -- copy return values to activity output
+		if containerInst != inst.Instance {
+			//not top level flow so we have to schedule next step
+
+			if containerInst.isErrorHandler {
+				//was the error handler, so directly under instance
+				host,ok := containerInst.host.(*EmbeddedInstance)
+				if ok {
+					host.SetStatus(model.FlowStatusCompleted)
+					host.returnData = containerInst.returnData
+					host.returnError = containerInst.returnError
+				}
+				//todo if not a task inst, what should we do?
+			} else {
+				// spawned from task instance
+				host,ok := containerInst.host.(*TaskInst)
+
+				if ok {
+					//if the flow failed, set the error
+					for _, value := range containerInst.returnData {
+						host.AddWorkingData(value)
+					}
+
+					inst.scheduleEval(host)
+				}
+				//todo if not a task inst, what should we do?
+			}
+
+			// flow has completed so remove it
+			delete(inst.subFlows, containerInst.subFlowId)
+		}
 
 	} else {
+		// not done, so enter tasks specified by the Done behavior call
 		inst.enterTasks(containerInst, taskEntries)
 	}
 
-	//inst.releaseTask(taskInst)
+	// task is done, so we can release it
 	containerInst.releaseTask(task)
 }
 
-//func (inst *IndependentInstance) releaseTask(taskInst *TaskInst) {
-//
-//	task := taskInst.Task()
-//
-//	delete(taskInst.inst.TaskDatas, task.ID())
-//
-//	inst.ChangeTracker.trackTaskData(&TaskInstChange{ChgType: CtDel, SubFlowID: taskInst.inst.subFlowId, ID: task.ID()})
-//	links := task.FromLinks()
-//
-//	for _, link := range links {
-//		delete(taskInst.inst.LinkDatas, link.ID())
-//		inst.ChangeTracker.trackLinkData(&LinkInstChange{ChgType: CtDel, SubFlowID: taskInst.inst.subFlowId,ID: link.ID()})
-//	}
-//}
 
 // handleTaskError handles the completion of a task in the Flow Instance
 func (inst *IndependentInstance) handleTaskError(taskBehavior model.TaskBehavior, taskInst *TaskInst, err error) {
@@ -330,7 +366,7 @@ func (inst *IndependentInstance) HandleGlobalError(containerInst *Instance) {
 
 		// todo: should we clear out the existing workitem queue for items from containerInst?
 
-		errorInst := inst.NewEmbeddedInstance(containerInst, containerInst.flowDef.GetErrorHandlerFlow())
+		errorInst := inst.NewEmbeddedErrorInstance(containerInst, containerInst.flowDef.GetErrorHandlerFlow())
 		inst.startInstance(errorInst.Instance)
 	}
 }
@@ -424,4 +460,23 @@ func (e *ActivityEvalError) Type() string {
 
 func (e *ActivityEvalError) Error() string {
 	return e.errText
+}
+
+
+//////////////
+// todo fix the following
+
+// Restart indicates that this FlowInstance was restarted
+func (inst *IndependentInstance) Restart(id string, provider provider.Provider) {
+	//pi.id = id
+	//pi.flowProvider = provider
+	//pi.Flow, _ = pi.flowProvider.GetFlow(pi.FlowURI)
+	//pi.FlowModel = model.Get(pi.Flow.ModelID())
+	//pi.FlowExecEnv.init(pi)
+}
+
+
+// InitActionContext initialize the action context, should be initialized before execution
+func (inst *Instance) InitActionContext(config *action.Config, handler action.ResultHandler) {
+	//pi.actionCtx = &ActionCtx{inst: pi, config: config, rh: handler}
 }

@@ -352,6 +352,81 @@ func (ti *TaskInst) EvalActivity() (done bool, evalErr error) {
 	return done, nil
 }
 
+// EvalActivity implements activity.ActivityContext.EvalActivity method
+func (ti *TaskInst) PostEvalActivity() (done bool, evalErr error) {
+
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Warnf("Unhandled Error executing activity '%s'[%s] : %v\n", ti.task.Name(), ti.task.ActivityConfig().Ref(), r)
+
+			// todo: useful for debugging
+			logger.Debugf("StackTrace: %s", debug.Stack())
+
+			if evalErr == nil {
+				evalErr = NewActivityEvalError(ti.task.Name(), "unhandled", fmt.Sprintf("%v", r))
+				done = false
+			}
+		}
+		if evalErr != nil {
+			logger.Errorf("Execution failed for Activity[%s] in Flow[%s] - %s", ti.task.Name(), ti.flowInst.flowDef.Name(), evalErr.Error())
+		}
+	}()
+
+	act := activity.Get(ti.task.ActivityConfig().Ref())
+
+	aa, ok := act.(activity.AsyncActivity)
+	done = true
+
+	if ok {
+		done, evalErr = aa.PostEval(ti, nil)
+
+		if evalErr != nil {
+			e, ok := evalErr.(*activity.Error)
+			if ok {
+				e.SetActivityName(ti.task.Name())
+			}
+
+			return false, evalErr
+		}
+	}
+
+	if done {
+
+		if ti.task.ActivityConfig().OutputMapper() != nil {
+			applyOutputInterceptor(ti)
+
+			appliedMapper, err := applyOutputMapper(ti)
+
+			if err != nil {
+				evalErr = NewActivityEvalError(ti.task.Name(), "mapper", err.Error())
+				return done, evalErr
+			}
+
+			if !appliedMapper && !ti.task.IsScope() {
+
+				logger.Debug("Mapper not applied")
+			}
+		}
+	}
+
+	return done, nil
+}
+
+// FlowReply is used to reply to the Flow Host with the results of the execution
+func (ti *TaskInst) FlowReply(replyData map[string]*data.Attribute, err error) {
+	//ignore
+}
+
+// FlowReturn is used to indicate to the Flow Host that it should complete and return the results of the execution
+func (ti *TaskInst) FlowReturn(returnData map[string]*data.Attribute, err error) {
+
+	if err != nil {
+		for _, value := range returnData {
+			ti.AddWorkingData(value)
+		}
+	}
+}
+
 //// Failed marks the Activity as failed
 //func (td *TaskInst) Failed(err error) {
 //
@@ -360,3 +435,8 @@ func (ti *TaskInst) EvalActivity() (done bool, evalErr error) {
 //	errorMsgAttr2 := "[activity." + td.task.ID() + "._errorMsg]"
 //	td.inst.AddAttr(errorMsgAttr2, data.STRING, err.Error())
 //}
+
+// FlowDetails implements activity.Context.FlowName method
+func (ti *TaskInst) FlowDetails() activity.FlowDetails {
+	return ti.flowInst
+}

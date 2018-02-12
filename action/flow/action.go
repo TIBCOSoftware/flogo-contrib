@@ -234,7 +234,7 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 		instanceID := fa.idGenerator.NextAsString()
 		logger.Debug("Creating Instance: ", instanceID)
 
-		inst = instance.NewIndependentInstance(instanceID, flowDef)//(flowURI, flowDef, ep.GetFlowModel())
+		inst = instance.NewIndependentInstance(instanceID, flowDef) //(flowURI, flowDef, ep.GetFlowModel())
 	case instance.OpResume:
 		if initialState != nil {
 			inst = initialState
@@ -307,7 +307,7 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 			}
 		}
 
-		if inst.Status() ==  model.FlowStatusCompleted {
+		if inst.Status() == model.FlowStatusCompleted {
 			returnData, err := inst.GetReturnData()
 			handler.HandleResult(returnData, err)
 		}
@@ -328,7 +328,7 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 
 		logger.Debugf("Done Executing A.instance [%s] - Status: %d\n", inst.ID(), inst.Status())
 
-		if inst.Status() ==  model.FlowStatusCompleted {
+		if inst.Status() == model.FlowStatusCompleted {
 			logger.Infof("Flow [%s] Completed", inst.ID())
 		}
 	}()

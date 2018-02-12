@@ -6,17 +6,18 @@ import (
 
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/util"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/TIBCOSoftware/flogo-lib/core/action"
 )
 
 type Instance struct {
 	subFlowId int
 
 	master *IndependentInstance //needed for change tracker
-	host   util.FlowHost
+	host   interface{}
+
 	//parent, should it be the taskinst?  Is this also the host context?
 	//hostContext HostContext
 
@@ -124,6 +125,10 @@ func (inst *Instance) appendErrorData(err error) {
 
 	//todo add case for *dataMapperError & *activity.Error
 }
+
+/////////////////////////////////////////
+// Instance - activity.Host Implementation
+
 
 /////////////////////////////////////////
 // Instance - activity.Host Implementation
@@ -258,4 +263,51 @@ func (inst *Instance) AddAttr(attrName string, attrType data.Type, value interfa
 	}
 
 	return attr
+}
+
+////////////
+
+// UpdateAttrs updates the attributes of the Flow Instance
+func (inst *Instance) UpdateAttrs(attrs []*data.Attribute) {
+
+	if attrs != nil {
+
+		logger.Debugf("Updating flow attrs: %v", attrs)
+
+		if inst.attrs == nil {
+			inst.attrs = make(map[string]*data.Attribute, len(attrs))
+		}
+
+		for _, attr := range attrs {
+			inst.attrs[attr.Name()] = attr
+		}
+	}
+}
+
+
+/////////////
+//FlowDetails
+
+// ReplyHandler returns the reply handler for the instance
+func (inst *Instance) ReplyHandler() activity.ReplyHandler {
+	return nil
+	//return &SimpleReplyHandler{pi.actionCtx.rh}
+}
+
+// SimpleReplyHandler is a simple ReplyHandler that is pass-thru to the action ResultHandler
+type SimpleReplyHandler struct {
+	resultHandler action.ResultHandler
+}
+
+// Reply implements ReplyHandler.Reply
+func (rh *SimpleReplyHandler) Reply(code int, replyData interface{}, err error) {
+
+	dataAttr, _ := data.NewAttribute("data", data.OBJECT, replyData)
+	codeAttr, _ := data.NewAttribute("code", data.INTEGER, code)
+	resultData := map[string]*data.Attribute{
+		"data": dataAttr,
+		"code": codeAttr,
+	}
+
+	rh.resultHandler.HandleResult(resultData, err)
 }

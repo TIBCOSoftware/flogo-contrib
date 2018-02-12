@@ -50,7 +50,7 @@ func (a *AggregateActivity) Metadata() *activity.Metadata {
 // Eval implements api.Activity.Eval - Aggregates the Message
 func (a *AggregateActivity) Eval(context activity.Context) (done bool, err error) {
 
-	aggregatorKey := context.FlowDetails().Name() + ":" + context.TaskName()
+	aggregatorKey := context.ActivityHost().Name() + ":" + context.Name()
 
 	a.mutex.RLock()
 	//get aggregator for activity, assumes flow & task names are unique

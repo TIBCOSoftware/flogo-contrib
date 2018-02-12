@@ -46,6 +46,9 @@ type TaskContext interface {
 	// EvalActivity evaluates the Activity associated with the Task
 	EvalActivity() (done bool, err error)
 
+	// PostActivity does post evaluation of the Activity associated with the Task
+	PostEvalActivity() (done bool, err error)
+
 	// Failed marks the Activity as failed
 	//Failed(err error)
 
