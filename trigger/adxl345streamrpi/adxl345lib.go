@@ -127,23 +127,21 @@ func (adxl *Adxl345) setup() error {
 }
 
 func (adxl *Adxl345) checkDevID() error {
-	data := []byte{0}
-
 	log.Info("Writing byte %s", regDevid)
 	err := adxl.Bus.WriteByte(DeviceAddr, regDevid)
 	if err != nil {
 		log.Errorf("Error while writing byte to device !", err.Error())
 		return err
 	}
-	data, err = adxl.Bus.ReadByte(DeviceAddr)
+	data, err := adxl.Bus.ReadByte(DeviceAddr)
 	if err != nil {
 		log.Errorf("Error while reading byte from device !", err.Error())
 		return err
 	}
 
 
-	if data[0] != deviceID {
-		errors.New(fmt.Sprintf("ADXL345 at %x on bus %d returned wrong device id: %x\n", adxl.address, adxl.device, data[0]))
+	if data != deviceID {
+		errors.New(fmt.Sprintf("ADXL345 at %x on bus %d returned wrong device id: %x\n", adxl.address, adxl.device, data))
 	}
 
 	return nil
