@@ -80,7 +80,7 @@ const (
 
 const deviceID byte = 0xE5
 const DeviceAddr byte = 0x53
-const fullResolutionScaleFactor float32 = 3.9
+const fullResolutionScaleFactor float64 = 3.9
 
 type Adxl345 struct {
 	Bus      embd.I2CBus

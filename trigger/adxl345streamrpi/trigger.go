@@ -124,7 +124,7 @@ func (t *ADXL345Trigger) scheduleRepeating(endpoint *trigger.HandlerConfig) {
 	doEvery(time.Duration(interval)*time.Millisecond, fn2)
 }
 
-func (t *ADXL345Trigger) getDataFromSensor(endpoint *trigger.HandlerConfig) (x float32, y float32, z float32, err error) {
+func (t *ADXL345Trigger) getDataFromSensor(endpoint *trigger.HandlerConfig) (x float64, y float64, z float64, err error) {
 
 	opt := NewOpt()
 	adxl345, errNew := New(embd.NewI2CBus(1), opt)
