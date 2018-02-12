@@ -8,8 +8,6 @@ import (
 	"bytes"
 )
 
-var log = logger.GetLogger("trigger-adxl345-rpi-lib")
-
 const (
 	regDevid         = 0x00
 	regThreshTap     = 0x1d
