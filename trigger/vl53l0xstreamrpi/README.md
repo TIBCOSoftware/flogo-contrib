@@ -9,7 +9,7 @@ Flogo Trigger for sensor VL53L0X on Raspberry Pi (Distance in mm)
 Example: install **VL53L0XStreamRPI** trigger
 
 ```bash
-flogo install github.com/prithvimoses/flogo-contrib/trigger/devices/RaspberryPi/VL53L0XStreamRPI
+flogo install github.com/philippegabert/flogo-contrib/trigger/vl53l0xstreamrpi
 ```
 
 
