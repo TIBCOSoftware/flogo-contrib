@@ -12,7 +12,7 @@ import (
 )
 
 // log is the default package logger
-var log = logger.GetLogger("trigger-adxsl345-rpi")
+var log = logger.GetLogger("trigger-adxl345-rpi")
 
 var interval = 500
 
@@ -132,12 +132,16 @@ func (t *ADXL345Trigger) getDataFromSensor(endpoint *trigger.HandlerConfig) (x f
 	if errNew != nil {
 		log.Errorf("Error while creating the sensor reader !' %s'\n", errNew)
 		err = errNew
+	} else {
+		log.Info("Sensor reader successfully created.")
 	}
 
 	accel, errRead := adxl345.Read()
 	if errRead != nil {
 		log.Errorf("Error while reading the data !!' %s'\n", errRead)
 		err = errRead
+	} else {
+		log.Info("Data successfully read.")
 	}
 	x = accel.data[0]
 	y = accel.data[1]
