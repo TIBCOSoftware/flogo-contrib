@@ -127,7 +127,8 @@ func (adxl *Adxl345) setup() error {
 }
 
 func (adxl *Adxl345) checkDevID() error {
-	log.Info("Writing byte %s", regDevid)
+
+	log.Info("Writing byte %v", regDevid)
 	err := adxl.Bus.WriteByte(DeviceAddr, regDevid)
 	if err != nil {
 		log.Errorf("Error while writing byte to device !", err.Error())
@@ -139,9 +140,11 @@ func (adxl *Adxl345) checkDevID() error {
 		return err
 	}
 
-
 	if data != deviceID {
 		errors.New(fmt.Sprintf("ADXL345 at %x on bus %d returned wrong device id: %x\n", adxl.address, adxl.device, data))
+	} else
+	{
+		log.Debug("Device ID is correct.")
 	}
 
 	return nil
@@ -152,23 +155,28 @@ func (adxl *Adxl345) Destroy() {
 
 
 func (adxl *Adxl345) Read() (*Acceleration, error) {
-	data := make([]byte, 6, 6)
+
+	log.Debug("Start reading.....")
+	//data := make([]byte, 6, 6)
 	ret := &Acceleration{}
 	var xReg int16
 	var yReg int16
 	var zReg int16
 
+	log.Debug("Start adxl.Bus.WriteByte(DeviceAddr, regDataX0).....")
 	err := adxl.Bus.WriteByte(DeviceAddr, regDataX0)
 
 	if err != nil {
 		return ret, err
 	}
-	_, err = adxl.Bus.ReadByte(DeviceAddr)
+
+	log.Debug("adxl.Bus.ReadByte(DeviceAddr)")
+	reading, err := adxl.Bus.ReadBytes(DeviceAddr, 6)
 	if err != nil {
 		return ret, err
 	}
 
-	buf := bytes.NewBuffer(data)
+	buf := bytes.NewBuffer(reading)
 
 	binary.Read(buf, binary.LittleEndian, &xReg)
 	binary.Read(buf, binary.LittleEndian, &yReg)
