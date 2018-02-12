@@ -101,7 +101,7 @@ func NewOpt() *Opt {
 }
 
 type Acceleration struct {
-	data [3]float32 /* mg */
+	data [3]float64 /* mg */
 }
 
 
@@ -157,7 +157,6 @@ func (adxl *Adxl345) Destroy() {
 func (adxl *Adxl345) Read() (*Acceleration, error) {
 
 	log.Debug("Start reading.....")
-	//data := make([]byte, 6, 6)
 	ret := &Acceleration{}
 	var xReg int16
 	var yReg int16
@@ -185,9 +184,9 @@ func (adxl *Adxl345) Read() (*Acceleration, error) {
 		return ret, err
 	}
 	
-	ret.data[0] = float32(xReg) * fullResolutionScaleFactor
-	ret.data[1] = float32(yReg) * fullResolutionScaleFactor
-	ret.data[2] = float32(zReg) * fullResolutionScaleFactor
+	ret.data[0] = float64(xReg) * fullResolutionScaleFactor
+	ret.data[1] = float64(yReg) * fullResolutionScaleFactor
+	ret.data[2] = float64(zReg) * fullResolutionScaleFactor
 
 	return ret, nil
 }
