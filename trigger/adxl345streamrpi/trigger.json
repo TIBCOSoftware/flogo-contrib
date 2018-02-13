@@ -14,8 +14,8 @@
          "value":"500"
       },
 	  {
-         "name":"int",
-         "type":"number",
+         "name":"sensitivity",
+         "type":"int",
          "value":"16"
       },
 	  {
