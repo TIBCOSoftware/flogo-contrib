@@ -15,6 +15,8 @@ import (
 var log = logger.GetLogger("trigger-adxl345-rpi")
 
 var interval = 500
+var sensitivity int = 16
+var dataRate float64 = 400
 
 // ADXL345Factory My Trigger factory
 type ADXL345Factory struct {
@@ -36,6 +38,13 @@ type ADXL345Trigger struct {
 	metadata *trigger.Metadata
 	runner   action.Runner
 	config   *trigger.Config
+	driver *Adxl345
+}
+
+// ADXL345Driver represents the I2C driver for the ADXL345 chip.
+type ADXL345Driver struct {
+	bus     embd.I2CBus
+	address byte
 }
 
 func doEvery(d time.Duration, f func()) {
@@ -56,6 +65,26 @@ func (t *ADXL345Trigger) Init(runner action.Runner) {
 		} else {
 			log.Infof("No delay has been set. Using default value (", interval, "ms)")
 		}
+		if t.config.Settings["sensitivity"] != nil && t.config.Settings["sensitivity"] != "" {
+			sensitivity, _ = strconv.Atoi(t.config.GetSetting("sensitivity"))
+		} else {
+			log.Infof("No sensitivity has been set. Using default value (", sensitivity, "ms)")
+		}
+		if t.config.Settings["dataRate"] != nil && t.config.Settings["dataRate"] != "" {
+			dataRate, _ = strconv.ParseFloat(t.config.GetSetting("dataRate"), 64)
+		} else {
+			log.Infof("No dataRate has been set. Using default value (", dataRate, "ms)")
+		}
+	}
+
+	opt := NewOpt(sensitivity, dataRate)
+	var errNew error
+	t.driver, errNew = New(embd.NewI2CBus(1), opt)
+
+	if errNew != nil {
+		log.Errorf("Error while creating the sensor reader !' %s'\n", errNew)
+	} else {
+		log.Info("Sensor reader successfully created.")
 	}
 
 	log.Infof("In init, id: '%s', Metadata: '%+v', Config: '%+v'", t.config.Id, t.metadata, t.config)
@@ -94,7 +123,7 @@ func (t *ADXL345Trigger) scheduleRepeating(endpoint *trigger.HandlerConfig) {
 	fn2 := func() {
 		act := action.Get(endpoint.ActionId)
 
-		x, y, z,  err := t.getDataFromSensor(endpoint)
+		x, y, z, err := t.getDataFromSensor(endpoint)
 		if err != nil {
 			log.Error("Error while reading sensor data. Err: ", err.Error())
 		}
@@ -125,18 +154,7 @@ func (t *ADXL345Trigger) scheduleRepeating(endpoint *trigger.HandlerConfig) {
 }
 
 func (t *ADXL345Trigger) getDataFromSensor(endpoint *trigger.HandlerConfig) (x float64, y float64, z float64, err error) {
-
-	opt := NewOpt()
-	adxl345, errNew := New(embd.NewI2CBus(1), opt)
-
-	if errNew != nil {
-		log.Errorf("Error while creating the sensor reader !' %s'\n", errNew)
-		err = errNew
-	} else {
-		log.Info("Sensor reader successfully created.")
-	}
-
-	accel, errRead := adxl345.Read()
+	accel, errRead := t.driver.Read()
 	if errRead != nil {
 		log.Errorf("Error while reading the data !!' %s'\n", errRead)
 		err = errRead

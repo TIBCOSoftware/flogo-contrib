@@ -4,7 +4,7 @@
    "ref":"github.com/philippegabert/flogo-contrib/trigger/adxl345streamrpi",
    "version":"0.0.2",
    "title":"ADXL345 Stream Trigger for RPI",
-   "description":"ADXL345 Stream Trigger for Raspberry PI",
+   "description":"ADXL345 Stream Trigger for Raspberry PI. Return acceleration values (x, y, z) in mG",
    "homepage":"https://github.com/philippegabert/flogo-contrib/tree/master/trigger/adxl345streamrpi",
    "author":"Philippe GABERT <pgabert@tibco.com>",
    "settings":[
@@ -12,6 +12,16 @@
          "name":"delay_ms",
          "type":"integer",
          "value":"500"
+      },
+	  {
+         "name":"int",
+         "type":"number",
+         "value":"16"
+      },
+	  {
+         "name":"dataRate",
+         "type":"number",
+         "value":"400"
       }
    ],
    "output":[

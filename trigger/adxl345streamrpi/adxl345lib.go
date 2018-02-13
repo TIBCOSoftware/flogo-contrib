@@ -1,11 +1,11 @@
 package adxl345streamrpi
 
 import (
-	"github.com/kidoman/embd"
-	"fmt"
-	"errors"
-	"encoding/binary"
 	"bytes"
+	"encoding/binary"
+	"errors"
+	"fmt"
+	"github.com/kidoman/embd"
 )
 
 const (
@@ -64,6 +64,14 @@ const (
 	dataFormatSelfTest  byte = 0x80
 )
 
+// See https://www.sparkfun.com/datasheets/Sensors/Accelerometer/ADXL345.pdf
+const (
+	resolutionFactor2G  float64 = 3.9
+	resolutionFactor4G  float64 = 7.8
+	resolutionFactor8G  float64 = 15.6
+	resolutionFactor16G float64 = 31.2
+)
+
 const (
 	bwRate6_25 byte = 0x06
 	bwRate12_5 byte = 0x07
@@ -77,33 +85,81 @@ const (
 	bwRate3200 byte = 0x0f
 )
 
-
 const deviceID byte = 0xE5
 const DeviceAddr byte = 0x53
-const fullResolutionScaleFactor float64 = 3.9
 
 type Adxl345 struct {
-	Bus      embd.I2CBus
-	Opt      *Opt
+	Bus     embd.I2CBus
+	Opt     *Opt
 	device  int
 	address uint8
 }
 
 type Opt struct {
-
+	Sensitivity      int
+	ResolutionFactor float64
+	DataFormatRange  byte
+	DataRate         byte
 }
 
 // NewOpt : initialize opts
-func NewOpt() *Opt {
+func NewOpt(sensitivity int, dataRate float64) *Opt {
+	formatRange, resFactor := GetADXLConf(sensitivity)
+	
+	byteDataRate := GetDataRate(dataRate)
+	
 	return &Opt{
-		
+		Sensitivity:      sensitivity,
+		DataFormatRange:  formatRange,
+		ResolutionFactor: resFactor,
+		DataRate:         byteDataRate,
+	}
+}
+
+func GetDataRate(dataRate float64) byte {
+	switch dataRate {
+	case 6.25:
+		return bwRate6_25
+	case 12.5:
+		return bwRate12_5
+	case 25:
+		return bwRate25
+	case 50:
+		return bwRate50
+	case 100:
+		return bwRate100
+	case 200:
+		return bwRate200
+	case 400:
+		return bwRate400
+	case 800:
+		return bwRate800
+	case 1600:
+		return bwRate1600
+	case 3200:
+		return bwRate3200
+	default:
+		return bwRate400
+	}
+}
+func GetADXLConf(sensitivy int) (byte, float64) {
+	switch sensitivy {
+	case 2:
+		return dataFormatRange2g, resolutionFactor2G
+	case 4:
+		return dataFormatRange4g, resolutionFactor4G
+	case 8:
+		return dataFormatRange8g, resolutionFactor8G
+	case 16:
+		return dataFormatRange16g, resolutionFactor16G
+	default:
+		return dataFormatRange16g, resolutionFactor16G
 	}
 }
 
 type Acceleration struct {
 	data [3]float64 /* mg */
 }
-
 
 // New : initialize ADXL345
 func New(bus embd.I2CBus, opt *Opt) (*Adxl345, error) {
@@ -119,7 +175,7 @@ func (adxl *Adxl345) setup() error {
 	if err := adxl.checkDevID(); err != nil {
 		fmt.Sprintf(err.Error())
 	}
-	adxl.Bus.WriteByteToReg(DeviceAddr, regDataFormat, dataFormatRange16g|dataFormatFullRes)
+	adxl.Bus.WriteByteToReg(DeviceAddr, regDataFormat, adxl.Opt.DataFormatRange|dataFormatFullRes)
 	adxl.Bus.WriteByteToReg(DeviceAddr, regBWRate, bwRate400)
 	adxl.Bus.WriteByteToReg(DeviceAddr, regPowerCtl, powerCtlMeasure)
 	return nil
@@ -142,8 +198,7 @@ func (adxl *Adxl345) checkDevID() error {
 
 	if data != deviceID {
 		errors.New(fmt.Sprintf("ADXL345 at %x on bus %d returned wrong device id: %x\n", adxl.address, adxl.device, data))
-	} else
-	{
+	} else {
 		log.Debug("Device ID is correct.")
 	}
 
@@ -152,7 +207,6 @@ func (adxl *Adxl345) checkDevID() error {
 
 func (adxl *Adxl345) Destroy() {
 }
-
 
 func (adxl *Adxl345) Read() (*Acceleration, error) {
 
@@ -183,11 +237,10 @@ func (adxl *Adxl345) Read() (*Acceleration, error) {
 	if err != nil {
 		return ret, err
 	}
-	
-	ret.data[0] = float64(xReg) * fullResolutionScaleFactor
-	ret.data[1] = float64(yReg) * fullResolutionScaleFactor
-	ret.data[2] = float64(zReg) * fullResolutionScaleFactor
+
+	ret.data[0] = float64(xReg) * adxl.Opt.ResolutionFactor
+	ret.data[1] = float64(yReg) * adxl.Opt.ResolutionFactor
+	ret.data[2] = float64(zReg) * adxl.Opt.ResolutionFactor
 
 	return ret, nil
 }
-
