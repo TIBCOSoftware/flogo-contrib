@@ -20,6 +20,10 @@ type FlowBehavior interface {
 	// at this time.
 	Start(context FlowContext) (started bool, taskEntries []*TaskEntry)
 
+	// StartErrorHandler start the error handler for the flow.
+	// Return the list of tasks to start
+	StartErrorHandler(context FlowContext) (taskEntries []*TaskEntry)
+
 	// Resume the flow instance.  Returning true indicates that the
 	// flow can resume.  Return false indicates that the flow
 	// could not be resumed at this time.

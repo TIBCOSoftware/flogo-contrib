@@ -12,15 +12,15 @@ import (
 // Flow Instance Serialization
 
 type serIndependentInstance struct {
-	ID        string              `json:"id"`
-	Status    model.FlowStatus    `json:"status"`
-	State     int                 `json:"state"`
-	FlowURI   string              `json:"flowUri"`
-	Attrs     []*data.Attribute   `json:"attrs"`
-	WorkQueue []*WorkItem         `json:"workQueue"`
-	TaskInsts []*TaskInst         `json:"tasks"`
-	LinkInsts []*LinkInst         `json:"links"`
-	SubFlows  []*EmbeddedInstance `json:"subFlows,omitempty"`
+	ID        string            `json:"id"`
+	Status    model.FlowStatus  `json:"status"`
+	State     int               `json:"state"`
+	FlowURI   string            `json:"flowUri"`
+	Attrs     []*data.Attribute `json:"attrs"`
+	WorkQueue []*WorkItem       `json:"workQueue"`
+	TaskInsts []*TaskInst       `json:"tasks"`
+	LinkInsts []*LinkInst       `json:"links"`
+	SubFlows  []*Instance       `json:"subFlows,omitempty"`
 }
 
 // MarshalJSON overrides the default MarshalJSON for FlowInstance
@@ -50,7 +50,7 @@ func (inst *IndependentInstance) MarshalJSON() ([]byte, error) {
 		lis = append(lis, value)
 	}
 
-	sfs := make([]*EmbeddedInstance, 0, len(inst.subFlows))
+	sfs := make([]*Instance, 0, len(inst.subFlows))
 
 	for _, value := range inst.subFlows {
 		sfs = append(sfs, value)
@@ -105,7 +105,7 @@ func (inst *IndependentInstance) UnmarshalJSON(d []byte) error {
 
 	if len(ser.SubFlows) > 0 {
 
-		inst.subFlows = make(map[int]*EmbeddedInstance, len(ser.SubFlows))
+		inst.subFlows = make(map[int]*Instance, len(ser.SubFlows))
 
 		for _, value := range ser.SubFlows {
 			inst.subFlows[value.subFlowId] = value
@@ -136,9 +136,9 @@ func (inst *IndependentInstance) UnmarshalJSON(d []byte) error {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Embedded Flow Instance Serialization
+// Flow Instance Serialization
 
-type serEmbeddedInstance struct {
+type serInstance struct {
 	SubFlowId int
 	Status    model.FlowStatus  `json:"status"`
 	FlowURI   string            `json:"flowUri"`
@@ -148,7 +148,7 @@ type serEmbeddedInstance struct {
 }
 
 // MarshalJSON overrides the default MarshalJSON for FlowInstance
-func (inst *EmbeddedInstance) MarshalJSON() ([]byte, error) {
+func (inst *Instance) MarshalJSON() ([]byte, error) {
 
 	attrs := make([]*data.Attribute, 0, len(inst.attrs))
 
@@ -170,7 +170,7 @@ func (inst *EmbeddedInstance) MarshalJSON() ([]byte, error) {
 
 	//serialize all the subFlows
 
-	return json.Marshal(&serEmbeddedInstance{
+	return json.Marshal(&serInstance{
 		SubFlowId: inst.subFlowId,
 		Status:    inst.status,
 		Attrs:     attrs,
@@ -181,9 +181,9 @@ func (inst *EmbeddedInstance) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON overrides the default UnmarshalJSON for FlowInstance
-func (inst *EmbeddedInstance) UnmarshalJSON(d []byte) error {
+func (inst *Instance) UnmarshalJSON(d []byte) error {
 
-	ser := &serEmbeddedInstance{}
+	ser := &serInstance{}
 	if err := json.Unmarshal(d, ser); err != nil {
 		return err
 	}
@@ -211,6 +211,83 @@ func (inst *EmbeddedInstance) UnmarshalJSON(d []byte) error {
 
 	return nil
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Embedded Flow Instance Serialization
+
+//type serEmbeddedInstance struct {
+//	SubFlowId int
+//	Status    model.FlowStatus  `json:"status"`
+//	FlowURI   string            `json:"flowUri"`
+//	Attrs     []*data.Attribute `json:"attrs"`
+//	TaskDatas []*TaskInst       `json:"taskDatas"`
+//	LinkDatas []*LinkInst       `json:"linkDatas"`
+//}
+//
+//// MarshalJSON overrides the default MarshalJSON for FlowInstance
+//func (inst *EmbeddedInstance) MarshalJSON() ([]byte, error) {
+//
+//	attrs := make([]*data.Attribute, 0, len(inst.attrs))
+//
+//	for _, value := range inst.attrs {
+//		attrs = append(attrs, value)
+//	}
+//
+//	tds := make([]*TaskInst, 0, len(inst.taskInsts))
+//
+//	for _, value := range inst.taskInsts {
+//		tds = append(tds, value)
+//	}
+//
+//	lds := make([]*LinkInst, 0, len(inst.linkInsts))
+//
+//	for _, value := range inst.linkInsts {
+//		lds = append(lds, value)
+//	}
+//
+//	//serialize all the subFlows
+//
+//	return json.Marshal(&serEmbeddedInstance{
+//		SubFlowId: inst.subFlowId,
+//		Status:    inst.status,
+//		Attrs:     attrs,
+//		FlowURI:   inst.flowURI,
+//		TaskDatas: tds,
+//		LinkDatas: lds,
+//	})
+//}
+//
+//// UnmarshalJSON overrides the default UnmarshalJSON for FlowInstance
+//func (inst *EmbeddedInstance) UnmarshalJSON(d []byte) error {
+//
+//	ser := &serEmbeddedInstance{}
+//	if err := json.Unmarshal(d, ser); err != nil {
+//		return err
+//	}
+//
+//	inst.subFlowId = ser.SubFlowId
+//	inst.status = ser.Status
+//	inst.flowURI = ser.FlowURI
+//
+//	inst.attrs = make(map[string]*data.Attribute)
+//
+//	for _, value := range ser.Attrs {
+//		inst.attrs[value.Name()] = value
+//	}
+//
+//	inst.taskInsts = make(map[string]*TaskInst, len(ser.TaskDatas))
+//	inst.linkInsts = make(map[int]*LinkInst, len(ser.LinkDatas))
+//
+//	for _, value := range ser.TaskDatas {
+//		inst.taskInsts[value.taskID] = value
+//	}
+//
+//	for _, value := range ser.LinkDatas {
+//		inst.linkInsts[value.linkID] = value
+//	}
+//
+//	return nil
+//}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // TaskInst Serialization

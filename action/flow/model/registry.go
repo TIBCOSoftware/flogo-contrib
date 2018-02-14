@@ -7,6 +7,7 @@ import (
 var (
 	modelsMu sync.RWMutex
 	models   = make(map[string]*FlowModel)
+	defaultModel *FlowModel
 )
 
 // Register registers the specified flow model
@@ -45,4 +46,26 @@ func Registered() []*FlowModel {
 // Get gets specified FlowModel
 func Get(id string) *FlowModel {
 	return models[id]
+}
+
+// Register registers the specified flow model
+func RegisterDefault(model *FlowModel) {
+	modelsMu.Lock()
+	defer modelsMu.Unlock()
+
+	if model == nil {
+		panic("model.RegisterDefault: model cannot be nil")
+	}
+
+	id := model.Name()
+
+	if _, dup := models[id]; !dup {
+		models[id] = model
+	}
+
+	defaultModel = model
+}
+
+func Default() *FlowModel {
+	return defaultModel
 }

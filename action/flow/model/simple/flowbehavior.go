@@ -1,12 +1,9 @@
-package behaviors
+package simple
 
 import (
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
-	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 )
-
-var log = logger.GetLogger("flowmodel-simple")
 
 // Flow implements model.FlowBehavior
 type Flow struct {

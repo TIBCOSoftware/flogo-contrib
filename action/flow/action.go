@@ -19,6 +19,8 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/TIBCOSoftware/flogo-lib/util"
+
+	_ "github.com/TIBCOSoftware/flogo-contrib/action/flow/model/simple"
 )
 
 const (
@@ -246,6 +248,14 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 		if initialState != nil {
 			inst = initialState
 			instanceID := fa.idGenerator.NextAsString()
+			flowDef, err := ep.GetFlowProvider().GetFlow(inst.FlowURI())
+			if err != nil {
+				return err
+			}
+
+			if flowDef.Metadata() == nil {
+				//flowDef.SetMetadata(fa.config.Metadata)
+			}
 			inst.Restart(instanceID, ep.GetFlowProvider())
 
 			logger.Debug("Restarting Instance: ", instanceID)
@@ -273,7 +283,7 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 	stepCount := 0
 	hasWork := true
 
-	inst.InitActionContext(fa.config, handler)
+	inst.SetResultHandler(handler)
 
 	go func() {
 
@@ -286,6 +296,7 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 				"id": idAttr,
 			}
 
+			//todo remove
 			if old {
 				dataAttr, _ := data.NewAttribute("data", data.OBJECT, &instance.IDResponse{ID: inst.ID()})
 				results["data"] = dataAttr

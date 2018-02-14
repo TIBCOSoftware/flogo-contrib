@@ -62,9 +62,9 @@ func (a *ReturnActivity) Eval(ctx activity.Context) (done bool, err error) {
 	return true, nil
 }
 
-func newOutputScope(actionCtx activity.Host, mapperDef *data.MapperDef) *data.FixedScope {
+func newOutputScope(activityHost activity.Host, mapperDef *data.MapperDef) *data.FixedScope {
 
-	if actionCtx.InstanceMetadata() == nil {
+	if activityHost.IOMetadata() == nil {
 		//todo temporary fix to support tester service
 		attrs := make([]*data.Attribute, 0, len(mapperDef.Mappings))
 
@@ -75,7 +75,7 @@ func newOutputScope(actionCtx activity.Host, mapperDef *data.MapperDef) *data.Fi
 
 		return data.NewFixedScope(attrs)
 	} else {
-		outAttrs := actionCtx.InstanceMetadata().Output
+		outAttrs := activityHost.IOMetadata().Output
 		attrs := make([]*data.Attribute, 0, len(outAttrs))
 
 		for _, outAttr := range outAttrs {

@@ -18,11 +18,7 @@ type Instance struct {
 	master *IndependentInstance //needed for change tracker
 	host   interface{}
 
-	//parent, should it be the taskinst?  Is this also the host context?
-	//hostContext HostContext
-
-	isErrorHandler bool
-	ErrorInstance  *Instance
+	isHandlingError bool
 
 	status  model.FlowStatus
 	flowDef *definition.Definition
@@ -36,6 +32,8 @@ type Instance struct {
 	forceCompletion bool
 	returnData      map[string]*data.Attribute
 	returnError     error
+
+	resultHandler action.ResultHandler
 }
 
 func (inst *Instance) FlowURI() string {
@@ -52,6 +50,11 @@ func (inst *Instance) ID() string  {
 	}
 
 	return inst.master.id
+}
+
+// InitActionContext initialize the action context, should be initialized before execution
+func (inst *Instance) SetResultHandler(handler action.ResultHandler) {
+	inst.resultHandler = handler
 }
 
 // FindOrCreateTaskData finds an existing TaskInst or creates ones if not found for the
@@ -129,12 +132,15 @@ func (inst *Instance) appendErrorData(err error) {
 /////////////////////////////////////////
 // Instance - activity.Host Implementation
 
-
-/////////////////////////////////////////
-// Instance - activity.Host Implementation
+// IOMetadata get the input/output metadata of the activity host
+func (inst *Instance) IOMetadata() *data.IOMetadata {
+	return inst.flowDef.Metadata()
+}
 
 func (inst *Instance) Reply(replyData map[string]*data.Attribute, err error) {
-	//ac.rh.HandleResult(replyData, err)
+	if inst.resultHandler != nil {
+		inst.resultHandler.HandleResult(replyData, err)
+	}
 }
 
 func (inst *Instance) Return(returnData map[string]*data.Attribute, err error) {
@@ -284,9 +290,8 @@ func (inst *Instance) UpdateAttrs(attrs []*data.Attribute) {
 	}
 }
 
-
 /////////////
-//FlowDetails
+// FlowDetails
 
 // ReplyHandler returns the reply handler for the instance
 func (inst *Instance) ReplyHandler() activity.ReplyHandler {

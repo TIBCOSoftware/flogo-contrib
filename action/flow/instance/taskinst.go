@@ -437,6 +437,7 @@ func (ti *TaskInst) FlowReturn(returnData map[string]*data.Attribute, err error)
 //}
 
 // FlowDetails implements activity.Context.FlowName method
-func (ti *TaskInst) FlowDetails() activity.FlowDetails {
-	return ti.flowInst
-}
+//func (ti *TaskInst) FlowDetails() activity.FlowDetails {
+//	return ti.flowInst
+//}
+//

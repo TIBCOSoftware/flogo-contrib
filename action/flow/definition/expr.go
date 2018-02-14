@@ -41,16 +41,21 @@ func GetExpressionLinks(def *Definition) []*Link {
 
 	var links []*Link
 
-	for _, link := range def.GetLinks() {
+	for _, link := range def.Links() {
 
 		if link.Type() == LtExpression {
 			links = append(links, link)
 		}
 	}
 
-	//if def.ErrorHandlerTask() != nil {
-	//	getExpressionLinks(def.ErrorHandlerTask(), &links)
-	//}
+	if def.GetErrorHandler() != nil {
+		for _, link := range def.GetErrorHandler().links {
+
+			if link.Type() == LtExpression {
+				links = append(links, link)
+			}
+		}
+	}
 
 	return links
 }

@@ -14,27 +14,25 @@ import (
 
 // DefinitionRep is a serializable representation of a flow Definition
 type DefinitionRep struct {
-	ExplicitReply bool      `json:"explicitReply"`
-	Name          string    `json:"name"`
-	ModelID       string    `json:"model"`
-	Metadata      *Metadata `json:"metadata"`
+	ExplicitReply bool   `json:"explicitReply"`
+	Name          string `json:"name"`
+	ModelID       string `json:"model"`
 
+	Metadata   *data.IOMetadata  `json:"metadata"`
 	Attributes []*data.Attribute `json:"attributes,omitempty"`
 
 	Tasks []*TaskRep `json:"tasks"`
 	Links []*LinkRep `json:"links"`
 
-	IsErrorHandler      bool          `json:"isErrorHandler"`
-	ErrorHandlerFlow    *ErrorFlowRep `json:"errorHandlerFlow"`
-	ErrorHandlerFlowRef string        `json:"errorHandlerFlowRef"`
+	ErrorHandler *ErrorHandlerRep `json:"errorHandler"`
 
 	//deprecated
 	RootTask         *TaskRepOld `json:"rootTask"`
 	ErrorHandlerTask *TaskRepOld `json:"errorHandlerTask"`
 }
 
-// ErrorFlowRep is a serializable representation of the error flow
-type ErrorFlowRep struct {
+// ErrorHandlerRep is a serializable representation of the error flow
+type ErrorHandlerRep struct {
 	Tasks []*TaskRep `json:"tasks"`
 	Links []*LinkRep `json:"links"`
 }
@@ -116,40 +114,46 @@ func NewDefinition(rep *DefinitionRep) (def *Definition, err error) {
 
 			for _, linkRep := range rep.Links {
 
-				link := createLink(def, linkRep)
+				link, err := createLink(def, linkRep)
+				if err != nil {
+					return nil, err
+				}
+
 				def.links[link.id] = link
 			}
 		}
 
-		if rep.ErrorHandlerFlow != nil {
+		if rep.ErrorHandler != nil {
 
-			errorDef := &Definition{}
-			errorDef.name = "ErrorHandler"
-			errorDef.modelID = rep.ModelID
-			errorDef.tasks = make(map[string]*Task)
-			errorDef.links = make(map[int]*Link)
-			errorDef.isErrorHandler = true
-			def.errorHandlerFlow = errorDef
+			errorHandler := &ErrorHandler{}
+			errorHandler.tasks = make(map[string]*Task)
+			errorHandler.links = make(map[int]*Link)
+			def.errorHandler = errorHandler
 
-			if len(rep.ErrorHandlerFlow.Tasks) != 0 {
+			if len(rep.ErrorHandler.Tasks) != 0 {
 
-				for _, taskRep := range rep.ErrorHandlerFlow.Tasks {
+				for _, taskRep := range rep.ErrorHandler.Tasks {
 
-					task, err := createTask(errorDef, taskRep)
+					//task, err := createTask(errorHandler, taskRep)
+					task, err := createTask(def, taskRep)
 
 					if err != nil {
 						return nil, err
 					}
-					errorDef.tasks[task.id] = task
+					errorHandler.tasks[task.id] = task
 				}
 			}
 
-			if len(rep.ErrorHandlerFlow.Links) != 0 {
+			if len(rep.ErrorHandler.Links) != 0 {
 
-				for _, linkRep := range rep.ErrorHandlerFlow.Links {
+				for _, linkRep := range rep.ErrorHandler.Links {
 
-					link := createLink(errorDef, linkRep)
-					errorDef.links[link.id] = link
+					//link := createLink(errorHandler, linkRep)
+					link, err := createLink(def, linkRep)
+					if err != nil {
+						return nil, err
+					}
+					errorHandler.links[link.id] = link
 				}
 			}
 
@@ -157,21 +161,30 @@ func NewDefinition(rep *DefinitionRep) (def *Definition, err error) {
 
 	} else {
 		// support for deprecated flow format
-		addTasksOld(def, rep.RootTask)
-		addLinksOld(def, rep.RootTask)
+		err = addTasksOld(def, rep.RootTask, false)
+		if err != nil {
+			return nil, err
+		}
+
+		err = addLinksOld(def, rep.RootTask, false)
+
+		if err != nil {
+			return nil, err
+		}
 
 		if rep.ErrorHandlerTask != nil {
 
-			errorDef := &Definition{}
-			errorDef.name = rep.Name
-			errorDef.modelID = rep.ModelID
-			errorDef.tasks = make(map[string]*Task)
-			errorDef.links = make(map[int]*Link)
-			errorDef.isErrorHandler = true
-			def.errorHandlerFlow = errorDef
+			errorHandler := &ErrorHandler{}
+			errorHandler.tasks = make(map[string]*Task)
+			errorHandler.links = make(map[int]*Link)
+			def.errorHandler = errorHandler
 
-			addTasksOld(errorDef, rep.ErrorHandlerTask)
-			addLinksOld(errorDef, rep.ErrorHandlerTask)
+			err = addTasksOld(def, rep.ErrorHandlerTask, true)
+			if err != nil {
+				return nil, err
+			}
+
+			addLinksOld(def, rep.ErrorHandlerTask, true)
 		}
 	}
 
@@ -214,6 +227,10 @@ func createTask(def *Definition, rep *TaskRep) (*Task, error) {
 
 func createActivityConfig(task *Task, rep *ActivityConfigRep) (*ActivityConfig, error) {
 
+	if rep.Ref == "" {
+		return nil, errors.New("Activity Not Specified for Task :" + task.ID())
+	}
+
 	act := activity.Get(rep.Ref)
 	if act == nil {
 		return nil, errors.New("Unsupported Activity:" + rep.Ref)
@@ -221,6 +238,9 @@ func createActivityConfig(task *Task, rep *ActivityConfigRep) (*ActivityConfig, 
 
 	activityCfg := &ActivityConfig{}
 	activityCfg.Activity = act
+
+	//todo need to fix this
+	task.activityCfg = activityCfg
 
 	// Keep for now, DEPRECATE "attributes" section from flogo.json
 	if len(rep.Settings) > 0 {
@@ -281,7 +301,7 @@ func createActivityConfig(task *Task, rep *ActivityConfigRep) (*ActivityConfig, 
 	return activityCfg, nil
 }
 
-func createLink(def *Definition, linkRep *LinkRep) *Link {
+func createLink(def *Definition, linkRep *LinkRep) (*Link, error) {
 
 	link := &Link{}
 	link.id = linkRep.ID
@@ -291,6 +311,16 @@ func createLink(def *Definition, linkRep *LinkRep) *Link {
 	link.fromTask = def.tasks[linkRep.FromID]
 	link.toTask = def.tasks[linkRep.ToID]
 
+	if link.toTask == nil {
+		strId := strconv.Itoa(link.ID())
+		return nil, errors.New("Link[" + strId + "]: ToTask '" + linkRep.ToID + "' not found")
+	}
+
+	if link.fromTask == nil {
+		strId := strconv.Itoa(link.ID())
+		return nil, errors.New("Link[" + strId + "]: FromTask '" + linkRep.FromID + "' not found")
+	}
+
 	// add this link as predecessor "fromLink" to the "toTask"
 	link.toTask.fromLinks = append(link.toTask.fromLinks, link)
 
@@ -299,7 +329,7 @@ func createLink(def *Definition, linkRep *LinkRep) *Link {
 
 	def.links[link.id] = link
 
-	return link
+	return link, nil
 }
 
 ///////////////////////////
@@ -321,6 +351,8 @@ type TaskRepOld struct {
 	Mappings    *Mappings              `json:"mappings,omitempty"`
 	InputAttrs  map[string]interface{} `json:"input,omitempty"`
 	OutputAttrs map[string]interface{} `json:"output,omitempty"`
+
+	Settings map[string]interface{} `json:"settings"`
 
 	//keep temporarily for backwards compatibility
 	InputAttrsOld  map[string]interface{} `json:"inputs,omitempty"`
@@ -347,7 +379,7 @@ type LinkRepOld struct {
 }
 
 //Deprecated
-func addTasksOld(def *Definition, rootTaskRep *TaskRepOld) error {
+func addTasksOld(def *Definition, rootTaskRep *TaskRepOld, eh bool) error {
 	// flow  tasks
 	if len(rootTaskRep.Tasks) > 0 {
 
@@ -358,7 +390,11 @@ func addTasksOld(def *Definition, rootTaskRep *TaskRepOld) error {
 			if err != nil {
 				return err
 			}
-			def.tasks[task.id] = task
+			if eh {
+				def.errorHandler.tasks[task.id] = task
+			} else {
+				def.tasks[task.id] = task
+			}
 		}
 	}
 
@@ -386,7 +422,7 @@ func createTaskFromOld(def *Definition, rep *TaskRepOld) (*Task, error) {
 		return nil, err
 	}
 
-	if actCfg.Activity.Metadata().ProducesResult || def.explicitReply {
+	if actCfg != nil && (actCfg.Activity.Metadata().ProducesResult || def.explicitReply) {
 		def.explicitReply = true
 	}
 
@@ -398,6 +434,10 @@ func createTaskFromOld(def *Definition, rep *TaskRepOld) (*Task, error) {
 //Deprecated
 func createActivityConfigFromOld(task *Task, rep *TaskRepOld) (*ActivityConfig, error) {
 
+	if rep.ActivityRef == "" {
+		return nil, nil
+	}
+
 	act := activity.Get(rep.ActivityRef)
 	if act == nil {
 		return nil, errors.New("Unsupported Activity:" + rep.ActivityRef)
@@ -405,6 +445,18 @@ func createActivityConfigFromOld(task *Task, rep *TaskRepOld) (*ActivityConfig, 
 
 	activityCfg := &ActivityConfig{}
 	activityCfg.Activity = act
+
+	//todo need to fix this
+	task.activityCfg = activityCfg
+
+	// Keep for now, DEPRECATE "attributes" section from flogo.json
+	if len(rep.Settings) > 0 {
+		task.settings = make(map[string]interface{}, len(rep.Settings))
+
+		for name, value := range rep.Settings {
+			task.settings[name] = value
+		}
+	}
 
 	// create mappers
 	if rep.Mappings != nil {
@@ -493,7 +545,7 @@ func createActivityConfigFromOld(task *Task, rep *TaskRepOld) (*ActivityConfig, 
 }
 
 //Deprecated
-func addLinksOld(def *Definition, rep *TaskRepOld) {
+func addLinksOld(def *Definition, rep *TaskRepOld, eh bool) error {
 
 	numLinks := len(rep.Links)
 
@@ -507,8 +559,25 @@ func addLinksOld(def *Definition, rep *TaskRepOld) {
 			//link.Definition = pd
 			link.linkType = LinkType(linkRep.Type)
 			link.value = linkRep.Value
-			link.fromTask = def.tasks[convertInterfaceToString(linkRep.FromID)]
-			link.toTask = def.tasks[convertInterfaceToString(linkRep.ToID)]
+
+			if eh {
+				link.fromTask = def.errorHandler.tasks[convertInterfaceToString(linkRep.FromID)]
+				link.toTask = def.errorHandler.tasks[convertInterfaceToString(linkRep.ToID)]
+
+			} else {
+				link.fromTask = def.tasks[convertInterfaceToString(linkRep.FromID)]
+				link.toTask = def.tasks[convertInterfaceToString(linkRep.ToID)]
+			}
+
+			if link.toTask == nil {
+				strId := strconv.Itoa(link.ID())
+				return errors.New("Link[" + strId + "]: ToTask '" + convertInterfaceToString(linkRep.ToID) + "' not found")
+			}
+
+			if link.fromTask == nil {
+				strId := strconv.Itoa(link.ID())
+				return errors.New("Link[" + strId + "]: FromTask '" + convertInterfaceToString(linkRep.FromID) + "' not found")
+			}
 
 			// add this link as predecessor "fromLink" to the "toTask"
 			link.toTask.fromLinks = append(link.toTask.fromLinks, link)
@@ -516,9 +585,15 @@ func addLinksOld(def *Definition, rep *TaskRepOld) {
 			// add this link as successor "toLink" to the "fromTask"
 			link.fromTask.toLinks = append(link.fromTask.toLinks, link)
 
-			def.links[link.id] = link
+			if eh {
+				def.errorHandler.links[link.id] = link
+			} else {
+				def.links[link.id] = link
+			}
 		}
 	}
+
+	return nil
 }
 
 //convertInterfaceToString will identify whether the interface is int or string and return a string in any case
