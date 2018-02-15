@@ -1,8 +1,12 @@
 package instance
 
 import (
-	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"errors"
+
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
+	"github.com/TIBCOSoftware/flogo-lib/core/activity"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
 func applyInputMapper(taskInst *TaskInst) error {
@@ -116,4 +120,25 @@ func applyOutputMapper(taskInst *TaskInst) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func StartSubFlow(ctx  activity.Context, flowPath string) error {
+
+	taskInst, ok := ctx.(*TaskInst)
+
+	if !ok {
+		return errors.New("unable to create subFlow using this context")
+	}
+
+	//resolve the definition using the flowPath
+	var def *definition.Definition
+
+	//todo make sure that there is only one subflow per taskinst
+	flowInst := taskInst.flowInst.master.NewEmbeddedInstance(taskInst, def)
+	//copy inputs to the activity to the flowInst
+
+	println(flowInst.Name())
+	//start it
+
+	return nil
 }

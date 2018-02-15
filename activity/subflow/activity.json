@@ -1,0 +1,16 @@
+{
+  "name": "flogo-subflow",
+  "type": "flogo:activity",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/subflow",
+  "version": "0.0.1",
+  "title": "Start a SubFlow",
+  "description": "Simple SubFlow Activity",
+  "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/subflow",
+  "input":[
+    {
+      "name": "flowPath",
+      "type": "string",
+      "required": true
+    }
+  ]
+}
