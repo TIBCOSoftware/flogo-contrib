@@ -10,6 +10,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/util"
 	flowutil "github.com/TIBCOSoftware/flogo-contrib/action/flow/util"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
 // DefinitionRep is a serializable representation of a flow Definition
@@ -181,7 +182,7 @@ func createTask(def *Definition, rep *TaskRep) (*Task, error) {
 		task.settings = make(map[string]interface{}, len(rep.Settings))
 
 		for name, value := range rep.Settings {
-			task.settings[name] = value
+			task.settings[name] = resolveSettingValue(name, value)
 		}
 	}
 
@@ -242,7 +243,7 @@ func createActivityConfig(task *Task, rep *ActivityConfigRep) (*ActivityConfig, 
 			if attr != nil {
 				//var err error
 				//todo handle error
-				activityCfg.settings[name], _ = data.NewAttribute(name, attr.Type(), value)
+				activityCfg.settings[name], _ = data.NewAttribute(name, attr.Type(), resolveSettingValue(name, value))
 			}
 		}
 	}
@@ -283,6 +284,23 @@ func createActivityConfig(task *Task, rep *ActivityConfigRep) (*ActivityConfig, 
 	}
 
 	return activityCfg, nil
+}
+
+func resolveSettingValue(setting string, value interface{}) interface{} {
+
+	strVal, ok := value.(string)
+
+	if ok && len(strVal) > 0 && strVal[0] == '$' {
+		v, err := data.GetBasicResolver().Resolve(strVal, nil)
+
+		if err != nil {
+
+			logger.Debugf("Resolved setting [%s: %s] to : %v", setting, value, v)
+			return v
+		}
+	}
+
+	return value
 }
 
 func createLink(def *Definition, linkRep *LinkRep) (*Link, error) {
@@ -492,7 +510,7 @@ func createActivityConfigFromOld(task *Task, rep *TaskRepOld) (*ActivityConfig, 
 		task.settings = make(map[string]interface{}, len(rep.Settings))
 
 		for name, value := range rep.Settings {
-			task.settings[name] = value
+			task.settings[name] = resolveSettingValue(name, value)
 		}
 	}
 

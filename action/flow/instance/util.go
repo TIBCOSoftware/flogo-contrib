@@ -122,7 +122,7 @@ func applyOutputMapper(taskInst *TaskInst) (bool, error) {
 	return false, nil
 }
 
-func StartSubFlow(ctx  activity.Context, flowPath string) error {
+func StartSubFlow(ctx  activity.Context, flowURI string) error {
 
 	taskInst, ok := ctx.(*TaskInst)
 
@@ -130,11 +130,13 @@ func StartSubFlow(ctx  activity.Context, flowPath string) error {
 		return errors.New("unable to create subFlow using this context")
 	}
 
-	//resolve the definition using the flowPath
-	var def *definition.Definition
+	//todo make sure that there is only one subFlow per taskinst
+	flowInst, err := taskInst.flowInst.master.NewEmbeddedInstanceFromURI(taskInst, flowURI)
 
-	//todo make sure that there is only one subflow per taskinst
-	flowInst := taskInst.flowInst.master.NewEmbeddedInstance(taskInst, def)
+	if err != nil {
+		return err
+	}
+
 	//copy inputs to the activity to the flowInst
 
 	println(flowInst.Name())

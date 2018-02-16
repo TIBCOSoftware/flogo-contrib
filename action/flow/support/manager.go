@@ -12,6 +12,8 @@ import (
 	"sync"
 
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/script/fggos"
+	"github.com/TIBCOSoftware/flogo-lib/app/resource"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/TIBCOSoftware/flogo-lib/util"
 )
@@ -19,156 +21,174 @@ import (
 const (
 	uriSchemeFile = "file://"
 	uriSchemeHttp = "http://"
+	uriSchemeRes  = "res://"
 )
 
-// FlowManager is a simple manager for flows
-type FlowManager struct {
-	mu    *sync.Mutex // protects the flow maps
-	flows map[string]*FlowEntry
+type FlowResourceManager struct {
+	resFlows map[string]*definition.Definition
+
+	//todo switch to cache
+	rfMu        *sync.Mutex // protects the flow maps
+	remoteFlows map[string]*definition.Definition
 }
 
-// FlowEntry will contain either a compressed flow, an uncompressed flow or a flow uri
-type FlowEntry struct {
-	compressed   string
-	uncompressed []byte
-	uri          string
-}
-
-// NewFlowManager creates a new FlowManager
-func NewFlowManager() *FlowManager {
-	return &FlowManager{mu: &sync.Mutex{}, flows: make(map[string]*FlowEntry)}
-}
-
-// AddCompressed adds a compressed flow to the map of flow entries
-func (mgr *FlowManager) AddCompressed(id string, newFlow string) error {
-	if len(newFlow) < 3 {
-		return fmt.Errorf("Empty Flow with id '%s'", id)
-	}
-	mgr.mu.Lock()
-	defer mgr.mu.Unlock()
-	_, ok := mgr.flows[id]
-	if ok {
-		return fmt.Errorf("Flow with id '%s' already exists", id)
-	}
-	// Add the flow
-	mgr.flows[id] = &FlowEntry{compressed: newFlow}
-	logger.Debugf("Compressed flow with id '%s' added", id)
-	return nil
-}
-
-// TODO add schema validation for flow
-// AddUncompressed adds an uncompressed flow to the map of flow entries
-func (mgr *FlowManager) AddUncompressed(id string, newFlow []byte) error {
-	if len(newFlow) < 3 {
-		return fmt.Errorf("Empty Flow with id '%s'", id)
-	}
-	mgr.mu.Lock()
-	defer mgr.mu.Unlock()
-	_, ok := mgr.flows[id]
-	if ok {
-		return fmt.Errorf("Flow with id '%s' already exists", id)
-	}
-	// Add the flow
-	mgr.flows[id] = &FlowEntry{uncompressed: newFlow}
-	logger.Debugf("Uncompressed flow with id '%s' added", id)
-	return nil
-}
-
-// AddURI adds a uri flow to the map of flow entries
-func (mgr *FlowManager) AddURI(id string, newUri string) error {
-	if len(newUri) < 3 {
-		return fmt.Errorf("Empty Flow URI with id '%s'", id)
-	}
-	mgr.mu.Lock()
-	defer mgr.mu.Unlock()
-	_, ok := mgr.flows[id]
-	if ok {
-		return fmt.Errorf("Flow with id '%s' already exists", id)
-	}
-	// Add the flow
-	mgr.flows[id] = &FlowEntry{uri: newUri}
-	logger.Debugf("URI flow with id '%s' added", id)
-	return nil
-}
-
-// GetFlow gets the specified embedded flow
-func (mgr *FlowManager) GetFlow(id string) (*definition.DefinitionRep, error) {
-
-	entry, ok := mgr.flows[id]
-
-	if !ok {
-		//temporary fix for tester (dynamic uri)
-		if strings.HasPrefix(id, uriSchemeHttp) {
-			entry = &FlowEntry{uri: id}
-			mgr.flows[id] = entry
-		} else {
-			err := fmt.Errorf("No flow found for id '%s'", id)
-			logger.Errorf(err.Error())
-			return nil, err
-		}
-	}
+func (rm *FlowResourceManager) LoadResource(config *resource.Config) error {
 
 	var flowDefBytes []byte
 
-	// Uncompressed Flow condition
-	if len(entry.uncompressed) > 0 {
-		// Uncompressed flow
-		flowDefBytes = entry.uncompressed
-	}
-
-	// Compressed Flow condition
-	if len(entry.compressed) > 0 {
-
-		decodedBytes, err := decodeAndUnzip(entry.compressed)
+	if config.Compressed {
+		decodedBytes, err := decodeAndUnzip(string(config.Data))
 		if err != nil {
-			decodeErr := fmt.Errorf("Error decoding compressed flow with id '%s', %s", id, err.Error())
+			decodeErr := fmt.Errorf("error decoding compressed resource with id '%s', %s", config.ID, err.Error())
 			logger.Errorf(decodeErr.Error())
-			return nil, decodeErr
+			return decodeErr
 		}
+
 		flowDefBytes = decodedBytes
+	} else {
+		flowDefBytes = config.Data
 	}
 
-	// URI Flow condition
-	if len(entry.uri) > 0 {
-		if strings.HasPrefix(entry.uri, uriSchemeFile) {
-			// File URI
-			logger.Infof("Loading Local Flow: %s\n", entry.uri)
-			flowFilePath, _ := util.URLStringToFilePath(entry.uri)
+	var defRep *definition.DefinitionRep
+	err := json.Unmarshal(flowDefBytes, &defRep)
+	if err != nil {
+		logger.Errorf(err.Error())
+		return fmt.Errorf("error marshalling flow resource with id '%s', %s", config.ID, err.Error())
+	}
 
-			readBytes, err := ioutil.ReadFile(flowFilePath)
+	flow, err := rm.materializeFlow(defRep)
+	if err != nil {
+		return err
+	}
+
+	rm.resFlows[config.ID] = flow
+	return nil
+}
+
+func (rm *FlowResourceManager) GetResource(id string) interface{} {
+	return rm.resFlows[id]
+}
+
+func (rm *FlowResourceManager) GetFlow(uri string) (*definition.Definition, error) {
+
+	if strings.HasPrefix(uri, uriSchemeRes) {
+		return rm.resFlows[uri[6:]], nil
+	}
+
+	rm.rfMu.Lock()
+	defer rm.rfMu.Unlock()
+
+	flow, exists := rm.remoteFlows[uri]
+
+	if !exists {
+
+		defRep, err := loadRemoteFlow(uri)
+		if err != nil {
+			return nil, err
+		}
+
+		flow, err = rm.materializeFlow(defRep)
+		if err != nil {
+			return nil, err
+		}
+
+		rm.remoteFlows[uri] = flow
+	}
+
+	return flow, nil
+}
+
+func (rm *FlowResourceManager) materializeFlow(flowRep *definition.DefinitionRep) (*definition.Definition, error) {
+
+	def, err := definition.NewDefinition(flowRep)
+	if err != nil {
+		//errorMsg := fmt.Sprintf("Error unmarshalling flow '%s': %s", id, err.Error())
+		errorMsg := fmt.Sprintf("Error unmarshalling flow: %s", err.Error())
+		logger.Errorf(errorMsg)
+		return nil, fmt.Errorf(errorMsg)
+	}
+
+	//todo validate flow
+	
+	//todo fix this up
+	factory := definition.GetLinkExprManagerFactory()
+
+	if factory == nil {
+		factory = &fggos.GosLinkExprManagerFactory{}
+	}
+
+	def.SetLinkExprManager(factory.NewLinkExprManager(def))
+	//todo init activities
+
+	return def, nil
+
+}
+
+func loadRemoteFlow(uri string) (*definition.DefinitionRep, error) {
+
+	var flowDefBytes []byte
+
+	if strings.HasPrefix(uri, uriSchemeFile) {
+		// File URI
+		logger.Infof("Loading Local Flow: %s\n", uri)
+		flowFilePath, _ := util.URLStringToFilePath(uri)
+
+		readBytes, err := ioutil.ReadFile(flowFilePath)
+		if err != nil {
+			readErr := fmt.Errorf("error reading flow with uri '%s', %s", uri, err.Error())
+			logger.Errorf(readErr.Error())
+			return nil, readErr
+		}
+		if readBytes[0] == 0x1f && readBytes[2] == 0x8b {
+			flowDefBytes, err = unzip(readBytes)
 			if err != nil {
-				readErr := fmt.Errorf("Error reading flow file with id '%s', %s", id, err.Error())
-				logger.Errorf(readErr.Error())
-				return nil, readErr
+				decompressErr := fmt.Errorf("error uncompressing flow with uri '%s', %s", uri, err.Error())
+				logger.Errorf(decompressErr.Error())
+				return nil, decompressErr
 			}
-			flowDefBytes = readBytes
 		} else {
-			// URI
-			req, err := http.NewRequest("GET", entry.uri, nil)
-			client := &http.Client{}
-			resp, err := client.Do(req)
+			flowDefBytes = readBytes
+
+		}
+
+	} else {
+		// URI
+		req, err := http.NewRequest("GET", uri, nil)
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			getErr := fmt.Errorf("error getting flow with uri '%s', %s", uri, err.Error())
+			logger.Errorf(getErr.Error())
+			return nil, getErr
+		}
+		defer resp.Body.Close()
+
+		logger.Infof("response Status:", resp.Status)
+
+		if resp.StatusCode >= 300 {
+			//not found
+			getErr := fmt.Errorf("error getting flow with uri '%s', status code %d", uri, resp.StatusCode)
+			logger.Errorf(getErr.Error())
+			return nil, getErr
+		}
+
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			readErr := fmt.Errorf("error reading flow response body with uri '%s', %s", uri, err.Error())
+			logger.Errorf(readErr.Error())
+			return nil, readErr
+		}
+
+		val := resp.Header.Get("flow-compressed")
+		if strings.ToLower(val) == "true" {
+			decodedBytes, err := decodeAndUnzip(string(body))
 			if err != nil {
-				getErr := fmt.Errorf("Error getting flow uri with id '%s', %s", id, err.Error())
-				logger.Errorf(getErr.Error())
-				return nil, getErr
+				decodeErr := fmt.Errorf("error decoding compressed flow with uri '%s', %s", uri, err.Error())
+				logger.Errorf(decodeErr.Error())
+				return nil, decodeErr
 			}
-			defer resp.Body.Close()
-
-			logger.Infof("response Status:", resp.Status)
-
-			if resp.StatusCode >= 300 {
-				//not found
-				getErr := fmt.Errorf("Error getting flow uri with id '%s', status code %d", id, resp.StatusCode)
-				logger.Errorf(getErr.Error())
-				return nil, getErr
-			}
-
-			body, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				readErr := fmt.Errorf("Error reading flow uri response body with id '%s', %s", id, err.Error())
-				logger.Errorf(readErr.Error())
-				return nil, readErr
-			}
+			flowDefBytes = decodedBytes
+		} else {
 			flowDefBytes = body
 		}
 	}
@@ -177,15 +197,21 @@ func (mgr *FlowManager) GetFlow(id string) (*definition.DefinitionRep, error) {
 	err := json.Unmarshal(flowDefBytes, &flow)
 	if err != nil {
 		logger.Errorf(err.Error())
-		return nil, fmt.Errorf("Error marshalling flow with id '%s', %s", id, err.Error())
+		return nil, fmt.Errorf("error marshalling flow with uri '%s', %s", uri, err.Error())
 	}
+
 	return flow, nil
 }
 
 func decodeAndUnzip(encoded string) ([]byte, error) {
 
 	decoded, _ := base64.StdEncoding.DecodeString(encoded)
-	buf := bytes.NewBuffer(decoded)
+	return unzip(decoded)
+}
+
+func unzip(compressed []byte) ([]byte, error) {
+
+	buf := bytes.NewBuffer(compressed)
 	r, err := gzip.NewReader(buf)
 	if err != nil {
 		return nil, err

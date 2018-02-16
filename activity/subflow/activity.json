@@ -8,7 +8,7 @@
   "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/subflow",
   "settings":[
     {
-      "name": "flowPath",
+      "name": "flowURI",
       "type": "string",
       "required": true
     }

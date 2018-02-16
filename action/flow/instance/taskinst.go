@@ -87,16 +87,15 @@ func (ti *TaskInst) Name() string {
 }
 
 // GetSetting implements activity.Context.GetSetting
-func (ti *TaskInst) GetSetting(name string) interface{} {
+func (ti *TaskInst) GetSetting(setting string) (value interface{}, exists bool) {
 
-	val, found := ti.Task().ActivityConfig().GetInputAttr()
-	if found {
-		return val.Value()
-	}
-
-	return nil
+	return ti.Task().ActivityConfig().GetSetting(setting)
 }
 
+// GetSetting implements activity.Context.GetInitValue
+func (ti *TaskInst) GetInitValue(key string) (value interface{}, exists bool) {
+	return nil, false
+}
 
 // GetInput implements activity.Context.GetInput
 func (ti *TaskInst) GetInput(name string) interface{} {
@@ -151,28 +150,9 @@ func (ti *TaskInst) HasWorkingData() bool {
 	return ti.workingData != nil
 }
 
-func (ti *TaskInst) GetSetting(setting string) (value interface{}, exists bool) {
+func (ti *TaskInst) Resolve(toResolve string) (value interface{}, err error) {
 
-	value, exists = ti.task.GetSetting(setting)
-
-	if !exists {
-		return nil, false
-	}
-
-	strValue, ok := value.(string)
-
-	if ok && strValue[0] == '$' {
-
-		v, err := definition.GetDataResolver().Resolve(strValue, ti.flowInst)
-		if err != nil {
-			return nil, false
-		}
-
-		return v, true
-
-	} else {
-		return value, true
-	}
+	return definition.GetDataResolver().Resolve(toResolve, ti.flowInst)
 }
 
 func (ti *TaskInst) AddWorkingData(attr *data.Attribute) {

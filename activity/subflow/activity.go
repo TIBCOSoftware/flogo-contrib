@@ -5,18 +5,19 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/instance"
+	"github.com/pkg/errors"
 )
 
 // log is the default package logger
 var log = logger.GetLogger("activity-flogo-subFlow")
 
 const (
-	settingFlowPath = "flowPath"
+	settingFlowURI = "flowURI"
 )
 
 // SubFlowActivity is an Activity that is used to start a sub-flow, can only be used within the
 // context of an flow
-// settings: {flowPath}
+// settings: {flowURI}
 // input : {sub-flow's input}
 // output: {sub-flow's output}
 type SubFlowActivity struct {
@@ -36,14 +37,21 @@ func (a *SubFlowActivity) Metadata() *activity.Metadata {
 // Eval implements api.Activity.Eval - Invokes a REST Operation
 func (a *SubFlowActivity) Eval(ctx activity.Context) (done bool, err error) {
 
-	flowPath := ctx.GetSetting(settingFlowPath).(string)
+	//todo move to init
+	setting, set := ctx.GetSetting(settingFlowURI)
+
+	if !set {
+		return false, errors.New("flowURI not set")
+	}
+
+	flowPath := setting.(string)
 	log.Debugf("Starting SubFlow: %s", flowPath)
 
+	err = instance.StartSubFlow(ctx, flowPath)
 
-	//r := ctx.ActivityHost().GetResolver()
-	//r.Resolve()
-
-	instance.StartSubFlow(ctx, flowPath)
+	if err != nil {
+		return false, err
+	}
 
 	return false, nil
 }

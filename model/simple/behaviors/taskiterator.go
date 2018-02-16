@@ -31,7 +31,7 @@ func (tb *IteratorTask) Eval(ctx model.TaskContext) (evalResult model.EvalResult
 		itx = itxAttr.Value().(Iterator)
 	} else {
 
-		iterateOn, ok := ctx.GetSetting("iterate")
+		iterateOn, ok := getIterateValue(ctx)
 
 		if !ok {
 			//todo if iterateOn is not defined, what should we do?
@@ -118,10 +118,30 @@ func (tb *IteratorTask) PostEval(ctx model.TaskContext) (evalResult model.EvalRe
 	itx := itxAttr.Value().(Iterator)
 
 	if itx.HasNext() {
-		return  model.EVAL_REPEAT, nil
+		return model.EVAL_REPEAT, nil
 	}
 
 	return model.EVAL_DONE, nil
+}
+
+func getIterateValue(ctx model.TaskContext) (value interface{}, set bool) {
+
+	value, set = ctx.Task().GetSetting("iterate")
+	if !set {
+		return nil, false
+	}
+
+	strVal, ok := value.(string)
+	if ok {
+		if strVal[0] == '$' {
+			val, err := ctx.Resolve(strVal)
+			if err != nil {
+				return val, true
+			}
+		}
+	}
+
+	return value, true
 }
 
 ///////////////////////////////////

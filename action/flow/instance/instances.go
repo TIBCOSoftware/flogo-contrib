@@ -57,7 +57,12 @@ func NewIndependentInstance(instanceID string, flow *definition.Definition) *Ind
 	return inst
 }
 
-func (inst *IndependentInstance) NewEmbeddedInstance (taskInst *TaskInst, flow *definition.Definition) *Instance {
+func (inst *IndependentInstance) NewEmbeddedInstanceFromURI (taskInst *TaskInst, flowURI string) (*Instance,error) {
+
+	return nil, nil
+}
+
+func (inst *IndependentInstance) newEmbeddedInstance (taskInst *TaskInst, flow *definition.Definition) *Instance {
 
 	inst.subFlowCtr++
 
