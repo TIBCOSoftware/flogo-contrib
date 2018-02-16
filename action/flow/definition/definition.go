@@ -108,6 +108,7 @@ func (pd *Definition) GetLinkExprManager() LinkExprManager {
 
 type ActivityConfig struct {
 	Activity    activity.Activity
+	settings    map[string]*data.Attribute
 	inputAttrs  map[string]*data.Attribute
 	outputAttrs map[string]*data.Attribute
 
@@ -115,11 +116,25 @@ type ActivityConfig struct {
 	outputMapper data.Mapper
 }
 
-// GetAttr gets the specified input attribute
-func (task *ActivityConfig) GetInputAttr(attrName string) (attr *data.Attribute, exists bool) {
 
-	if task.inputAttrs != nil {
-		attr, found := task.inputAttrs[attrName]
+// GetSetting gets the specified setting
+func (ac *ActivityConfig) GetSetting(setting string) (attr *data.Attribute, exists bool) {
+
+	if ac.outputAttrs != nil {
+		attr, found := ac.settings[setting]
+		if found {
+			return attr, true
+		}
+	}
+
+	return nil, false
+}
+
+// GetAttr gets the specified input attribute
+func (ac *ActivityConfig) GetInputAttr(attrName string) (attr *data.Attribute, exists bool) {
+
+	if ac.inputAttrs != nil {
+		attr, found := ac.inputAttrs[attrName]
 		if found {
 			return attr, true
 		}
@@ -129,10 +144,10 @@ func (task *ActivityConfig) GetInputAttr(attrName string) (attr *data.Attribute,
 }
 
 // GetOutputAttr gets the specified output attribute
-func (task *ActivityConfig) GetOutputAttr(attrName string) (attr *data.Attribute, exists bool) {
+func (ac *ActivityConfig) GetOutputAttr(attrName string) (attr *data.Attribute, exists bool) {
 
-	if task.outputAttrs != nil {
-		attr, found := task.outputAttrs[attrName]
+	if ac.outputAttrs != nil {
+		attr, found := ac.outputAttrs[attrName]
 		if found {
 			return attr, true
 		}
@@ -142,17 +157,17 @@ func (task *ActivityConfig) GetOutputAttr(attrName string) (attr *data.Attribute
 }
 
 // InputMapper returns the InputMapper of the task
-func (task *ActivityConfig) InputMapper() data.Mapper {
-	return task.inputMapper
+func (ac *ActivityConfig) InputMapper() data.Mapper {
+	return ac.inputMapper
 }
 
 // OutputMapper returns the OutputMapper of the task
-func (task *ActivityConfig) OutputMapper() data.Mapper {
-	return task.outputMapper
+func (ac *ActivityConfig) OutputMapper() data.Mapper {
+	return ac.outputMapper
 }
 
-func (task *ActivityConfig) Ref() string {
-	return task.Activity.Metadata().ID
+func (ac *ActivityConfig) Ref() string {
+	return ac.Activity.Metadata().ID
 }
 
 // Task is the object that describes the definition of
@@ -160,7 +175,7 @@ func (task *ActivityConfig) Ref() string {
 // nested structure (child tasks & child links).
 type Task struct {
 	id          string
-	typeID      int
+	typeID      string
 	name        string
 	activityCfg *ActivityConfig
 
@@ -190,7 +205,7 @@ func (task *Task) Name() string {
 }
 
 // TypeID gets the id of the task type
-func (task *Task) TypeID() int {
+func (task *Task) TypeID() string {
 	return task.typeID
 }
 

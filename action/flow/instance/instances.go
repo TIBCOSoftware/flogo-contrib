@@ -145,7 +145,7 @@ func (inst *IndependentInstance) DoStep() bool {
 
 			// get the corresponding behavior
 			behavior := inst.flowModel.GetDefaultTaskBehavior()
-			if typeID := workItem.taskInst.task.TypeID(); typeID > 1 {
+			if typeID := workItem.taskInst.task.TypeID(); typeID != "" {
 				behavior = inst.flowModel.GetTaskBehavior(typeID)
 			}
 

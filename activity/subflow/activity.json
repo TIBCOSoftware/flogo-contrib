@@ -6,7 +6,7 @@
   "title": "Start a SubFlow",
   "description": "Simple SubFlow Activity",
   "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/subflow",
-  "input":[
+  "settings":[
     {
       "name": "flowPath",
       "type": "string",

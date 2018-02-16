@@ -11,12 +11,14 @@ import (
 var log = logger.GetLogger("activity-flogo-subFlow")
 
 const (
-	ivFlowPath = "flowPath"
+	settingFlowPath = "flowPath"
 )
 
-// SubFlowActivity is an Activity that is used to subFlow/return via the trigger
-// inputs : {method,uri,params}
-// outputs: {result}
+// SubFlowActivity is an Activity that is used to start a sub-flow, can only be used within the
+// context of an flow
+// settings: {flowPath}
+// input : {sub-flow's input}
+// output: {sub-flow's output}
 type SubFlowActivity struct {
 	metadata *activity.Metadata
 }
@@ -34,11 +36,14 @@ func (a *SubFlowActivity) Metadata() *activity.Metadata {
 // Eval implements api.Activity.Eval - Invokes a REST Operation
 func (a *SubFlowActivity) Eval(ctx activity.Context) (done bool, err error) {
 
-	flowPath := ctx.GetInput(ivFlowPath).(string)
+	flowPath := ctx.GetSetting(settingFlowPath).(string)
 	log.Debugf("Starting SubFlow: %s", flowPath)
 
+
+	//r := ctx.ActivityHost().GetResolver()
+	//r.Resolve()
+
 	instance.StartSubFlow(ctx, flowPath)
-	//apply mappings
 
 	return false, nil
 }

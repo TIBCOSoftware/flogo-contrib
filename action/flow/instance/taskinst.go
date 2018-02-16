@@ -86,6 +86,18 @@ func (ti *TaskInst) Name() string {
 	return ti.task.Name()
 }
 
+// GetSetting implements activity.Context.GetSetting
+func (ti *TaskInst) GetSetting(name string) interface{} {
+
+	val, found := ti.Task().ActivityConfig().GetInputAttr()
+	if found {
+		return val.Value()
+	}
+
+	return nil
+}
+
+
 // GetInput implements activity.Context.GetInput
 func (ti *TaskInst) GetInput(name string) interface{} {
 

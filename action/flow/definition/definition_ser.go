@@ -79,6 +79,10 @@ func NewDefinition(rep *DefinitionRep) (def *Definition, err error) {
 
 	defer util.HandlePanic("NewDefinition", &err)
 
+	if rep.RootTask != nil {
+		return definitionFromOldRep(rep)
+	}
+
 	def = &Definition{}
 	def.name = rep.Name
 	def.modelID = rep.ModelID
@@ -95,97 +99,66 @@ func NewDefinition(rep *DefinitionRep) (def *Definition, err error) {
 	def.tasks = make(map[string]*Task)
 	def.links = make(map[int]*Link)
 
-	if rep.RootTask == nil {
+	if len(rep.Tasks) != 0 {
 
-		if len(rep.Tasks) != 0 {
+		for _, taskRep := range rep.Tasks {
 
-			for _, taskRep := range rep.Tasks {
+			task, err := createTask(def, taskRep)
 
+			if err != nil {
+				return nil, err
+			}
+			def.tasks[task.id] = task
+		}
+	}
+
+	if len(rep.Links) != 0 {
+
+		for _, linkRep := range rep.Links {
+
+			link, err := createLink(def, linkRep)
+			if err != nil {
+				return nil, err
+			}
+
+			def.links[link.id] = link
+		}
+	}
+
+	if rep.ErrorHandler != nil {
+
+		errorHandler := &ErrorHandler{}
+		errorHandler.tasks = make(map[string]*Task)
+		errorHandler.links = make(map[int]*Link)
+		def.errorHandler = errorHandler
+
+		if len(rep.ErrorHandler.Tasks) != 0 {
+
+			for _, taskRep := range rep.ErrorHandler.Tasks {
+
+				//task, err := createTask(errorHandler, taskRep)
 				task, err := createTask(def, taskRep)
 
 				if err != nil {
 					return nil, err
 				}
-				def.tasks[task.id] = task
+				errorHandler.tasks[task.id] = task
 			}
 		}
 
-		if len(rep.Links) != 0 {
+		if len(rep.ErrorHandler.Links) != 0 {
 
-			for _, linkRep := range rep.Links {
+			for _, linkRep := range rep.ErrorHandler.Links {
 
+				//link := createLink(errorHandler, linkRep)
 				link, err := createLink(def, linkRep)
 				if err != nil {
 					return nil, err
 				}
-
-				def.links[link.id] = link
+				errorHandler.links[link.id] = link
 			}
 		}
 
-		if rep.ErrorHandler != nil {
-
-			errorHandler := &ErrorHandler{}
-			errorHandler.tasks = make(map[string]*Task)
-			errorHandler.links = make(map[int]*Link)
-			def.errorHandler = errorHandler
-
-			if len(rep.ErrorHandler.Tasks) != 0 {
-
-				for _, taskRep := range rep.ErrorHandler.Tasks {
-
-					//task, err := createTask(errorHandler, taskRep)
-					task, err := createTask(def, taskRep)
-
-					if err != nil {
-						return nil, err
-					}
-					errorHandler.tasks[task.id] = task
-				}
-			}
-
-			if len(rep.ErrorHandler.Links) != 0 {
-
-				for _, linkRep := range rep.ErrorHandler.Links {
-
-					//link := createLink(errorHandler, linkRep)
-					link, err := createLink(def, linkRep)
-					if err != nil {
-						return nil, err
-					}
-					errorHandler.links[link.id] = link
-				}
-			}
-
-		}
-
-	} else {
-		// support for deprecated flow format
-		err = addTasksOld(def, rep.RootTask, false)
-		if err != nil {
-			return nil, err
-		}
-
-		err = addLinksOld(def, rep.RootTask, false)
-
-		if err != nil {
-			return nil, err
-		}
-
-		if rep.ErrorHandlerTask != nil {
-
-			errorHandler := &ErrorHandler{}
-			errorHandler.tasks = make(map[string]*Task)
-			errorHandler.links = make(map[int]*Link)
-			def.errorHandler = errorHandler
-
-			err = addTasksOld(def, rep.ErrorHandlerTask, true)
-			if err != nil {
-				return nil, err
-			}
-
-			addLinksOld(def, rep.ErrorHandlerTask, true)
-		}
 	}
 
 	return def, nil
@@ -197,14 +170,19 @@ func createTask(def *Definition, rep *TaskRep) (*Task, error) {
 	task.name = rep.Name
 	task.definition = def
 
-	if rep.Type != "" && rep.Type != "default" {
-		//todo need a better way to do this
-		id, found := flowutil.GetIntFromAlias(def.modelID + "-" + rep.Type)
-
-		if !found {
+	if rep.Type != "" {
+		if !flowutil.IsValidTaskType(def.modelID, rep.Type) {
 			return nil, errors.New("Unsupported task type: " + rep.Type)
 		}
-		task.typeID = id
+		task.typeID = rep.Type
+	}
+
+	if len(rep.Settings) > 0 {
+		task.settings = make(map[string]interface{}, len(rep.Settings))
+
+		for name, value := range rep.Settings {
+			task.settings[name] = value
+		}
 	}
 
 	if rep.ActivityCfgRep != nil {
@@ -242,15 +220,6 @@ func createActivityConfig(task *Task, rep *ActivityConfigRep) (*ActivityConfig, 
 	//todo need to fix this
 	task.activityCfg = activityCfg
 
-	// Keep for now, DEPRECATE "attributes" section from flogo.json
-	if len(rep.Settings) > 0 {
-		task.settings = make(map[string]interface{}, len(rep.Settings))
-
-		for name, value := range rep.Settings {
-			task.settings[name] = value
-		}
-	}
-
 	// create mappers
 	if rep.Mappings != nil {
 		if rep.Mappings.Input != nil {
@@ -260,6 +229,21 @@ func createActivityConfig(task *Task, rep *ActivityConfigRep) (*ActivityConfig, 
 			activityCfg.outputMapper = GetMapperFactory().NewActivityOutputMapper(task, &data.MapperDef{Mappings: rep.Mappings.Output})
 		} else {
 			activityCfg.outputMapper = GetMapperFactory().GetDefaultActivityOutputMapper(task)
+		}
+	}
+
+	if len(rep.Settings) > 0 {
+		activityCfg.settings = make(map[string]*data.Attribute, len(rep.Settings))
+
+		for name, value := range rep.Settings {
+
+			attr := act.Metadata().Settings[name]
+
+			if attr != nil {
+				//var err error
+				//todo handle error
+				activityCfg.settings[name], _ = data.NewAttribute(name, attr.Type(), value)
+			}
 		}
 	}
 
@@ -334,6 +318,54 @@ func createLink(def *Definition, linkRep *LinkRep) (*Link, error) {
 
 ///////////////////////////
 // DEPRECATED
+
+func definitionFromOldRep(rep *DefinitionRep) (def *Definition, err error) {
+
+	def = &Definition{}
+	def.name = rep.Name
+	def.modelID = rep.ModelID
+	def.metadata = rep.Metadata
+
+	if len(rep.Attributes) > 0 {
+		def.attrs = make(map[string]*data.Attribute, len(rep.Attributes))
+
+		for _, value := range rep.Attributes {
+			def.attrs[value.Name()] = value
+		}
+	}
+
+	def.tasks = make(map[string]*Task)
+	def.links = make(map[int]*Link)
+
+	// support for deprecated flow format
+	err = addTasksOld(def, rep.RootTask, false)
+	if err != nil {
+		return nil, err
+	}
+
+	err = addLinksOld(def, rep.RootTask, false)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if rep.ErrorHandlerTask != nil {
+
+		errorHandler := &ErrorHandler{}
+		errorHandler.tasks = make(map[string]*Task)
+		errorHandler.links = make(map[int]*Link)
+		def.errorHandler = errorHandler
+
+		err = addTasksOld(def, rep.ErrorHandlerTask, true)
+		if err != nil {
+			return nil, err
+		}
+
+		addLinksOld(def, rep.ErrorHandlerTask, true)
+	}
+
+	return def, nil
+}
 
 // TaskRepOld is a serializable representation of a flow TaskOld
 //Deprecated
@@ -411,7 +443,13 @@ func createTaskFromOld(def *Definition, rep *TaskRepOld) (*Task, error) {
 	task.id = convertInterfaceToString(rep.ID)
 	// Workaround to support Backwards compatibility
 	// Remove once rep.ID is string
-	task.typeID = rep.TypeID
+
+	//temporary hack
+	if rep.TypeID == 2 {
+		task.typeID = "iterator"
+	} else {
+		task.typeID = ""
+	}
 
 	task.name = rep.Name
 	task.definition = def

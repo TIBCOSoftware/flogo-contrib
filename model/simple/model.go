@@ -20,7 +20,8 @@ func init() {
 func New() *model.FlowModel {
 	m := model.New(MODEL_NAME)
 	m.RegisterFlowBehavior(&behaviors.Flow{})
-	m.RegisterDefaultTaskBehavior(&behaviors.Task{})
-	m.RegisterTaskBehavior(2, "iterator", &behaviors.IteratorTask{})
+	m.RegisterDefaultTaskBehavior("basic", &behaviors.Task{})
+	m.RegisterTaskBehavior("iterator", &behaviors.IteratorTask{})
+
 	return m
 }

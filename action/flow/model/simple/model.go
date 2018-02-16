@@ -7,20 +7,21 @@ import (
 )
 
 // log is the default package logger
-var log = logger.GetLogger("flowmodel-simple")
+var log = logger.GetLogger("flowmodel-flogo-simple")
 
 const (
 	MODEL_NAME = "flogo-simple"
 )
 
 func init() {
-	model.RegisterDefault(New())
+	model.Register(New())
 }
 
 func New() *model.FlowModel {
 	m := model.New(MODEL_NAME)
 	m.RegisterFlowBehavior(&behaviors.Flow{})
-	m.RegisterDefaultTaskBehavior(&behaviors.Task{})
-	m.RegisterTaskBehavior(2, "iterator", &behaviors.IteratorTask{})
+	m.RegisterDefaultTaskBehavior("basic", &behaviors.Task{})
+	m.RegisterTaskBehavior("iterator", &behaviors.IteratorTask{})
+
 	return m
 }

@@ -2,6 +2,7 @@ package model
 
 import (
 	"sync"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/util"
 )
 
 var (
@@ -11,21 +12,22 @@ var (
 )
 
 // Register registers the specified flow model
-func Register(model *FlowModel) {
+func Register(flowModel *FlowModel) {
 	modelsMu.Lock()
 	defer modelsMu.Unlock()
 
-	if model == nil {
+	if flowModel == nil {
 		panic("model.Register: model cannot be nil")
 	}
 
-	id := model.Name()
+	id := flowModel.Name()
 
 	if _, dup := models[id]; dup {
 		panic("model.Register: model " + id + " already registered")
 	}
 
-	models[id] = model
+	models[id] = flowModel
+	util.RegisterModelValidator(id, flowModel)
 }
 
 // Registered gets all the registered flow models
