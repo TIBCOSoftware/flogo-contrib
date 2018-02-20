@@ -10,8 +10,10 @@ import (
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/TIBCOSoftware/flogo-lib/core/mapper/exprmapper"
 )
 
+var log = logger.GetLogger("GosLinkExprManagerFactory")
 // GosLinkExprManager is the Lua Implementation of a Link Expression Manager
 type GosLinkExprManager struct {
 	values map[int][]string
@@ -26,8 +28,10 @@ type varInfo struct {
 type GosLinkExprManagerFactory struct {
 }
 
+
 // NewGosLinkExprManager creates a new LuaLinkExprManager
 func (f *GosLinkExprManagerFactory) NewLinkExprManager(def *definition.Definition) definition.LinkExprManager {
+
 
 	mgr := &GosLinkExprManager{}
 	mgr.values = make(map[int][]string)
@@ -181,6 +185,12 @@ func (em *GosLinkExprManager) EvalLinkExpr(link *definition.Link, scope data.Sco
 		return true, nil
 	}
 
+	//complex function linker expression
+	if link.Type() == definition.LtFunction {
+		return em.EvalComplexLinker(link, scope)
+	}
+
+
 	vars, attrsOK := em.values[link.ID()]
 	expr, exprOK := em.exprs[link.ID()]
 
@@ -248,6 +258,28 @@ func (em *GosLinkExprManager) EvalLinkExpr(link *definition.Link, scope data.Sco
 	}
 
 	return val.(bool), nil
+}
+
+func (em *GosLinkExprManager) EvalComplexLinker(link *definition.Link, scope data.Scope) (bool, error) {
+	value := link.Value()
+	if value == "" {
+		return true, nil
+	}
+
+	log.Debugf("WI link expression value [%s]", value)
+	funcValue, err := exprmapper.GetMappingValue(value, scope, scope)
+	if err != nil {
+		log.Error("Get value from link value %+v, error %s", value, err.Error())
+		return false, fmt.Errorf("Get value from link value %+v, error %s", value, err.Error())
+	}
+
+	b, err := data.CoerceToBoolean(funcValue)
+	if err != nil {
+		log.Error("Parser [%+v] to boolean error [%s]", value, err.Error())
+		return false, fmt.Errorf("Parser [%+v] to boolean error [%s]", value, err.Error())
+	}
+	log.Debugf("Linking %s result %b", link.Value(), b)
+	return b, nil
 }
 
 // FixUpValue fixes json numbers
