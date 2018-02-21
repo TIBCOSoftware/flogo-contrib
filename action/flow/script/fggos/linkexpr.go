@@ -267,7 +267,7 @@ func (em *GosLinkExprManager) EvalComplexLinker(link *definition.Link, scope dat
 	}
 
 	log.Debugf("WI link expression value [%s]", value)
-	funcValue, err := exprmapper.GetMappingValue(value, scope, scope)
+	funcValue, err := exprmapper.GetMappingValue(value, scope, definition.GetDataResolver())
 	if err != nil {
 		log.Error("Get value from link value %+v, error %s", value, err.Error())
 		return false, fmt.Errorf("Get value from link value %+v, error %s", value, err.Error())
