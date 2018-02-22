@@ -64,6 +64,11 @@ func (fm *FlowModel)  IsValidTaskType(taskType string) bool {
 
 // GetTaskBehavior returns TaskBehavior with the specified ID in he FlowModel
 func (fm *FlowModel) GetTaskBehavior(id string) TaskBehavior {
+
+	if id == "" {
+		return fm.defaultTaskBehavior
+	}
+
 	return fm.taskBehaviors[id]
 }
 

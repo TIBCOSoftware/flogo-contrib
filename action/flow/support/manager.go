@@ -30,7 +30,7 @@ type FlowManager struct {
 	resFlows map[string]*definition.Definition
 
 	//todo switch to cache
-	rfMu         *sync.Mutex // protects the flow maps
+	rfMu         sync.Mutex // protects the flow maps
 	remoteFlows  map[string]*definition.Definition
 	flowProvider definition.Provider
 }

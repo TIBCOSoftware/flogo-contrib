@@ -67,7 +67,7 @@ func (rp *RequestProcessor) StartFlow(startRequest *StartRequest) (results map[s
 	attr, _:=data.NewAttribute("_run_options", data.ANY, ro)
 	inputs[attr.Name()] = attr
 
-	return rp.runner.RunAction2(ctx, act, inputs)
+	return rp.runner.Execute(ctx, act, inputs)
 	//return rp.runner.RunAction(ctx, act, newOptions)
 }
 
@@ -104,7 +104,7 @@ func (rp *RequestProcessor) RestartFlow(restartRequest *RestartRequest)  (result
 	inputs[attr.Name()] = attr
 
 
-	return rp.runner.RunAction2(ctx, act, inputs)
+	return rp.runner.Execute(ctx, act, inputs)
 }
 
 // ResumeFlow handles a ResumeRequest for a FlowInstance.  This will
@@ -140,7 +140,7 @@ func (rp *RequestProcessor) ResumeFlow(resumeRequest *ResumeRequest)  (results m
 	inputs[attr.Name()] = attr
 
 	//return rp.runner.RunAction(ctx, act, newOptions)
-	return rp.runner.RunAction2(ctx, act, inputs)
+	return rp.runner.Execute(ctx, act, inputs)
 
 }
 

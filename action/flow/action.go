@@ -13,13 +13,14 @@ import (
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/instance"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
+	_ "github.com/TIBCOSoftware/flogo-contrib/action/flow/model/simple"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/support"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/tester"
 	"github.com/TIBCOSoftware/flogo-lib/app/resource"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/TIBCOSoftware/flogo-lib/util"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/support"
 )
 
 const (
@@ -54,6 +55,9 @@ var manager *support.FlowManager
 //todo expose and support this properly
 var maxStepCount = 10000000
 
+//todo fix this
+var metadata = &action.Metadata{ID: "github.com/TIBCOSoftware/flogo-contrib/action/flow", Async: true}
+
 func init() {
 	action.RegisterFactory(FLOW_REF, &ActionFactory{})
 }
@@ -65,7 +69,7 @@ func SetExtensionProvider(provider ExtensionProvider) {
 type ActionFactory struct {
 }
 
-func (ff *ActionFactory) Init() {
+func (ff *ActionFactory) Init() error {
 	if ep == nil {
 		testerEnabled := os.Getenv(tester.ENV_ENABLED)
 		if strings.ToLower(testerEnabled) == "true" {
@@ -87,9 +91,11 @@ func (ff *ActionFactory) Init() {
 		idGenerator, _ = util.NewGenerator()
 	}
 
+	model.RegisterDefault(ep.GetDefaultFlowModel())
 	manager = support.NewFlowManager(ep.GetFlowProvider())
-
 	resource.RegisterManager(support.RESTYPE_FLOW, manager)
+
+	return nil
 }
 
 func recordFlows() bool {
@@ -110,8 +116,8 @@ func (ff *ActionFactory) New(config *action.Config) (action.Action, error) {
 		return flowAction, nil
 	}
 
-	var actionData *ActionData
-	err := json.Unmarshal(config.Data, actionData)
+	var actionData ActionData
+	err := json.Unmarshal(config.Data, &actionData)
 	if err != nil {
 		return nil, fmt.Errorf("faild to load flow action data '%s' error '%s'", config.Id, err.Error())
 	}
@@ -120,7 +126,7 @@ func (ff *ActionFactory) New(config *action.Config) (action.Action, error) {
 
 		flowAction.flowURI = actionData.FlowURI
 	} else {
-		uri, err := createResource(actionData)
+		uri, err := createResource(&actionData)
 		if err != nil {
 			return nil, err
 		}
@@ -145,9 +151,9 @@ func (ff *ActionFactory) New(config *action.Config) (action.Action, error) {
 //Deprecated
 func createResource(actionData *ActionData) (string, error) {
 
-	manager := resource.GetManager("flow")
+	manager := resource.GetManager(support.RESTYPE_FLOW)
 
-	resourceCfg := &resource.Config{ID: "res://flow:" + strconv.Itoa(time.Now().Nanosecond())}
+	resourceCfg := &resource.Config{ID: "flow:" + strconv.Itoa(time.Now().Nanosecond())}
 
 	if actionData.FlowCompressed != nil {
 		resourceCfg.Compressed = true
@@ -163,7 +169,7 @@ func createResource(actionData *ActionData) (string, error) {
 		return "", err
 	}
 
-	return resourceCfg.ID, nil
+	return "res://" + resourceCfg.ID, nil
 }
 
 //
@@ -271,7 +277,7 @@ func createResource(actionData *ActionData) (string, error) {
 
 //Metadata get the Action's metadata
 func (fa *FlowAction) Metadata() *action.Metadata {
-	return nil
+	return metadata
 }
 
 func (fa *FlowAction) IOMetadata() *data.IOMetadata {
@@ -287,17 +293,20 @@ func (fa *FlowAction) Run(context context.Context, inputs map[string]*data.Attri
 	var initialState *instance.IndependentInstance
 	var flowURI string
 
-	runOptions, ok := inputs["_run_options"]
+	runOptions, exists := inputs["_run_options"]
+
 	var execOptions *instance.ExecOptions
 
-	ro, ok := runOptions.Value().(*instance.RunOptions)
+	if exists {
+		ro, ok := runOptions.Value().(*instance.RunOptions)
 
-	if ok {
-		op = ro.Op
-		retID = ro.ReturnID
-		initialState = ro.InitialState
-		flowURI = ro.FlowURI
-		execOptions = ro.ExecOptions
+		if ok {
+			op = ro.Op
+			retID = ro.ReturnID
+			initialState = ro.InitialState
+			flowURI = ro.FlowURI
+			execOptions = ro.ExecOptions
+		}
 	}
 
 	if flowURI == "" {
@@ -316,6 +325,10 @@ func (fa *FlowAction) Run(context context.Context, inputs map[string]*data.Attri
 		flowDef, err := manager.GetFlow(flowURI)
 		if err != nil {
 			return err
+		}
+
+		if flowDef == nil {
+			return errors.New("flow not found for URI: " + flowURI)
 		}
 
 		instanceID := idGenerator.NextAsString()
