@@ -55,15 +55,20 @@ func (rp *RequestProcessor) StartFlow(startRequest *StartRequest) (results map[s
 	}
 
 	factory := action.GetFactory(FLOW_REF)
-	act := factory.New(&action.Config{Id: "flow"})
+	act, _ := factory.New(&action.Config{})
 
 	ctx := trigger.NewContext(context.Background(), attrs)
 
 	ro := &instance.RunOptions{Op: instance.OpStart, ReturnID: true,  FlowURI: startRequest.FlowURI, ExecOptions: execOptions}
-	newOptions := make(map[string]interface{})
-	newOptions["deprecated_options"] = ro
+	//newOptions := make(map[string]interface{})
+	//newOptions["deprecated_options"] = ro
 
-	return rp.runner.RunAction(ctx, act, newOptions)
+	inputs := make(map[string]*data.Attribute,1)
+	attr, _:=data.NewAttribute("_run_options", data.ANY, ro)
+	inputs[attr.Name()] = attr
+
+	return rp.runner.RunAction2(ctx, act, inputs)
+	//return rp.runner.RunAction(ctx, act, newOptions)
 }
 
 // RestartFlow handles a RestartRequest for a FlowInstance.  This will
@@ -88,13 +93,18 @@ func (rp *RequestProcessor) RestartFlow(restartRequest *RestartRequest)  (result
 	}
 
 	factory := action.GetFactory(FLOW_REF)
-	act := factory.New(&action.Config{Id: "flow"})
+	act,_ := factory.New(&action.Config{})
 
 	ro := &instance.RunOptions{Op: instance.OpRestart, ReturnID: true, FlowURI: restartRequest.InitialState.FlowURI(), InitialState: restartRequest.InitialState, ExecOptions: execOptions}
-	newOptions := make(map[string]interface{})
-	newOptions["deprecated_options"] = ro
+	//newOptions := make(map[string]interface{})
+	//newOptions["deprecated_options"] = ro
 
-	return rp.runner.RunAction(ctx, act, newOptions)
+	inputs := make(map[string]*data.Attribute,1)
+	attr, _:=data.NewAttribute("_run_options", data.ANY, ro)
+	inputs[attr.Name()] = attr
+
+
+	return rp.runner.RunAction2(ctx, act, inputs)
 }
 
 // ResumeFlow handles a ResumeRequest for a FlowInstance.  This will
@@ -119,13 +129,19 @@ func (rp *RequestProcessor) ResumeFlow(resumeRequest *ResumeRequest)  (results m
 	}
 
 	factory := action.GetFactory(FLOW_REF)
-	act := factory.New(&action.Config{Id: "flow"})
+	act,_ := factory.New(&action.Config{})
 
 	ro := &instance.RunOptions{Op: instance.OpResume, ReturnID: true, FlowURI:resumeRequest.State.FlowURI(), InitialState : resumeRequest.State, ExecOptions: execOptions}
-	newOptions := make(map[string]interface{})
-	newOptions["deprecated_options"] = ro
+	//newOptions := make(map[string]interface{})
+	//newOptions["deprecated_options"] = ro
 
-	return rp.runner.RunAction(ctx, act, newOptions)
+	inputs := make(map[string]*data.Attribute,1)
+	attr, _:=data.NewAttribute("_run_options", data.ANY, ro)
+	inputs[attr.Name()] = attr
+
+	//return rp.runner.RunAction(ctx, act, newOptions)
+	return rp.runner.RunAction2(ctx, act, inputs)
+
 }
 
 // StartRequest describes a request for starting a FlowInstance

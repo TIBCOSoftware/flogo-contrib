@@ -6,217 +6,302 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
-	"sync"
+	"time"
 
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/extension"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/instance"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/provider"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/tester"
+	"github.com/TIBCOSoftware/flogo-lib/app/resource"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/TIBCOSoftware/flogo-lib/util"
-
-	_ "github.com/TIBCOSoftware/flogo-contrib/action/flow/model/simple"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/support"
 )
 
 const (
 	FLOW_REF = "github.com/TIBCOSoftware/flogo-contrib/action/flow"
+
+	ENV_FLOW_RECORD = "FLOGO_FLOW_RECORD"
 )
 
-// ActionOptions are the options for the FlowAction
-type ActionOptions struct {
-	MaxStepCount int
-	Record       bool
-}
-
 type FlowAction struct {
-	idGenerator   *util.Generator
-	actionOptions *ActionOptions
-	config        *action.Config
+	flowURI    string
+	ioMetadata *data.IOMetadata
 }
 
-// Provides the different extension points to the Flow Action
-type ExtensionProvider interface {
-	GetFlowProvider() provider.Provider
-	GetFlowModel() *model.FlowModel
-	GetStateRecorder() instance.StateRecorder
-	GetMapperFactory() definition.MapperFactory
-	GetLinkExprManagerFactory() definition.LinkExprManagerFactory
-	GetFlowTester() *tester.RestEngineTester
+type ActionData struct {
+	// The flow is a URI
+	FlowURI string `json:"flowURI"`
+
+	// The flow is embedded and uncompressed
+	//DEPRECATED
+	Flow json.RawMessage `json:"flow"`
+
+	// The flow is a URI
+	//DEPRECATED
+	FlowCompressed json.RawMessage `json:"flowCompressed"`
 }
 
-var actionMu sync.Mutex
 var ep ExtensionProvider
-//var flowAction *FlowAction
 var idGenerator *util.Generator
 var record bool
+var manager *support.FlowManager
+
+//todo expose and support this properly
+var maxStepCount = 10000000
 
 func init() {
-	action.RegisterFactory(FLOW_REF, &FlowFactory{})
+	action.RegisterFactory(FLOW_REF, &ActionFactory{})
 }
 
 func SetExtensionProvider(provider ExtensionProvider) {
-	actionMu.Lock()
-	defer actionMu.Unlock()
-
 	ep = provider
 }
 
-type FlowFactory struct{}
+type ActionFactory struct {
+}
 
-func (ff *FlowFactory) New(config *action.Config) action.Action {
+func (ff *ActionFactory) Init() {
+	if ep == nil {
+		testerEnabled := os.Getenv(tester.ENV_ENABLED)
+		if strings.ToLower(testerEnabled) == "true" {
+			ep = tester.NewExtensionProvider()
 
-	actionMu.Lock()
-	defer actionMu.Unlock()
-
-	var flowAction *FlowAction
-
-	if flowAction == nil {
-		options := &ActionOptions{Record: record}
-
-		if ep == nil {
-			testerEnabled := os.Getenv(tester.ENV_ENABLED)
-			if strings.ToLower(testerEnabled) == "true" {
-				ep = tester.NewExtensionProvider()
-
-				sm := util.GetDefaultServiceManager()
-				sm.RegisterService(ep.GetFlowTester())
-				record = true
-				options.Record = true
-			} else {
-				ep = extension.New()
-			}
-
-			definition.SetMapperFactory(ep.GetMapperFactory())
-			definition.SetLinkExprManagerFactory(ep.GetLinkExprManagerFactory())
+			sm := util.GetDefaultServiceManager()
+			sm.RegisterService(ep.GetFlowTester())
+			record = true
+		} else {
+			ep = NewDefaultExtensionProvider()
+			record = recordFlows()
 		}
 
-		if idGenerator == nil {
-			idGenerator, _ = util.NewGenerator()
-		}
-
-		if options.MaxStepCount < 1 {
-			options.MaxStepCount = int(^uint16(0))
-		}
-
-		flowAction = &FlowAction{config: config}
-
-		flowAction.actionOptions = options
-		flowAction.idGenerator = idGenerator
+		definition.SetMapperFactory(ep.GetMapperFactory())
+		definition.SetLinkExprManagerFactory(ep.GetLinkExprManagerFactory())
 	}
+
+	if idGenerator == nil {
+		idGenerator, _ = util.NewGenerator()
+	}
+
+	manager = support.NewFlowManager(ep.GetFlowProvider())
+
+	resource.RegisterManager(support.RESTYPE_FLOW, manager)
+}
+
+func recordFlows() bool {
+	recordFlows := os.Getenv(ENV_FLOW_RECORD)
+	if len(recordFlows) == 0 {
+		return false
+	}
+	b, _ := strconv.ParseBool(recordFlows)
+	return b
+}
+
+func (ff *ActionFactory) New(config *action.Config) (action.Action, error) {
+
+	flowAction := &FlowAction{}
 
 	//temporary hack to support dynamic process running by tester
 	if config.Data == nil {
-		return flowAction
+		return flowAction, nil
 	}
 
-	var flavor Flavor
-	err := json.Unmarshal(config.Data, &flavor)
+	var actionData *ActionData
+	err := json.Unmarshal(config.Data, actionData)
 	if err != nil {
-		errorMsg := fmt.Sprintf("Error while loading flow '%s' error '%s'", config.Id, err.Error())
-		logger.Errorf(errorMsg)
-		panic(errorMsg)
+		return nil, fmt.Errorf("faild to load flow action data '%s' error '%s'", config.Id, err.Error())
 	}
 
-	if len(flavor.Flow) > 0 {
-		// It is an uncompressed and embedded flow
-		err := ep.GetFlowProvider().AddUncompressedFlow(config.Id, flavor.Flow)
+	if len(actionData.FlowURI) > 0 {
+
+		flowAction.flowURI = actionData.FlowURI
+	} else {
+		uri, err := createResource(actionData)
 		if err != nil {
-			errorMsg := fmt.Sprintf("Error while loading uncompressed flow '%s' error '%s'", config.Id, err.Error())
-			logger.Errorf(errorMsg)
-			panic(errorMsg)
+			return nil, err
 		}
-		return flowAction
+		flowAction.flowURI = uri
 	}
 
-	if len(flavor.FlowCompressed) > 0 {
-		// It is a compressed and embedded flow
-		err := ep.GetFlowProvider().AddCompressedFlow(config.Id, string(flavor.FlowCompressed[:]))
+	if config.Metadata != nil {
+		flowAction.ioMetadata = config.Metadata
+	} else {
+		//todo add flag to remove startup validation
+		def, err := ep.GetFlowProvider().GetFlow(flowAction.flowURI)
 		if err != nil {
-			errorMsg := fmt.Sprintf("Error while loading compressed flow '%s' error '%s'", config.Id, err.Error())
-			logger.Errorf(errorMsg)
-			panic(errorMsg)
+			return nil, err
 		}
-		return flowAction
+
+		flowAction.ioMetadata = def.Metadata
 	}
 
-	if len(flavor.FlowURI) > 0 {
-		// It is a URI flow
-		err := ep.GetFlowProvider().AddFlowURI(config.Id, string(flavor.FlowURI[:]))
-		if err != nil {
-			errorMsg := fmt.Sprintf("Error while loading flow URI '%s' error '%s'", config.Id, err.Error())
-			logger.Errorf(errorMsg)
-			panic(errorMsg)
-		}
-		return flowAction
-	}
-
-	errorMsg := fmt.Sprintf("No flow found in action data for id '%s'", config.Id)
-	logger.Errorf(errorMsg)
-	panic(errorMsg)
-
-	return flowAction
+	return flowAction, nil
 }
 
-//Config get the Action's config
-func (fa *FlowAction) Config() *action.Config {
-	return fa.config
+//Deprecated
+func createResource(actionData *ActionData) (string, error) {
+
+	manager := resource.GetManager("flow")
+
+	resourceCfg := &resource.Config{ID: "res://flow:" + strconv.Itoa(time.Now().Nanosecond())}
+
+	if actionData.FlowCompressed != nil {
+		resourceCfg.Compressed = true
+		resourceCfg.Data = actionData.FlowCompressed
+	} else if actionData.Flow != nil {
+		resourceCfg.Data = actionData.Flow
+	} else {
+		return "", fmt.Errorf("flow not provided for Flow Action")
+	}
+
+	err := manager.LoadResource(resourceCfg)
+	if err != nil {
+		return "", err
+	}
+
+	return resourceCfg.ID, nil
 }
+
+//
+//func (ff *FlowFactory) NewOld(config *action.Config) action.Action {
+//
+//
+//
+//
+//	actionMu.Lock()
+//	defer actionMu.Unlock()
+//
+//	var flowAction *FlowAction
+//
+//	if flowAction == nil {
+//		options := &ActionOptions{Record: record}
+//
+//		if ep == nil {
+//			testerEnabled := os.Getenv(tester.ENV_ENABLED)
+//			if strings.ToLower(testerEnabled) == "true" {
+//				ep = tester.NewExtensionProvider()
+//
+//				sm := util.GetDefaultServiceManager()
+//				sm.RegisterService(ep.GetFlowTester())
+//				record = true
+//				options.Record = true
+//			} else {
+//				ep = extension.New()
+//			}
+//
+//			definition.SetMapperFactory(ep.GetMapperFactory())
+//			definition.SetLinkExprManagerFactory(ep.GetLinkExprManagerFactory())
+//		}
+//
+//		if idGenerator == nil {
+//			idGenerator, _ = util.NewGenerator()
+//		}
+//
+//		if options.MaxStepCount < 1 {
+//			options.MaxStepCount = int(^uint16(0))
+//		}
+//
+//		flowAction = &FlowAction{config: config}
+//
+//		flowAction.actionOptions = options
+//		flowAction.idGenerator = idGenerator
+//	}
+//
+//	//temporary hack to support dynamic process running by tester
+//	if config.Data == nil {
+//		return flowAction
+//	}
+//
+//	var flavor Flavor
+//	err := json.Unmarshal(config.Data, &flavor)
+//	if err != nil {
+//		errorMsg := fmt.Sprintf("Error while loading flow '%s' error '%s'", config.Id, err.Error())
+//		logger.Errorf(errorMsg)
+//		panic(errorMsg)
+//	}
+//
+//	if len(flavor.Flow) > 0 {
+//		// It is an uncompressed and embedded flow
+//		err := ep.GetFlowProvider().AddUncompressedFlow(config.Id, flavor.Flow)
+//		if err != nil {
+//			errorMsg := fmt.Sprintf("Error while loading uncompressed flow '%s' error '%s'", config.Id, err.Error())
+//			logger.Errorf(errorMsg)
+//			panic(errorMsg)
+//		}
+//		return flowAction
+//	}
+//
+//	if len(flavor.FlowCompressed) > 0 {
+//		// It is a compressed and embedded flow
+//		err := ep.GetFlowProvider().AddCompressedFlow(config.Id, string(flavor.FlowCompressed[:]))
+//		if err != nil {
+//			errorMsg := fmt.Sprintf("Error while loading compressed flow '%s' error '%s'", config.Id, err.Error())
+//			logger.Errorf(errorMsg)
+//			panic(errorMsg)
+//		}
+//		return flowAction
+//	}
+//
+//	if len(flavor.FlowURI) > 0 {
+//		// It is a URI flow
+//		err := ep.GetFlowProvider().AddFlowURI(config.Id, string(flavor.FlowURI[:]))
+//		if err != nil {
+//			errorMsg := fmt.Sprintf("Error while loading flow URI '%s' error '%s'", config.Id, err.Error())
+//			logger.Errorf(errorMsg)
+//			panic(errorMsg)
+//		}
+//		return flowAction
+//	}
+//
+//	errorMsg := fmt.Sprintf("No flow found in action data for id '%s'", config.Id)
+//	logger.Errorf(errorMsg)
+//	panic(errorMsg)
+//
+//	return flowAction
+//}
+
+////Config get the Action's config
+//func (fa *FlowAction) Config() *action.Config {
+//	return fa.config
+//}
 
 //Metadata get the Action's metadata
 func (fa *FlowAction) Metadata() *action.Metadata {
 	return nil
 }
 
+func (fa *FlowAction) IOMetadata() *data.IOMetadata {
+	return fa.ioMetadata
+}
+
 // Run implements action.Action.Run
 //func (fa *FlowAction) Run(context context.Context, uri string, options interface{}, handler action.ResultHandler) error {
-func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, options map[string]interface{}, handler action.ResultHandler) error {
+func (fa *FlowAction) Run(context context.Context, inputs map[string]*data.Attribute, handler action.ResultHandler) error {
 
 	op := instance.OpStart
 	retID := false
 	var initialState *instance.IndependentInstance
 	var flowURI string
-	mh := data.GetMapHelper()
 
-	oldOptions, old := options["deprecated_options"]
+	runOptions, ok := inputs["_run_options"]
 	var execOptions *instance.ExecOptions
 
-	if old {
-		ro, ok := oldOptions.(*instance.RunOptions)
+	ro, ok := runOptions.Value().(*instance.RunOptions)
 
-		if ok {
-			op = ro.Op
-			retID = ro.ReturnID
-			initialState = ro.InitialState
-			flowURI = ro.FlowURI
-			execOptions = ro.ExecOptions
-		}
-
-	} else {
-		//todo enable support for ExecOption when using new action options
-
-		if v, ok := mh.GetInt(options, "op"); ok {
-			op = v
-		}
-		if v, ok := mh.GetBool(options, "returnId"); ok {
-			retID = v
-		}
-		if v, ok := mh.GetString(options, "flowURI"); ok {
-			flowURI = v
-		}
-		if v, ok := options["initialState"]; ok {
-			if v, ok := v.(*instance.IndependentInstance); ok {
-				initialState = v
-			}
-		}
+	if ok {
+		op = ro.Op
+		retID = ro.ReturnID
+		initialState = ro.InitialState
+		flowURI = ro.FlowURI
+		execOptions = ro.ExecOptions
 	}
 
 	if flowURI == "" {
-		flowURI = fa.Config().Id
+		flowURI = fa.flowURI
 	}
 
 	logger.Infof("In Flow Run uri: '%s'", flowURI)
@@ -228,12 +313,12 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 
 	switch op {
 	case instance.OpStart:
-		flowDef, err := ep.GetFlowProvider().GetFlow(flowURI)
+		flowDef, err := manager.GetFlow(flowURI)
 		if err != nil {
 			return err
 		}
 
-		instanceID := fa.idGenerator.NextAsString()
+		instanceID := idGenerator.NextAsString()
 		logger.Debug("Creating Instance: ", instanceID)
 
 		inst = instance.NewIndependentInstance(instanceID, flowDef) //(flowURI, flowDef, ep.GetFlowModel())
@@ -247,13 +332,13 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 	case instance.OpRestart:
 		if initialState != nil {
 			inst = initialState
-			instanceID := fa.idGenerator.NextAsString()
+			instanceID := idGenerator.NextAsString()
 			flowDef, err := ep.GetFlowProvider().GetFlow(inst.FlowURI())
 			if err != nil {
 				return err
 			}
 
-			if flowDef.Metadata() == nil {
+			if flowDef.Metadata == nil {
 				//flowDef.SetMetadata(fa.config.Metadata)
 			}
 			inst.Restart(instanceID, ep.GetFlowProvider())
@@ -297,22 +382,22 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 			}
 
 			//todo remove
-			if old {
-				dataAttr, _ := data.NewAttribute("data", data.OBJECT, &instance.IDResponse{ID: inst.ID()})
-				results["data"] = dataAttr
-				codeAttr, _ := data.NewAttribute("code", data.INTEGER, 200)
-				results["code"] = codeAttr
-			}
+			//if old {
+			//	dataAttr, _ := data.NewAttribute("data", data.OBJECT, &instance.IDResponse{ID: inst.ID()})
+			//	results["data"] = dataAttr
+			//	codeAttr, _ := data.NewAttribute("code", data.INTEGER, 200)
+			//	results["code"] = codeAttr
+			//}
 
 			handler.HandleResult(results, nil)
 		}
 
-		for hasWork && inst.Status() < model.FlowStatusCompleted && stepCount < fa.actionOptions.MaxStepCount {
+		for hasWork && inst.Status() < model.FlowStatusCompleted && stepCount < maxStepCount {
 			stepCount++
 			logger.Debugf("Step: %d\n", stepCount)
 			hasWork = inst.DoStep()
 
-			if fa.actionOptions.Record {
+			if record {
 				ep.GetStateRecorder().RecordSnapshot(inst)
 				ep.GetStateRecorder().RecordStep(inst)
 			}
@@ -322,20 +407,6 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 			returnData, err := inst.GetReturnData()
 			handler.HandleResult(returnData, err)
 		}
-
-		//if retID {
-		//
-		//	resp := map[string]*data.Attribute {
-		//		"id": data.NewAttribute("id", data.STRING, inst.ID()),
-		//	}
-		//
-		//	if old {
-		//		resp["data"] = data.NewAttribute("data", data.OBJECT, &instance.IDResponse{ID: inst.ID()})
-		//		resp["code"] = data.NewAttribute("code", data.INTEGER, 200)
-		//	}
-		//
-		//	handler.HandleResult(resp, nil)
-		//}
 
 		logger.Debugf("Done Executing A.instance [%s] - Status: %d\n", inst.ID(), inst.Status())
 
@@ -347,7 +418,7 @@ func (fa *FlowAction) Run(context context.Context, inputs []*data.Attribute, opt
 	return nil
 }
 
-func logInputs(attrs []*data.Attribute) {
+func logInputs(attrs map[string]*data.Attribute) {
 	if len(attrs) > 0 {
 		logger.Debug("Input Attributes:")
 		for _, attr := range attrs {
@@ -361,18 +432,18 @@ func logInputs(attrs []*data.Attribute) {
 	}
 }
 
-func extractAttributes(inputs map[string]interface{}) []*data.Attribute {
-
-	size := len(inputs)
-
-	attrs := make([]*data.Attribute, 0, size)
-
-	//todo do special handling for complex_object metadata (merge or ref it)
-	for _, value := range inputs {
-
-		attr, _ := value.(*data.Attribute)
-		attrs = append(attrs, attr)
-	}
-
-	return attrs
-}
+//func extractAttributes(inputs map[string]interface{}) []*data.Attribute {
+//
+//	size := len(inputs)
+//
+//	attrs := make([]*data.Attribute, 0, size)
+//
+//	//todo do special handling for complex_object metadata (merge or ref it)
+//	for _, value := range inputs {
+//
+//		attr, _ := value.(*data.Attribute)
+//		attrs = append(attrs, attr)
+//	}
+//
+//	return attrs
+//}

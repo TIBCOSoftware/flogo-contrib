@@ -6,7 +6,6 @@ import (
 
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/provider"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/support"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
@@ -82,15 +81,16 @@ func (inst *IndependentInstance) newEmbeddedInstance (taskInst *TaskInst, flow *
 	return embeddedInst
 }
 
-func (inst *IndependentInstance) Start(startAttrs []*data.Attribute) bool {
+func (inst *IndependentInstance) Start(startAttrs map[string]*data.Attribute) bool {
 
-	if inst.attrs == nil {
-		inst.attrs = make(map[string]*data.Attribute)
-	}
-
-	for _, attr := range startAttrs {
-		inst.attrs[attr.Name()] = attr
-	}
+	inst.attrs = startAttrs
+	//if inst.attrs == nil {
+	//	inst.attrs = make(map[string]*data.Attribute)
+	//}
+	//
+	//for _, attr := range startAttrs {
+	//	inst.attrs[attr.Name()] = attr
+	//}
 
 	return inst.startInstance(inst.Instance)
 }
@@ -443,11 +443,11 @@ func (e *ActivityEvalError) Error() string {
 //////////////
 // todo fix the following
 
-// Restart indicates that this FlowInstance was restarted
-func (inst *IndependentInstance) Restart(id string, provider provider.Provider) {
-	//pi.id = id
-	//pi.flowProvider = provider
-	//pi.Flow, _ = pi.flowProvider.GetFlow(pi.FlowURI)
-	//pi.FlowModel = model.Get(pi.Flow.ModelID())
-	//pi.FlowExecEnv.init(pi)
+//// Restart indicates that this FlowInstance was restarted
+func (inst *IndependentInstance) Restart(id string, provider definition.Provider) {
+//	//pi.id = id
+//	//pi.flowProvider = provider
+//	//pi.Flow, _ = pi.flowProvider.GetFlow(pi.FlowURI)
+//	//pi.FlowModel = model.Get(pi.Flow.ModelID())
+//	//pi.FlowExecEnv.init(pi)
 }

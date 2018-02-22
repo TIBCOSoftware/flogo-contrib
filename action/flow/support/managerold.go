@@ -22,8 +22,8 @@ import (
 //	uriSchemeRes  = "res://"
 //)
 
-// FlowManager is a simple manager for flows
-type FlowManager struct {
+// FlowManagerOld is a simple manager for flows
+type FlowManagerOld struct {
 	mu    *sync.Mutex // protects the flow maps
 	flows map[string]*FlowEntry
 }
@@ -35,13 +35,13 @@ type FlowEntry struct {
 	uri          string
 }
 
-// NewFlowManager creates a new FlowManager
-func NewFlowManager() *FlowManager {
-	return &FlowManager{mu: &sync.Mutex{}, flows: make(map[string]*FlowEntry)}
+// NewFlowManager creates a new FlowManagerOld
+func NewFlowManagerOld() *FlowManagerOld {
+	return &FlowManagerOld{mu: &sync.Mutex{}, flows: make(map[string]*FlowEntry)}
 }
 
 // AddCompressed adds a compressed flow to the map of flow entries
-func (mgr *FlowManager) AddCompressed(id string, newFlow string) error {
+func (mgr *FlowManagerOld) AddCompressed(id string, newFlow string) error {
 	if len(newFlow) < 3 {
 		return fmt.Errorf("Empty Flow with id '%s'", id)
 	}
@@ -59,7 +59,7 @@ func (mgr *FlowManager) AddCompressed(id string, newFlow string) error {
 
 // TODO add schema validation for flow
 // AddUncompressed adds an uncompressed flow to the map of flow entries
-func (mgr *FlowManager) AddUncompressed(id string, newFlow []byte) error {
+func (mgr *FlowManagerOld) AddUncompressed(id string, newFlow []byte) error {
 	if len(newFlow) < 3 {
 		return fmt.Errorf("Empty Flow with id '%s'", id)
 	}
@@ -76,7 +76,7 @@ func (mgr *FlowManager) AddUncompressed(id string, newFlow []byte) error {
 }
 
 // AddURI adds a uri flow to the map of flow entries
-func (mgr *FlowManager) AddURI(id string, newUri string) error {
+func (mgr *FlowManagerOld) AddURI(id string, newUri string) error {
 	if len(newUri) < 3 {
 		return fmt.Errorf("Empty Flow URI with id '%s'", id)
 	}
@@ -93,7 +93,7 @@ func (mgr *FlowManager) AddURI(id string, newUri string) error {
 }
 
 // GetFlow gets the specified embedded flow
-func (mgr *FlowManager) GetFlow(id string) (*definition.DefinitionRep, error) {
+func (mgr *FlowManagerOld) GetFlow(id string) (*definition.DefinitionRep, error) {
 
 	entry, ok := mgr.flows[id]
 

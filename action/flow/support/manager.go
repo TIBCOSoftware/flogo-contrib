@@ -22,17 +22,33 @@ const (
 	uriSchemeFile = "file://"
 	uriSchemeHttp = "http://"
 	uriSchemeRes  = "res://"
+	RESTYPE_FLOW = "flow"
 )
 
-type FlowResourceManager struct {
+
+type FlowManager struct {
 	resFlows map[string]*definition.Definition
 
 	//todo switch to cache
-	rfMu        *sync.Mutex // protects the flow maps
-	remoteFlows map[string]*definition.Definition
+	rfMu         *sync.Mutex // protects the flow maps
+	remoteFlows  map[string]*definition.Definition
+	flowProvider definition.Provider
 }
 
-func (rm *FlowResourceManager) LoadResource(config *resource.Config) error {
+func NewFlowManager(flowProvider definition.Provider) *FlowManager {
+	manager := &FlowManager{}
+	manager.resFlows = make(map[string]*definition.Definition)
+
+	if flowProvider != nil {
+		manager.flowProvider = flowProvider
+	} else {
+		manager.flowProvider = &BasicRemoteFlowProvider{}
+	}
+
+	return manager
+}
+
+func (rm *FlowManager) LoadResource(config *resource.Config) error {
 
 	var flowDefBytes []byte
 
@@ -65,11 +81,11 @@ func (rm *FlowResourceManager) LoadResource(config *resource.Config) error {
 	return nil
 }
 
-func (rm *FlowResourceManager) GetResource(id string) interface{} {
+func (rm *FlowManager) GetResource(id string) interface{} {
 	return rm.resFlows[id]
 }
 
-func (rm *FlowResourceManager) GetFlow(uri string) (*definition.Definition, error) {
+func (rm *FlowManager) GetFlow(uri string) (*definition.Definition, error) {
 
 	if strings.HasPrefix(uri, uriSchemeRes) {
 		return rm.resFlows[uri[6:]], nil
@@ -78,11 +94,16 @@ func (rm *FlowResourceManager) GetFlow(uri string) (*definition.Definition, erro
 	rm.rfMu.Lock()
 	defer rm.rfMu.Unlock()
 
+	if rm.remoteFlows == nil {
+		rm.resFlows = make(map[string]*definition.Definition)
+	}
+
+
 	flow, exists := rm.remoteFlows[uri]
 
 	if !exists {
 
-		defRep, err := loadRemoteFlow(uri)
+		defRep, err := rm.flowProvider.GetFlow(uri)
 		if err != nil {
 			return nil, err
 		}
@@ -98,14 +119,11 @@ func (rm *FlowResourceManager) GetFlow(uri string) (*definition.Definition, erro
 	return flow, nil
 }
 
-func (rm *FlowResourceManager) materializeFlow(flowRep *definition.DefinitionRep) (*definition.Definition, error) {
+func (rm *FlowManager) materializeFlow(flowRep *definition.DefinitionRep) (*definition.Definition, error) {
 
 	def, err := definition.NewDefinition(flowRep)
 	if err != nil {
-		//errorMsg := fmt.Sprintf("Error unmarshalling flow '%s': %s", id, err.Error())
-		errorMsg := fmt.Sprintf("Error unmarshalling flow: %s", err.Error())
-		logger.Errorf(errorMsg)
-		return nil, fmt.Errorf(errorMsg)
+		return nil, fmt.Errorf("error unmarshalling flow: %s", err.Error())
 	}
 
 	//todo validate flow
@@ -124,25 +142,29 @@ func (rm *FlowResourceManager) materializeFlow(flowRep *definition.DefinitionRep
 
 }
 
-func loadRemoteFlow(uri string) (*definition.DefinitionRep, error) {
+type BasicRemoteFlowProvider struct {
+
+}
+
+func (*BasicRemoteFlowProvider) GetFlow(flowURI string) (*definition.DefinitionRep, error) {
 
 	var flowDefBytes []byte
 
-	if strings.HasPrefix(uri, uriSchemeFile) {
+	if strings.HasPrefix(flowURI, uriSchemeFile) {
 		// File URI
-		logger.Infof("Loading Local Flow: %s\n", uri)
-		flowFilePath, _ := util.URLStringToFilePath(uri)
+		logger.Infof("Loading Local Flow: %s\n", flowURI)
+		flowFilePath, _ := util.URLStringToFilePath(flowURI)
 
 		readBytes, err := ioutil.ReadFile(flowFilePath)
 		if err != nil {
-			readErr := fmt.Errorf("error reading flow with uri '%s', %s", uri, err.Error())
+			readErr := fmt.Errorf("error reading flow with uri '%s', %s", flowURI, err.Error())
 			logger.Errorf(readErr.Error())
 			return nil, readErr
 		}
 		if readBytes[0] == 0x1f && readBytes[2] == 0x8b {
 			flowDefBytes, err = unzip(readBytes)
 			if err != nil {
-				decompressErr := fmt.Errorf("error uncompressing flow with uri '%s', %s", uri, err.Error())
+				decompressErr := fmt.Errorf("error uncompressing flow with uri '%s', %s", flowURI, err.Error())
 				logger.Errorf(decompressErr.Error())
 				return nil, decompressErr
 			}
@@ -153,11 +175,11 @@ func loadRemoteFlow(uri string) (*definition.DefinitionRep, error) {
 
 	} else {
 		// URI
-		req, err := http.NewRequest("GET", uri, nil)
+		req, err := http.NewRequest("GET", flowURI, nil)
 		client := &http.Client{}
 		resp, err := client.Do(req)
 		if err != nil {
-			getErr := fmt.Errorf("error getting flow with uri '%s', %s", uri, err.Error())
+			getErr := fmt.Errorf("error getting flow with uri '%s', %s", flowURI, err.Error())
 			logger.Errorf(getErr.Error())
 			return nil, getErr
 		}
@@ -167,14 +189,14 @@ func loadRemoteFlow(uri string) (*definition.DefinitionRep, error) {
 
 		if resp.StatusCode >= 300 {
 			//not found
-			getErr := fmt.Errorf("error getting flow with uri '%s', status code %d", uri, resp.StatusCode)
+			getErr := fmt.Errorf("error getting flow with uri '%s', status code %d", flowURI, resp.StatusCode)
 			logger.Errorf(getErr.Error())
 			return nil, getErr
 		}
 
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			readErr := fmt.Errorf("error reading flow response body with uri '%s', %s", uri, err.Error())
+			readErr := fmt.Errorf("error reading flow response body with uri '%s', %s", flowURI, err.Error())
 			logger.Errorf(readErr.Error())
 			return nil, readErr
 		}
@@ -183,7 +205,7 @@ func loadRemoteFlow(uri string) (*definition.DefinitionRep, error) {
 		if strings.ToLower(val) == "true" {
 			decodedBytes, err := decodeAndUnzip(string(body))
 			if err != nil {
-				decodeErr := fmt.Errorf("error decoding compressed flow with uri '%s', %s", uri, err.Error())
+				decodeErr := fmt.Errorf("error decoding compressed flow with uri '%s', %s", flowURI, err.Error())
 				logger.Errorf(decodeErr.Error())
 				return nil, decodeErr
 			}
@@ -197,7 +219,7 @@ func loadRemoteFlow(uri string) (*definition.DefinitionRep, error) {
 	err := json.Unmarshal(flowDefBytes, &flow)
 	if err != nil {
 		logger.Errorf(err.Error())
-		return nil, fmt.Errorf("error marshalling flow with uri '%s', %s", uri, err.Error())
+		return nil, fmt.Errorf("error marshalling flow with uri '%s', %s", flowURI, err.Error())
 	}
 
 	return flow, nil

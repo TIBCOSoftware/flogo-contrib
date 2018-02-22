@@ -274,7 +274,7 @@ func (inst *Instance) AddAttr(attrName string, attrType data.Type, value interfa
 ////////////
 
 // UpdateAttrs updates the attributes of the Flow Instance
-func (inst *Instance) UpdateAttrs(attrs []*data.Attribute) {
+func (inst *Instance) UpdateAttrs(attrs map[string]*data.Attribute) {
 
 	if attrs != nil {
 
