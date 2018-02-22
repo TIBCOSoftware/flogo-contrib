@@ -10,6 +10,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/TIBCOSoftware/flogo-lib/core/trigger/handler"
 )
 
 // log is the default package logger
@@ -29,7 +30,7 @@ type CliTrigger struct {
 type actionInfo struct {
 	actionId   string
 	Invoke     bool
-	handlerCfg *trigger.HandlerConfig
+	handlerCfg *handler.Config
 }
 
 //NewFactory create a new Trigger factory
@@ -130,7 +131,7 @@ func Invoke() (string, error) {
 	return singleton.Invoke(singleton.defAction.actionId, singleton.defAction.handlerCfg, args)
 }
 
-func (t *CliTrigger) Invoke(actionId string, handlerCfg *trigger.HandlerConfig, args []string) (string, error) {
+func (t *CliTrigger) Invoke(actionId string, handlerCfg *handler.Config, args []string) (string, error) {
 
 	log.Infof("CLI Trigger: Invoking action '%s'", actionId)
 

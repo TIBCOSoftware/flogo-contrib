@@ -1,9 +1,9 @@
 package support
 
 import (
-	"bytes"
-	"compress/gzip"
-	"encoding/base64"
+	//"bytes"
+	//"compress/gzip"
+	//"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
