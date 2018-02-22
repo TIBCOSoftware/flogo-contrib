@@ -444,10 +444,9 @@ func (e *ActivityEvalError) Error() string {
 // todo fix the following
 
 //// Restart indicates that this FlowInstance was restarted
-func (inst *IndependentInstance) Restart(id string, provider definition.Provider) {
-//	//pi.id = id
-//	//pi.flowProvider = provider
-//	//pi.Flow, _ = pi.flowProvider.GetFlow(pi.FlowURI)
-//	//pi.FlowModel = model.Get(pi.Flow.ModelID())
-//	//pi.FlowExecEnv.init(pi)
+func (inst *IndependentInstance) Restart(id string, manager *support.FlowManager) {
+	inst.id = id
+	inst.flowDef, _ = manager.GetFlow(inst.flowURI)
+	inst.flowModel = model.Get(inst.flowDef.ModelID())
+	//inst.FlowExecEnv.init(pi)
 }

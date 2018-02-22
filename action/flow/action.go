@@ -354,7 +354,7 @@ func (fa *FlowAction) Run(context context.Context, inputs map[string]*data.Attri
 			if flowDef.Metadata == nil {
 				//flowDef.SetMetadata(fa.config.Metadata)
 			}
-			inst.Restart(instanceID, ep.GetFlowProvider())
+			inst.Restart(instanceID, manager)
 
 			logger.Debug("Restarting Instance: ", instanceID)
 		} else {
