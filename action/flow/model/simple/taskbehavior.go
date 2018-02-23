@@ -15,7 +15,7 @@ type TaskBehavior struct {
 func (tb *TaskBehavior) Enter(ctx model.TaskContext) (enterResult model.EnterResult) {
 
 	task := ctx.Task()
-	log.Debugf("TaskBehavior Enter: %s\n", task.Name())
+	log.Debugf("Enter Task '%s'", task.ID())
 
 	ctx.SetStatus(model.TaskStatusEntered)
 
@@ -31,10 +31,10 @@ func (tb *TaskBehavior) Enter(ctx model.TaskContext) (enterResult model.EnterRes
 	} else {
 		skipped = true
 
-		log.Debugf("Num Links: %d\n", len(linkContexts))
+		log.Debugf("Task '%s' has %d incoming Links", task.ID(), len(linkContexts))
 		for _, linkContext := range linkContexts {
 
-			log.Debugf("TaskBehavior: %s, linkData: %v\n", task.Name(), linkContext)
+			log.Debugf("Task '%s' Link '%s' has status '%d'", task.ID(), linkContext.Link().ID(), linkContext.Status())
 			if linkContext.Status() < model.LinkStatusFalse {
 				ready = false
 				break
@@ -47,17 +47,16 @@ func (tb *TaskBehavior) Enter(ctx model.TaskContext) (enterResult model.EnterRes
 	if ready {
 
 		if skipped {
-			log.Debugf("TaskBehavior Skipped\n")
 			ctx.SetStatus(model.TaskStatusSkipped)
 			return model.ENTER_SKIP
 		} else {
-			log.Debugf("TaskBehavior Ready\n")
+			log.Debugf("Task '%s' Ready", ctx.Task().ID())
 			ctx.SetStatus(model.TaskStatusReady)
 		}
 		return model.ENTER_EVAL
 
 	} else {
-		log.Debugf("TaskBehavior Not Ready\n")
+		log.Debugf("Task '%s' Not Ready", ctx.Task().ID())
 	}
 
 	return model.ENTER_NOTREADY
@@ -67,16 +66,16 @@ func (tb *TaskBehavior) Enter(ctx model.TaskContext) (enterResult model.EnterRes
 func (tb *TaskBehavior) Eval(ctx model.TaskContext) (evalResult model.EvalResult, err error) {
 
 	if ctx.Status() == model.TaskStatusSkipped {
-		return model.EVAL_DONE, nil //todo introduce EVAL_SKIP?
+		return model.EVAL_SKIP, nil
 	}
 
 	task := ctx.Task()
-	log.Debugf("TaskBehavior Eval: %v\n", task)
+	log.Debugf("Eval Task '%s'", task.ID())
 
 	done, err := ctx.EvalActivity()
 
 	if err != nil {
-		log.Errorf("Error evaluating activity '%s'[%s] - %s", ctx.Task().Name(), ctx.Task().ActivityConfig().Ref(), err.Error())
+		log.Errorf("Error evaluating activity '%s'[%s] - %s", ctx.Task().ID(), ctx.Task().ActivityConfig().Ref(), err.Error())
 		ctx.SetStatus(model.TaskStatusFailed)
 		return model.EVAL_FAIL, err
 	}
@@ -93,13 +92,13 @@ func (tb *TaskBehavior) Eval(ctx model.TaskContext) (evalResult model.EvalResult
 // PostEval implements model.TaskBehavior.PostEval
 func (tb *TaskBehavior) PostEval(ctx model.TaskContext) (evalResult model.EvalResult, err error) {
 
-	log.Debugf("TaskBehavior PostEval\n")
+	log.Debugf("PostEval Task '%s'", ctx.Task().ID())
 
 	_, err = ctx.PostEvalActivity()
 
 	//what to do if eval isn't "done"?
 	if err != nil {
-		log.Errorf("Error post evaluating activity '%s'[%s] - %s", ctx.Task().Name(), ctx.Task().ActivityConfig().Ref(), err.Error())
+		log.Errorf("Error post evaluating activity '%s'[%s] - %s", ctx.Task().ID(), ctx.Task().ActivityConfig().Ref(), err.Error())
 		ctx.SetStatus(model.TaskStatusFailed)
 		return model.EVAL_FAIL, err
 	}
@@ -115,10 +114,14 @@ func (tb *TaskBehavior) Done(ctx model.TaskContext) (notifyFlow bool, taskEntrie
 
 	ctx.SetStatus(model.TaskStatusDone)
 
+	log.Debugf("Task '%s' is done", ctx.Task().ID())
+
 	// process outgoing links
 	if numLinks > 0 {
 
 		taskEntries = make([]*model.TaskEntry, 0, numLinks)
+
+		log.Debugf("Task '%s' has %d outgoing links", ctx.Task().ID(), numLinks)
 
 		for _, linkInst := range linkInsts {
 
@@ -131,6 +134,7 @@ func (tb *TaskBehavior) Done(ctx model.TaskContext) (notifyFlow bool, taskEntrie
 
 			if linkInst.Link().Type() == definition.LtExpression {
 				//todo handle error
+				log.Debugf("Evaluating Expression Link '%s'", linkInst.Link().ID())
 				follow, err = ctx.EvalLink(linkInst.Link())
 
 				if err != nil {
@@ -141,6 +145,7 @@ func (tb *TaskBehavior) Done(ctx model.TaskContext) (notifyFlow bool, taskEntrie
 			if follow {
 				linkInst.SetStatus(model.LinkStatusTrue)
 
+				log.Debugf("Following Link '%s'", linkInst.Link().ID())
 				taskEntry := &model.TaskEntry{Task: linkInst.Link().ToTask()}
 				taskEntries = append(taskEntries, taskEntry)
 			} else {
@@ -155,9 +160,7 @@ func (tb *TaskBehavior) Done(ctx model.TaskContext) (notifyFlow bool, taskEntrie
 		return false, taskEntries, nil
 	}
 
-	return true, nil, nil
-
-	log.Debug("notifying flow that task is done")
+	log.Debugf("Notifying flow that end task '%s' is done", ctx.Task().ID())
 
 	// there are no outgoing links, so just notify parent that we are done
 	return true, nil, nil
@@ -170,10 +173,14 @@ func (tb *TaskBehavior) Skip(ctx model.TaskContext) (notifyFlow bool, taskEntrie
 
 	ctx.SetStatus(model.TaskStatusSkipped)
 
+	log.Debugf("Task '%s' was skipped", ctx.Task().ID())
+
 	// process outgoing links
 	if numLinks > 0 {
 
 		taskEntries = make([]*model.TaskEntry, 0, numLinks)
+
+		log.Debugf("Task '%s' has %d outgoing links", ctx.Task().ID(), numLinks)
 
 		for _, linkInst := range linkInsts {
 			linkInst.SetStatus(model.LinkStatusSkipped)
@@ -183,6 +190,8 @@ func (tb *TaskBehavior) Skip(ctx model.TaskContext) (notifyFlow bool, taskEntrie
 
 		return false, taskEntries
 	}
+
+	log.Debugf("Notifying flow that end task '%s' is skipped", ctx.Task().ID())
 
 	return true, nil
 }

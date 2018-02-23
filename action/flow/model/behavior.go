@@ -43,6 +43,7 @@ const (
 	EVAL_DONE
 	EVAL_REPEAT
 	EVAL_WAIT
+	EVAL_SKIP
 )
 
 type EnterResult int

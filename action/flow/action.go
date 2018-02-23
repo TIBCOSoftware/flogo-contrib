@@ -317,7 +317,7 @@ func (fa *FlowAction) Run(context context.Context, inputs map[string]*data.Attri
 		flowURI = fa.flowURI
 	}
 
-	logger.Infof("In FlowBehavior Run uri: '%s'", flowURI)
+	logger.Infof("Running FlowAction for URI: '%s'", flowURI)
 
 	//todo: catch panic
 	//todo: consider switch to URI to dictate flow operation (ex. flow://blah/resume)
@@ -336,13 +336,13 @@ func (fa *FlowAction) Run(context context.Context, inputs map[string]*data.Attri
 		}
 
 		instanceID := idGenerator.NextAsString()
-		logger.Debug("Creating Instance: ", instanceID)
+		logger.Debug("Creating Flow Instance: ", instanceID)
 
 		inst = instance.NewIndependentInstance(instanceID, flowDef) //(flowURI, flowDef, ep.GetFlowModel())
 	case instance.OpResume:
 		if initialState != nil {
 			inst = initialState
-			logger.Debug("Resuming Instance: ", inst.ID())
+			logger.Debug("Resuming Flow Instance: ", inst.ID())
 		} else {
 			return errors.New("unable to resume instance, initial state not provided")
 		}
@@ -360,27 +360,28 @@ func (fa *FlowAction) Run(context context.Context, inputs map[string]*data.Attri
 			}
 			inst.Restart(instanceID, manager)
 
-			logger.Debug("Restarting Instance: ", instanceID)
+			logger.Debug("Restarting Flow Instance: ", instanceID)
 		} else {
 			return errors.New("unable to restart instance, initial state not provided")
 		}
 	}
 
 	if execOptions != nil {
-		logger.Debugf("Applying Exec Options to instance: %s\n", inst.ID())
+		logger.Debugf("Applying Exec Options to instance: %s", inst.ID())
 		instance.ApplyExecOptions(inst, execOptions)
 	}
 
 	//todo how do we check if debug is enabled?
-	logInputs(inputs)
+	//logInputs(inputs)
+
+	logger.Debugf("Executing Flow Instance: %s", inst.ID())
 
 	if op == instance.OpStart {
+
 		inst.Start(inputs)
 	} else {
 		inst.UpdateAttrs(inputs)
 	}
-
-	logger.Debugf("Executing instance: %s\n", inst.ID())
 
 	stepCount := 0
 	hasWork := true
@@ -411,7 +412,7 @@ func (fa *FlowAction) Run(context context.Context, inputs map[string]*data.Attri
 
 		for hasWork && inst.Status() < model.FlowStatusCompleted && stepCount < maxStepCount {
 			stepCount++
-			logger.Debugf("Step: %d\n", stepCount)
+			logger.Debugf("Step: %d", stepCount)
 			hasWork = inst.DoStep()
 
 			if record {
@@ -425,10 +426,12 @@ func (fa *FlowAction) Run(context context.Context, inputs map[string]*data.Attri
 			handler.HandleResult(returnData, err)
 		}
 
-		logger.Debugf("Done Executing A.instance [%s] - Status: %d\n", inst.ID(), inst.Status())
+		logger.Debugf("Done Executing flow instance [%s] - Status: %d", inst.ID(), inst.Status())
 
 		if inst.Status() == model.FlowStatusCompleted {
-			logger.Infof("FlowBehavior [%s] Completed", inst.ID())
+			logger.Infof("Flow instance [%s] Completed Successfully", inst.ID())
+		} else if inst.Status() == model.FlowStatusFailed {
+			logger.Infof("Flow instance [%s] Failed", inst.ID())
 		}
 	}()
 

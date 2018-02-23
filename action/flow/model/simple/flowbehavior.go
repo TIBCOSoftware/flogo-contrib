@@ -28,16 +28,18 @@ func (fb *FlowBehavior) Resume(ctx model.FlowContext) (resumed bool) {
 func (fb *FlowBehavior) TaskDone(ctx model.FlowContext) (flowDone bool) {
 	tasks := ctx.TaskInstances()
 
+	log.Debug("Checking if all tasks done or skipped")
+
 	for _, taskInst := range tasks {
 
 		if taskInst.Status() < model.TaskStatusDone { //ignore not started?
 
-			log.Debugf("task %s not done or skipped", taskInst.Task().Name())
+			log.Debugf("Task '%s' not done or skipped", taskInst.Task().ID())
 			return false
 		}
 	}
 
-	log.Debug("all tasks done or skipped")
+	log.Debug("All tasks done or skipped")
 
 	// our tasks are done, so the flow is done
 	return true
@@ -45,7 +47,7 @@ func (fb *FlowBehavior) TaskDone(ctx model.FlowContext) (flowDone bool) {
 
 // Done implements model.FlowBehavior.Done
 func (fb *FlowBehavior) Done(ctx model.FlowContext) {
-	log.Debugf("FlowBehavior Done\n")
+	log.Debugf("Flow Done")
 }
 
 func getFlowTaskEntries(tasks []*definition.Task, leadingOnly bool) []*model.TaskEntry {

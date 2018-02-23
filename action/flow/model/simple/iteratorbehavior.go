@@ -20,7 +20,7 @@ func (tb *IteratorTaskBehavior) Eval(ctx model.TaskContext) (evalResult model.Ev
 	}
 
 	task := ctx.Task()
-	log.Debugf("TaskBehavior Eval: %v\n", task)
+	log.Debugf("Eval Iterator Task '%s'", task.ID())
 
 	var itx Iterator
 
@@ -103,7 +103,7 @@ func (tb *IteratorTaskBehavior) Eval(ctx model.TaskContext) (evalResult model.Ev
 // PostEval implements model.TaskBehavior.PostEval
 func (tb *IteratorTaskBehavior) PostEval(ctx model.TaskContext) (evalResult model.EvalResult, err error) {
 
-	log.Debugf("TaskBehavior PostEval\n")
+	log.Debugf("PostEval Iterator Task '%s'", ctx.Task().ID())
 
 	_, err = ctx.PostEvalActivity()
 

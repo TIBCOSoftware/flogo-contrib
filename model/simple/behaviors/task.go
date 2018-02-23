@@ -15,7 +15,7 @@ type Task struct {
 func (tb *Task) Enter(ctx model.TaskContext) (enterResult model.EnterResult) {
 
 	task := ctx.Task()
-	log.Debugf("Task Enter: %s\n", task.Name())
+	log.Debugf("Enter Task '%s'", task.ID())
 
 	ctx.SetStatus(model.TaskStatusEntered)
 
@@ -31,10 +31,10 @@ func (tb *Task) Enter(ctx model.TaskContext) (enterResult model.EnterResult) {
 	} else {
 		skipped = true
 
-		log.Debugf("Num Links: %d\n", len(linkContexts))
+		log.Debugf("Task '%s' has %d incoming Links", task.ID(), len(linkContexts))
 		for _, linkContext := range linkContexts {
 
-			log.Debugf("Task: %s, linkData: %v\n", task.Name(), linkContext)
+			log.Debugf("Task '%s' Link '%s' has status '%d'", task.ID(), linkContext.Link().ID(), linkContext.Status())
 			if linkContext.Status() < model.LinkStatusFalse {
 				ready = false
 				break
@@ -47,17 +47,17 @@ func (tb *Task) Enter(ctx model.TaskContext) (enterResult model.EnterResult) {
 	if ready {
 
 		if skipped {
-			log.Debugf("Task Skipped\n")
+			log.Debugf("Task '%s' Skipped", ctx.Task().ID())
 			ctx.SetStatus(model.TaskStatusSkipped)
 			return model.ENTER_SKIP
 		} else {
-			log.Debugf("Task Ready\n")
+			log.Debugf("Task '%s' Ready", ctx.Task().ID())
 			ctx.SetStatus(model.TaskStatusReady)
 		}
 		return model.ENTER_EVAL
 
 	} else {
-		log.Debugf("Task Not Ready\n")
+		log.Debugf("Task '%s' Not Ready", ctx.Task().ID())
 	}
 
 	return model.ENTER_NOTREADY
@@ -71,12 +71,12 @@ func (tb *Task) Eval(ctx model.TaskContext) (evalResult model.EvalResult, err er
 	}
 
 	task := ctx.Task()
-	log.Debugf("Task Eval: %v\n", task)
+	log.Debugf("Eval Task '%s'", task.ID())
 
 	done, err := ctx.EvalActivity()
 
 	if err != nil {
-		log.Errorf("Error evaluating activity '%s'[%s] - %s", ctx.Task().Name(), ctx.Task().ActivityConfig().Ref(), err.Error())
+		log.Errorf("Error evaluating activity '%s'[%s] - %s", ctx.Task().ID(), ctx.Task().ActivityConfig().Ref(), err.Error())
 		ctx.SetStatus(model.TaskStatusFailed)
 		return model.EVAL_FAIL, err
 	}
@@ -93,13 +93,13 @@ func (tb *Task) Eval(ctx model.TaskContext) (evalResult model.EvalResult, err er
 // PostEval implements model.Task.PostEval
 func (tb *Task) PostEval(ctx model.TaskContext) (evalResult model.EvalResult, err error) {
 
-	log.Debugf("Task PostEval\n")
+	log.Debugf("PostEval Task '%s'", ctx.Task().ID())
 
 	_, err = ctx.PostEvalActivity()
 
 	//what to do if eval isn't "done"?
 	if err != nil {
-		log.Errorf("Error post evaluating activity '%s'[%s] - %s", ctx.Task().Name(), ctx.Task().ActivityConfig().Ref(), err.Error())
+		log.Errorf("Error post evaluating activity '%s'[%s] - %s", ctx.Task().ID(), ctx.Task().ActivityConfig().Ref(), err.Error())
 		ctx.SetStatus(model.TaskStatusFailed)
 		return model.EVAL_FAIL, err
 	}
@@ -155,9 +155,7 @@ func (tb *Task) Done(ctx model.TaskContext) (notifyFlow bool, taskEntries []*mod
 		return false, taskEntries, nil
 	}
 
-	return true, nil, nil
-
-	log.Debug("notifying flow that task is done")
+	log.Debugf("Notifying flow that task '%s' is done", ctx.Task().ID())
 
 	// there are no outgoing links, so just notify parent that we are done
 	return true, nil, nil

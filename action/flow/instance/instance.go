@@ -253,7 +253,7 @@ func (inst *Instance) AddAttr(attrName string, attrType data.Type, value interfa
 		inst.attrs = make(map[string]*data.Attribute)
 	}
 
-	logger.Debugf("AddAttr - name: %s, type: %s, value:%v\n", attrName, attrType, value)
+	logger.Debugf("AddAttr - name: %s, type: %s, value:%v", attrName, attrType, value)
 
 	var attr *data.Attribute
 

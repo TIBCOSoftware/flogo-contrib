@@ -78,13 +78,13 @@ func (t *RestTrigger) Initialize(ctx trigger.InitContext) error {
 		method := strings.ToUpper(handler.GetStringSetting("method"))
 		path := handler.GetStringSetting("path")
 
-		log.Debugf("REST Trigger: Registering handler [%s: %s]", method, path)
+		log.Debugf("Registering handler [%s: %s]", method, path)
 
 		router.OPTIONS(path, handleCorsPreflight) // for CORS
 		router.Handle(method, path, newActionHandler(t, handler))
 	}
 
-	log.Debugf("REST Trigger: Configured on port %s", t.config.Settings["port"])
+	log.Debugf("Configured on port %s", t.config.Settings["port"])
 	t.server = NewServer(addr, router)
 
 	return nil
@@ -121,7 +121,7 @@ func newActionHandler(rt *RestTrigger, handler *trigger.Handler) httprouter.Hand
 
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
-		log.Infof("REST Trigger: Received request for id '%s'", rt.config.Id)
+		log.Infof("Received request for id '%s'", rt.config.Id)
 
 		c := cors.New(REST_CORS_PREFIX, log)
 		c.WriteCorsActualRequestHeaders(w)

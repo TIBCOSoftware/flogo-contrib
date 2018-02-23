@@ -163,7 +163,7 @@ func (inst *IndependentInstance) DoStep() bool {
 		item, ok := inst.workItemQueue.Pop()
 
 		if ok {
-			logger.Debug("retrieved item from flow instance work queue")
+			logger.Debug("Retrieved item from Flow Instance work queue")
 
 			workItem := item.(*WorkItem)
 
@@ -180,7 +180,7 @@ func (inst *IndependentInstance) DoStep() bool {
 
 			hasNext = true
 		} else {
-			logger.Debug("flow instance work queue empty")
+			logger.Debug("Flow Instance work queue empty")
 		}
 	}
 
@@ -192,7 +192,7 @@ func (inst *IndependentInstance) scheduleEval(taskInst *TaskInst) {
 	inst.wiCounter++
 
 	workItem := NewWorkItem(inst.wiCounter, taskInst)
-	logger.Debugf("Scheduling task: %s\n", taskInst.task.Name())
+	logger.Debugf("Scheduling task '%s'", taskInst.task.ID())
 
 	inst.workItemQueue.Push(workItem)
 
@@ -206,7 +206,7 @@ func (inst *IndependentInstance) execTask(behavior model.TaskBehavior, taskInst 
 	defer func() {
 		if r := recover(); r != nil {
 
-			err := fmt.Errorf("Unhandled Error executing task '%s' : %v\n", taskInst.task.Name(), r)
+			err := fmt.Errorf("Unhandled Error executing task '%s' : %v", taskInst.task.Name(), r)
 			logger.Error(err)
 
 			// todo: useful for debugging
@@ -242,6 +242,9 @@ func (inst *IndependentInstance) execTask(behavior model.TaskBehavior, taskInst 
 	case model.EVAL_DONE:
 		taskInst.SetStatus(model.TaskStatusDone)
 		inst.handleTaskDone(behavior, taskInst)
+	case model.EVAL_SKIP:
+		taskInst.SetStatus(model.TaskStatusSkipped)
+		inst.handleTaskDone(behavior, taskInst)
 	case model.EVAL_WAIT:
 		taskInst.SetStatus(model.TaskStatusWaiting)
 	case model.EVAL_FAIL:
@@ -255,7 +258,16 @@ func (inst *IndependentInstance) execTask(behavior model.TaskBehavior, taskInst 
 // handleTaskDone handles the completion of a task in the Flow Instance
 func (inst *IndependentInstance) handleTaskDone(taskBehavior model.TaskBehavior, taskInst *TaskInst) {
 
-	notifyFlow, taskEntries, err := taskBehavior.Done(taskInst)
+	notifyFlow := false
+	var taskEntries []*model.TaskEntry
+	var err error
+
+	if taskInst.Status() == model.TaskStatusSkipped {
+		notifyFlow, taskEntries = taskBehavior.Skip(taskInst)
+
+	} else {
+		notifyFlow, taskEntries, err = taskBehavior.Done(taskInst)
+	}
 
 	containerInst := taskInst.flowInst
 
@@ -425,7 +437,7 @@ func (inst *IndependentInstance) enterTasks(activeInst *Instance, taskEntries []
 
 	for _, taskEntry := range taskEntries {
 
-		logger.Debugf("EnterTask - TaskEntry: %v\n", taskEntry)
+		//logger.Debugf("EnterTask - TaskEntry: %v", taskEntry)
 		taskToEnterBehavior := inst.flowModel.GetTaskBehavior(taskEntry.Task.TypeID())
 
 		enterTaskData, _ := activeInst.FindOrCreateTaskData(taskEntry.Task)
@@ -434,8 +446,9 @@ func (inst *IndependentInstance) enterTasks(activeInst *Instance, taskEntries []
 
 		if enterResult == model.ENTER_EVAL {
 			inst.scheduleEval(enterTaskData)
-		} else if enterResult != model.ENTER_EVAL {
-			//skip task
+		} else if enterResult == model.ENTER_SKIP {
+			//todo optimize skip, just keep skipping and don't schedule eval
+			inst.scheduleEval(enterTaskData)
 		}
 	}
 }

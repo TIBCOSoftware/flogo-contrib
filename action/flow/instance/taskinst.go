@@ -84,7 +84,7 @@ func (ti *TaskInst) OutputScope() data.Scope {
 		act := activity.Get(ti.task.ActivityConfig().Ref())
 		ti.outScope = NewFixedTaskScope(act.Metadata().Output, ti.task, false)
 
-		logger.Debugf("OutputScope: %v\n", ti.outScope)
+		//logger.Debugf("OutputScope: %#v", ti.outScope)
 	} else if ti.task.IsScope() {
 
 		//add flow scope
@@ -222,7 +222,7 @@ func (ti *TaskInst) Task() *definition.Task {
 // GetFromLinkInstances implements model.TaskContext.GetFromLinkInstances
 func (ti *TaskInst) GetFromLinkInstances() []model.LinkInstance {
 
-	logger.Debugf("GetFromLinkInstances: task=%v\n", ti.Task)
+	//logger.Debugf("GetFromLinkInstances: task=%v", ti.Task)
 
 	links := ti.task.FromLinks()
 
@@ -243,7 +243,7 @@ func (ti *TaskInst) GetFromLinkInstances() []model.LinkInstance {
 // GetToLinkInstances implements model.TaskContext.GetToLinkInstances,
 func (ti *TaskInst) GetToLinkInstances() []model.LinkInstance {
 
-	logger.Debugf("GetToLinkInstances: task=%v\n", ti.Task)
+	//logger.Debugf("GetToLinkInstances: task=%v\n", ti.Task)
 
 	links := ti.task.ToLinks()
 
@@ -263,8 +263,6 @@ func (ti *TaskInst) GetToLinkInstances() []model.LinkInstance {
 
 // EvalLink implements activity.ActivityContext.EvalLink method
 func (ti *TaskInst) EvalLink(link *definition.Link) (result bool, err error) {
-
-	logger.Debugf("TaskContext.EvalLink: %d\n", link.ID())
 
 	defer func() {
 		if r := recover(); r != nil {

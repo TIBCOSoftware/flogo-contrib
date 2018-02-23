@@ -109,7 +109,7 @@ func (s *FixedTaskScope) SetAttrValue(attrName string, value interface{}) error 
 		s.attrs = make(map[string]*data.Attribute)
 	}
 
-	logger.Debugf("SetAttr: %s = %v\n", attrName, value)
+	logger.Debugf("SetAttr: %s = %v", attrName, value)
 
 	attr, found := s.attrs[attrName]
 
