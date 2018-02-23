@@ -25,6 +25,12 @@ const (
 	RESTYPE_FLOW  = "flow"
 )
 
+var defaultManager *FlowManager
+
+func GetFlowManager() *FlowManager {
+	return defaultManager
+}
+
 type FlowManager struct {
 	resFlows map[string]*definition.Definition
 
@@ -43,6 +49,9 @@ func NewFlowManager(flowProvider definition.Provider) *FlowManager {
 	} else {
 		manager.flowProvider = &BasicRemoteFlowProvider{}
 	}
+
+	//temp hack
+	defaultManager = manager
 
 	return manager
 }

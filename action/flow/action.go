@@ -107,6 +107,10 @@ func recordFlows() bool {
 	return b
 }
 
+func GetFlowManager() *support.FlowManager {
+	return manager
+}
+
 func (ff *ActionFactory) New(config *action.Config) (action.Action, error) {
 
 	flowAction := &FlowAction{}
@@ -137,12 +141,12 @@ func (ff *ActionFactory) New(config *action.Config) (action.Action, error) {
 		flowAction.ioMetadata = config.Metadata
 	} else {
 		//todo add flag to remove startup validation
-		def, err := ep.GetFlowProvider().GetFlow(flowAction.flowURI)
+		def, err := manager.GetFlow(flowAction.flowURI)
 		if err != nil {
 			return nil, err
 		}
 
-		flowAction.ioMetadata = def.Metadata
+		flowAction.ioMetadata = def.Metadata()
 	}
 
 	return flowAction, nil

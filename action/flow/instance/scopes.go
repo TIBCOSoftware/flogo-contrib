@@ -122,8 +122,8 @@ func (s *FixedTaskScope) SetAttrValue(attrName string, value interface{}) error 
 		if found {
 			s.attrs[attrName], err = data.NewAttribute(attrName, attr.Type(), value)
 		} else {
-			logger.Debugf("SetAttr: Attr %s ref not found\n", attrName)
-			logger.Debugf("SetAttr: refs %v\n", s.refAttrs)
+			logger.Debugf("SetAttr: Attr '%s' not found in metadata\n", attrName)
+			logger.Debugf("SetAttr: metadata %v\n", s.refAttrs)
 		}
 		//todo: else error
 	}

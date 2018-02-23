@@ -94,7 +94,12 @@ func (ti *TaskInst) Name() string {
 // GetSetting implements activity.Context.GetSetting
 func (ti *TaskInst) GetSetting(setting string) (value interface{}, exists bool) {
 
-	return ti.Task().ActivityConfig().GetSetting(setting)
+	val, found := ti.Task().ActivityConfig().GetSetting(setting)
+	if found {
+		return val.Value(), true
+	}
+
+	return nil, false
 }
 
 // GetInitValue implements activity.Context.GetInitValue

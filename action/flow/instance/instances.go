@@ -10,6 +10,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/TIBCOSoftware/flogo-lib/util"
+	"github.com/pkg/errors"
 )
 
 type IndependentInstance struct {
@@ -56,20 +57,18 @@ func NewIndependentInstance(instanceID string, flow *definition.Definition) *Ind
 	return inst
 }
 
-func (inst *IndependentInstance) NewEmbeddedInstanceFromURI(taskInst *TaskInst, flowURI string) (*Instance, error) {
-
-	return nil, nil
-}
-
 func (inst *IndependentInstance) newEmbeddedInstance(taskInst *TaskInst, flow *definition.Definition) *Instance {
 
 	inst.subFlowCtr++
 
 	embeddedInst := &Instance{}
-	embeddedInst.flowDef = flow
 	embeddedInst.subFlowId = inst.subFlowCtr
 	embeddedInst.master = inst
 	embeddedInst.host = taskInst
+	embeddedInst.flowDef = flow
+	embeddedInst.status = model.FlowStatusNotStarted
+	embeddedInst.taskInsts = make(map[string]*TaskInst)
+	embeddedInst.linkInsts = make(map[int]*LinkInst)
 
 	if inst.subFlows == nil {
 		inst.subFlows = make(map[int]*Instance)
@@ -79,6 +78,26 @@ func (inst *IndependentInstance) newEmbeddedInstance(taskInst *TaskInst, flow *d
 	inst.ChangeTracker.SubFlowChange(taskInst.flowInst.subFlowId, CtAdd, embeddedInst.subFlowId, "")
 
 	return embeddedInst
+}
+
+func (inst *IndependentInstance) startEmbedded(embedded *Instance, startAttrs map[string]*data.Attribute) error {
+
+	embedded.attrs = startAttrs
+
+	if embedded.master != inst {
+		errors.New("embedded instance is not from this independent instance")
+	}
+
+	//if inst.attrs == nil {
+	//	inst.attrs = make(map[string]*data.Attribute)
+	//}
+	//
+	//for _, attr := range startAttrs {
+	//	inst.attrs[attr.Name()] = attr
+	//}
+
+	inst.startInstance(embedded)
+	return nil
 }
 
 func (inst *IndependentInstance) Start(startAttrs map[string]*data.Attribute) bool {

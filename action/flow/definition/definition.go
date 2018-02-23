@@ -119,7 +119,7 @@ type ActivityConfig struct {
 // GetSetting gets the specified setting
 func (ac *ActivityConfig) GetSetting(setting string) (attr *data.Attribute, exists bool) {
 
-	if ac.outputAttrs != nil {
+	if ac.settings != nil {
 		attr, found := ac.settings[setting]
 		if found {
 			return attr, true

@@ -34,6 +34,9 @@ func (a *SubFlowActivity) Metadata() *activity.Metadata {
 	return a.metadata
 }
 
+//todo need notion of dynamic input/outputs
+
+
 // Eval implements api.Activity.Eval - Invokes a REST Operation
 func (a *SubFlowActivity) Eval(ctx activity.Context) (done bool, err error) {
 

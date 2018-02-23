@@ -6,6 +6,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/support"
 )
 
 func applyInputMapper(taskInst *TaskInst) error {
@@ -129,17 +130,31 @@ func StartSubFlow(ctx activity.Context, flowURI string) error {
 		return errors.New("unable to create subFlow using this context")
 	}
 
+	manager:=support.GetFlowManager()
+	def, err := manager.GetFlow(flowURI)
+
+	if err != nil {
+		return err
+	}
+
+	if def == nil {
+		return errors.New("unable to resolve subflow: " + flowURI)
+	}
+
 	//todo make sure that there is only one subFlow per taskinst
-	flowInst, err := taskInst.flowInst.master.NewEmbeddedInstanceFromURI(taskInst, flowURI)
+	flowInst := taskInst.flowInst.master.newEmbeddedInstance(taskInst, def)
 
 	if err != nil {
 		return err
 	}
 
 	//copy inputs to the activity to the flowInst
-
 	println(flowInst.Name())
-	//start it
+
+	err = taskInst.flowInst.master.startEmbedded(flowInst, nil)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
