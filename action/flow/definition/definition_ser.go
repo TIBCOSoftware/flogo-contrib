@@ -304,25 +304,19 @@ func createLink(def *Definition, linkRep *LinkRep, id int) (*Link, error) {
 
 	link := &Link{}
 	link.id = id
+	link.linkType = LtDependency
 
-	typeId, err := strconv.Atoi(linkRep.Type)
-
-	if err != nil {
-		switch linkRep.Type {
-		case "expression":
-			link.linkType = LtExpression
-		case "error":
-			link.linkType = LtError
-		case "label":
-			link.linkType = LtLabel
-		default:
-			link.linkType = LtDependency
-		}
-	} else {
-		if typeId > 3 {
-			typeId = 0
-		}
-		link.linkType = LinkType(typeId)
+	switch linkRep.Type {
+	case "default", "dependency", "0":
+		link.linkType = LtDependency
+	case "expression", "1":
+		link.linkType = LtExpression
+	case "label", "2":
+		link.linkType = LtLabel
+	case "error", "3":
+		link.linkType = LtError
+	default:
+		logger.Warnf("Unsupported link type '%s', using default link")
 	}
 
 	link.value = linkRep.Value
