@@ -68,6 +68,7 @@ func (t *RestTrigger) Init(runner action.Runner) {
 	t.runner = runner
 
 	// Init handlers
+	pathMap := make(map[string]string)
 	for _, handlerCfg := range t.config.Handlers {
 
 		if handlerIsValid(handlerCfg) {
@@ -76,7 +77,11 @@ func (t *RestTrigger) Init(runner action.Runner) {
 
 			log.Debugf("REST Trigger: Registering handler [%s: %s] for Action Id: [%s]", method, path, handlerCfg.ActionId)
 
-			router.OPTIONS(path, handleCorsPreflight) // for CORS
+			if _, ok := pathMap[path]; !ok {
+				pathMap[path] = path
+				router.OPTIONS(path, handleCorsPreflight) // for CORS
+			}
+
 			router.Handle(method, path, newActionHandler(t, handlerCfg.ActionId, handlerCfg))
 
 		} else {
