@@ -1,6 +1,7 @@
 package instance
 
 import (
+	"errors"
 	"fmt"
 	"runtime/debug"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/TIBCOSoftware/flogo-lib/util"
-	"github.com/pkg/errors"
 )
 
 type IndependentInstance struct {
@@ -238,10 +238,15 @@ func (inst *IndependentInstance) execTask(behavior model.TaskBehavior, taskInst 
 		return
 	}
 
-	if evalResult == model.EVAL_DONE {
-		//task was done
+	switch evalResult {
+	case model.EVAL_DONE:
+		taskInst.SetStatus(model.TaskStatusDone)
 		inst.handleTaskDone(behavior, taskInst)
-	} else if evalResult == model.EVAL_REPEAT {
+	case model.EVAL_WAIT:
+		taskInst.SetStatus(model.TaskStatusWaiting)
+	case model.EVAL_FAIL:
+		taskInst.SetStatus(model.TaskStatusFailed)
+	case model.EVAL_REPEAT:
 		//task needs to iterate or retry
 		inst.scheduleEval(taskInst)
 	}

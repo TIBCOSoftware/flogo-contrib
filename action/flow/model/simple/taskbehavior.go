@@ -7,15 +7,15 @@ import (
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// Task implements model.Task
-type Task struct {
+// TaskBehavior implements model.TaskBehavior
+type TaskBehavior struct {
 }
 
-// Enter implements model.Task.Enter
-func (tb *Task) Enter(ctx model.TaskContext) (enterResult model.EnterResult) {
+// Enter implements model.TaskBehavior.Enter
+func (tb *TaskBehavior) Enter(ctx model.TaskContext) (enterResult model.EnterResult) {
 
 	task := ctx.Task()
-	log.Debugf("Task Enter: %s\n", task.Name())
+	log.Debugf("TaskBehavior Enter: %s\n", task.Name())
 
 	ctx.SetStatus(model.TaskStatusEntered)
 
@@ -34,7 +34,7 @@ func (tb *Task) Enter(ctx model.TaskContext) (enterResult model.EnterResult) {
 		log.Debugf("Num Links: %d\n", len(linkContexts))
 		for _, linkContext := range linkContexts {
 
-			log.Debugf("Task: %s, linkData: %v\n", task.Name(), linkContext)
+			log.Debugf("TaskBehavior: %s, linkData: %v\n", task.Name(), linkContext)
 			if linkContext.Status() < model.LinkStatusFalse {
 				ready = false
 				break
@@ -47,31 +47,31 @@ func (tb *Task) Enter(ctx model.TaskContext) (enterResult model.EnterResult) {
 	if ready {
 
 		if skipped {
-			log.Debugf("Task Skipped\n")
+			log.Debugf("TaskBehavior Skipped\n")
 			ctx.SetStatus(model.TaskStatusSkipped)
 			return model.ENTER_SKIP
 		} else {
-			log.Debugf("Task Ready\n")
+			log.Debugf("TaskBehavior Ready\n")
 			ctx.SetStatus(model.TaskStatusReady)
 		}
 		return model.ENTER_EVAL
 
 	} else {
-		log.Debugf("Task Not Ready\n")
+		log.Debugf("TaskBehavior Not Ready\n")
 	}
 
 	return model.ENTER_NOTREADY
 }
 
-// Eval implements model.Task.Eval
-func (tb *Task) Eval(ctx model.TaskContext) (evalResult model.EvalResult, err error) {
+// Eval implements model.TaskBehavior.Eval
+func (tb *TaskBehavior) Eval(ctx model.TaskContext) (evalResult model.EvalResult, err error) {
 
 	if ctx.Status() == model.TaskStatusSkipped {
 		return model.EVAL_DONE, nil //todo introduce EVAL_SKIP?
 	}
 
 	task := ctx.Task()
-	log.Debugf("Task Eval: %v\n", task)
+	log.Debugf("TaskBehavior Eval: %v\n", task)
 
 	done, err := ctx.EvalActivity()
 
@@ -90,10 +90,10 @@ func (tb *Task) Eval(ctx model.TaskContext) (evalResult model.EvalResult, err er
 	return evalResult, nil
 }
 
-// PostEval implements model.Task.PostEval
-func (tb *Task) PostEval(ctx model.TaskContext) (evalResult model.EvalResult, err error) {
+// PostEval implements model.TaskBehavior.PostEval
+func (tb *TaskBehavior) PostEval(ctx model.TaskContext) (evalResult model.EvalResult, err error) {
 
-	log.Debugf("Task PostEval\n")
+	log.Debugf("TaskBehavior PostEval\n")
 
 	_, err = ctx.PostEvalActivity()
 
@@ -107,8 +107,8 @@ func (tb *Task) PostEval(ctx model.TaskContext) (evalResult model.EvalResult, er
 	return model.EVAL_DONE, nil
 }
 
-// Done implements model.Task.Done
-func (tb *Task) Done(ctx model.TaskContext) (notifyFlow bool, taskEntries []*model.TaskEntry, err error) {
+// Done implements model.TaskBehavior.Done
+func (tb *TaskBehavior) Done(ctx model.TaskContext) (notifyFlow bool, taskEntries []*model.TaskEntry, err error) {
 
 	linkInsts := ctx.GetToLinkInstances()
 	numLinks := len(linkInsts)
@@ -163,8 +163,8 @@ func (tb *Task) Done(ctx model.TaskContext) (notifyFlow bool, taskEntries []*mod
 	return true, nil, nil
 }
 
-// Done implements model.Task.Skip
-func (tb *Task) Skip(ctx model.TaskContext) (notifyFlow bool, taskEntries []*model.TaskEntry) {
+// Done implements model.TaskBehavior.Skip
+func (tb *TaskBehavior) Skip(ctx model.TaskContext) (notifyFlow bool, taskEntries []*model.TaskEntry) {
 	linkInsts := ctx.GetToLinkInstances()
 	numLinks := len(linkInsts)
 
@@ -187,8 +187,8 @@ func (tb *Task) Skip(ctx model.TaskContext) (notifyFlow bool, taskEntries []*mod
 	return true, nil
 }
 
-// Done implements model.Task.Error
-func (tb *Task) Error(ctx model.TaskContext, err error) (handled bool, taskEntries []*model.TaskEntry) {
+// Done implements model.TaskBehavior.Error
+func (tb *TaskBehavior) Error(ctx model.TaskContext, err error) (handled bool, taskEntries []*model.TaskEntry) {
 
 	linkInsts := ctx.GetToLinkInstances()
 	numLinks := len(linkInsts)

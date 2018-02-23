@@ -122,7 +122,22 @@ func applyOutputMapper(taskInst *TaskInst) (bool, error) {
 	return false, nil
 }
 
-func StartSubFlow(ctx activity.Context, flowURI string) error {
+func GetFlowIOMetadata (flowURI string) (*data.IOMetadata,error) {
+	manager:=support.GetFlowManager()
+	def, err := manager.GetFlow(flowURI)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if def == nil {
+		return nil, errors.New("unable to resolve flow: " + flowURI)
+	}
+
+	return def.Metadata(), nil
+}
+
+func StartSubFlow(ctx activity.Context, flowURI string, inputs map[string]*data.Attribute) error {
 
 	taskInst, ok := ctx.(*TaskInst)
 
@@ -148,10 +163,9 @@ func StartSubFlow(ctx activity.Context, flowURI string) error {
 		return err
 	}
 
-	//copy inputs to the activity to the flowInst
-	println(flowInst.Name())
+	logger.Debugf("starting embedded subflow `%s`", flowInst.Name())
 
-	err = taskInst.flowInst.master.startEmbedded(flowInst, nil)
+	err = taskInst.flowInst.master.startEmbedded(flowInst, inputs)
 	if err != nil {
 		return err
 	}

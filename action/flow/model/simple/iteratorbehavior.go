@@ -8,19 +8,19 @@ import (
 )
 
 // SimpleIteratorTask implements model.TaskBehavior
-type IteratorTask struct {
-	Task
+type IteratorTaskBehavior struct {
+	TaskBehavior
 }
 
 // Eval implements model.TaskBehavior.Eval
-func (tb *IteratorTask) Eval(ctx model.TaskContext) (evalResult model.EvalResult, err error) {
+func (tb *IteratorTaskBehavior) Eval(ctx model.TaskContext) (evalResult model.EvalResult, err error) {
 
 	if ctx.Status() == model.TaskStatusSkipped {
 		return model.EVAL_DONE, nil //todo introduce EVAL_SKIP?
 	}
 
 	task := ctx.Task()
-	log.Debugf("Task Eval: %v\n", task)
+	log.Debugf("TaskBehavior Eval: %v\n", task)
 
 	var itx Iterator
 
@@ -101,9 +101,9 @@ func (tb *IteratorTask) Eval(ctx model.TaskContext) (evalResult model.EvalResult
 }
 
 // PostEval implements model.TaskBehavior.PostEval
-func (tb *IteratorTask) PostEval(ctx model.TaskContext) (evalResult model.EvalResult, err error) {
+func (tb *IteratorTaskBehavior) PostEval(ctx model.TaskContext) (evalResult model.EvalResult, err error) {
 
-	log.Debugf("Task PostEval\n")
+	log.Debugf("TaskBehavior PostEval\n")
 
 	_, err = ctx.PostEvalActivity()
 

@@ -171,6 +171,24 @@ func TestCreate(t *testing.T) {
 	}
 }
 
+func TestDynamicIO(t *testing.T) {
+
+	act := NewActivity(getActivityMetadata())
+
+	if act == nil {
+		t.Error("Activity Not Created")
+		t.Fail()
+		return
+	}
+
+	assert.True(t, 	act.Metadata().DynamicIO)
+
+	_, ok := act.(activity.DynamicIO)
+
+	assert.True(t, 	ok)
+}
+
+
 func TestSubFlow(t *testing.T) {
 
 	act := NewActivity(getActivityMetadata())

@@ -9,7 +9,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/tester"
 )
 
-// Provides the different extension points to the Flow Action
+// Provides the different extension points to the FlowBehavior Action
 type ExtensionProvider interface {
 	GetStateRecorder() instance.StateRecorder
 	GetFlowTester() *tester.RestEngineTester

@@ -6,7 +6,8 @@
   "title": "Start a SubFlow",
   "description": "Simple SubFlow Activity",
   "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/subflow",
-  "settings":[
+  "dynamicIO": true,
+  "settings": [
     {
       "name": "flowURI",
       "type": "string",

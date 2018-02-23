@@ -6,6 +6,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/instance"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/TIBCOSoftware/flogo-lib/core/data"
 )
 
 // log is the default package logger
@@ -34,8 +35,17 @@ func (a *SubFlowActivity) Metadata() *activity.Metadata {
 	return a.metadata
 }
 
-//todo need notion of dynamic input/outputs
+func (a *SubFlowActivity) IOMetadata(ctx activity.Context) (*data.IOMetadata, error) {
+	//todo this can be moved to an "init" to optimize
+	setting, set := ctx.GetSetting(settingFlowURI)
+	if !set {
+		return nil, errors.New("flowURI not set")
+	}
 
+	flowURI := setting.(string)
+
+	return instance.GetFlowIOMetadata(flowURI)
+}
 
 // Eval implements api.Activity.Eval - Invokes a REST Operation
 func (a *SubFlowActivity) Eval(ctx activity.Context) (done bool, err error) {
@@ -47,10 +57,28 @@ func (a *SubFlowActivity) Eval(ctx activity.Context) (done bool, err error) {
 		return false, errors.New("flowURI not set")
 	}
 
-	flowPath := setting.(string)
-	log.Debugf("Starting SubFlow: %s", flowPath)
+	flowURI := setting.(string)
+	log.Debugf("Starting SubFlow: %s", flowURI)
 
-	err = instance.StartSubFlow(ctx, flowPath)
+	ioMd, err := instance.GetFlowIOMetadata(flowURI)
+	if err != nil {
+		return false, err
+	}
+
+	inputs := make(map[string]*data.Attribute)
+
+	for name, attr := range ioMd.Input {
+
+		value := ctx.GetInput(name)
+		newAttr, err := data.NewAttribute(attr.Name(), attr.Type(), value)
+		if err != nil {
+			return false, err
+		}
+
+		inputs[name] = newAttr
+	}
+
+	err = instance.StartSubFlow(ctx, flowURI, inputs)
 
 	if err != nil {
 		return false, err

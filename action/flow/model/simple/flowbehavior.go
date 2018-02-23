@@ -5,27 +5,27 @@ import (
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
 )
 
-// Flow implements model.FlowBehavior
-type Flow struct {
+// FlowBehavior implements model.FlowBehavior
+type FlowBehavior struct {
 }
 
-// Start implements model.Flow.Start
-func (fb *Flow) Start(ctx model.FlowContext) (started bool, taskEntries []*model.TaskEntry) {
+// Start implements model.FlowBehavior.Start
+func (fb *FlowBehavior) Start(ctx model.FlowContext) (started bool, taskEntries []*model.TaskEntry) {
 	return true, getFlowTaskEntries(ctx.FlowDefinition().Tasks(), true)
 }
 
-// StartErrorHandler implements model.Flow.StartErrorHandler
-func (fb *Flow) StartErrorHandler(ctx model.FlowContext) (taskEntries []*model.TaskEntry) {
+// StartErrorHandler implements model.FlowBehavior.StartErrorHandler
+func (fb *FlowBehavior) StartErrorHandler(ctx model.FlowContext) (taskEntries []*model.TaskEntry) {
 	return getFlowTaskEntries(ctx.FlowDefinition().GetErrorHandler().Tasks(), true)
 }
 
-// Resume implements model.Flow.Resume
-func (fb *Flow) Resume(ctx model.FlowContext) (resumed bool) {
+// Resume implements model.FlowBehavior.Resume
+func (fb *FlowBehavior) Resume(ctx model.FlowContext) (resumed bool) {
 	return true
 }
 
-// TasksDone implements model.Flow.TasksDone
-func (fb *Flow) TaskDone(ctx model.FlowContext) (flowDone bool) {
+// TasksDone implements model.FlowBehavior.TasksDone
+func (fb *FlowBehavior) TaskDone(ctx model.FlowContext) (flowDone bool) {
 	tasks := ctx.TaskInstances()
 
 	for _, taskInst := range tasks {
@@ -43,9 +43,9 @@ func (fb *Flow) TaskDone(ctx model.FlowContext) (flowDone bool) {
 	return true
 }
 
-// Done implements model.Flow.Done
-func (fb *Flow) Done(ctx model.FlowContext) {
-	log.Debugf("Flow Done\n")
+// Done implements model.FlowBehavior.Done
+func (fb *FlowBehavior) Done(ctx model.FlowContext) {
+	log.Debugf("FlowBehavior Done\n")
 }
 
 func getFlowTaskEntries(tasks []*definition.Task, leadingOnly bool) []*model.TaskEntry {

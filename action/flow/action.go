@@ -53,7 +53,7 @@ var record bool
 var manager *support.FlowManager
 
 //todo expose and support this properly
-var maxStepCount = 10000000
+var maxStepCount = 1000000
 
 //todo fix this
 var metadata = &action.Metadata{ID: "github.com/TIBCOSoftware/flogo-contrib/action/flow", Async: true}
@@ -165,7 +165,7 @@ func createResource(actionData *ActionData) (string, error) {
 	} else if actionData.Flow != nil {
 		resourceCfg.Data = actionData.Flow
 	} else {
-		return "", fmt.Errorf("flow not provided for Flow Action")
+		return "", fmt.Errorf("flow not provided for FlowBehavior Action")
 	}
 
 	err := manager.LoadResource(resourceCfg)
@@ -234,9 +234,9 @@ func createResource(actionData *ActionData) (string, error) {
 //		panic(errorMsg)
 //	}
 //
-//	if len(flavor.Flow) > 0 {
+//	if len(flavor.FlowBehavior) > 0 {
 //		// It is an uncompressed and embedded flow
-//		err := ep.GetFlowProvider().AddUncompressedFlow(config.Id, flavor.Flow)
+//		err := ep.GetFlowProvider().AddUncompressedFlow(config.Id, flavor.FlowBehavior)
 //		if err != nil {
 //			errorMsg := fmt.Sprintf("Error while loading uncompressed flow '%s' error '%s'", config.Id, err.Error())
 //			logger.Errorf(errorMsg)
@@ -317,7 +317,7 @@ func (fa *FlowAction) Run(context context.Context, inputs map[string]*data.Attri
 		flowURI = fa.flowURI
 	}
 
-	logger.Infof("In Flow Run uri: '%s'", flowURI)
+	logger.Infof("In FlowBehavior Run uri: '%s'", flowURI)
 
 	//todo: catch panic
 	//todo: consider switch to URI to dictate flow operation (ex. flow://blah/resume)
@@ -428,7 +428,7 @@ func (fa *FlowAction) Run(context context.Context, inputs map[string]*data.Attri
 		logger.Debugf("Done Executing A.instance [%s] - Status: %d\n", inst.ID(), inst.Status())
 
 		if inst.Status() == model.FlowStatusCompleted {
-			logger.Infof("Flow [%s] Completed", inst.ID())
+			logger.Infof("FlowBehavior [%s] Completed", inst.ID())
 		}
 	}()
 
