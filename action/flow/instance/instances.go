@@ -215,7 +215,7 @@ func (inst *IndependentInstance) execTask(behavior model.TaskBehavior, taskInst 
 			if !taskInst.flowInst.isHandlingError {
 
 				taskInst.flowInst.appendErrorData(NewActivityEvalError(taskInst.task.Name(), "unhandled", err.Error()))
-				inst.HandleGlobalError(taskInst.flowInst)
+				inst.HandleGlobalError(taskInst.flowInst, err)
 			}
 			// else what should we do?
 		}
@@ -256,7 +256,7 @@ func (inst *IndependentInstance) handleTaskDone(taskBehavior model.TaskBehavior,
 
 	if err != nil {
 		containerInst.appendErrorData(err)
-		inst.HandleGlobalError(containerInst)
+		inst.HandleGlobalError(containerInst, err)
 		return
 	}
 
@@ -331,7 +331,7 @@ func (inst *IndependentInstance) handleTaskError(taskBehavior model.TaskBehavior
 			inst.SetStatus(model.FlowStatusFailed)
 		} else {
 			containerInst.appendErrorData(err)
-			inst.HandleGlobalError(containerInst)
+			inst.HandleGlobalError(containerInst, err)
 		}
 		return
 	}
@@ -344,13 +344,15 @@ func (inst *IndependentInstance) handleTaskError(taskBehavior model.TaskBehavior
 }
 
 // HandleGlobalError handles instance errors
-func (inst *IndependentInstance) HandleGlobalError(containerInst *Instance) {
+func (inst *IndependentInstance) HandleGlobalError(containerInst *Instance, err error) {
 
 	if containerInst.isHandlingError {
 		//todo: log error information
 		containerInst.SetStatus(model.FlowStatusFailed)
 		return
 	}
+
+	flowBehavior := inst.flowModel.GetFlowBehavior()
 
 	//not currently handling error, so check if it has an error handler
 	if containerInst.flowDef.GetErrorHandler() != nil {
@@ -360,9 +362,31 @@ func (inst *IndependentInstance) HandleGlobalError(containerInst *Instance) {
 		//clear existing instances
 		inst.taskInsts = make(map[string]*TaskInst)
 
-		flowBehavior := inst.flowModel.GetFlowBehavior()
+
 		taskEntries := flowBehavior.StartErrorHandler(containerInst)
 		inst.enterTasks(containerInst, taskEntries)
+	} else {
+
+		containerInst.SetStatus(model.FlowStatusFailed)
+
+		if containerInst != inst.Instance {
+
+			// spawned from task instance
+			host, ok := containerInst.host.(*TaskInst)
+
+			if ok {
+				behavior := inst.flowModel.GetDefaultTaskBehavior()
+				if typeID :=host.task.TypeID(); typeID != "" {
+					behavior = inst.flowModel.GetTaskBehavior(typeID)
+				}
+
+				inst.handleTaskError(behavior, host, err)
+
+				//fail the task
+
+				//inst.scheduleEval(host)
+			}
+		}
 	}
 }
 
