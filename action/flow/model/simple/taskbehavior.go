@@ -20,25 +20,25 @@ func (tb *TaskBehavior) Enter(ctx model.TaskContext) (enterResult model.EnterRes
 	ctx.SetStatus(model.TaskStatusEntered)
 
 	//check if all predecessor links are done
-	linkContexts := ctx.GetFromLinkInstances()
+	linkInsts := ctx.GetFromLinkInstances()
 
 	ready := true
 	skipped := false
 
-	if len(linkContexts) == 0 {
+	if len(linkInsts) == 0 {
 		// has no predecessor links, so task is ready
 		ready = true
 	} else {
 		skipped = true
 
-		log.Debugf("Task '%s' has %d incoming Links", task.ID(), len(linkContexts))
-		for _, linkContext := range linkContexts {
+		log.Debugf("Task '%s' has %d incoming Links", task.ID(), len(linkInsts))
+		for _, linkInst := range linkInsts {
 
-			log.Debugf("Task '%s' Link '%s' has status '%d'", task.ID(), linkContext.Link().ID(), linkContext.Status())
-			if linkContext.Status() < model.LinkStatusFalse {
+			log.Debugf("Task '%s': Link from Task '%s' has status '%s'", task.ID(), linkInst.Link().FromTask().ID(), linkStatus(linkInst))
+			if linkInst.Status() < model.LinkStatusFalse {
 				ready = false
 				break
-			} else if linkContext.Status() == model.LinkStatusTrue {
+			} else if linkInst.Status() == model.LinkStatusTrue {
 				skipped = false
 			}
 		}
@@ -134,7 +134,7 @@ func (tb *TaskBehavior) Done(ctx model.TaskContext) (notifyFlow bool, taskEntrie
 
 			if linkInst.Link().Type() == definition.LtExpression {
 				//todo handle error
-				log.Debugf("Evaluating Expression Link '%s'", linkInst.Link().ID())
+				log.Debugf("Task '%s': Evaluating Outgoing Expression Link to Task '%s'", ctx.Task().ID(), linkInst.Link().ToTask().ID())
 				follow, err = ctx.EvalLink(linkInst.Link())
 
 				if err != nil {
@@ -145,7 +145,7 @@ func (tb *TaskBehavior) Done(ctx model.TaskContext) (notifyFlow bool, taskEntrie
 			if follow {
 				linkInst.SetStatus(model.LinkStatusTrue)
 
-				log.Debugf("Following Link '%s'", linkInst.Link().ID())
+				log.Debugf("Task '%s': Following Link  to task '%s'", ctx.Task().ID(), linkInst.Link().ToTask().ID())
 				taskEntry := &model.TaskEntry{Task: linkInst.Link().ToTask()}
 				taskEntries = append(taskEntries, taskEntry)
 			} else {
@@ -234,4 +234,18 @@ func (tb *TaskBehavior) Error(ctx model.TaskContext, err error) (handled bool, t
 	}
 
 	return false, nil
+}
+
+func linkStatus(inst model.LinkInstance) string {
+
+	switch inst.Status() {
+	case model.LinkStatusFalse:
+		return "false"
+	case model.LinkStatusTrue:
+		return "true"
+	case model.LinkStatusSkipped:
+		return "skipped"
+	}
+
+	return "unknown"
 }

@@ -59,8 +59,7 @@ type ActivityConfigRep struct {
 
 // LinkRep is a serializable representation of a flow LinkOld
 type LinkRep struct {
-	ID   int `json:"id"`   //is this really needed?
-	Type int `json:"type"` //is this really needed?
+	Type string `json:"type"`
 
 	Name   string `json:"name"`
 	ToID   string `json:"to"`
@@ -115,9 +114,9 @@ func NewDefinition(rep *DefinitionRep) (def *Definition, err error) {
 
 	if len(rep.Links) != 0 {
 
-		for _, linkRep := range rep.Links {
+		for id, linkRep := range rep.Links {
 
-			link, err := createLink(def, linkRep)
+			link, err := createLink(def, linkRep, id)
 			if err != nil {
 				return nil, err
 			}
@@ -137,7 +136,6 @@ func NewDefinition(rep *DefinitionRep) (def *Definition, err error) {
 
 			for _, taskRep := range rep.ErrorHandler.Tasks {
 
-				//task, err := createTask(errorHandler, taskRep)
 				task, err := createTask(def, taskRep)
 
 				if err != nil {
@@ -149,10 +147,9 @@ func NewDefinition(rep *DefinitionRep) (def *Definition, err error) {
 
 		if len(rep.ErrorHandler.Links) != 0 {
 
-			for _, linkRep := range rep.ErrorHandler.Links {
+			for id, linkRep := range rep.ErrorHandler.Links {
 
-				//link := createLink(errorHandler, linkRep)
-				link, err := createLink(def, linkRep)
+				link, err := createLink(def, linkRep, id)
 				if err != nil {
 					return nil, err
 				}
@@ -303,12 +300,31 @@ func resolveSettingValue(setting string, value interface{}) interface{} {
 	return value
 }
 
-func createLink(def *Definition, linkRep *LinkRep) (*Link, error) {
+func createLink(def *Definition, linkRep *LinkRep, id int) (*Link, error) {
 
 	link := &Link{}
-	link.id = linkRep.ID
-	//link.Definition = pd
-	link.linkType = LinkType(linkRep.Type)
+	link.id = id
+
+	typeId, err := strconv.Atoi(linkRep.Type)
+
+	if err != nil {
+		switch linkRep.Type {
+		case "expression":
+			link.linkType = LtExpression
+		case "error":
+			link.linkType = LtError
+		case "label":
+			link.linkType = LtLabel
+		default:
+			link.linkType = LtDependency
+		}
+	} else {
+		if typeId > 3 {
+			typeId = 0
+		}
+		link.linkType = LinkType(typeId)
+	}
+
 	link.value = linkRep.Value
 	link.fromTask = def.tasks[linkRep.FromID]
 	link.toTask = def.tasks[linkRep.ToID]
