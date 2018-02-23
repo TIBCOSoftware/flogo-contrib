@@ -14,11 +14,8 @@ type FlowContext interface {
 	// TaskInstances get the task instances
 	TaskInstances() []TaskInstance
 
-	////Status gets the state of the Flow instance
+	// Status gets the state of the Flow instance
 	Status() FlowStatus
-	//
-	////SetStatus sets the state of the Flow instance
-	//SetStatus(status int)
 }
 
 // TaskContext is the execution context of the Task when executing
@@ -81,29 +78,3 @@ type TaskInstance interface {
 	// Status gets the state of the Task instance
 	Status() TaskStatus
 }
-
-//
-//type FlowHost interface {
-//	// ID returns the ID of the Action Instance
-//	ID() string
-//
-//	// The action reference
-//	Ref() string
-//
-//	// Get metadata of the action instance
-//	//InstanceMetadata() *ConfigMetadata
-//
-//	// Reply is used to reply with the results of the instance execution
-//	Reply(replyData map[string]*data.Attribute, err error)
-//
-//	// Return is used to complete the action and return the results of the execution
-//	Return(returnData map[string]*data.Attribute, err error)
-//
-//	//todo rename, essentially the flow's attrs for now
-//	WorkingData() data.Scope
-//
-//	//Map with action specific details/properties, flowId, etc.
-//	//GetDetails() map[string]string
-//
-//	GetResolver() data.Resolver
-//}

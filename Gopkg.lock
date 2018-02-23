@@ -122,12 +122,6 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/pkg/errors"
-  packages = ["."]
-  revision = "e881fd58d78e04cf6d0de1217f8707c8cc2249bc"
-
-[[projects]]
-  branch = "master"
   name = "github.com/pmezard/go-difflib"
   packages = ["difflib"]
   revision = "792786c7400a136282c1664665ae0a8db921c6c2"

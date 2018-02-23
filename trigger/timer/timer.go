@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/carlescere/scheduler"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/carlescere/scheduler"
 )
 
 var log = logger.GetLogger("timer-trigger")
@@ -207,7 +207,7 @@ func getInitialStartInSeconds(endpoint *trigger.Handler) int {
 	}
 
 	idx := strings.LastIndex(startDate, "Z")
-	timeZone := startDate[idx+1: ]
+	timeZone := startDate[idx+1:]
 	log.Debug("Time Zone: ", timeZone)
 	startDate = strings.TrimSuffix(startDate, timeZone)
 	log.Debug("startDate: ", startDate)

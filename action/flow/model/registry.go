@@ -1,13 +1,13 @@
 package model
 
 import (
-	"sync"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/util"
+	"sync"
 )
 
 var (
-	modelsMu sync.RWMutex
-	models   = make(map[string]*FlowModel)
+	modelsMu     sync.RWMutex
+	models       = make(map[string]*FlowModel)
 	defaultModel *FlowModel
 )
 

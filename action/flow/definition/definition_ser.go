@@ -6,11 +6,11 @@ import (
 	"strconv"
 	"strings"
 
+	flowutil "github.com/TIBCOSoftware/flogo-contrib/action/flow/util"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
-	"github.com/TIBCOSoftware/flogo-lib/util"
-	flowutil "github.com/TIBCOSoftware/flogo-contrib/action/flow/util"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/TIBCOSoftware/flogo-lib/util"
 )
 
 // DefinitionRep is a serializable representation of a flow Definition

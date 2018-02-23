@@ -1,8 +1,8 @@
 package instance
 
 import (
-	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
+	"github.com/TIBCOSoftware/flogo-lib/core/data"
 )
 
 // ChgType denotes the type of change for an object in an instance

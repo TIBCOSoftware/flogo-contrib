@@ -110,7 +110,7 @@ func (et *RestEngineTester) StartFlow(w http.ResponseWriter, r *http.Request, _ 
 
 			encoder := json.NewEncoder(w)
 			encoder.Encode(idResponse)
-		}  else {
+		} else {
 			logger.Error("Id not returned")
 			w.WriteHeader(http.StatusOK)
 		}

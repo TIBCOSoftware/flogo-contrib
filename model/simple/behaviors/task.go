@@ -87,7 +87,7 @@ func (tb *Task) Eval(ctx model.TaskContext) (evalResult model.EvalResult, err er
 		evalResult = model.EVAL_WAIT
 	}
 
-	return evalResult,  nil
+	return evalResult, nil
 }
 
 // PostEval implements model.Task.PostEval

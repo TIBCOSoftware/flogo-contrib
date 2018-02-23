@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/japm/goScript"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/japm/goScript"
 )
 
 // GosLinkExprManager is the Lua Implementation of a Link Expression Manager

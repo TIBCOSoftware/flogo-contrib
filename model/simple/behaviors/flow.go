@@ -1,9 +1,9 @@
 package behaviors
 
 import (
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 )
 
 var log = logger.GetLogger("flowmodel-simple")
@@ -18,7 +18,7 @@ func (fb *Flow) Start(ctx model.FlowContext) (started bool, taskEntries []*model
 }
 
 // StartErrorHandler implements model.Flow.StartErrorHandler
-func (fb *Flow)	StartErrorHandler(ctx model.FlowContext) (taskEntries []*model.TaskEntry) {
+func (fb *Flow) StartErrorHandler(ctx model.FlowContext) (taskEntries []*model.TaskEntry) {
 	return getFlowTaskEntries(ctx.FlowDefinition().GetErrorHandler().Tasks(), true)
 }
 

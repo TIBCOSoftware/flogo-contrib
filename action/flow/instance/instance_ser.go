@@ -78,6 +78,7 @@ func (inst *IndependentInstance) UnmarshalJSON(d []byte) error {
 		return err
 	}
 
+	inst.Instance = &Instance{}
 	inst.id = ser.ID
 	inst.status = ser.Status
 	inst.flowURI = ser.FlowURI

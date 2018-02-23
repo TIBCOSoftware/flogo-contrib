@@ -1,14 +1,13 @@
 package mapper
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"testing"
 
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/test"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
-	"io/ioutil"
-	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
-	"encoding/json"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -42,8 +41,8 @@ func TestCreate(t *testing.T) {
 func TestSimpleMapper(t *testing.T) {
 
 	act := NewActivity(getActivityMetadata())
-	ac := newActionContext()
-	tc := test.NewTestActivityContextWithAction(getActivityMetadata(), ac)
+	ah := newActivityHost()
+	tc := test.NewTestActivityContextWithAction(getActivityMetadata(), ah)
 
 	//set mappings
 	mappingsJson := `[
@@ -63,28 +62,28 @@ func TestSimpleMapper(t *testing.T) {
 	//eval
 	act.Eval(tc)
 
-	assert.Nil(t, ac.ReplyErr)
-	o1,exists1 := ac.ReplyDataAttr["Output1"]
+	//assert.Nil(t, ah.ReplyErr)
+	o1, exists1 := ah.HostData.GetAttr("Output1")
 	assert.True(t, exists1, "Output1 not set")
 	if exists1 {
 		assert.Equal(t, "1", o1.Value())
 	}
-	o2,exists2 := ac.ReplyDataAttr["Output2"]
+	o2, exists2 := ah.HostData.GetAttr("Output2")
 	assert.True(t, exists2, "Output2 not set")
 	if exists2 {
-		assert.Equal(t, 2.0, o2.Value())
+		assert.Equal(t, 2, o2.Value())
 	}
 }
 
-func newActionContext() *test.TestActionCtx {
+func newActivityHost() *test.TestActivityHost {
 	input := []*data.Attribute{data.NewZeroAttribute("Input1", data.STRING)}
 	output := []*data.Attribute{data.NewZeroAttribute("Output1", data.STRING), data.NewZeroAttribute("Output2", data.INTEGER)}
 
-	ac := &test.TestActionCtx{
-		ActionId:   "1",
-		ActionRef:  "github.com/TIBCOSoftware/flogo-contrib/action/flow",
-		ActionMd:   &action.ConfigMetadata{Input: input, Output: output},
-		ActionData: data.NewSimpleScope(nil, nil),
+	ac := &test.TestActivityHost{
+		HostId:     "1",
+		HostRef:    "github.com/TIBCOSoftware/flogo-contrib/action/flow",
+		IoMetadata: &data.IOMetadata{Input: input, Output: output},
+		HostData:   data.NewFixedScope(output),
 	}
 
 	return ac

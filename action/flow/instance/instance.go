@@ -6,10 +6,10 @@ import (
 
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
+	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"github.com/TIBCOSoftware/flogo-lib/core/action"
 )
 
 type Instance struct {
@@ -44,7 +44,7 @@ func (inst *Instance) Name() string {
 	return inst.flowDef.Name()
 }
 
-func (inst *Instance) ID() string  {
+func (inst *Instance) ID() string {
 	if inst.subFlowId > 0 {
 		return inst.master.id + "-" + strconv.Itoa(inst.subFlowId)
 	}

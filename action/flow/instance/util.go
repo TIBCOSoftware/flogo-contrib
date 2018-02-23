@@ -3,8 +3,8 @@ package instance
 import (
 	"errors"
 
-	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
+	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
@@ -121,7 +121,7 @@ func applyOutputMapper(taskInst *TaskInst) (bool, error) {
 	return false, nil
 }
 
-func StartSubFlow(ctx  activity.Context, flowURI string) error {
+func StartSubFlow(ctx activity.Context, flowURI string) error {
 
 	taskInst, ok := ctx.(*TaskInst)
 

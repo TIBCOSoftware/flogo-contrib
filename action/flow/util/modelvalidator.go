@@ -1,6 +1,5 @@
 package util
 
-
 var modelValidators = make(map[string]ModelValidator)
 
 func RegisterModelValidator(modelName string, validator ModelValidator) {

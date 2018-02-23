@@ -3,8 +3,8 @@ package definition
 import (
 	"fmt"
 
-	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
+	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	//"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
 )
 
@@ -115,7 +115,6 @@ type ActivityConfig struct {
 	inputMapper  data.Mapper
 	outputMapper data.Mapper
 }
-
 
 // GetSetting gets the specified setting
 func (ac *ActivityConfig) GetSetting(setting string) (attr *data.Attribute, exists bool) {
@@ -290,7 +289,7 @@ const (
 	// LtExpression denotes a link with an expression
 	LtExpression LinkType = 1 //expr language on the model or def?
 
-	// LtLabel denotes 'labelled' link
+	// LtLabel denotes 'label' link
 	LtLabel LinkType = 2
 
 	// LtError denotes an error link

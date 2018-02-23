@@ -125,6 +125,7 @@ const defJSONOld = `
   }
 }
 `
+
 func TestGosLinkExprManager_TestTransExpr(t *testing.T) {
 
 	expr := "$activity.3.result.code == 1"
@@ -162,11 +163,20 @@ func TestGosLinkExprManager_TestTransExpr(t *testing.T) {
 	fmt.Println("expr :", expr)
 	fmt.Println("tExpr:", tExpr)
 
-
 	expr = "$activity[C].result <= $flow.petMax"
 	_, tExpr = transExpr(expr)
 	fmt.Println("expr :", expr)
 	fmt.Println("tExpr:", tExpr)
+}
+
+func newAttr(name string, dataType data.Type, value interface{}) *data.Attribute {
+	attr, err := data.NewAttribute(name, dataType, value)
+
+	if err != nil {
+		attr = data.NewZeroAttribute(name, dataType)
+	}
+
+	return attr
 }
 
 func TestGosLinkExprManager_EvalLinkExpr(t *testing.T) {
@@ -196,11 +206,11 @@ func TestGosLinkExprManager_EvalLinkExpr(t *testing.T) {
 	aCresult := 2
 
 	attrs := []*data.Attribute{
-		data.NewAttribute("petMax", data.INTEGER, 4),
-		data.NewAttribute("petId", data.INTEGER, 3),
-		data.NewAttribute("_A.C.result", data.OBJECT, aCresult),
-		data.NewAttribute("_A.2.result", data.OBJECT, a2result),
-		data.NewAttribute("_T.result", data.OBJECT, a2result),
+		newAttr("petMax", data.INTEGER, 4),
+		newAttr("petId", data.INTEGER, 3),
+		newAttr("_A.C.result", data.INTEGER, aCresult),
+		newAttr("_A.2.result", data.OBJECT, a2result),
+		newAttr("_T.result", data.OBJECT, a2result),
 	}
 
 	scope := data.NewSimpleScope(attrs, nil)
@@ -303,7 +313,6 @@ func TestGosLinkExprManager_TestTransExprOld(t *testing.T) {
 	fmt.Println("expr :", expr)
 	fmt.Println("tExpr:", tExpr)
 
-
 	expr = "${activity.C.result} <= ${petMax}"
 	_, tExpr = transExpr(expr)
 	fmt.Println("expr :", expr)
@@ -337,11 +346,11 @@ func TestGosLinkExprManager_EvalLinkExprOld(t *testing.T) {
 	aCresult := 2
 
 	attrs := []*data.Attribute{
-		data.NewAttribute("petMax", data.INTEGER, 4),
-		data.NewAttribute("petId", data.INTEGER, 3),
-		data.NewAttribute("_A.C.result", data.INTEGER, aCresult),
-		data.NewAttribute("_A.2.result", data.OBJECT, a2result),
-		data.NewAttribute("_T.result", data.OBJECT, a2result),
+		newAttr("petMax", data.INTEGER, 4),
+		newAttr("petId", data.INTEGER, 3),
+		newAttr("_A.C.result", data.INTEGER, aCresult),
+		newAttr("_A.2.result", data.OBJECT, a2result),
+		newAttr("_T.result", data.OBJECT, a2result),
 	}
 
 	scope := data.NewSimpleScope(attrs, nil)

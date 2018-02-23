@@ -40,21 +40,20 @@ func (a *MapperActivity) Eval(context activity.Context) (done bool, err error) {
 	mapperDef, err := mapper.NewMapperDefFromAnyArray(mappings)
 
 	//todo move this to a action instance level initialization, need the notion of static inputs or config
-	actionMapper := mapper.NewBasicMapper(mapperDef, context.ActionContext().GetResolver())
+	actionMapper := mapper.NewBasicMapper(mapperDef, context.ActivityHost().GetResolver())
 
 	if err != nil {
 		return false, err
 	}
 
-	actionCtx := context.ActionContext()
-	actionScope :=  actionCtx.WorkingData() // action/flow data
+	activityHost := context.ActivityHost()
+	actionScope := activityHost.WorkingData() // action/flow data
 
 	err = actionMapper.Apply(actionScope, actionScope)
 
 	if err != nil {
 		return false, err
 	}
-
 
 	return true, nil
 }

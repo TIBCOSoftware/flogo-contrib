@@ -1,6 +1,5 @@
 package model
 
-
 // FlowModel defines the execution Model for a Flow.  It contains the
 // execution behaviors for Flows and Tasks.
 type FlowModel struct {
@@ -52,7 +51,7 @@ func (fm *FlowModel) RegisterTaskBehavior(id string, taskBehavior TaskBehavior) 
 	fm.taskBehaviors[id] = taskBehavior
 }
 
-func (fm *FlowModel)  IsValidTaskType(taskType string) bool {
+func (fm *FlowModel) IsValidTaskType(taskType string) bool {
 
 	if taskType == "" && fm.defaultTaskBehavior != nil {
 		return true
@@ -71,4 +70,3 @@ func (fm *FlowModel) GetTaskBehavior(id string) TaskBehavior {
 
 	return fm.taskBehaviors[id]
 }
-

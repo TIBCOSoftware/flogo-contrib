@@ -1,8 +1,8 @@
 package instance
 
 import (
-	"fmt"
 	"errors"
+	"fmt"
 	"runtime/debug"
 
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
@@ -31,6 +31,11 @@ type TaskInst struct {
 	outScope data.Scope
 
 	taskID string //needed for serialization
+}
+
+//DEPRECATED
+func (ti *TaskInst) FlowDetails() activity.FlowDetails {
+	return ti.flowInst
 }
 
 // InputScope get the InputScope of the task instance
@@ -92,7 +97,7 @@ func (ti *TaskInst) GetSetting(setting string) (value interface{}, exists bool) 
 	return ti.Task().ActivityConfig().GetSetting(setting)
 }
 
-// GetSetting implements activity.Context.GetInitValue
+// GetInitValue implements activity.Context.GetInitValue
 func (ti *TaskInst) GetInitValue(key string) (value interface{}, exists bool) {
 	return nil, false
 }

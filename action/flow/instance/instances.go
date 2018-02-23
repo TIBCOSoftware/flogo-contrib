@@ -56,16 +56,16 @@ func NewIndependentInstance(instanceID string, flow *definition.Definition) *Ind
 	return inst
 }
 
-func (inst *IndependentInstance) NewEmbeddedInstanceFromURI (taskInst *TaskInst, flowURI string) (*Instance,error) {
+func (inst *IndependentInstance) NewEmbeddedInstanceFromURI(taskInst *TaskInst, flowURI string) (*Instance, error) {
 
 	return nil, nil
 }
 
-func (inst *IndependentInstance) newEmbeddedInstance (taskInst *TaskInst, flow *definition.Definition) *Instance {
+func (inst *IndependentInstance) newEmbeddedInstance(taskInst *TaskInst, flow *definition.Definition) *Instance {
 
 	inst.subFlowCtr++
 
-	embeddedInst :=  &Instance{}
+	embeddedInst := &Instance{}
 	embeddedInst.flowDef = flow
 	embeddedInst.subFlowId = inst.subFlowCtr
 	embeddedInst.master = inst
@@ -260,7 +260,7 @@ func (inst *IndependentInstance) handleTaskDone(taskBehavior model.TaskBehavior,
 			//not top level flow so we have to schedule next step
 
 			// spawned from task instance
-			host,ok := containerInst.host.(*TaskInst)
+			host, ok := containerInst.host.(*TaskInst)
 
 			if ok {
 				//if the flow failed, set the error
@@ -298,7 +298,6 @@ func (inst *IndependentInstance) handleTaskDone(taskBehavior model.TaskBehavior,
 	// task is done, so we can release it
 	containerInst.releaseTask(task)
 }
-
 
 // handleTaskError handles the completion of a task in the Flow Instance
 func (inst *IndependentInstance) handleTaskError(taskBehavior model.TaskBehavior, taskInst *TaskInst, err error) {
@@ -438,7 +437,6 @@ func (e *ActivityEvalError) Type() string {
 func (e *ActivityEvalError) Error() string {
 	return e.errText
 }
-
 
 //////////////
 // todo fix the following

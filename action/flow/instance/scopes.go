@@ -4,8 +4,8 @@ import (
 	"strings"
 
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
-	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
 // WorkingDataScope is scope restricted by the set of reference attrs and backed by the specified Task

@@ -1,10 +1,9 @@
 package test
 
 import (
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
-	"github.com/TIBCOSoftware/flogo-lib/core/action"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 )
 
 // NewTestActivityContext creates a new TestActivityContext
@@ -13,27 +12,26 @@ func NewTestActivityContext(metadata *activity.Metadata) *TestActivityContext {
 	input := []*data.Attribute{data.NewZeroAttribute("Input1", data.STRING)}
 	output := []*data.Attribute{data.NewZeroAttribute("Output1", data.STRING)}
 
-	ac := &TestActionCtx{
-		ActionId:   "1",
-		ActionRef:  "github.com/TIBCOSoftware/flogo-contrib/action/flow",
-		ActionMd:   &action.ConfigMetadata{Input: input, Output: output},
-		ActionData: data.NewSimpleScope(nil, nil),
+	ac := &TestActivityHost{
+		HostId:     "1",
+		HostRef:    "github.com/TIBCOSoftware/flogo-contrib/action/flow",
+		IoMetadata: &data.IOMetadata{Input: input, Output: output},
+		HostData:   data.NewSimpleScope(nil, nil),
 	}
 
 	return NewTestActivityContextWithAction(metadata, ac)
 }
 
 // NewTestActivityContextWithAction creates a new TestActivityContext
-func NewTestActivityContextWithAction(metadata *activity.Metadata, actionCtx *TestActionCtx) *TestActivityContext {
+func NewTestActivityContextWithAction(metadata *activity.Metadata, activityHost *TestActivityHost) *TestActivityContext {
 
-	fd := &TestFlowDetails{
-		FlowIDVal:   "1",
-		FlowNameVal: "Test Flow",
-	}
+	//fd := &TestFlowDetails{
+	//	FlowIDVal:   "1",
+	//	FlowNameVal: "Test Flow",
+	//}
 
 	tc := &TestActivityContext{
-		details:     fd,
-		ACtx:        actionCtx,
+		activityHost:     activityHost,
 		TaskNameVal: "Test TaskOld",
 		Attrs:       make(map[string]*data.Attribute),
 		inputs:      make(map[string]*data.Attribute, len(metadata.Input)),
@@ -75,48 +73,52 @@ func (fd *TestFlowDetails) ReplyHandler() activity.ReplyHandler {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TestActionCtx
+// TestActivityHost
 
-type TestActionCtx struct {
-	ActionId  string
-	ActionRef string
-	ActionMd  *action.ConfigMetadata
+type TestActivityHost struct {
+	HostId  string
+	HostRef string
 
-	ActionData    data.Scope
+	IoMetadata    *data.IOMetadata
+	HostData      data.Scope
 	ReplyData     map[string]interface{}
 	ReplyDataAttr map[string]*data.Attribute
 	ReplyErr      error
 }
 
-func (ac *TestActionCtx) ID() string {
-	return ac.ActionId
+func (ac *TestActivityHost) Name() string {
+	return ""
 }
 
-func (ac *TestActionCtx) Ref() string {
-	return ac.ActionRef
+func (ac *TestActivityHost) IOMetadata() *data.IOMetadata {
+	return nil
 }
 
-func (ac *TestActionCtx) InstanceMetadata() *action.ConfigMetadata {
-	return ac.ActionMd
+func (ac *TestActivityHost) ID() string {
+	return ac.HostId
 }
 
-func (ac *TestActionCtx) Reply(data map[string]*data.Attribute, err error) {
+func (ac *TestActivityHost) Ref() string {
+	return ac.HostRef
+}
+
+func (ac *TestActivityHost) Reply(data map[string]*data.Attribute, err error) {
 	//todo log reply
 	ac.ReplyDataAttr = data
 	ac.ReplyErr = err
 }
 
-func (ac *TestActionCtx) Return(data map[string]*data.Attribute, err error) {
+func (ac *TestActivityHost) Return(data map[string]*data.Attribute, err error) {
 	//todo log reply
 	ac.ReplyDataAttr = data
 	ac.ReplyErr = err
 }
 
-func (ac *TestActionCtx) WorkingData() data.Scope {
-	return ac.ActionData
+func (ac *TestActivityHost) WorkingData() data.Scope {
+	return ac.HostData
 }
 
-func (ac *TestActionCtx) GetResolver() data.Resolver {
+func (ac *TestActivityHost) GetResolver() data.Resolver {
 	return definition.GetDataResolver()
 }
 
@@ -125,20 +127,38 @@ func (ac *TestActionCtx) GetResolver() data.Resolver {
 
 // TestActivityContext is a dummy ActivityContext to assist in testing
 type TestActivityContext struct {
-	details     activity.FlowDetails
-	ACtx        *TestActionCtx
 	TaskNameVal string
 	Attrs       map[string]*data.Attribute
+	activityHost        activity.Host
 
 	metadata *activity.Metadata
 	inputs   map[string]*data.Attribute
 	outputs  map[string]*data.Attribute
 }
 
-// FlowDetails implements activity.Context.FlowDetails
 func (c *TestActivityContext) FlowDetails() activity.FlowDetails {
-	return c.details
+	return c.activityHost
 }
+
+func (c *TestActivityContext) ActivityHost() activity.Host {
+	return c.activityHost
+}
+
+func (c *TestActivityContext) Name() string {
+	return c.TaskNameVal
+}
+
+// GetSetting implements activity.Context.GetSetting
+func (c *TestActivityContext) GetSetting(setting string) (value interface{}, exists bool) {
+
+	return nil, false
+}
+
+// GetInitValue implements activity.Context.GetInitValue
+func (c *TestActivityContext) GetInitValue(key string) (value interface{}, exists bool) {
+	return nil, false
+}
+
 
 // TaskName implements activity.Context.TaskName
 func (c *TestActivityContext) TaskName() string {
@@ -227,6 +247,3 @@ func (c *TestActivityContext) GetOutput(name string) interface{} {
 	return nil
 }
 
-func (c *TestActivityContext) ActionContext() action.Context {
-	return c.ACtx
-}

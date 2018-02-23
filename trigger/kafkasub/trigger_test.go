@@ -33,8 +33,8 @@ import (
 	"os"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
-	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
+	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 )
 
 var jsonMetadata = getJsonMetadata()
@@ -118,6 +118,11 @@ const testConfigMulti string = `{
 type TestRunner struct {
 }
 
+func (tr *TestRunner) Execute(ctx context.Context, act action.Action, inputs map[string]*data.Attribute) (results map[string]*data.Attribute, err error) {
+	log.Printf("Ran Action: %v", act.Metadata().ID)
+	return nil, nil
+}
+
 // Run implements action.Runner.Run
 func (tr *TestRunner) Run(context context.Context, action action.Action, uri string, options interface{}) (code int, data interface{}, err error) {
 	log.Printf("Ran Action: %v", uri)
@@ -125,7 +130,7 @@ func (tr *TestRunner) Run(context context.Context, action action.Action, uri str
 }
 
 func (tr *TestRunner) RunAction(ctx context.Context, act action.Action, options map[string]interface{}) (results map[string]*data.Attribute, err error) {
-	log.Printf("Ran Action: %v", act.Config().Id)
+	log.Printf("Ran Action: %v", act.Metadata().ID)
 	return nil, nil
 }
 

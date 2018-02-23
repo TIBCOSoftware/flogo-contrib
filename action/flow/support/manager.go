@@ -22,9 +22,8 @@ const (
 	uriSchemeFile = "file://"
 	uriSchemeHttp = "http://"
 	uriSchemeRes  = "res://"
-	RESTYPE_FLOW = "flow"
+	RESTYPE_FLOW  = "flow"
 )
-
 
 type FlowManager struct {
 	resFlows map[string]*definition.Definition
@@ -55,9 +54,7 @@ func (rm *FlowManager) LoadResource(config *resource.Config) error {
 	if config.Compressed {
 		decodedBytes, err := decodeAndUnzip(string(config.Data))
 		if err != nil {
-			decodeErr := fmt.Errorf("error decoding compressed resource with id '%s', %s", config.ID, err.Error())
-			logger.Errorf(decodeErr.Error())
-			return decodeErr
+			return fmt.Errorf("error decoding compressed resource with id '%s', %s", config.ID, err.Error())
 		}
 
 		flowDefBytes = decodedBytes
@@ -68,7 +65,6 @@ func (rm *FlowManager) LoadResource(config *resource.Config) error {
 	var defRep *definition.DefinitionRep
 	err := json.Unmarshal(flowDefBytes, &defRep)
 	if err != nil {
-		logger.Errorf(err.Error())
 		return fmt.Errorf("error marshalling flow resource with id '%s', %s", config.ID, err.Error())
 	}
 
@@ -98,7 +94,6 @@ func (rm *FlowManager) GetFlow(uri string) (*definition.Definition, error) {
 		rm.resFlows = make(map[string]*definition.Definition)
 	}
 
-
 	flow, exists := rm.remoteFlows[uri]
 
 	if !exists {
@@ -127,7 +122,7 @@ func (rm *FlowManager) materializeFlow(flowRep *definition.DefinitionRep) (*defi
 	}
 
 	//todo validate flow
-	
+
 	//todo fix this up
 	factory := definition.GetLinkExprManagerFactory()
 
@@ -143,7 +138,6 @@ func (rm *FlowManager) materializeFlow(flowRep *definition.DefinitionRep) (*defi
 }
 
 type BasicRemoteFlowProvider struct {
-
 }
 
 func (*BasicRemoteFlowProvider) GetFlow(flowURI string) (*definition.DefinitionRep, error) {

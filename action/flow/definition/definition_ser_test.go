@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
+	"github.com/stretchr/testify/assert"
 )
 
 func init() {
@@ -110,7 +110,6 @@ func TestDeserialize(t *testing.T) {
 	fmt.Printf("Definition: %v", def)
 }
 
-
 func TestDeserializeOld(t *testing.T) {
 
 	defRep := &DefinitionRep{}
@@ -153,7 +152,6 @@ func TestConvertInterfaceToString(t *testing.T) {
 
 }
 
-
 //DUMMY TEST ACTIVITIES
 
 type LogActivity struct {
@@ -162,7 +160,7 @@ type LogActivity struct {
 
 // NewActivity creates a new AppActivity
 func NewLogActivity() activity.Activity {
-	metadata := &activity.Metadata{ID:"log"}
+	metadata := &activity.Metadata{ID: "log"}
 	input := map[string]*data.Attribute{
 		"message": data.NewZeroAttribute("message", data.STRING),
 	}
@@ -181,6 +179,6 @@ func (a *LogActivity) Eval(context activity.Context) (done bool, err error) {
 	//mv := context.GetInput(ivMessage)
 	message, _ := context.GetInput("message").(string)
 
-	fmt.Println("Message :",message)
+	fmt.Println("Message :", message)
 	return true, nil
 }

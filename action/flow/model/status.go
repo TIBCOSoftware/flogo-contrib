@@ -20,7 +20,6 @@ const (
 	// StatusFailed indicates that the FlowInstance has failed
 	FlowStatusFailed FlowStatus = 700
 
-
 	// TaskStatusNotStarted indicates that the Task has not been started
 	TaskStatusNotStarted TaskStatus = 0
 
@@ -42,7 +41,6 @@ const (
 	// TaskStatusFailed indicates that the Task failed
 	TaskStatusFailed TaskStatus = 100
 
-
 	// LinkStatusFalse indicates that the Link evaluated to false
 	LinkStatusFalse LinkStatus = 1
 
@@ -51,5 +49,4 @@ const (
 
 	// LinkStatusSkipped indicates that the Link has been skipped
 	LinkStatusSkipped LinkStatus = 3
-
 )
