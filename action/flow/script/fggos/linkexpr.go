@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/japm/goScript"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/japm/goScript"
 )
 
 // GosLinkExprManager is the Lua Implementation of a Link Expression Manager
@@ -44,7 +44,7 @@ func (f *GosLinkExprManagerFactory) NewLinkExprManager(def *definition.Definitio
 
 			mgr.values[link.ID()] = vars
 
-			logger.Debugf("expr: %v\n", exprStr)
+			//logger.Debugf("expr: %v\n", exprStr)
 
 			expr := &goScript.Expr{}
 			err := expr.Prepare(exprStr)
@@ -239,7 +239,7 @@ func (em *GosLinkExprManager) EvalLinkExpr(link *definition.Link, scope data.Sco
 	f := isDefinedFunc{scope: scope}
 	ctxt["isDefined"] = f.isDefined
 
-	logger.Debugf("Vals: %v", vals)
+	//logger.Debugf("Vals: %v", vals)
 
 	val, err := expr.Eval(ctxt)
 

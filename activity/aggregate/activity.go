@@ -1,13 +1,13 @@
 package aggregate
 
 import (
-	"sync"
 	"errors"
+	"sync"
 
-	"github.com/TIBCOSoftware/flogo-lib/core/activity"
-	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-contrib/activity/aggregate/aggregator"
+	"github.com/TIBCOSoftware/flogo-lib/core/activity"
+	"github.com/TIBCOSoftware/flogo-lib/core/data"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
 // activityLogger is the default logger for the Aggregate Activity
@@ -39,7 +39,7 @@ type AggregateActivity struct {
 
 // NewActivity creates a new AppActivity
 func NewActivity(metadata *activity.Metadata) activity.Activity {
-	return &AggregateActivity{metadata: metadata, aggregators:make(map[string]aggregator.Aggregator), mutex:&sync.RWMutex{}}
+	return &AggregateActivity{metadata: metadata, aggregators: make(map[string]aggregator.Aggregator), mutex: &sync.RWMutex{}}
 }
 
 // Metadata returns the activity's metadata
@@ -50,7 +50,7 @@ func (a *AggregateActivity) Metadata() *activity.Metadata {
 // Eval implements api.Activity.Eval - Aggregates the Message
 func (a *AggregateActivity) Eval(context activity.Context) (done bool, err error) {
 
-	aggregatorKey := context.FlowDetails().Name() + ":" + context.TaskName()
+	aggregatorKey := context.ActivityHost().Name() + ":" + context.Name()
 
 	a.mutex.RLock()
 	//get aggregator for activity, assumes flow & task names are unique
@@ -69,12 +69,12 @@ func (a *AggregateActivity) Eval(context activity.Context) (done bool, err error
 
 		if !ok {
 			windowSize, _ := context.GetInput(ivWindowSize).(int)
-			aggrName,_ := context.GetInput(ivFunction).(string)
+			aggrName, _ := context.GetInput(ivFunction).(string)
 
 			factory := aggregator.GetFactory(aggrName)
 
 			if factory == nil {
-				return false, errors.New("Unknown aggregator: " +aggrName)
+				return false, errors.New("Unknown aggregator: " + aggrName)
 			}
 
 			aggr = factory(windowSize)
@@ -89,7 +89,7 @@ func (a *AggregateActivity) Eval(context activity.Context) (done bool, err error
 	value, ok := context.GetInput(ivValue).(float64)
 
 	if !ok {
-		value,_ = data.CoerceToNumber(context.GetInput(ivValue))
+		value, _ = data.CoerceToNumber(context.GetInput(ivValue))
 	}
 
 	report, result := aggr.Add(value)

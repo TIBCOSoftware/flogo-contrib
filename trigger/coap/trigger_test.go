@@ -1,16 +1,11 @@
 package coap
 
-import (
-	"context"
-	//"encoding/json"
-	//"net/http"
-	//"testing"
+//"encoding/json"
+//"net/http"
+//"testing"
 
-	"github.com/TIBCOSoftware/flogo-lib/core/action"
-	//"net/http"
-	//"github.com/TIBCOSoftware/flogo-lib/core/trigger"
-	"github.com/TIBCOSoftware/flogo-lib/core/data"
-)
+//"net/http"
+//"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 
 const testConfig string = `{
   "id": "tibco-coap",
@@ -30,19 +25,6 @@ const testConfig string = `{
 }
 `
 
-type TestRunner struct {
-}
-
-// Run implements action.Runner.Run
-func (tr *TestRunner) Run(context context.Context, action action.Action, uri string, options interface{}) (code int, data interface{}, err error) {
-	log.Debugf("Ran Action: %v", uri)
-	return 0, nil, nil
-}
-
-func (tr *TestRunner) RunAction(ctx context.Context, act action.Action, options map[string]interface{}) (results map[string]*data.Attribute, err error) {
-	log.Debugf("Ran Action: %v", act.Config().Id)
-	return nil, nil
-}
 /*
 // TODO Fix this test
 

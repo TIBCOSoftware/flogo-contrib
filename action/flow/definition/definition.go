@@ -3,7 +3,9 @@ package definition
 import (
 	"fmt"
 
+	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
+	//"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
 )
 
 // Definition is the object that describes the definition of
@@ -13,15 +15,18 @@ type Definition struct {
 	name          string
 	modelID       string
 	explicitReply bool
-	rootTask      *Task
-	ehTask        *Task
+	//flowModel     model.FlowModel
 
 	attrs map[string]*data.Attribute
 
-	links       map[int]*Link
-	tasks       map[string]*Task
+	links map[int]*Link
+	tasks map[string]*Task
+
+	metadata *data.IOMetadata
 
 	linkExprMgr LinkExprManager
+
+	errorHandler *ErrorHandler
 }
 
 // Name returns the name of the definition
@@ -34,18 +39,29 @@ func (pd *Definition) ModelID() string {
 	return pd.modelID
 }
 
-// RootTask returns the root task of the definition
-func (pd *Definition) RootTask() *Task {
-	return pd.rootTask
+// Metadata returns IO metadata for the flow
+func (pd *Definition) Metadata() *data.IOMetadata {
+	return pd.metadata
+}
+
+// GetTask returns the task with the specified ID
+func (pd *Definition) GetTask(taskID string) *Task {
+	task := pd.tasks[taskID]
+	return task
+}
+
+// GetLink returns the link with the specified ID
+func (pd *Definition) GetLink(linkID int) *Link {
+	task := pd.links[linkID]
+	return task
 }
 
 func (pd *Definition) ExplicitReply() bool {
 	return pd.explicitReply
 }
 
-// ErrorHandler returns the error handler task of the definition
-func (pd *Definition) ErrorHandlerTask() *Task {
-	return pd.ehTask
+func (pd *Definition) GetErrorHandler() *ErrorHandler {
+	return pd.errorHandler
 }
 
 // GetAttr gets the specified attribute
@@ -62,46 +78,109 @@ func (pd *Definition) GetAttr(attrName string) (attr *data.Attribute, exists boo
 }
 
 // GetTask returns the task with the specified ID
-func (pd *Definition) GetTask(taskID string) *Task {
-	task := pd.tasks[taskID]
-	return task
+func (pd *Definition) Tasks() []*Task {
+
+	tasks := make([]*Task, 0, len(pd.tasks))
+	for _, task := range pd.tasks {
+		tasks = append(tasks, task)
+	}
+	return tasks
 }
 
-// GetLink returns the link with the specified ID
-func (pd *Definition) GetLink(linkID int) *Link {
-	task := pd.links[linkID]
-	return task
+func (pd *Definition) Links() []*Link {
+	links := make([]*Link, 0, len(pd.links))
+	for _, link := range pd.links {
+		links = append(links, link)
+	}
+	return links
 }
 
-// SetLinkExprManager sets the Link Expression Manager for the definition
+// SetLinkExprManager sets the LinkOld Expression Manager for the definition
 func (pd *Definition) SetLinkExprManager(mgr LinkExprManager) {
 	// todo revisit
 	pd.linkExprMgr = mgr
 }
 
-// GetLinkExprManager gets the Link Expression Manager for the definition
+// GetLinkExprManager gets the LinkOld Expression Manager for the definition
 func (pd *Definition) GetLinkExprManager() LinkExprManager {
 	return pd.linkExprMgr
 }
 
-////////////////////////////////////////////////////////////////////////////
-// Task
+type ActivityConfig struct {
+	Activity    activity.Activity
+	settings    map[string]*data.Attribute
+	inputAttrs  map[string]*data.Attribute
+	outputAttrs map[string]*data.Attribute
+
+	inputMapper  data.Mapper
+	outputMapper data.Mapper
+}
+
+// GetSetting gets the specified setting
+func (ac *ActivityConfig) GetSetting(setting string) (attr *data.Attribute, exists bool) {
+
+	if ac.settings != nil {
+		attr, found := ac.settings[setting]
+		if found {
+			return attr, true
+		}
+	}
+
+	return nil, false
+}
+
+// GetAttr gets the specified input attribute
+func (ac *ActivityConfig) GetInputAttr(attrName string) (attr *data.Attribute, exists bool) {
+
+	if ac.inputAttrs != nil {
+		attr, found := ac.inputAttrs[attrName]
+		if found {
+			return attr, true
+		}
+	}
+
+	return nil, false
+}
+
+// GetOutputAttr gets the specified output attribute
+func (ac *ActivityConfig) GetOutputAttr(attrName string) (attr *data.Attribute, exists bool) {
+
+	if ac.outputAttrs != nil {
+		attr, found := ac.outputAttrs[attrName]
+		if found {
+			return attr, true
+		}
+	}
+
+	return nil, false
+}
+
+// InputMapper returns the InputMapper of the task
+func (ac *ActivityConfig) InputMapper() data.Mapper {
+	return ac.inputMapper
+}
+
+// OutputMapper returns the OutputMapper of the task
+func (ac *ActivityConfig) OutputMapper() data.Mapper {
+	return ac.outputMapper
+}
+
+func (ac *ActivityConfig) Ref() string {
+	return ac.Activity.Metadata().ID
+}
 
 // Task is the object that describes the definition of
 // a task.  It contains its data (attributes) and its
 // nested structure (child tasks & child links).
 type Task struct {
-	id           string
-	typeID       int
-	activityType string
-	activityRef  string
-	name         string
-	tasks        []*Task
-	links        []*Link
-	isScope      bool
+	id          string
+	typeID      string
+	name        string
+	activityCfg *ActivityConfig
+
+	isScope bool
 
 	definition *Definition
-	parent     *Task
 
 	settings    map[string]interface{}
 	inputAttrs  map[string]*data.Attribute
@@ -125,38 +204,8 @@ func (task *Task) Name() string {
 }
 
 // TypeID gets the id of the task type
-func (task *Task) TypeID() int {
+func (task *Task) TypeID() string {
 	return task.typeID
-}
-
-// ActivityType gets the activity type
-func (task *Task) ActivityType() string {
-	return task.activityType
-}
-
-// ActivityRef gets the activity ref
-func (task *Task) ActivityRef() string {
-	return task.activityRef
-}
-
-// Parent gets the parent task of the task
-func (task *Task) Parent() *Task {
-	return task.parent
-}
-
-// ChildTasks gets the child tasks of the task
-func (task *Task) ChildTasks() []*Task {
-	return task.tasks
-}
-
-// ChildLinks gets the child tasks of the task
-func (task *Task) ChildLinks() []*Link {
-	return task.links
-}
-
-func (task *Task) GetSetting(attrName string) (value interface{}, exists bool) {
-	value, exists = task.settings[attrName]
-	return value,exists
 }
 
 // GetAttr gets the specified attribute
@@ -199,6 +248,15 @@ func (task *Task) GetOutputAttr(attrName string) (attr *data.Attribute, exists b
 	return nil, false
 }
 
+func (task *Task) ActivityConfig() *ActivityConfig {
+	return task.activityCfg
+}
+
+func (task *Task) GetSetting(attrName string) (value interface{}, exists bool) {
+	value, exists = task.settings[attrName]
+	return value, exists
+}
+
 // ToLinks returns the predecessor links of the task
 func (task *Task) ToLinks() []*Link {
 	return task.toLinks
@@ -207,16 +265,6 @@ func (task *Task) ToLinks() []*Link {
 // FromLinks returns the successor links of the task
 func (task *Task) FromLinks() []*Link {
 	return task.fromLinks
-}
-
-// InputMapper returns the InputMapper of the task
-func (task *Task) InputMapper() data.Mapper {
-	return task.inputMapper
-}
-
-// OutputMapper returns the OutputMapper of the task
-func (task *Task) OutputMapper() data.Mapper {
-	return task.outputMapper
 }
 
 func (task *Task) String() string {
@@ -241,14 +289,14 @@ const (
 	// LtExpression denotes a link with an expression
 	LtExpression LinkType = 1 //expr language on the model or def?
 
-	// LtLabel denotes 'labelled' link
+	// LtLabel denotes 'label' link
 	LtLabel LinkType = 2
 
 	// LtError denotes an error link
 	LtError LinkType = 3
 )
 
-// Link is the object that describes the definition of
+// LinkOld is the object that describes the definition of
 // a link.
 type Link struct {
 	id       int
@@ -259,7 +307,6 @@ type Link struct {
 	value    string //expression or label
 
 	definition *Definition
-	parent     *Task
 }
 
 // ID gets the id of the link
@@ -289,4 +336,18 @@ func (link *Link) ToTask() *Task {
 
 func (link *Link) String() string {
 	return fmt.Sprintf("Link[%d]:'%s' - [from:%d, to:%d]", link.id, link.name, link.fromTask.id, link.toTask.id)
+}
+
+type ErrorHandler struct {
+	links map[int]*Link
+	tasks map[string]*Task
+}
+
+func (eh *ErrorHandler) Tasks() []*Task {
+
+	tasks := make([]*Task, 0, len(eh.tasks))
+	for _, task := range eh.tasks {
+		tasks = append(tasks, task)
+	}
+	return tasks
 }
