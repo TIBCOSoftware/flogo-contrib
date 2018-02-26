@@ -1,49 +1,54 @@
-# flogo-reply
-This activity provides your flogo action/flow the ability to reply to a trigger invocation and set output values.
+# flogo-subflow
+This activity provides your flogo flow the ability to start a sub-flow.
 
 ## Installation
 
 ```bash
-flogo install github.com/TIBCOSoftware/flogo-contrib/activity/actreply
+flogo install github.com/TIBCOSoftware/flogo-contrib/activity/subflow
 ```
 
 ## Schema
-Input and Output:
+The Input/Output schema is determined from the Input/Output metadata
+of the sub-flow that is being executed
+
+## Settings
 
 ```json
 {
-  "input":[
+  "settings":[
     {
-      "name": "mappings",
-      "type": "array",
+      "name": "flowURI",
+      "type": "string",
       "required": true
     }
-  ],
-  "output": [
   ]
+
 }
 ```
-## Settings
+
 | Setting     | Description    |
 |:------------|:---------------|
-| mappings    | The mappings to the action/flow ouputs |         
+| flowURI    | The URI of the flow to execute |         
 
 
 ## Configuration Examples
 ### Simple
-Configure a activity to reply and set the output values to literals "1" and 2.
+Configure a activity to execute "mysubflow" and set its input values to literals "1" and "2".
 
 ```json
 {
-  "id": "reply",
-  "type": 1,
-  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/actreply",
-  "name": "Reply",
-  "input": { 
-  	"mappings":[
-      { "type": 2, "value": "1", "mapTo": "Output1" },
-      { "type": 2, "value": 2, "mapTo": "Output2" }
-    ]
+  "id": "RunSubFlow",
+  "activity": {
+    "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/subflow",
+    "settings" : {
+      "flowURI" : "res://flow/mysubflow"
+    },
+    "input": { 
+  	  "mappings":[
+        { "type": "literal", "value": "1", "mapTo": "FlowIn1" },
+        { "type": "literal", "value": "2", "mapTo": "FlowIn2" }
+      ]
+    }
   }
 }
 ```
