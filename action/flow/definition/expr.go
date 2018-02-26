@@ -41,26 +41,21 @@ func GetExpressionLinks(def *Definition) []*Link {
 
 	var links []*Link
 
-	getExpressionLinks(def.RootTask(), &links)
-
-	if def.ErrorHandlerTask() != nil {
-		getExpressionLinks(def.ErrorHandlerTask(), &links)
-	}
-
-	return links
-}
-
-// getExpressionLinks gets the links under the specified task that are of type LtExpression
-func getExpressionLinks(task *Task, links *[]*Link) {
-
-	for _, link := range task.ChildLinks() {
+	for _, link := range def.Links() {
 
 		if link.Type() == LtExpression {
-			*links = append(*links, link)
+			links = append(links, link)
 		}
 	}
 
-	for _, childTask := range task.ChildTasks() {
-		getExpressionLinks(childTask, links)
+	if def.GetErrorHandler() != nil {
+		for _, link := range def.GetErrorHandler().links {
+
+			if link.Type() == LtExpression {
+				links = append(links, link)
+			}
+		}
 	}
+
+	return links
 }

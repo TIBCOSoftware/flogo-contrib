@@ -1,14 +1,13 @@
 package actreturn
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"testing"
 
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/test"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
-	"io/ioutil"
-	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
-	"encoding/json"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -76,16 +75,16 @@ func TestSimpleReturn(t *testing.T) {
 	}
 }
 
-func newActionContext() *test.TestActionCtx {
+func newActionContext() *test.TestActivityHost {
 
 	input := []*data.Attribute{data.NewZeroAttribute("Input1", data.STRING)}
 	output := []*data.Attribute{data.NewZeroAttribute("Output1", data.STRING), data.NewZeroAttribute("Output2", data.INTEGER)}
 
-	ac := &test.TestActionCtx{
-		ActionId:   "1",
-		ActionRef:  "github.com/TIBCOSoftware/flogo-contrib/action/flow",
-		ActionMd:   &action.ConfigMetadata{Input: input, Output: output},
-		ActionData: data.NewSimpleScope(nil, nil),
+	ac := &test.TestActivityHost{
+		HostId:   "1",
+		HostRef:  "github.com/TIBCOSoftware/flogo-contrib/action/flow",
+		IoMetadata: &data.IOMetadata{Input: input, Output: output},
+		HostData: data.NewSimpleScope(nil, nil),
 	}
 
 	return ac

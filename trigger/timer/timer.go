@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/carlescere/scheduler"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/carlescere/scheduler"
 )
 
 var log = logger.GetLogger("timer-trigger")
@@ -19,7 +19,9 @@ type TimerTrigger struct {
 	metadata *trigger.Metadata
 	runner   action.Runner
 	config   *trigger.Config
-	timers   map[string]*scheduler.Job
+	timers   []*scheduler.Job
+
+	handlers []*trigger.Handler
 }
 
 //NewFactory create a new Trigger factory
@@ -48,17 +50,22 @@ func (t *TimerTrigger) Init(runner action.Runner) {
 	//log.Infof("In init, id: '%s', Metadata: '%+v', Config: '%+v'", t.config.Id, t.metadata, t.config)
 }
 
+func (t *TimerTrigger) Initialize(ctx trigger.InitContext) {
+	//t.runner = runner
+	//log.Infof("In init, id: '%s', Metadata: '%+v', Config: '%+v'", t.config.Id, t.metadata, t.config)
+}
+
 // Start implements ext.Trigger.Start
 func (t *TimerTrigger) Start() error {
 
 	log.Debug("Start")
-	t.timers = make(map[string]*scheduler.Job)
-	handlers := t.config.Handlers
+	//t.timers = make(map[string]*scheduler.Job)
+	handlers := t.handlers
 
 	log.Debug("Processing handlers")
 	for _, handler := range handlers {
 
-		repeating := handler.Settings["repeating"]
+		repeating := handler.GetStringSetting("repeating")
 		log.Debug("Repeating: ", repeating)
 		if repeating == "false" {
 			t.scheduleOnce(handler)
@@ -67,8 +74,8 @@ func (t *TimerTrigger) Start() error {
 		} else {
 			log.Error("No match for repeating: ", repeating)
 		}
-		log.Debug("Settings repeating: ", handler.Settings["repeating"])
-		log.Debugf("Processing Handler: %s", handler.ActionId)
+		log.Debug("Settings repeating: ", handler.GetStringSetting("repeating"))
+		//log.Debugf("Processing Handler: %s", handler.ActionId)
 	}
 
 	return nil
@@ -78,19 +85,20 @@ func (t *TimerTrigger) Start() error {
 func (t *TimerTrigger) Stop() error {
 
 	log.Debug("Stopping endpoints")
-	for k, v := range t.timers {
-		if t.timers[k].IsRunning() {
-			log.Debug("Stopping timer for : ", k)
-			v.Quit <- true
-		} else {
-			log.Debugf("Timer: %s is not running", k)
+	for _, timer := range t.timers {
+
+		if timer.IsRunning() {
+			//log.Debug("Stopping timer for : ", k)
+			timer.Quit <- true
 		}
 	}
+
+	t.timers = nil
 
 	return nil
 }
 
-func (t *TimerTrigger) scheduleOnce(endpoint *trigger.HandlerConfig) {
+func (t *TimerTrigger) scheduleOnce(endpoint *trigger.Handler) {
 	log.Info("Scheduling a run one time job")
 
 	seconds := getInitialStartInSeconds(endpoint)
@@ -107,19 +115,23 @@ func (t *TimerTrigger) scheduleOnce(endpoint *trigger.HandlerConfig) {
 	fn := func() {
 		log.Debug("Executing \"Once\" timer trigger")
 
-		act := action.Get(endpoint.ActionId)
-
-		if act != nil {
-			log.Debugf("Running action: %s", endpoint.ActionId)
-
-			_, err := t.runner.RunAction(context.Background(), act, nil )
-
-			if err != nil {
-				log.Error("Error running action: ", err.Error())
-			}
-		} else {
-			log.Errorf("Action '%s' not found", endpoint.ActionId)
+		_, err := endpoint.Handle(context.Background(), nil)
+		if err != nil {
+			log.Error("Error running handler: ", err.Error())
 		}
+		//act := action.Get(endpoint.ActionId)
+		//
+		//if act != nil {
+		//	log.Debugf("Running action: %s", endpoint.ActionId)
+		//
+		//	_, err := t.runner.RunAction(context.Background(), act, nil )
+		//
+		//	if err != nil {
+		//		log.Error("Error running action: ", err.Error())
+		//	}
+		//} else {
+		//	log.Errorf("Action '%s' not found", endpoint.ActionId)
+		//}
 
 		if timerJob != nil {
 			timerJob.Quit <- true
@@ -134,11 +146,11 @@ func (t *TimerTrigger) scheduleOnce(endpoint *trigger.HandlerConfig) {
 			log.Error("Error performing scheduleOnce: ", err.Error())
 		}
 
-		t.timers[endpoint.ActionId] = timerJob
+		t.timers = append(t.timers, timerJob)
 	}
 }
 
-func (t *TimerTrigger) scheduleRepeating(endpoint *trigger.HandlerConfig) {
+func (t *TimerTrigger) scheduleRepeating(endpoint *trigger.Handler) {
 	log.Info("Scheduling a repeating job")
 
 	seconds := getInitialStartInSeconds(endpoint)
@@ -146,17 +158,22 @@ func (t *TimerTrigger) scheduleRepeating(endpoint *trigger.HandlerConfig) {
 	fn2 := func() {
 		log.Debug("-- Starting \"Repeating\" (repeat) timer action")
 
-		act := action.Get(endpoint.ActionId)
-		log.Debugf("Found action: '%+x'", act)
-		log.Debugf("ActionID: '%s'", endpoint.ActionId)
-		_, _, err := t.runner.Run(context.Background(), act, endpoint.ActionId, nil)
-
+		_, err := endpoint.Handle(context.Background(), nil)
 		if err != nil {
-			log.Error("Error starting flow: ", err.Error())
+			log.Error("Error running handler: ", err.Error())
 		}
+
+		//act := action.Get(endpoint.ActionId)
+		//log.Debugf("Found action: '%+x'", act)
+		//log.Debugf("ActionID: '%s'", endpoint.ActionId)
+		//_, _, err := t.runner.Run(context.Background(), act, endpoint.ActionId, nil)
+		//
+		//if err != nil {
+		//	log.Error("Error starting flow: ", err.Error())
+		//}
 	}
 
-	if endpoint.Settings["notImmediate"] == "false" {
+	if endpoint.GetStringSetting("notImmediate") == "false" {
 		t.scheduleJobEverySecond(endpoint, fn2)
 	} else {
 
@@ -176,25 +193,21 @@ func (t *TimerTrigger) scheduleRepeating(endpoint *trigger.HandlerConfig) {
 			log.Error("timerJob is nil")
 		}
 
-		t.timers[endpoint.ActionId] = timerJob
+		t.timers = append(t.timers, timerJob)
 	}
 }
 
-func getInitialStartInSeconds(handlerCfg *trigger.HandlerConfig) int {
-
-	if _, ok := handlerCfg.Settings["startDate"]; !ok {
-		return 0
-	}
+func getInitialStartInSeconds(endpoint *trigger.Handler) int {
 
 	layout := time.RFC3339
-	startDate := handlerCfg.GetSetting("startDate")
+	startDate := endpoint.GetStringSetting("startDate")
 
 	if startDate == "" {
 		return 0
 	}
 
 	idx := strings.LastIndex(startDate, "Z")
-	timeZone := startDate[idx+1: ]
+	timeZone := startDate[idx+1:]
 	log.Debug("Time Zone: ", timeZone)
 	startDate = strings.TrimSuffix(startDate, timeZone)
 	log.Debug("startDate: ", startDate)
@@ -254,18 +267,18 @@ func (j *PrintJob) Run() error {
 	return nil
 }
 
-func (t *TimerTrigger) scheduleJobEverySecond(handlerCfg *trigger.HandlerConfig, fn func()) {
+func (t *TimerTrigger) scheduleJobEverySecond(tgrHandler *trigger.Handler, fn func()) {
 
 	var interval int = 0
-	if seconds := handlerCfg.GetSetting("seconds"); seconds != "" {
+	if seconds := tgrHandler.GetStringSetting("seconds"); seconds != "" {
 		seconds, _ := strconv.Atoi(seconds)
 		interval = interval + seconds
 	}
-	if minutes := handlerCfg.GetSetting("minutes"); minutes != "" {
+	if minutes := tgrHandler.GetStringSetting("minutes"); minutes != "" {
 		minutes, _ := strconv.Atoi(minutes)
 		interval = interval + minutes*60
 	}
-	if hours := handlerCfg.GetSetting("hours"); hours != "" {
+	if hours := tgrHandler.GetStringSetting("hours"); hours != "" {
 		hours, _ := strconv.Atoi(hours)
 		interval = interval + hours*3600
 	}
@@ -280,5 +293,5 @@ func (t *TimerTrigger) scheduleJobEverySecond(handlerCfg *trigger.HandlerConfig,
 		log.Error("timerJob is nil")
 	}
 
-	t.timers["r:"+handlerCfg.ActionId] = timerJob
+	t.timers = append(t.timers, timerJob)
 }

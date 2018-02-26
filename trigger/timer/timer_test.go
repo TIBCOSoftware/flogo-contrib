@@ -9,9 +9,9 @@ import (
 
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	//"github.com/TIBCOSoftware/flogo-lib/core/trigger"
-	"testing"
-	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"encoding/json"
+	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
+	"testing"
 )
 
 var jsonTestMetadata = getTestJsonMetadata()
@@ -129,7 +129,6 @@ func TestInit(t *testing.T) {
 	json.Unmarshal([]byte(testConfig), &config)
 	//tgr.Init(config, runner)
 }
-
 
 /*
 //TODO fix this test

@@ -2,6 +2,7 @@ package awssns
 
 import (
 	"fmt"
+
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/aws/aws-sdk-go/aws"
@@ -54,7 +55,6 @@ func (a *AWSSNS) Eval(context activity.Context) (done bool, err error) {
 	SMSFrom := context.GetInput(ConfSMSFrom).(string)
 	SMSTo := context.GetInput(ConfSMSTo).(string)
 	SMSMessage := context.GetInput(ConfSMSMessage).(string)
-	var SMSType string	
 	SMSType := context.GetInput(ConfSMSType).(string)
 
 	log.Debug("Setting credentials")

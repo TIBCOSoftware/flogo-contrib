@@ -49,26 +49,31 @@ func (rp *RequestProcessor) StartFlow(startRequest *StartRequest) (results map[s
 
 			//todo handle error
 			t, _ := data.GetType(v)
-			attr,_ := data.NewAttribute(k, t, v)
+			attr, _ := data.NewAttribute(k, t, v)
 			attrs = append(attrs, attr)
 		}
 	}
 
 	factory := action.GetFactory(FLOW_REF)
-	act := factory.New(&action.Config{Id: "flow"})
+	act, _ := factory.New(&action.Config{})
 
 	ctx := trigger.NewContext(context.Background(), attrs)
 
-	ro := &instance.RunOptions{Op: instance.OpStart, ReturnID: true,  FlowURI: startRequest.FlowURI, ExecOptions: execOptions}
-	newOptions := make(map[string]interface{})
-	newOptions["deprecated_options"] = ro
+	ro := &instance.RunOptions{Op: instance.OpStart, ReturnID: true, FlowURI: startRequest.FlowURI, ExecOptions: execOptions}
+	//newOptions := make(map[string]interface{})
+	//newOptions["deprecated_options"] = ro
 
-	return rp.runner.RunAction(ctx, act, newOptions)
+	inputs := make(map[string]*data.Attribute, 1)
+	attr, _ := data.NewAttribute("_run_options", data.ANY, ro)
+	inputs[attr.Name()] = attr
+
+	return rp.runner.Execute(ctx, act, inputs)
+	//return rp.runner.RunAction(ctx, act, newOptions)
 }
 
 // RestartFlow handles a RestartRequest for a FlowInstance.  This will
 // generate an ID for the new FlowInstance and queue a RestartRequest.
-func (rp *RequestProcessor) RestartFlow(restartRequest *RestartRequest)  (results map[string]*data.Attribute, err error) {
+func (rp *RequestProcessor) RestartFlow(restartRequest *RestartRequest) (results map[string]*data.Attribute, err error) {
 
 	execOptions := &instance.ExecOptions{Interceptor: restartRequest.Interceptor, Patch: restartRequest.Patch}
 
@@ -80,26 +85,30 @@ func (rp *RequestProcessor) RestartFlow(restartRequest *RestartRequest)  (result
 		attrs := make([]*data.Attribute, len(restartRequest.Data))
 
 		for k, v := range restartRequest.Data {
-			attr,_ := data.NewAttribute(k, data.ANY, v)
-			attrs = append(attrs,attr)
+			attr, _ := data.NewAttribute(k, data.ANY, v)
+			attrs = append(attrs, attr)
 		}
 
 		ctx = trigger.NewContext(context.Background(), attrs)
 	}
 
 	factory := action.GetFactory(FLOW_REF)
-	act := factory.New(&action.Config{Id: "flow"})
+	act, _ := factory.New(&action.Config{})
 
-	ro := &instance.RunOptions{Op: instance.OpRestart, ReturnID: true, FlowURI: restartRequest.InitialState.FlowURI, InitialState: restartRequest.InitialState, ExecOptions: execOptions}
-	newOptions := make(map[string]interface{})
-	newOptions["deprecated_options"] = ro
+	ro := &instance.RunOptions{Op: instance.OpRestart, ReturnID: true, FlowURI: restartRequest.InitialState.FlowURI(), InitialState: restartRequest.InitialState, ExecOptions: execOptions}
+	//newOptions := make(map[string]interface{})
+	//newOptions["deprecated_options"] = ro
 
-	return rp.runner.RunAction(ctx, act, newOptions)
+	inputs := make(map[string]*data.Attribute, 1)
+	attr, _ := data.NewAttribute("_run_options", data.ANY, ro)
+	inputs[attr.Name()] = attr
+
+	return rp.runner.Execute(ctx, act, inputs)
 }
 
 // ResumeFlow handles a ResumeRequest for a FlowInstance.  This will
 // queue a RestartRequest.
-func (rp *RequestProcessor) ResumeFlow(resumeRequest *ResumeRequest)  (results map[string]*data.Attribute, err error) {
+func (rp *RequestProcessor) ResumeFlow(resumeRequest *ResumeRequest) (results map[string]*data.Attribute, err error) {
 
 	execOptions := &instance.ExecOptions{Interceptor: resumeRequest.Interceptor, Patch: resumeRequest.Patch}
 
@@ -111,21 +120,27 @@ func (rp *RequestProcessor) ResumeFlow(resumeRequest *ResumeRequest)  (results m
 		attrs := make([]*data.Attribute, len(resumeRequest.Data))
 
 		for k, v := range resumeRequest.Data {
-			attr,_ := data.NewAttribute(k, data.ANY, v)
-			attrs = append(attrs,attr)
+			attr, _ := data.NewAttribute(k, data.ANY, v)
+			attrs = append(attrs, attr)
 		}
 
 		ctx = trigger.NewContext(context.Background(), attrs)
 	}
 
 	factory := action.GetFactory(FLOW_REF)
-	act := factory.New(&action.Config{Id: "flow"})
+	act, _ := factory.New(&action.Config{})
 
-	ro := &instance.RunOptions{Op: instance.OpResume, ReturnID: true, FlowURI:resumeRequest.State.FlowURI, InitialState : resumeRequest.State, ExecOptions: execOptions}
-	newOptions := make(map[string]interface{})
-	newOptions["deprecated_options"] = ro
+	ro := &instance.RunOptions{Op: instance.OpResume, ReturnID: true, FlowURI: resumeRequest.State.FlowURI(), InitialState: resumeRequest.State, ExecOptions: execOptions}
+	//newOptions := make(map[string]interface{})
+	//newOptions["deprecated_options"] = ro
 
-	return rp.runner.RunAction(ctx, act, newOptions)
+	inputs := make(map[string]*data.Attribute, 1)
+	attr, _ := data.NewAttribute("_run_options", data.ANY, ro)
+	inputs[attr.Name()] = attr
+
+	//return rp.runner.RunAction(ctx, act, newOptions)
+	return rp.runner.Execute(ctx, act, inputs)
+
 }
 
 // StartRequest describes a request for starting a FlowInstance
@@ -141,17 +156,17 @@ type StartRequest struct {
 // RestartRequest describes a request for restarting a FlowInstance
 // todo: can be merged into StartRequest
 type RestartRequest struct {
-	InitialState *instance.Instance     `json:"initialState"`
-	Data         map[string]interface{} `json:"data"`
-	Interceptor  *support.Interceptor   `json:"interceptor"`
-	Patch        *support.Patch         `json:"patch"`
+	InitialState *instance.IndependentInstance `json:"initialState"`
+	Data         map[string]interface{}        `json:"data"`
+	Interceptor  *support.Interceptor          `json:"interceptor"`
+	Patch        *support.Patch                `json:"patch"`
 }
 
 // ResumeRequest describes a request for resuming a FlowInstance
 //todo: Data for resume request should be directed to waiting task
 type ResumeRequest struct {
-	State       *instance.Instance     `json:"state"`
-	Data        map[string]interface{} `json:"data"`
-	Interceptor *support.Interceptor   `json:"interceptor"`
-	Patch       *support.Patch         `json:"patch"`
+	State       *instance.IndependentInstance `json:"state"`
+	Data        map[string]interface{}        `json:"data"`
+	Interceptor *support.Interceptor          `json:"interceptor"`
+	Patch       *support.Patch                `json:"patch"`
 }

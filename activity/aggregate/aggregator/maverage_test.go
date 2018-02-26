@@ -1,8 +1,8 @@
 package aggregator
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 )
 
 func TestMovingAverage_Add(t *testing.T) {
@@ -33,7 +33,7 @@ func TestMovingAverage_Add(t *testing.T) {
 
 	report, avg = agg.Add(60)
 
-	fmt.Println("avg:",avg)
+	fmt.Println("avg:", avg)
 
 	if avg != 40.0 {
 		t.Error("Average should be 40")

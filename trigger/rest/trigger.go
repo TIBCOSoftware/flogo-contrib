@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"strings"
 
+	"context"
+
 	"github.com/TIBCOSoftware/flogo-contrib/trigger/rest/cors"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
@@ -27,9 +29,10 @@ var validMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
 // RestTrigger REST trigger struct
 type RestTrigger struct {
 	metadata *trigger.Metadata
-	runner   action.Runner
-	server   *Server
-	config   *trigger.Config
+	//runner   action.Runner
+	server *Server
+	config *trigger.Config
+	//handlers []*handler.Handler
 }
 
 //NewFactory create a new Trigger factory
@@ -52,40 +55,51 @@ func (t *RestTrigger) Metadata() *trigger.Metadata {
 	return t.metadata
 }
 
-func (t *RestTrigger) Init(runner action.Runner) {
-
+func (t *RestTrigger) Initialize(ctx trigger.InitContext) error {
 	router := httprouter.New()
 
 	if t.config.Settings == nil {
-		panic(fmt.Sprintf("No Settings found for trigger '%s'", t.config.Id))
+		return fmt.Errorf("no Settings found for trigger '%s'", t.config.Id)
 	}
 
 	if _, ok := t.config.Settings["port"]; !ok {
-		panic(fmt.Sprintf("No Port found for trigger '%s' in settings", t.config.Id))
+		return fmt.Errorf("no Port found for trigger '%s' in settings", t.config.Id)
 	}
 
 	addr := ":" + t.config.GetSetting("port")
-	t.runner = runner
+
+	pathMap := make(map[string]string)
 
 	// Init handlers
-	for _, handlerCfg := range t.config.Handlers {
+	for _, handler := range ctx.GetHandlers() {
 
-		if handlerIsValid(handlerCfg) {
-			method := strings.ToUpper(handlerCfg.GetSetting("method"))
-			path := handlerCfg.GetSetting("path")
-
-			log.Debugf("REST Trigger: Registering handler [%s: %s] for Action Id: [%s]", method, path, handlerCfg.ActionId)
-
-			router.OPTIONS(path, handleCorsPreflight) // for CORS
-			router.Handle(method, path, newActionHandler(t, handlerCfg.ActionId, handlerCfg))
-
-		} else {
-			panic(fmt.Sprintf("Invalid handler: %v", handlerCfg))
+		err := validateHandler(t.config.Id, handler)
+		if err != nil {
+			return err
 		}
+
+		method := strings.ToUpper(handler.GetStringSetting("method"))
+		path := handler.GetStringSetting("path")
+
+		log.Debugf("Registering handler [%s: %s]", method, path)
+
+		if _, ok := pathMap[path]; !ok {
+			pathMap[path] = path
+			router.OPTIONS(path, handleCorsPreflight) // for CORS
+		}
+
+		//router.OPTIONS(path, handleCorsPreflight) // for CORS
+		router.Handle(method, path, newActionHandler(t, handler))
 	}
 
-	log.Debugf("REST Trigger: Configured on port %s", t.config.Settings["port"])
+	log.Debugf("Configured on port %s", t.config.Settings["port"])
 	t.server = NewServer(addr, router)
+
+	return nil
+}
+
+func (t *RestTrigger) Init(runner action.Runner) {
+
 }
 
 func (t *RestTrigger) Start() error {
@@ -111,11 +125,11 @@ type IDResponse struct {
 	ID string `json:"id"`
 }
 
-func newActionHandler(rt *RestTrigger, actionId string, handlerCfg *trigger.HandlerConfig) httprouter.Handle {
+func newActionHandler(rt *RestTrigger, handler *trigger.Handler) httprouter.Handle {
 
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
-		log.Infof("REST Trigger: Received request for id '%s'", rt.config.Id)
+		log.Infof("Received request for id '%s'", rt.config.Id)
 
 		c := cors.New(REST_CORS_PREFIX, log)
 		c.WriteCorsActualRequestHeaders(w)
@@ -150,7 +164,7 @@ func newActionHandler(rt *RestTrigger, actionId string, handlerCfg *trigger.Hand
 			queryParams[key] = strings.Join(value, ",")
 		}
 
-		outData := map[string]interface{}{
+		triggerData := map[string]interface{}{
 			"params":      pathParams,
 			"pathParams":  pathParams,
 			"queryParams": queryParams,
@@ -158,12 +172,7 @@ func newActionHandler(rt *RestTrigger, actionId string, handlerCfg *trigger.Hand
 			"content":     content,
 		}
 
-		//todo handle error
-		startAttrs, _ := rt.metadata.OutputsToAttrs(outData, false)
-
-		act := action.Get(actionId)
-		ctx := trigger.NewInitialContext(startAttrs, handlerCfg)
-		results, err := rt.runner.RunAction(ctx, act, nil)
+		results, err := handler.Handle(context.Background(), triggerData)
 
 		var replyData interface{}
 		var replyCode int
@@ -208,22 +217,20 @@ func newActionHandler(rt *RestTrigger, actionId string, handlerCfg *trigger.Hand
 ////////////////////////////////////////////////////////////////////////////////////////
 // Utils
 
-func handlerIsValid(handler *trigger.HandlerConfig) bool {
-	if handler.Settings == nil {
-		return false
+func validateHandler(triggerId string, handler *trigger.Handler) error {
+
+	method := handler.GetStringSetting("method")
+	if method == "" {
+		return fmt.Errorf("no method specified in handler for trigger '%s'", triggerId)
 	}
 
-	if handler.Settings["method"] == "" {
-		return false
-	}
-
-	if !stringInList(strings.ToUpper(handler.GetSetting("method")), validMethods) {
-		return false
+	if !stringInList(strings.ToUpper(method), validMethods) {
+		return fmt.Errorf("invalid method '%s' specified in handler for trigger '%s'", method, triggerId)
 	}
 
 	//validate path
 
-	return true
+	return nil
 }
 
 func stringInList(str string, list []string) bool {

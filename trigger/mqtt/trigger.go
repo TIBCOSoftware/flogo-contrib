@@ -18,11 +18,11 @@ var log = logger.GetLogger("trigger-tibco-mqtt")
 
 // MqttTrigger is simple MQTT trigger
 type MqttTrigger struct {
-	metadata         *trigger.Metadata
-	runner           action.Runner
-	client           mqtt.Client
-	config           *trigger.Config
-	topicToActionURI map[string]string
+	metadata          *trigger.Metadata
+	runner            action.Runner
+	client            mqtt.Client
+	config            *trigger.Config
+	topicToActionURI  map[string]string
 	topicToHandlerCfg map[string]*trigger.HandlerConfig
 }
 
