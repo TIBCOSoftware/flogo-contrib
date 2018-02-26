@@ -9,8 +9,8 @@ import (
 // NewTestActivityContext creates a new TestActivityContext
 func NewTestActivityContext(metadata *activity.Metadata) *TestActivityContext {
 
-	input := []*data.Attribute{data.NewZeroAttribute("Input1", data.STRING)}
-	output := []*data.Attribute{data.NewZeroAttribute("Output1", data.STRING)}
+	input := map[string]*data.Attribute{"Input1":data.NewZeroAttribute("Input1", data.STRING)}
+	output := map[string]*data.Attribute{"Output1":data.NewZeroAttribute("Output1", data.STRING)}
 
 	ac := &TestActivityHost{
 		HostId:     "1",

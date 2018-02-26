@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"context"
+
 	"github.com/TIBCOSoftware/flogo-contrib/trigger/rest/cors"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
@@ -67,6 +68,8 @@ func (t *RestTrigger) Initialize(ctx trigger.InitContext) error {
 
 	addr := ":" + t.config.GetSetting("port")
 
+	pathMap := make(map[string]string)
+
 	// Init handlers
 	for _, handler := range ctx.GetHandlers() {
 
@@ -80,7 +83,12 @@ func (t *RestTrigger) Initialize(ctx trigger.InitContext) error {
 
 		log.Debugf("Registering handler [%s: %s]", method, path)
 
-		router.OPTIONS(path, handleCorsPreflight) // for CORS
+		if _, ok := pathMap[path]; !ok {
+			pathMap[path] = path
+			router.OPTIONS(path, handleCorsPreflight) // for CORS
+		}
+
+		//router.OPTIONS(path, handleCorsPreflight) // for CORS
 		router.Handle(method, path, newActionHandler(t, handler))
 	}
 
@@ -146,6 +154,11 @@ func newActionHandler(rt *RestTrigger, handler *trigger.Handler) httprouter.Hand
 
 		queryValues := r.URL.Query()
 		queryParams := make(map[string]string, len(queryValues))
+		header := make(map[string]string, len(r.Header))
+
+		for key, value := range r.Header {
+			header[key] = strings.Join(value, ",")
+		}
 
 		for key, value := range queryValues {
 			queryParams[key] = strings.Join(value, ",")
@@ -155,6 +168,7 @@ func newActionHandler(rt *RestTrigger, handler *trigger.Handler) httprouter.Hand
 			"params":      pathParams,
 			"pathParams":  pathParams,
 			"queryParams": queryParams,
+			"header":      header,
 			"content":     content,
 		}
 

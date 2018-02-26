@@ -27,6 +27,7 @@ const (
 	ivURI         = "uri"
 	ivPathParams  = "pathParams"
 	ivQueryParams = "queryParams"
+	ivHeader      = "header"
 	ivContent     = "content"
 	ivParams      = "params"
 	ivProxy       = "proxy"
@@ -79,9 +80,7 @@ func (a *RESTActivity) Eval(context activity.Context) (done bool, err error) {
 		uri = BuildURI(uri, pathParams)
 	}
 
-	if context.GetInput(ivQueryParams) != nil {
-		queryParams := context.GetInput(ivQueryParams).(map[string]string)
-
+	if queryParams, ok := context.GetInput(ivQueryParams).(map[string]string); ok && len(queryParams) > 0 {
 		qp := url.Values{}
 
 		for key, value := range queryParams {
@@ -118,6 +117,15 @@ func (a *RESTActivity) Eval(context activity.Context) (done bool, err error) {
 	req, err := http.NewRequest(method, uri, reqBody)
 	if reqBody != nil {
 		req.Header.Set("Content-Type", contentType)
+	}
+
+	// Set headers
+	log.Debug("Setting HTTP request headers...")
+	if headers, ok := context.GetInput(ivHeader).(map[string]string); ok && len(headers) > 0 {
+		for key, value := range headers {
+			log.Debugf("%s: %s", key, value)
+			req.Header.Set(key, value)
+		}
 	}
 
 	// Set the proxy server to use, if supplied

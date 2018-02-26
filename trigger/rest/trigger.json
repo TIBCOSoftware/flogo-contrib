@@ -27,6 +27,10 @@
       "type": "params"
     },
     {
+      "name": "header",
+      "type": "params"
+    },
+    {
       "name": "content",
       "type": "object"
     }
@@ -53,14 +57,6 @@
         "name": "path",
         "type": "string",
         "required" : true
-      },
-      {
-        "name": "autoIdReply",
-        "type": "boolean"
-      },
-      {
-        "name": "useReplyHandler",
-        "type": "boolean"
       }
     ]
   }

@@ -74,7 +74,27 @@ func TestSimpleGet(t *testing.T) {
 
 	//setup attrs
 	tc.SetInput("method", "GET")
-	tc.SetInput("uri", "http://petstore.swagger.io/v2/pet/16")
+	tc.SetInput("uri", "http://petstore.swagger.io/v2/pet/1")
+
+	//eval
+	act.Eval(tc)
+
+	val := tc.GetOutput("result")
+	fmt.Printf("result: %v\n", val)
+}
+
+func TestSimpleGetWithHeaders(t *testing.T) {
+
+	act := NewActivity(getActivityMetadata())
+	tc := test.NewTestActivityContext(getActivityMetadata())
+
+	//setup attrs
+	tc.SetInput("method", "GET")
+	tc.SetInput("uri", "http://petstore.swagger.io/v2/pet/1")
+
+	headers := make(map[string]string)
+	headers["TestHeader"] = "TestValue"
+	tc.SetInput("header", headers)
 
 	//eval
 	act.Eval(tc)

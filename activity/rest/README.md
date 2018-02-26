@@ -37,6 +37,10 @@ Inputs and Outputs:
       "type": "params"
     },
     {
+      "name": "header",
+      "type": "params"
+    },
+    {
       "name": "content",
       "type": "object"
     }
@@ -56,6 +60,7 @@ Inputs and Outputs:
 | uri         | The uri of the resource   |
 | pathParams  | The path parameters |
 | queryParams | The query parameters |
+| header      | The header parameters |
 | content     | The message content |
 | params      | The path parameters (Deprecated) |
 Note: 

@@ -1,8 +1,8 @@
 package aggregate
 
 import (
-	"sync"
 	"errors"
+	"sync"
 
 	"github.com/TIBCOSoftware/flogo-contrib/activity/aggregate/aggregator"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"

@@ -7,6 +7,7 @@ import (
 
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/support"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
+	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/eclipse/paho.mqtt.golang"
@@ -58,7 +59,7 @@ func (t *MqttTrigger) Start() error {
 	opts.SetClientID(t.config.GetSetting("id"))
 	opts.SetUsername(t.config.GetSetting("user"))
 	opts.SetPassword(t.config.GetSetting("password"))
-	b, err := strconv.ParseBool(t.config.GetSetting("cleansess"))
+	b, err := data.CoerceToBoolean(t.config.Settings["cleansess"])
 	if err != nil {
 		log.Error("Error converting \"cleansess\" to a boolean ", err.Error())
 		return err
@@ -87,7 +88,7 @@ func (t *MqttTrigger) Start() error {
 		panic(token.Error())
 	}
 
-	i, err := strconv.Atoi(t.config.GetSetting("qos"))
+	i, err := data.CoerceToNumber(t.config.Settings["qos"])
 	if err != nil {
 		log.Error("Error converting \"qos\" to an integer ", err.Error())
 		return err

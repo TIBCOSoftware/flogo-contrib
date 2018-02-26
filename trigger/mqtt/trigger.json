@@ -10,11 +10,13 @@
   "settings":[
     {
       "name": "broker",
-      "type": "string"
+      "type": "string",
+      "required": true
     },
     {
       "name": "id",
-      "type": "string"
+      "type": "string",
+      "required": true
     },
     {
       "name": "user",
