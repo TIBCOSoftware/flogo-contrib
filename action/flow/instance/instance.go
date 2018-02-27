@@ -295,8 +295,7 @@ func (inst *Instance) UpdateAttrs(attrs map[string]*data.Attribute) {
 
 // ReplyHandler returns the reply handler for the instance
 func (inst *Instance) ReplyHandler() activity.ReplyHandler {
-	return nil
-	//return &SimpleReplyHandler{pi.actionCtx.rh}
+	return &SimpleReplyHandler{inst.resultHandler}
 }
 
 // SimpleReplyHandler is a simple ReplyHandler that is pass-thru to the action ResultHandler
