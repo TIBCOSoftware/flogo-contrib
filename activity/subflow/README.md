@@ -41,7 +41,7 @@ Configure a activity to execute "mysubflow" and set its input values to literals
   "activity": {
     "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/subflow",
     "settings" : {
-      "flowURI" : "res://flow/mysubflow"
+      "flowURI" : "res://flow:mysubflow"
     },
     "input": { 
   	  "mappings":[
