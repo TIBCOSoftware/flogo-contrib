@@ -87,7 +87,7 @@ func NewDefinition(rep *DefinitionRep) (def *Definition, err error) {
 	def.name = rep.Name
 	def.modelID = rep.ModelID
 	def.metadata = rep.Metadata
-
+	def.explicitReply = rep.ExplicitReply
 	if len(rep.Attributes) > 0 {
 		def.attrs = make(map[string]*data.Attribute, len(rep.Attributes))
 
@@ -353,7 +353,7 @@ func definitionFromOldRep(rep *DefinitionRep) (def *Definition, err error) {
 	def.name = rep.Name
 	def.modelID = rep.ModelID
 	def.metadata = rep.Metadata
-
+	def.explicitReply = rep.ExplicitReply
 	if len(rep.Attributes) > 0 {
 		def.attrs = make(map[string]*data.Attribute, len(rep.Attributes))
 
