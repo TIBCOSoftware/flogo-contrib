@@ -25,12 +25,13 @@ func NewTestActivityContext(metadata *activity.Metadata) *TestActivityContext {
 // NewTestActivityContextWithAction creates a new TestActivityContext
 func NewTestActivityContextWithAction(metadata *activity.Metadata, activityHost *TestActivityHost) *TestActivityContext {
 
-	//fd := &TestFlowDetails{
-	//	FlowIDVal:   "1",
-	//	FlowNameVal: "Test Flow",
-	//}
+	fd := &TestFlowDetails{
+		FlowIDVal:   "1",
+		FlowNameVal: "Test Flow",
+	}
 
 	tc := &TestActivityContext{
+		details:fd,
 		activityHost:     activityHost,
 		TaskNameVal: "Test TaskOld",
 		Attrs:       make(map[string]*data.Attribute),
@@ -127,6 +128,7 @@ func (ac *TestActivityHost) GetResolver() data.Resolver {
 
 // TestActivityContext is a dummy ActivityContext to assist in testing
 type TestActivityContext struct {
+	details     activity.FlowDetails
 	TaskNameVal string
 	Attrs       map[string]*data.Attribute
 	activityHost        activity.Host
@@ -137,7 +139,7 @@ type TestActivityContext struct {
 }
 
 func (c *TestActivityContext) FlowDetails() activity.FlowDetails {
-	return c.activityHost
+	return c.details
 }
 
 func (c *TestActivityContext) ActivityHost() activity.Host {
