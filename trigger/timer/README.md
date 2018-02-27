@@ -1,5 +1,6 @@
 # tibco-timer
 This trigger provides your flogo application the ability to schedule a flow via scheduling service
+ERC Test
 
 ## Installation
 
