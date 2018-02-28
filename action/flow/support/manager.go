@@ -100,7 +100,7 @@ func (rm *FlowManager) GetFlow(uri string) (*definition.Definition, error) {
 	defer rm.rfMu.Unlock()
 
 	if rm.remoteFlows == nil {
-		rm.resFlows = make(map[string]*definition.Definition)
+		rm.remoteFlows = make(map[string]*definition.Definition)
 	}
 
 	flow, exists := rm.remoteFlows[uri]
