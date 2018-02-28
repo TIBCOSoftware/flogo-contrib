@@ -7,13 +7,18 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 )
 
+func init() {
+	activity.Register(NewLogActivity())
+	activity.Register(NewCounterActivity())
+}
+
 type LogActivity struct {
 	metadata *activity.Metadata
 }
 
 // NewActivity creates a new AppActivity
 func NewLogActivity() activity.Activity {
-	metadata := &activity.Metadata{ID: "log"}
+	metadata := &activity.Metadata{ID: "test-log"}
 	input := map[string]*data.Attribute{
 		"message": data.NewZeroAttribute("message", data.STRING),
 	}
@@ -43,7 +48,7 @@ type CounterActivity struct {
 
 // NewActivity creates a new AppActivity
 func NewCounterActivity() activity.Activity {
-	metadata := &activity.Metadata{ID: "counter"}
+	metadata := &activity.Metadata{ID: "test-counter"}
 	input := map[string]*data.Attribute{
 		"counterName": data.NewZeroAttribute("counterName", data.STRING),
 	}

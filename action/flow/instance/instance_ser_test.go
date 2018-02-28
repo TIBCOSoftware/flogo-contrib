@@ -1,8 +1,16 @@
 package instance
 
 import (
+	"encoding/json"
 	"os"
 	"testing"
+
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
+
+	_ "github.com/TIBCOSoftware/flogo-contrib/action/flow/test"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {
@@ -22,12 +30,12 @@ const defJSON = `
       "tasks": [
         {
           "id": 2,
-          "type": 1,
+          "activityRef": "test-counter",
           "name": "a"
         },
         {
           "id": 3,
-          "type": 1,
+          "activityRef": "test-log",
           "name": "b"
         }
       ],
@@ -38,31 +46,30 @@ const defJSON = `
   }
 `
 
-//func TestFullSerialization(t *testing.T) {
-//
-//	defRep := &flowdef.DefinitionRep{}
-//	json.Unmarshal([]byte(defJSON), defRep)
-//
-//	log.Infof("Def Rep: %v", defRep)
-//
-//	def, _ := flowdef.NewDefinition(defRep)
-//
-//	idGen, _ := util.NewGenerator()
-//	id := idGen.NextAsString()
-//
-//	instance := NewFlowInstance(id, "uri1", def)
-//
-//	instance.Start(nil)
-//
-//	hasWork := true
-//
-//	for hasWork && instance.Status() < StatusCompleted {
-//		hasWork = instance.DoStep()
-//
-//		json, _ := json.Marshal(instance)
-//		log.Debugf("Snapshot: %s\n", string(json))
-//	}
-//}
+func TestFullSerialization(t *testing.T) {
+
+	defRep := &definition.DefinitionRep{}
+	err := json.Unmarshal([]byte(defJSON), defRep)
+	assert.Nil(t, err)
+
+	logger.Infof("Def Rep: %v", defRep)
+
+	def, _ := definition.NewDefinition(defRep)
+	assert.NotNil(t, def)
+
+	instance := NewIndependentInstance("12345", def)
+
+	instance.Start(nil)
+
+	hasWork := true
+
+	for hasWork && instance.Status() < model.FlowStatusCompleted {
+		hasWork = instance.DoStep()
+
+		json, _ := json.Marshal(instance)
+		logger.Debugf("Snapshot: %s\n", string(json))
+	}
+}
 
 //func TestIncrementalSerialization(t *testing.T) {
 //
