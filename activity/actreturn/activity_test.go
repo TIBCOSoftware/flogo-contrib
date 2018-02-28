@@ -81,10 +81,10 @@ func newActionContext() *test.TestActivityHost {
 	output := []*data.Attribute{data.NewZeroAttribute("Output1", data.STRING), data.NewZeroAttribute("Output2", data.INTEGER)}
 
 	ac := &test.TestActivityHost{
-		HostId:   "1",
-		HostRef:  "github.com/TIBCOSoftware/flogo-contrib/action/flow",
+		HostId:     "1",
+		HostRef:    "github.com/TIBCOSoftware/flogo-contrib/action/flow",
 		IoMetadata: &data.IOMetadata{Input: input, Output: output},
-		HostData: data.NewSimpleScope(nil, nil),
+		HostData:   data.NewSimpleScope(nil, nil),
 	}
 
 	return ac

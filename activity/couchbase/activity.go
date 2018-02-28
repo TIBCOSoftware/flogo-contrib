@@ -37,7 +37,7 @@ func init() {
 Integration with Couchbase
 inputs: {data, method, expiry, server, username, password, bucket, bucketPassword}
 outputs: {output, status}
- */
+*/
 type CouchbaseActivity struct {
 	metadata *activity.Metadata
 }

@@ -21,6 +21,25 @@ type serIndependentInstance struct {
 	TaskInsts []*TaskInst       `json:"tasks"`
 	LinkInsts []*LinkInst       `json:"links"`
 	SubFlows  []*Instance       `json:"subFlows,omitempty"`
+
+	//for backwards compatibility
+	RootTaskEnv *oldTaskEnv `json:"rootTaskEnv"`
+}
+
+type oldTaskEnv struct {
+	TaskDatas []*taskData
+	LinkDatas []*linkData
+}
+
+type taskData struct {
+	State int `json:"links"`
+	TaskID    string `json:"taskId"`
+
+}
+
+type linkData struct {
+	State int `json:"links"`
+	LinkID    int `json:"linkId"`
 }
 
 // MarshalJSON overrides the default MarshalJSON for FlowInstance
@@ -67,6 +86,7 @@ func (inst *IndependentInstance) MarshalJSON() ([]byte, error) {
 		TaskInsts: tis,
 		LinkInsts: lis,
 		SubFlows:  sfs,
+
 	})
 }
 
@@ -100,6 +120,17 @@ func (inst *IndependentInstance) UnmarshalJSON(d []byte) error {
 
 	for _, value := range ser.LinkInsts {
 		inst.linkInsts[value.linkID] = value
+	}
+
+	if ser.RootTaskEnv != nil {
+		for _, value := range ser.RootTaskEnv.TaskDatas {
+			inst.taskInsts[value.TaskID] = &TaskInst{taskID:value.TaskID, status:model.TaskStatus(value.State)}
+		}
+
+		for _, value := range ser.RootTaskEnv.LinkDatas {
+			inst.linkInsts[value.LinkID] = &LinkInst{linkID:value.LinkID, status:model.LinkStatus(value.State)}
+		}
+
 	}
 
 	subFlowCtr := 0

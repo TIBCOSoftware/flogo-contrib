@@ -350,7 +350,7 @@ func (fa *FlowAction) Run(context context.Context, inputs map[string]*data.Attri
 		if initialState != nil {
 			inst = initialState
 			instanceID := idGenerator.NextAsString()
-			flowDef, err := ep.GetFlowProvider().GetFlow(inst.FlowURI())
+			flowDef, err := manager.GetFlow(flowURI)
 			if err != nil {
 				return err
 			}

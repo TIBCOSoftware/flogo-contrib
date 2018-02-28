@@ -379,7 +379,6 @@ func (inst *IndependentInstance) HandleGlobalError(containerInst *Instance, err 
 		//clear existing instances
 		inst.taskInsts = make(map[string]*TaskInst)
 
-
 		taskEntries := flowBehavior.StartErrorHandler(containerInst)
 		inst.enterTasks(containerInst, taskEntries)
 	} else {
@@ -393,7 +392,7 @@ func (inst *IndependentInstance) HandleGlobalError(containerInst *Instance, err 
 
 			if ok {
 				behavior := inst.flowModel.GetDefaultTaskBehavior()
-				if typeID :=host.task.TypeID(); typeID != "" {
+				if typeID := host.task.TypeID(); typeID != "" {
 					behavior = inst.flowModel.GetTaskBehavior(typeID)
 				}
 
@@ -507,5 +506,19 @@ func (inst *IndependentInstance) Restart(id string, manager *support.FlowManager
 	inst.id = id
 	inst.flowDef, _ = manager.GetFlow(inst.flowURI)
 	inst.flowModel = model.Get(inst.flowDef.ModelID())
-	//inst.FlowExecEnv.init(pi)
+	inst.master = inst
+	inst.init(inst.Instance)
+}
+
+func (inst *IndependentInstance) init(flowInst *Instance) {
+
+	for _, v := range flowInst.taskInsts {
+		v.flowInst = flowInst
+		v.task = flowInst.flowDef.GetTask(v.taskID)
+	}
+
+	for _, v := range flowInst.linkInsts  {
+		v.flowInst = flowInst
+		v.link = flowInst.flowDef.GetLink(v.linkID)
+	}
 }
