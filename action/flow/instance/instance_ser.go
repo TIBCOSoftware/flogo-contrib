@@ -385,7 +385,7 @@ func (ict *InstanceChangeTracker) MarshalJSON() ([]byte, error) {
 		WqChanges   []*WorkItemQueueChange `json:"wqChanges,omitempty"`
 		TdChanges   []*TaskInstChange      `json:"tdChanges,omitempty"`
 		LdChanges   []*LinkInstChange      `json:"ldChanges,omitempty"`
-		InstChanges []*InstanceChange      `json:"ldChanges,omitempty"`
+		InstChanges []*InstanceChange      `json:"instChanges,omitempty"`
 	}{
 		Status:      status,
 		AttrChanges: attrs,

@@ -176,109 +176,6 @@ func createResource(actionData *ActionData) (string, error) {
 	return "res://" + resourceCfg.ID, nil
 }
 
-//
-//func (ff *FlowFactory) NewOld(config *action.Config) action.Action {
-//
-//
-//
-//
-//	actionMu.Lock()
-//	defer actionMu.Unlock()
-//
-//	var flowAction *FlowAction
-//
-//	if flowAction == nil {
-//		options := &ActionOptions{Record: record}
-//
-//		if ep == nil {
-//			testerEnabled := os.Getenv(tester.ENV_ENABLED)
-//			if strings.ToLower(testerEnabled) == "true" {
-//				ep = tester.NewExtensionProvider()
-//
-//				sm := util.GetDefaultServiceManager()
-//				sm.RegisterService(ep.GetFlowTester())
-//				record = true
-//				options.Record = true
-//			} else {
-//				ep = extension.New()
-//			}
-//
-//			definition.SetMapperFactory(ep.GetMapperFactory())
-//			definition.SetLinkExprManagerFactory(ep.GetLinkExprManagerFactory())
-//		}
-//
-//		if idGenerator == nil {
-//			idGenerator, _ = util.NewGenerator()
-//		}
-//
-//		if options.MaxStepCount < 1 {
-//			options.MaxStepCount = int(^uint16(0))
-//		}
-//
-//		flowAction = &FlowAction{config: config}
-//
-//		flowAction.actionOptions = options
-//		flowAction.idGenerator = idGenerator
-//	}
-//
-//	//temporary hack to support dynamic process running by tester
-//	if config.Data == nil {
-//		return flowAction
-//	}
-//
-//	var flavor Flavor
-//	err := json.Unmarshal(config.Data, &flavor)
-//	if err != nil {
-//		errorMsg := fmt.Sprintf("Error while loading flow '%s' error '%s'", config.Id, err.Error())
-//		logger.Errorf(errorMsg)
-//		panic(errorMsg)
-//	}
-//
-//	if len(flavor.FlowBehavior) > 0 {
-//		// It is an uncompressed and embedded flow
-//		err := ep.GetFlowProvider().AddUncompressedFlow(config.Id, flavor.FlowBehavior)
-//		if err != nil {
-//			errorMsg := fmt.Sprintf("Error while loading uncompressed flow '%s' error '%s'", config.Id, err.Error())
-//			logger.Errorf(errorMsg)
-//			panic(errorMsg)
-//		}
-//		return flowAction
-//	}
-//
-//	if len(flavor.FlowCompressed) > 0 {
-//		// It is a compressed and embedded flow
-//		err := ep.GetFlowProvider().AddCompressedFlow(config.Id, string(flavor.FlowCompressed[:]))
-//		if err != nil {
-//			errorMsg := fmt.Sprintf("Error while loading compressed flow '%s' error '%s'", config.Id, err.Error())
-//			logger.Errorf(errorMsg)
-//			panic(errorMsg)
-//		}
-//		return flowAction
-//	}
-//
-//	if len(flavor.FlowURI) > 0 {
-//		// It is a URI flow
-//		err := ep.GetFlowProvider().AddFlowURI(config.Id, string(flavor.FlowURI[:]))
-//		if err != nil {
-//			errorMsg := fmt.Sprintf("Error while loading flow URI '%s' error '%s'", config.Id, err.Error())
-//			logger.Errorf(errorMsg)
-//			panic(errorMsg)
-//		}
-//		return flowAction
-//	}
-//
-//	errorMsg := fmt.Sprintf("No flow found in action data for id '%s'", config.Id)
-//	logger.Errorf(errorMsg)
-//	panic(errorMsg)
-//
-//	return flowAction
-//}
-
-////Config get the Action's config
-//func (fa *FlowAction) Config() *action.Config {
-//	return fa.config
-//}
-
 //Metadata get the Action's metadata
 func (fa *FlowAction) Metadata() *action.Metadata {
 	return metadata
@@ -312,6 +209,8 @@ func (fa *FlowAction) Run(context context.Context, inputs map[string]*data.Attri
 			execOptions = ro.ExecOptions
 		}
 	}
+
+	delete(inputs, "_run_options")
 
 	if flowURI == "" {
 		flowURI = fa.flowURI
