@@ -317,21 +317,49 @@ func (ti *TaskInstChange) MarshalJSON() ([]byte, error) {
 	}
 
 	return json.Marshal(&struct {
-		ChgType    ChgType   `json:"chgType"`
-		ID         string    `json:"id"`
-		TaskInst   *TaskInst `json:"task,omitempty"`
+		ChgType  ChgType   `json:"ct"`
+		ID       string    `json:"id"`
+		TaskInst *TaskInst `json:"task,omitempty"`
 
 		ChgTypeOld ChgType   `json:"ChgType"`
 		IDOld      string    `json:"ID"`
 		TaskData   *taskData `json:"TaskData"`
 	}{
-		ChgType:    ti.ChgType,
-		ID:         ti.ID,
-		TaskInst:   ti.TaskInst,
+		ChgType:  ti.ChgType,
+		ID:       ti.ID,
+		TaskInst: ti.TaskInst,
 
 		ChgTypeOld: ti.ChgType,
 		IDOld:      ti.ID,
 		TaskData:   td,
+	})
+}
+
+// MarshalJSON overrides the default MarshalJSON for TaskInst
+func (li *LinkInstChange) MarshalJSON() ([]byte, error) {
+
+	var ld *linkData
+
+	if li.LinkInst != nil {
+		ld = &linkData{State: int(li.LinkInst.status), LinkID: li.LinkInst.link.ID()}
+	}
+
+	return json.Marshal(&struct {
+		ChgType  ChgType   `json:"ct"`
+		ID       int       `json:"id"`
+		LinkInst *LinkInst `json:"link,omitempty"`
+
+		ChgTypeOld ChgType   `json:"ChgType"`
+		IDOld      int       `json:"ID"`
+		LinkData   *linkData `json:"LinkData"`
+	}{
+		ChgType:  li.ChgType,
+		ID:       li.ID,
+		LinkInst: li.LinkInst,
+
+		ChgTypeOld: li.ChgType,
+		IDOld:      li.ID,
+		LinkData:   ld,
 	})
 }
 

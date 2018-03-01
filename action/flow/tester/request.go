@@ -63,9 +63,13 @@ func (rp *RequestProcessor) StartFlow(startRequest *StartRequest) (results map[s
 	//newOptions := make(map[string]interface{})
 	//newOptions["deprecated_options"] = ro
 
-	inputs := make(map[string]*data.Attribute, 1)
+	inputs := make(map[string]*data.Attribute, len(attrs) + 1)
 	attr, _ := data.NewAttribute("_run_options", data.ANY, ro)
 	inputs[attr.Name()] = attr
+
+	for _, attr := range attrs {
+		inputs[attr.Name()] = attr
+	}
 
 	return rp.runner.Execute(ctx, act, inputs)
 	//return rp.runner.RunAction(ctx, act, newOptions)

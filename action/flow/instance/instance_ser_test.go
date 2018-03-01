@@ -30,13 +30,27 @@ const defJSON = `
       "tasks": [
         {
           "id": 2,
-          "activityRef": "test-counter",
-          "name": "a"
+          "activityRef": "test-log",
+          "name": "a",
+          "attributes": [
+            {
+              "name": "message",
+              "value": "test message",
+              "type": "string"
+            }
+          ]
         },
         {
           "id": 3,
-          "activityRef": "test-log",
-          "name": "b"
+          "activityRef": "test-counter",
+          "name": "b",
+          "attributes": [
+            {
+              "name": "counterName",
+              "value": "test_counter",
+              "type": "string"
+            }
+          ]
         }
       ],
       "links": [
