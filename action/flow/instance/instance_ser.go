@@ -27,8 +27,8 @@ type serIndependentInstance struct {
 
 // old, for backwards compatibility
 type oldTaskEnv struct {
-	TaskDatas []*taskData
-	LinkDatas []*linkData
+	TaskDatas []*taskData `json:"taskDatas"`
+	LinkDatas []*linkData `json:"linkDatas"`
 }
 
 type taskData struct {
@@ -81,7 +81,7 @@ func (inst *IndependentInstance) MarshalJSON() ([]byte, error) {
 		tds := make([]*taskData, 0, len(inst.taskInsts))
 
 		for _, taskInst := range inst.taskInsts {
-			tds = append(tds, &taskData{State:int(taskInst.status), TaskID:taskInst.taskID})
+			tds = append(tds, &taskData{State: int(taskInst.status), TaskID: taskInst.task.ID()})
 		}
 
 		rootTaskEnv.TaskDatas = tds
@@ -91,7 +91,7 @@ func (inst *IndependentInstance) MarshalJSON() ([]byte, error) {
 		lds := make([]*linkData, 0, len(inst.linkInsts))
 
 		for _, linkInst := range inst.linkInsts {
-			lds = append(lds, &linkData{State:int(linkInst.status), LinkID:linkInst.linkID})
+			lds = append(lds, &linkData{State: int(linkInst.status), LinkID: linkInst.link.ID()})
 		}
 
 		rootTaskEnv.LinkDatas = lds
@@ -100,14 +100,14 @@ func (inst *IndependentInstance) MarshalJSON() ([]byte, error) {
 	//serialize all the subFlows
 
 	return json.Marshal(&serIndependentInstance{
-		ID:        inst.id,
-		Status:    inst.status,
-		Attrs:     attrs,
-		FlowURI:   inst.flowURI,
-		WorkQueue: queue,
-		TaskInsts: tis,
-		LinkInsts: lis,
-		SubFlows:  sfs,
+		ID:          inst.id,
+		Status:      inst.status,
+		Attrs:       attrs,
+		FlowURI:     inst.flowURI,
+		WorkQueue:   queue,
+		TaskInsts:   tis,
+		LinkInsts:   lis,
+		SubFlows:    sfs,
 		RootTaskEnv: rootTaskEnv,
 	})
 }
@@ -275,11 +275,9 @@ func (ti *TaskInst) MarshalJSON() ([]byte, error) {
 
 	return json.Marshal(&struct {
 		TaskID string `json:"taskId"`
-		State  int    `json:"state"`
 		Status int    `json:"status"`
 	}{
 		TaskID: ti.task.ID(),
-		State:  int(ti.status),
 		Status: int(ti.status),
 	})
 }
@@ -288,7 +286,6 @@ func (ti *TaskInst) MarshalJSON() ([]byte, error) {
 func (ti *TaskInst) UnmarshalJSON(d []byte) error {
 	ser := &struct {
 		TaskID string `json:"taskId"`
-		State  int    `json:"state"`
 		Status int    `json:"status"`
 	}{}
 
@@ -302,6 +299,41 @@ func (ti *TaskInst) UnmarshalJSON(d []byte) error {
 	return nil
 }
 
+//// TaskInstChange represents a change to a TaskInst
+//type TaskInstChange struct {
+//	ChgType  ChgType
+//	ID       string
+//	TaskInst *TaskInst
+//}
+//
+
+// MarshalJSON overrides the default MarshalJSON for TaskInst
+func (ti *TaskInstChange) MarshalJSON() ([]byte, error) {
+
+	return json.Marshal(&struct {
+		ChgType    ChgType   `json:"chgType"`
+		ID         string    `json:"id"`
+		TaskInst   *TaskInst `json:"task"`
+		ChgTypeOld ChgType   `json:"ChgType"`
+		IDOld      string    `json:"ID"`
+		TaskData   *taskData `json:"TaskData"`
+	}{
+		ChgType:    ti.ChgType,
+		ID:         ti.ID,
+		TaskInst:   ti.TaskInst,
+		ChgTypeOld: ti.ChgType,
+		IDOld:      ti.ID,
+		TaskData:   &taskData{State: int(ti.TaskInst.status), TaskID: ti.TaskInst.taskID},
+	})
+}
+
+//// LinkInstChange represents a change to a LinkInst
+//type LinkInstChange struct {
+//	ChgType  ChgType
+//	ID       int
+//	LinkInst *LinkInst
+//}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // LinkInst Serialization
 
@@ -310,11 +342,9 @@ func (ld *LinkInst) MarshalJSON() ([]byte, error) {
 
 	return json.Marshal(&struct {
 		LinkID int `json:"linkId"`
-		State  int `json:"state"`
 		Status int `json:"status"`
 	}{
 		LinkID: ld.link.ID(),
-		State:  int(ld.status),
 		Status: int(ld.status),
 	})
 }
@@ -323,7 +353,6 @@ func (ld *LinkInst) MarshalJSON() ([]byte, error) {
 func (ld *LinkInst) UnmarshalJSON(d []byte) error {
 	ser := &struct {
 		LinkID int `json:"linkId"`
-		State  int `json:"state"`
 		Status int `json:"status"`
 	}{}
 
