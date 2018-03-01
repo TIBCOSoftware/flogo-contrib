@@ -108,6 +108,7 @@ func (inst *IndependentInstance) MarshalJSON() ([]byte, error) {
 		TaskInsts: tis,
 		LinkInsts: lis,
 		SubFlows:  sfs,
+		RootTaskEnv: rootTaskEnv,
 	})
 }
 
