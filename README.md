@@ -30,19 +30,19 @@ Collection of Flogo activities, triggers and models.
 Example: install **log** activity
 
 ```bash
-flogo add activity github.com/TIBCOSoftware/flogo-contrib/activity/log
+flogo install github.com/TIBCOSoftware/flogo-contrib/activity/log
 ```
 #### Install Trigger
 Example: install **rest** trigger
 
 ```bash
-flogo add trigger github.com/TIBCOSoftware/flogo-contrib/trigger/rest
+flogo install github.com/TIBCOSoftware/flogo-contrib/trigger/rest
 ```
 #### Install Model
 Example: install **simple** model
 
 ```bash
-flogo add model github.com/TIBCOSoftware/flogo-contrib/model/simple
+flogo install github.com/TIBCOSoftware/flogo-contrib/model/simple
 ```
 
 ## Contributing and support
