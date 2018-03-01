@@ -74,6 +74,29 @@ func (inst *IndependentInstance) MarshalJSON() ([]byte, error) {
 		sfs = append(sfs, value)
 	}
 
+	//todo for backwards compatibility
+	rootTaskEnv := &oldTaskEnv{}
+
+	if len(inst.taskInsts) > 0 {
+		tds := make([]*taskData, 0, len(inst.taskInsts))
+
+		for _, taskInst := range inst.taskInsts {
+			tds = append(tds, &taskData{State:int(taskInst.status), TaskID:taskInst.taskID})
+		}
+
+		rootTaskEnv.TaskDatas = tds
+	}
+
+	if len(inst.linkInsts) > 0 {
+		lds := make([]*linkData, 0, len(inst.linkInsts))
+
+		for _, linkInst := range inst.linkInsts {
+			lds = append(lds, &linkData{State:int(linkInst.status), LinkID:linkInst.linkID})
+		}
+
+		rootTaskEnv.LinkDatas = lds
+	}
+
 	//serialize all the subFlows
 
 	return json.Marshal(&serIndependentInstance{
