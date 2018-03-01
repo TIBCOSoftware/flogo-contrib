@@ -582,6 +582,18 @@ func createActivityConfigFromOld(task *Task, rep *TaskRepOld) (*ActivityConfig, 
 				activityCfg.inputAttrs[name], _ = data.NewAttribute(name, attr.Type(), value)
 			}
 		}
+	} else if len(rep.Attributes) > 0 {
+
+		activityCfg.inputAttrs = make(map[string]*data.Attribute, len(inputAttrs))
+
+		for _, attr := range rep.Attributes {
+
+			if attr != nil {
+				//var err error
+				//todo handle error
+				activityCfg.inputAttrs[attr.Name()] = attr
+			}
+		}
 	}
 
 	outputAttrs := rep.OutputAttrs
