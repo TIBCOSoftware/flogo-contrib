@@ -310,10 +310,17 @@ func (ti *TaskInst) UnmarshalJSON(d []byte) error {
 // MarshalJSON overrides the default MarshalJSON for TaskInst
 func (ti *TaskInstChange) MarshalJSON() ([]byte, error) {
 
+	var td *taskData
+
+	if ti.TaskInst != nil {
+		td = &taskData{State: int(ti.TaskInst.status), TaskID: ti.TaskInst.task.ID()}
+	}
+
 	return json.Marshal(&struct {
 		ChgType    ChgType   `json:"chgType"`
 		ID         string    `json:"id"`
-		TaskInst   *TaskInst `json:"task"`
+		TaskInst   *TaskInst `json:"task,omitempty"`
+
 		ChgTypeOld ChgType   `json:"ChgType"`
 		IDOld      string    `json:"ID"`
 		TaskData   *taskData `json:"TaskData"`
@@ -321,9 +328,10 @@ func (ti *TaskInstChange) MarshalJSON() ([]byte, error) {
 		ChgType:    ti.ChgType,
 		ID:         ti.ID,
 		TaskInst:   ti.TaskInst,
+
 		ChgTypeOld: ti.ChgType,
 		IDOld:      ti.ID,
-		TaskData:   &taskData{State: int(ti.TaskInst.status), TaskID: ti.TaskInst.taskID},
+		TaskData:   td,
 	})
 }
 
