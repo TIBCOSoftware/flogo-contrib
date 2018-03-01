@@ -16,8 +16,6 @@ import (
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/tester"
 
 	_ "github.com/TIBCOSoftware/flogo-contrib/action/flow/test"
-	"net/url"
-	"fmt"
 )
 
 //TestInitNoFlavorError
