@@ -27,7 +27,7 @@
       },
       {
         "name": "default",
-        "type": "bool"
+        "type": "boolean"
       }
     ]
   }

@@ -1,6 +1,7 @@
 package subflow
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"testing"
@@ -10,9 +11,8 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
-	"github.com/stretchr/testify/assert"
 	"github.com/TIBCOSoftware/flogo-lib/engine/runner"
-	"context"
+	"github.com/stretchr/testify/assert"
 )
 
 var activityMetadata *activity.Metadata
@@ -181,13 +181,12 @@ func TestDynamicIO(t *testing.T) {
 		return
 	}
 
-	assert.True(t, 	act.Metadata().DynamicIO)
+	assert.True(t, act.Metadata().DynamicIO)
 
 	_, ok := act.(activity.DynamicIO)
 
-	assert.True(t, 	ok)
+	assert.True(t, ok)
 }
-
 
 func TestSubFlow(t *testing.T) {
 

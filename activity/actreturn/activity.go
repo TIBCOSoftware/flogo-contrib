@@ -66,20 +66,20 @@ func newOutputScope(activityHost activity.Host, mapperDef *data.MapperDef) *data
 
 	if activityHost.IOMetadata() == nil {
 		//todo temporary fix to support tester service
-		attrs := make([]*data.Attribute, 0, len(mapperDef.Mappings))
+		attrs := make(map[string]*data.Attribute, len(mapperDef.Mappings))
 
 		for _, mappingDef := range mapperDef.Mappings {
 			attr, _ := data.NewAttribute(mappingDef.MapTo, data.ANY, nil)
-			attrs = append(attrs, attr)
+			attrs[attr.Name()] = attr
 		}
 
 		return data.NewFixedScope(attrs)
 	} else {
 		outAttrs := activityHost.IOMetadata().Output
-		attrs := make([]*data.Attribute, 0, len(outAttrs))
+		attrs := make(map[string]*data.Attribute, len(outAttrs))
 
 		for _, outAttr := range outAttrs {
-			attrs = append(attrs, outAttr)
+			attrs[outAttr.Name()] = outAttr
 		}
 
 		//create a fixed scope using the output metadata

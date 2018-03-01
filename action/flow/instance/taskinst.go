@@ -323,9 +323,10 @@ func (ti *TaskInst) EvalActivity() (done bool, evalErr error) {
 			evalErr = NewActivityEvalError(ti.task.Name(), "mapper", err.Error())
 			return false, evalErr
 		}
-
-		eval = applyInputInterceptor(ti)
 	}
+
+	//if taskData.HasAttrs() {
+	eval = applyInputInterceptor(ti)
 
 	if eval {
 
@@ -346,8 +347,10 @@ func (ti *TaskInst) EvalActivity() (done bool, evalErr error) {
 
 	if done {
 
+		//if taskData.HasAttrs() {
+		applyOutputInterceptor(ti)
+
 		if ti.task.ActivityConfig().OutputMapper() != nil {
-			applyOutputInterceptor(ti)
 
 			appliedMapper, err := applyOutputMapper(ti)
 

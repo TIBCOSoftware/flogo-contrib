@@ -115,6 +115,11 @@ func (a *RESTActivity) Eval(context activity.Context) (done bool, err error) {
 	}
 
 	req, err := http.NewRequest(method, uri, reqBody)
+
+	if err != nil {
+		return false, err
+	}
+
 	if reqBody != nil {
 		req.Header.Set("Content-Type", contentType)
 	}
@@ -145,10 +150,11 @@ func (a *RESTActivity) Eval(context activity.Context) (done bool, err error) {
 		client = &http.Client{}
 	}
 	resp, err := client.Do(req)
-	if err != nil {
-		panic(err)
-	}
 	defer resp.Body.Close()
+
+	if err != nil {
+		return false, err
+	}
 
 	log.Debug("response Status:", resp.Status)
 	respBody, _ := ioutil.ReadAll(resp.Body)

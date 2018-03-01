@@ -32,7 +32,7 @@ type IndependentInstance struct {
 }
 
 // New creates a new Flow Instance from the specified Flow
-func NewIndependentInstance(instanceID string, flow *definition.Definition) *IndependentInstance {
+func NewIndependentInstance(instanceID string, flowURI string, flow *definition.Definition) *IndependentInstance {
 	inst := &IndependentInstance{}
 	inst.Instance = &Instance{}
 	inst.master = inst
@@ -40,13 +40,8 @@ func NewIndependentInstance(instanceID string, flow *definition.Definition) *Ind
 	inst.stepID = 0
 	inst.workItemQueue = util.NewSyncQueue()
 	inst.flowDef = flow
-
-	if flow.ModelID() == "" {
-		inst.flowModel = model.Default()
-	} else {
-		inst.flowModel = model.Get(flow.ModelID())
-		//todo if model not found, should throw error
-	}
+	inst.flowURI = flowURI
+	inst.flowModel = getFlowModel(flow)
 
 	inst.status = model.FlowStatusNotStarted
 	inst.ChangeTracker = NewInstanceChangeTracker()
@@ -57,7 +52,7 @@ func NewIndependentInstance(instanceID string, flow *definition.Definition) *Ind
 	return inst
 }
 
-func (inst *IndependentInstance) newEmbeddedInstance(taskInst *TaskInst, flow *definition.Definition) *Instance {
+func (inst *IndependentInstance) newEmbeddedInstance(taskInst *TaskInst, flowURI string, flow *definition.Definition) *Instance {
 
 	inst.subFlowCtr++
 
@@ -69,6 +64,7 @@ func (inst *IndependentInstance) newEmbeddedInstance(taskInst *TaskInst, flow *d
 	embeddedInst.status = model.FlowStatusNotStarted
 	embeddedInst.taskInsts = make(map[string]*TaskInst)
 	embeddedInst.linkInsts = make(map[int]*LinkInst)
+	embeddedInst.flowURI = flowURI
 
 	if inst.subFlows == nil {
 		inst.subFlows = make(map[int]*Instance)
@@ -379,7 +375,6 @@ func (inst *IndependentInstance) HandleGlobalError(containerInst *Instance, err 
 		//clear existing instances
 		inst.taskInsts = make(map[string]*TaskInst)
 
-
 		taskEntries := flowBehavior.StartErrorHandler(containerInst)
 		inst.enterTasks(containerInst, taskEntries)
 	} else {
@@ -393,7 +388,7 @@ func (inst *IndependentInstance) HandleGlobalError(containerInst *Instance, err 
 
 			if ok {
 				behavior := inst.flowModel.GetDefaultTaskBehavior()
-				if typeID :=host.task.TypeID(); typeID != "" {
+				if typeID := host.task.TypeID(); typeID != "" {
 					behavior = inst.flowModel.GetTaskBehavior(typeID)
 				}
 
@@ -502,10 +497,33 @@ func (e *ActivityEvalError) Error() string {
 //////////////
 // todo fix the following
 
+func getFlowModel(flow *definition.Definition) *model.FlowModel{
+	if flow.ModelID() == "" {
+		return model.Default()
+	} else {
+		return model.Get(flow.ModelID())
+		//todo if model not found, should throw error
+	}
+}
+
 //// Restart indicates that this FlowInstance was restarted
 func (inst *IndependentInstance) Restart(id string, manager *support.FlowManager) {
 	inst.id = id
 	inst.flowDef, _ = manager.GetFlow(inst.flowURI)
-	inst.flowModel = model.Get(inst.flowDef.ModelID())
-	//inst.FlowExecEnv.init(pi)
+	inst.flowModel = getFlowModel(inst.flowDef)
+	inst.master = inst
+	inst.init(inst.Instance)
+}
+
+func (inst *IndependentInstance) init(flowInst *Instance) {
+
+	for _, v := range flowInst.taskInsts {
+		v.flowInst = flowInst
+		v.task = flowInst.flowDef.GetTask(v.taskID)
+	}
+
+	for _, v := range flowInst.linkInsts  {
+		v.flowInst = flowInst
+		v.link = flowInst.flowDef.GetLink(v.linkID)
+	}
 }

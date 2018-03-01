@@ -62,24 +62,24 @@ func (a *ReplyActivity) Eval(ctx activity.Context) (done bool, err error) {
 	return true, nil
 }
 
-func newOutputScope(actionCtx activity.Host, mapperDef *data.MapperDef) *data.FixedScope {
+func newOutputScope(activityHost activity.Host, mapperDef *data.MapperDef) *data.FixedScope {
 
-	if actionCtx.IOMetadata() == nil {
+	if activityHost.IOMetadata() == nil {
 		//todo temporary fix to support tester service
-		attrs := make([]*data.Attribute, 0, len(mapperDef.Mappings))
+		attrs := make(map[string]*data.Attribute, len(mapperDef.Mappings))
 
 		for _, mappingDef := range mapperDef.Mappings {
 			attr, _ := data.NewAttribute(mappingDef.MapTo, data.ANY, nil)
-			attrs = append(attrs, attr)
+			attrs[attr.Name()] = attr
 		}
 
 		return data.NewFixedScope(attrs)
 	} else {
-		outAttrs := actionCtx.IOMetadata().Output
-		attrs := make([]*data.Attribute, 0, len(outAttrs))
+		outAttrs := activityHost.IOMetadata().Output
+		attrs := make(map[string]*data.Attribute, len(outAttrs))
 
 		for _, outAttr := range outAttrs {
-			attrs = append(attrs, outAttr)
+			attrs[outAttr.Name()] = outAttr
 		}
 
 		//create a fixed scope using the output metadata

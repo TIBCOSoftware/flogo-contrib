@@ -3,10 +3,10 @@ package instance
 import (
 	"errors"
 
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/support"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/support"
 )
 
 func applyInputMapper(taskInst *TaskInst) error {
@@ -122,8 +122,8 @@ func applyOutputMapper(taskInst *TaskInst) (bool, error) {
 	return false, nil
 }
 
-func GetFlowIOMetadata (flowURI string) (*data.IOMetadata,error) {
-	manager:=support.GetFlowManager()
+func GetFlowIOMetadata(flowURI string) (*data.IOMetadata, error) {
+	manager := support.GetFlowManager()
 	def, err := manager.GetFlow(flowURI)
 
 	if err != nil {
@@ -145,7 +145,7 @@ func StartSubFlow(ctx activity.Context, flowURI string, inputs map[string]*data.
 		return errors.New("unable to create subFlow using this context")
 	}
 
-	manager:=support.GetFlowManager()
+	manager := support.GetFlowManager()
 	def, err := manager.GetFlow(flowURI)
 
 	if err != nil {
@@ -157,7 +157,7 @@ func StartSubFlow(ctx activity.Context, flowURI string, inputs map[string]*data.
 	}
 
 	//todo make sure that there is only one subFlow per taskinst
-	flowInst := taskInst.flowInst.master.newEmbeddedInstance(taskInst, def)
+	flowInst := taskInst.flowInst.master.newEmbeddedInstance(taskInst, flowURI, def)
 
 	if err != nil {
 		return err

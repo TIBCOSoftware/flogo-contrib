@@ -119,11 +119,12 @@ func (sr *RemoteStateRecorder) RecordStep(instance *IndependentInstance) {
 		FlowID:   instance.ID(),
 		Status:   int(instance.Status()),
 		StepData: instance.ChangeTracker,
+		FlowURI:  instance.flowURI,
 	}
 
 	uri := sr.host + "/instances/steps"
 
-	logger.Debugf("POST Snapshot: %s\n", uri)
+	logger.Debugf("POST Step: %s\n", uri)
 
 	jsonReq, _ := json.Marshal(storeReq)
 
@@ -160,8 +161,12 @@ type RecordSnapshotReq struct {
 type RecordStepReq struct {
 	ID     int    `json:"id"`
 	FlowID string `json:"flowID"`
-	State  int    `json:"state"`
-	Status int    `json:"status"`
+
+	//todo should move to the "stepData"
+	State  int `json:"state"`
+	Status int `json:"status"`
+	//todo we should have initial "init" to associate flowURI with flowID, instead of at every step
+	FlowURI string `json:"flowURI"`
 
 	StepData *InstanceChangeTracker `json:"stepData"`
 }
