@@ -26,7 +26,7 @@ Settings, Outputs and Endpoint:
       },
       {
         "name": "default",
-        "type": "bool"
+        "type": "boolean"
       }
     ]
   }
