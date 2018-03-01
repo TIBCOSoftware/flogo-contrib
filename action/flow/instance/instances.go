@@ -32,7 +32,7 @@ type IndependentInstance struct {
 }
 
 // New creates a new Flow Instance from the specified Flow
-func NewIndependentInstance(instanceID string, flow *definition.Definition) *IndependentInstance {
+func NewIndependentInstance(instanceID string, flowURI string, flow *definition.Definition) *IndependentInstance {
 	inst := &IndependentInstance{}
 	inst.Instance = &Instance{}
 	inst.master = inst
@@ -40,6 +40,7 @@ func NewIndependentInstance(instanceID string, flow *definition.Definition) *Ind
 	inst.stepID = 0
 	inst.workItemQueue = util.NewSyncQueue()
 	inst.flowDef = flow
+	inst.flowURI = flowURI
 
 	if flow.ModelID() == "" {
 		inst.flowModel = model.Default()
@@ -57,7 +58,7 @@ func NewIndependentInstance(instanceID string, flow *definition.Definition) *Ind
 	return inst
 }
 
-func (inst *IndependentInstance) newEmbeddedInstance(taskInst *TaskInst, flow *definition.Definition) *Instance {
+func (inst *IndependentInstance) newEmbeddedInstance(taskInst *TaskInst, flowURI string, flow *definition.Definition) *Instance {
 
 	inst.subFlowCtr++
 
@@ -69,6 +70,7 @@ func (inst *IndependentInstance) newEmbeddedInstance(taskInst *TaskInst, flow *d
 	embeddedInst.status = model.FlowStatusNotStarted
 	embeddedInst.taskInsts = make(map[string]*TaskInst)
 	embeddedInst.linkInsts = make(map[int]*LinkInst)
+	embeddedInst.flowURI = flowURI
 
 	if inst.subFlows == nil {
 		inst.subFlows = make(map[int]*Instance)

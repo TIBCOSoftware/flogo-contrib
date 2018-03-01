@@ -157,7 +157,7 @@ func StartSubFlow(ctx activity.Context, flowURI string, inputs map[string]*data.
 	}
 
 	//todo make sure that there is only one subFlow per taskinst
-	flowInst := taskInst.flowInst.master.newEmbeddedInstance(taskInst, def)
+	flowInst := taskInst.flowInst.master.newEmbeddedInstance(taskInst, flowURI, def)
 
 	if err != nil {
 		return err

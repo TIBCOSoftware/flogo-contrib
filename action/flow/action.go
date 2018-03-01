@@ -237,7 +237,7 @@ func (fa *FlowAction) Run(context context.Context, inputs map[string]*data.Attri
 		instanceID := idGenerator.NextAsString()
 		logger.Debug("Creating Flow Instance: ", instanceID)
 
-		inst = instance.NewIndependentInstance(instanceID, flowDef) //(flowURI, flowDef, ep.GetFlowModel())
+		inst = instance.NewIndependentInstance(instanceID, flowURI, flowDef)
 	case instance.OpResume:
 		if initialState != nil {
 			inst = initialState
