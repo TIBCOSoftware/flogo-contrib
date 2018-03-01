@@ -12,10 +12,12 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/engine/runner"
 	"github.com/stretchr/testify/assert"
-	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/app/resource"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/test"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/tester"
+
+	_ "github.com/TIBCOSoftware/flogo-contrib/action/flow/test"
+	"net/url"
+	"fmt"
 )
 
 //TestInitNoFlavorError
@@ -284,7 +286,7 @@ var jsonFlow1 = `{
           "name": "Number Counter",
           "description": "Simple Global Counter Activity",
           "type": 1,
-          "activityRef": "counter",
+          "activityRef": "test-counter",
           "attributes": [
             {
               "name": "counterName",
@@ -299,7 +301,7 @@ var jsonFlow1 = `{
           "name": "Logger",
           "description": "Simple Log Activity",
           "type": 1,
-          "activityRef": "log",
+          "activityRef": "test-log",
           "attributes": [
             {
               "name": "message",
@@ -384,9 +386,6 @@ var jsonRestartRequest = `{
 
 func TestRequestProcessor_RestartFlow(t *testing.T) {
 
-	activity.Register(test.NewLogActivity())
-	activity.Register(test.NewCounterActivity())
-
 	f := action.GetFactory(FLOW_REF)
 	af := f.(*ActionFactory)
 	af.Init()
@@ -394,8 +393,6 @@ func TestRequestProcessor_RestartFlow(t *testing.T) {
 	rConfig1 := &resource.Config{ID: "flow:flow1", Data: []byte(jsonFlow1)}
 	err := resource.Load(rConfig1)
 	assert.Nil(t, err)
-
-
 
 	rp := tester.NewRequestProcessor()
 
@@ -410,5 +407,4 @@ func TestRequestProcessor_RestartFlow(t *testing.T) {
 	assert.NotNil(t, results)
 
 	//results, err := rp.RestartFlow(req)
-
 }
