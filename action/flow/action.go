@@ -87,10 +87,10 @@ func (ff *ActionFactory) Init() error {
 			ep = NewDefaultExtensionProvider()
 			record = recordFlows()
 		}
-
-		definition.SetMapperFactory(ep.GetMapperFactory())
-		definition.SetLinkExprManagerFactory(ep.GetLinkExprManagerFactory())
 	}
+
+	definition.SetMapperFactory(ep.GetMapperFactory())
+	definition.SetLinkExprManagerFactory(ep.GetLinkExprManagerFactory())
 
 	if idGenerator == nil {
 		idGenerator, _ = util.NewGenerator()
