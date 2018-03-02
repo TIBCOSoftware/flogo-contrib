@@ -294,6 +294,9 @@ const (
 
 	// LtError denotes an error link
 	LtError LinkType = 3
+
+	//LinkType denotes an complex linker expression
+	LtFunction  LinkType = 4
 )
 
 // LinkOld is the object that describes the definition of
