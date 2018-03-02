@@ -24,7 +24,7 @@
       "type": "string"
     }
   ],
-  "outputs": [
+  "output": [
     {
       "name": "message",
       "type": "string"

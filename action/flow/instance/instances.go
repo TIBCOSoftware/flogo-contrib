@@ -507,12 +507,23 @@ func getFlowModel(flow *definition.Definition) *model.FlowModel{
 }
 
 //// Restart indicates that this FlowInstance was restarted
-func (inst *IndependentInstance) Restart(id string, manager *support.FlowManager) {
+func (inst *IndependentInstance) Restart(id string, manager *support.FlowManager)  error {
 	inst.id = id
-	inst.flowDef, _ = manager.GetFlow(inst.flowURI)
+	var err error
+	inst.flowDef, err = manager.GetFlow(inst.flowURI)
+
+	if err!= nil {
+		return err
+	}
+	if inst.flowDef == nil {
+		return errors.New("unable to resolve flow: " + inst.flowURI)
+	}
+
 	inst.flowModel = getFlowModel(inst.flowDef)
 	inst.master = inst
 	inst.init(inst.Instance)
+
+	return nil
 }
 
 func (inst *IndependentInstance) init(flowInst *Instance) {

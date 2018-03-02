@@ -6,7 +6,7 @@
   "title": "Aggregate",
   "description": "Simple Aggregator Activity",
   "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/aggregate",
-  "inputs":[
+  "input":[
     {
       "name": "function",
       "type": "string",
@@ -23,7 +23,7 @@
       "type": "number"
     }
   ],
-  "outputs": [
+  "output": [
     {
       "name": "result",
       "type": "number"

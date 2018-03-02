@@ -69,7 +69,7 @@ func newOutputScope(activityHost activity.Host, mapperDef *data.MapperDef) *data
 		attrs := make(map[string]*data.Attribute, len(mapperDef.Mappings))
 
 		for _, mappingDef := range mapperDef.Mappings {
-			attr, _ := data.NewAttribute(mappingDef.MapTo, data.ANY, nil)
+			attr, _ := data.NewAttribute(mappingDef.MapTo, data.TypeAny, nil)
 			attrs[attr.Name()] = attr
 		}
 

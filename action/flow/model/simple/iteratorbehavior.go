@@ -57,7 +57,7 @@ func (tb *IteratorTaskBehavior) Eval(ctx model.TaskContext) (evalResult model.Ev
 			return model.EVAL_FAIL, fmt.Errorf("unsupported type '%s' for iterateOn", t)
 		}
 
-		itxAttr, _ = data.NewAttribute("_iterator", data.ANY, itx)
+		itxAttr, _ = data.NewAttribute("_iterator", data.TypeAny, itx)
 		ctx.AddWorkingData(itxAttr)
 
 		iteration := map[string]interface{}{
@@ -65,7 +65,7 @@ func (tb *IteratorTaskBehavior) Eval(ctx model.TaskContext) (evalResult model.Ev
 			"value": nil,
 		}
 
-		iterationAttr, _ = data.NewAttribute("iteration", data.OBJECT, iteration)
+		iterationAttr, _ = data.NewAttribute("iteration", data.TypeObject, iteration)
 		ctx.AddWorkingData(iterationAttr)
 	}
 

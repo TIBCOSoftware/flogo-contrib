@@ -18,7 +18,7 @@ Settings, Outputs and Endpoint:
       "type": "integer"
     }
   ],
-  "outputs": [
+  "output": [
     {
       "name": "pathParams",
       "type": "params"

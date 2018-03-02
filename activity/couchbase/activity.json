@@ -6,7 +6,7 @@
   "title": "Couchbase connector",
   "description": "Manage Couchbase documents in a specified bucket",
   "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/couchbase",
-  "inputs": [
+  "input": [
     {
       "name": "key",
       "type": "string",
@@ -57,7 +57,7 @@
       "type": "string"
     }
   ],
-  "outputs": [
+  "output": [
     {
       "name": "output",
       "type": "any"

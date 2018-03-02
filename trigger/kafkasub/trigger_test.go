@@ -61,7 +61,7 @@ const testConfig string = `{
       }
     }
   ],
-	"outputs": [
+	"output": [
     {
       "name": "message",
       "type": "string"
@@ -107,7 +107,7 @@ const testConfigMulti string = `{
       }
     }
   ],
-	"outputs": [
+	"output": [
     {
       "name": "message",
       "type": "string"

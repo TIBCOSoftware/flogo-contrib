@@ -206,11 +206,11 @@ func TestGosLinkExprManager_EvalLinkExpr(t *testing.T) {
 	aCresult := 2
 
 	attrs := []*data.Attribute{
-		newAttr("petMax", data.INTEGER, 4),
-		newAttr("petId", data.INTEGER, 3),
-		newAttr("_A.C.result", data.INTEGER, aCresult),
-		newAttr("_A.2.result", data.OBJECT, a2result),
-		newAttr("_T.result", data.OBJECT, a2result),
+		newAttr("petMax", data.TypeInteger, 4),
+		newAttr("petId", data.TypeInteger, 3),
+		newAttr("_A.C.result", data.TypeInteger, aCresult),
+		newAttr("_A.2.result", data.TypeObject, a2result),
+		newAttr("_T.result", data.TypeObject, a2result),
 	}
 
 	scope := data.NewSimpleScope(attrs, nil)
@@ -346,11 +346,11 @@ func TestGosLinkExprManager_EvalLinkExprOld(t *testing.T) {
 	aCresult := 2
 
 	attrs := []*data.Attribute{
-		newAttr("petMax", data.INTEGER, 4),
-		newAttr("petId", data.INTEGER, 3),
-		newAttr("_A.C.result", data.INTEGER, aCresult),
-		newAttr("_A.2.result", data.OBJECT, a2result),
-		newAttr("_T.result", data.OBJECT, a2result),
+		newAttr("petMax", data.TypeInteger, 4),
+		newAttr("petId", data.TypeInteger, 3),
+		newAttr("_A.C.result", data.TypeInteger, aCresult),
+		newAttr("_A.2.result", data.TypeObject, a2result),
+		newAttr("_T.result", data.TypeObject, a2result),
 	}
 
 	scope := data.NewSimpleScope(attrs, nil)

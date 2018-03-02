@@ -12,7 +12,7 @@ Outputs and Endpoint:
 
 ```json
 {
-  "outputs": [
+  "output": [
     {
       "name": "params",
       "type": "params"

@@ -56,7 +56,7 @@ func NewFlowManager(flowProvider definition.Provider) *FlowManager {
 	return manager
 }
 
-func (rm *FlowManager) LoadResource(config *resource.Config) error {
+func (fm *FlowManager) LoadResource(config *resource.Config) error {
 
 	var flowDefBytes []byte
 
@@ -77,53 +77,53 @@ func (rm *FlowManager) LoadResource(config *resource.Config) error {
 		return fmt.Errorf("error marshalling flow resource with id '%s', %s", config.ID, err.Error())
 	}
 
-	flow, err := rm.materializeFlow(defRep)
+	flow, err := fm.materializeFlow(defRep)
 	if err != nil {
 		return err
 	}
 
-	rm.resFlows[config.ID] = flow
+	fm.resFlows[config.ID] = flow
 	return nil
 }
 
-func (rm *FlowManager) GetResource(id string) interface{} {
-	return rm.resFlows[id]
+func (fm *FlowManager) GetResource(id string) interface{} {
+	return fm.resFlows[id]
 }
 
-func (rm *FlowManager) GetFlow(uri string) (*definition.Definition, error) {
+func (fm *FlowManager) GetFlow(uri string) (*definition.Definition, error) {
 
 	if strings.HasPrefix(uri, uriSchemeRes) {
-		return rm.resFlows[uri[6:]], nil
+		return fm.resFlows[uri[6:]], nil
 	}
 
-	rm.rfMu.Lock()
-	defer rm.rfMu.Unlock()
+	fm.rfMu.Lock()
+	defer fm.rfMu.Unlock()
 
-	if rm.remoteFlows == nil {
-		rm.remoteFlows = make(map[string]*definition.Definition)
+	if fm.remoteFlows == nil {
+		fm.remoteFlows = make(map[string]*definition.Definition)
 	}
 
-	flow, exists := rm.remoteFlows[uri]
+	flow, exists := fm.remoteFlows[uri]
 
 	if !exists {
 
-		defRep, err := rm.flowProvider.GetFlow(uri)
+		defRep, err := fm.flowProvider.GetFlow(uri)
 		if err != nil {
 			return nil, err
 		}
 
-		flow, err = rm.materializeFlow(defRep)
+		flow, err = fm.materializeFlow(defRep)
 		if err != nil {
 			return nil, err
 		}
 
-		rm.remoteFlows[uri] = flow
+		fm.remoteFlows[uri] = flow
 	}
 
 	return flow, nil
 }
 
-func (rm *FlowManager) materializeFlow(flowRep *definition.DefinitionRep) (*definition.Definition, error) {
+func (fm *FlowManager) materializeFlow(flowRep *definition.DefinitionRep) (*definition.Definition, error) {
 
 	def, err := definition.NewDefinition(flowRep)
 	if err != nil {

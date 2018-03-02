@@ -13,7 +13,7 @@ Inputs and Outputs:
 
 ```json
 {
-  "inputs":[
+  "input":[
     {
       "name": "method",
       "type": "string",
@@ -45,7 +45,7 @@ Inputs and Outputs:
       "type": "object"
     }
   ],
-  "outputs": [
+  "output": [
     {
       "name": "result",
       "type": "object"
