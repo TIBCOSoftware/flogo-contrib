@@ -5,6 +5,6 @@
   "version": "0.0.1",
   "title": "Simple Flow",
   "description": "Simple Flow Action",
-  "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/action/flow"
-  "async":true
+  "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/action/flow",
+  "async": true
 }
