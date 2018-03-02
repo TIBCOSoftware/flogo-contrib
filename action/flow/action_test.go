@@ -243,7 +243,7 @@ func TestFlowAction_Run_Restart(t *testing.T) {
 		attrs := make([]*data.Attribute, len(req.Data))
 
 		for k, v := range req.Data {
-			attr, _ := data.NewAttribute(k, data.ANY, v)
+			attr, _ := data.NewAttribute(k, data.TypeAny, v)
 			attrs = append(attrs, attr)
 		}
 
@@ -253,7 +253,7 @@ func TestFlowAction_Run_Restart(t *testing.T) {
 	execOptions := &instance.ExecOptions{Interceptor: req.Interceptor, Patch: req.Patch}
 	ro := &instance.RunOptions{Op: instance.OpRestart, ReturnID: true, FlowURI: req.InitialState.FlowURI(), InitialState: req.InitialState, ExecOptions: execOptions}
 	inputs := make(map[string]*data.Attribute, 1)
-	attr, _ := data.NewAttribute("_run_options", data.ANY, ro)
+	attr, _ := data.NewAttribute("_run_options", data.TypeAny, ro)
 	inputs[attr.Name()] = attr
 
 	r := runner.NewDirect()

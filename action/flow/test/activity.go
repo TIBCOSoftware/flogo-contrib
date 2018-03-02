@@ -21,11 +21,11 @@ type LogActivity struct {
 func NewLogActivity() activity.Activity {
 	metadata := &activity.Metadata{ID: "test-log"}
 	input := map[string]*data.Attribute{
-		"message": data.NewZeroAttribute("message", data.STRING),
+		"message": data.NewZeroAttribute("message", data.TypeString),
 	}
 	metadata.Input = input
 	output := map[string]*data.Attribute{
-		"message": data.NewZeroAttribute("message", data.STRING),
+		"message": data.NewZeroAttribute("message", data.TypeString),
 	}
 	metadata.Output = output
 	return &LogActivity{metadata: metadata}
@@ -60,11 +60,11 @@ type CounterActivity struct {
 func NewCounterActivity() activity.Activity {
 	metadata := &activity.Metadata{ID: "test-counter"}
 	input := map[string]*data.Attribute{
-		"counterName": data.NewZeroAttribute("counterName", data.STRING),
+		"counterName": data.NewZeroAttribute("counterName", data.TypeString),
 	}
 	metadata.Input = input
 	output := map[string]*data.Attribute{
-		"value": data.NewZeroAttribute("value", data.INTEGER),
+		"value": data.NewZeroAttribute("value", data.TypeInteger),
 	}
 	metadata.Output = output
 	return &CounterActivity{metadata: metadata, counters:make(map[string]int)}

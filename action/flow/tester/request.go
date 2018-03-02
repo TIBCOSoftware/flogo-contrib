@@ -58,7 +58,7 @@ func (rp *RequestProcessor) StartFlow(startRequest *StartRequest) (results map[s
 		for k, v := range startRequest.Data {
 			t, err := data.GetType(v)
 			if err != nil {
-				t = data.ANY
+				t = data.TypeAny
 			}
 			attr, _ := data.NewAttribute(k, t, v)
 			inputs[k] = attr
@@ -69,7 +69,7 @@ func (rp *RequestProcessor) StartFlow(startRequest *StartRequest) (results map[s
 
 	execOptions := &instance.ExecOptions{Interceptor: startRequest.Interceptor, Patch: startRequest.Patch}
 	ro := &instance.RunOptions{Op: instance.OpStart, ReturnID: true, FlowURI: startRequest.FlowURI, ExecOptions: execOptions}
-	attr, _ := data.NewAttribute("_run_options", data.ANY, ro)
+	attr, _ := data.NewAttribute("_run_options", data.TypeAny, ro)
 	inputs[attr.Name()] = attr
 
 	return rp.runner.Execute(context.Background(), act, inputs)
@@ -91,14 +91,14 @@ func (rp *RequestProcessor) RestartFlow(restartRequest *RestartRequest) (results
 		logger.Debugf("Updating flow attrs: %v", restartRequest.Data)
 
 		for k, v := range restartRequest.Data {
-			attr, _ := data.NewAttribute(k, data.ANY, v)
+			attr, _ := data.NewAttribute(k, data.TypeAny, v)
 			inputs[k] = attr
 		}
 	}
 
 	execOptions := &instance.ExecOptions{Interceptor: restartRequest.Interceptor, Patch: restartRequest.Patch}
 	ro := &instance.RunOptions{Op: instance.OpRestart, ReturnID: true, FlowURI: restartRequest.InitialState.FlowURI(), InitialState: restartRequest.InitialState, ExecOptions: execOptions}
-	attr, _ := data.NewAttribute("_run_options", data.ANY, ro)
+	attr, _ := data.NewAttribute("_run_options", data.TypeAny, ro)
 	inputs[attr.Name()] = attr
 
 	return rp.runner.Execute(context.Background(), act, inputs)
@@ -120,14 +120,14 @@ func (rp *RequestProcessor) ResumeFlow(resumeRequest *ResumeRequest) (results ma
 		logger.Debugf("Updating flow attrs: %v", resumeRequest.Data)
 
 		for k, v := range resumeRequest.Data {
-			attr, _ := data.NewAttribute(k, data.ANY, v)
+			attr, _ := data.NewAttribute(k, data.TypeAny, v)
 			inputs[k] = attr
 		}
 	}
 
 	execOptions := &instance.ExecOptions{Interceptor: resumeRequest.Interceptor, Patch: resumeRequest.Patch}
 	ro := &instance.RunOptions{Op: instance.OpResume, ReturnID: true, FlowURI: resumeRequest.State.FlowURI(), InitialState: resumeRequest.State, ExecOptions: execOptions}
-	attr, _ := data.NewAttribute("_run_options", data.ANY, ro)
+	attr, _ := data.NewAttribute("_run_options", data.TypeAny, ro)
 	inputs[attr.Name()] = attr
 
 	return rp.runner.Execute(context.Background(), act, inputs)

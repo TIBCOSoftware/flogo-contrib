@@ -77,8 +77,8 @@ func TestSimpleReturn(t *testing.T) {
 
 func newActionContext() *test.TestActivityHost {
 
-	input := []*data.Attribute{data.NewZeroAttribute("Input1", data.STRING)}
-	output := []*data.Attribute{data.NewZeroAttribute("Output1", data.STRING), data.NewZeroAttribute("Output2", data.INTEGER)}
+	input := []*data.Attribute{data.NewZeroAttribute("Input1", data.TypeString)}
+	output := []*data.Attribute{data.NewZeroAttribute("Output1", data.TypeString), data.NewZeroAttribute("Output2", data.TypeInteger)}
 
 	ac := &test.TestActivityHost{
 		HostId:     "1",

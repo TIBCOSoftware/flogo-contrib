@@ -305,7 +305,7 @@ func (fa *FlowAction) Run(context context.Context, inputs map[string]*data.Attri
 
 		if !inst.FlowDefinition().ExplicitReply() || retID {
 
-			idAttr, _ := data.NewAttribute("id", data.STRING, inst.ID())
+			idAttr, _ := data.NewAttribute("id", data.TypeString, inst.ID())
 			results := map[string]*data.Attribute{
 				"id": idAttr,
 			}

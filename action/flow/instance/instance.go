@@ -108,22 +108,22 @@ func (inst *Instance) appendErrorData(err error) {
 
 	switch e := err.(type) {
 	case *definition.LinkExprError:
-		inst.AddAttr("{Error.type}", data.STRING, "link_expr")
-		inst.AddAttr("{Error.message}", data.STRING, err.Error())
+		inst.AddAttr("{Error.type}", data.TypeString, "link_expr")
+		inst.AddAttr("{Error.message}", data.TypeString, err.Error())
 	case *activity.Error:
-		inst.AddAttr("{Error.message}", data.STRING, err.Error())
-		inst.AddAttr("{Error.data}", data.OBJECT, e.Data())
-		inst.AddAttr("{Error.code}", data.STRING, e.Code())
+		inst.AddAttr("{Error.message}", data.TypeString, err.Error())
+		inst.AddAttr("{Error.data}", data.TypeObject, e.Data())
+		inst.AddAttr("{Error.code}", data.TypeString, e.Code())
 
 		if e.ActivityName() != "" {
-			inst.AddAttr("{Error.activity}", data.STRING, e.ActivityName())
+			inst.AddAttr("{Error.activity}", data.TypeString, e.ActivityName())
 		}
 	case *ActivityEvalError:
-		inst.AddAttr("{Error.activity}", data.STRING, e.TaskName())
-		inst.AddAttr("{Error.message}", data.STRING, err.Error())
-		inst.AddAttr("{Error.type}", data.STRING, e.Type())
+		inst.AddAttr("{Error.activity}", data.TypeString, e.TaskName())
+		inst.AddAttr("{Error.message}", data.TypeString, err.Error())
+		inst.AddAttr("{Error.type}", data.TypeString, e.Type())
 	default:
-		inst.AddAttr("{Error.message}", data.STRING, err.Error())
+		inst.AddAttr("{Error.message}", data.TypeString, err.Error())
 	}
 
 	//todo add case for *dataMapperError & *activity.Error
@@ -306,8 +306,8 @@ type SimpleReplyHandler struct {
 // Reply implements ReplyHandler.Reply
 func (rh *SimpleReplyHandler) Reply(code int, replyData interface{}, err error) {
 
-	dataAttr, _ := data.NewAttribute("data", data.OBJECT, replyData)
-	codeAttr, _ := data.NewAttribute("code", data.INTEGER, code)
+	dataAttr, _ := data.NewAttribute("data", data.TypeObject, replyData)
+	codeAttr, _ := data.NewAttribute("code", data.TypeInteger, code)
 	resultData := map[string]*data.Attribute{
 		"data": dataAttr,
 		"code": codeAttr,
