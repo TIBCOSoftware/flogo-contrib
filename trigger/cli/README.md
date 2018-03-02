@@ -12,7 +12,7 @@ Settings, Outputs and Endpoint:
 
 ```json
 {
-  "outputs": [
+  "output": [
     {
       "name": "args",
       "type": "array"

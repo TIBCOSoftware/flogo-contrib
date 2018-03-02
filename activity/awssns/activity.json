@@ -7,7 +7,7 @@
   "author": "Philippe GABERT <pgabert@tibco.com>",
   "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/awssns",
   "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/awssns",
-  "inputs":[
+  "input":[
     {
       "name": "accessKey",
       "type": "string",
@@ -46,7 +46,7 @@
       "required": "true"
     }
   ],
-  "outputs": [
+  "output": [
     {
       "name": "messageId",
       "type": "string"

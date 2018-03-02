@@ -70,6 +70,11 @@ type ActionFactory struct {
 }
 
 func (ff *ActionFactory) Init() error {
+
+	if manager != nil {
+		return nil
+	}
+
 	if ep == nil {
 		testerEnabled := os.Getenv(tester.ENV_ENABLED)
 		if strings.ToLower(testerEnabled) == "true" {
@@ -144,6 +149,10 @@ func (ff *ActionFactory) New(config *action.Config) (action.Action, error) {
 		def, err := manager.GetFlow(flowAction.flowURI)
 		if err != nil {
 			return nil, err
+		} else {
+			if def == nil {
+				return nil, errors.New("unable to resolve flow: " + flowAction.flowURI)
+			}
 		}
 
 		flowAction.ioMetadata = def.Metadata()
@@ -257,7 +266,10 @@ func (fa *FlowAction) Run(context context.Context, inputs map[string]*data.Attri
 			if flowDef.Metadata == nil {
 				//flowDef.SetMetadata(fa.config.Metadata)
 			}
-			inst.Restart(instanceID, manager)
+			err = inst.Restart(instanceID, manager)
+			if err != nil {
+				return err
+			}
 
 			logger.Debug("Restarting Flow Instance: ", instanceID)
 		} else {

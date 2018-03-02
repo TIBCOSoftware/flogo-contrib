@@ -13,7 +13,7 @@ Inputs and Outputs:
 
 ```json
 {
-  "inputs":[
+  "input":[
     {
       "name": "accessKey",
       "type": "string",
@@ -51,7 +51,7 @@ Inputs and Outputs:
       "required": "true"
     }
   ],
-  "outputs": [
+  "output": [
   	{
       "name": "messageId",
       "type": "string"

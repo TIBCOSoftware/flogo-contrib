@@ -12,7 +12,7 @@ Inputs and Outputs:
 
 ```json
 {
-  "inputs":[
+  "input":[
     {
       "name": "method",
       "type": "string",
@@ -41,7 +41,7 @@ Inputs and Outputs:
       "allowed" : ["Up", "Down", "Off"]
     }
   ],
-  "outputs": [
+  "output": [
     {
       "name": "result",
       "type": "integer"

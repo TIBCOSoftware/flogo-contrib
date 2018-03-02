@@ -17,7 +17,7 @@ Settings, Outputs and Endpoint:
     "type": "integer",
   }
 ],
-"outputs": [
+"output": [
   {
     "name": "payload",
     "type": "string"

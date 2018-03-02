@@ -30,45 +30,45 @@ type Definition struct {
 }
 
 // Name returns the name of the definition
-func (pd *Definition) Name() string {
-	return pd.name
+func (d *Definition) Name() string {
+	return d.name
 }
 
 // ModelID returns the ID of the model the definition uses
-func (pd *Definition) ModelID() string {
-	return pd.modelID
+func (d *Definition) ModelID() string {
+	return d.modelID
 }
 
 // Metadata returns IO metadata for the flow
-func (pd *Definition) Metadata() *data.IOMetadata {
-	return pd.metadata
+func (d *Definition) Metadata() *data.IOMetadata {
+	return d.metadata
 }
 
 // GetTask returns the task with the specified ID
-func (pd *Definition) GetTask(taskID string) *Task {
-	task := pd.tasks[taskID]
+func (d *Definition) GetTask(taskID string) *Task {
+	task := d.tasks[taskID]
 	return task
 }
 
 // GetLink returns the link with the specified ID
-func (pd *Definition) GetLink(linkID int) *Link {
-	task := pd.links[linkID]
+func (d *Definition) GetLink(linkID int) *Link {
+	task := d.links[linkID]
 	return task
 }
 
-func (pd *Definition) ExplicitReply() bool {
-	return pd.explicitReply
+func (d *Definition) ExplicitReply() bool {
+	return d.explicitReply
 }
 
-func (pd *Definition) GetErrorHandler() *ErrorHandler {
-	return pd.errorHandler
+func (d *Definition) GetErrorHandler() *ErrorHandler {
+	return d.errorHandler
 }
 
 // GetAttr gets the specified attribute
-func (pd *Definition) GetAttr(attrName string) (attr *data.Attribute, exists bool) {
+func (d *Definition) GetAttr(attrName string) (attr *data.Attribute, exists bool) {
 
-	if pd.attrs != nil {
-		attr, found := pd.attrs[attrName]
+	if d.attrs != nil {
+		attr, found := d.attrs[attrName]
 		if found {
 			return attr, true
 		}
@@ -78,32 +78,32 @@ func (pd *Definition) GetAttr(attrName string) (attr *data.Attribute, exists boo
 }
 
 // GetTask returns the task with the specified ID
-func (pd *Definition) Tasks() []*Task {
+func (d *Definition) Tasks() []*Task {
 
-	tasks := make([]*Task, 0, len(pd.tasks))
-	for _, task := range pd.tasks {
+	tasks := make([]*Task, 0, len(d.tasks))
+	for _, task := range d.tasks {
 		tasks = append(tasks, task)
 	}
 	return tasks
 }
 
-func (pd *Definition) Links() []*Link {
-	links := make([]*Link, 0, len(pd.links))
-	for _, link := range pd.links {
+func (d *Definition) Links() []*Link {
+	links := make([]*Link, 0, len(d.links))
+	for _, link := range d.links {
 		links = append(links, link)
 	}
 	return links
 }
 
 // SetLinkExprManager sets the LinkOld Expression Manager for the definition
-func (pd *Definition) SetLinkExprManager(mgr LinkExprManager) {
+func (d *Definition) SetLinkExprManager(mgr LinkExprManager) {
 	// todo revisit
-	pd.linkExprMgr = mgr
+	d.linkExprMgr = mgr
 }
 
 // GetLinkExprManager gets the LinkOld Expression Manager for the definition
-func (pd *Definition) GetLinkExprManager() LinkExprManager {
-	return pd.linkExprMgr
+func (d *Definition) GetLinkExprManager() LinkExprManager {
+	return d.linkExprMgr
 }
 
 type ActivityConfig struct {

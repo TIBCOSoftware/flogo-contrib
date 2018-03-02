@@ -190,7 +190,7 @@ var testRestartInitialState = `{
     "tasks": [
       {
         "id": "log_2",
-        "inputs": [
+        "input": [
           {
             "name": "message",
             "type": "string",
@@ -368,7 +368,7 @@ var jsonRestartRequest = `{
     "tasks": [
       {
         "id": "log_1",
-        "inputs": [
+        "input": [
           {
             "name": "message",
             "type": "string",

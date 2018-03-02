@@ -6,7 +6,7 @@
   "title": "Control GPIO",
   "description": "Control raspberry gpio",
   "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/gpio",
-  "inputs":[
+  "input":[
     {
       "name": "method",
       "type": "string",
@@ -35,7 +35,7 @@
       "allowed" : ["Up", "Down", "Off"]
     }
   ],
-  "outputs": [
+  "output": [
     {
       "name": "result",
       "type": "integer"

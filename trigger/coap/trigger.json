@@ -12,7 +12,7 @@
       "required": true
     }
   ],
-  "outputs": [
+  "output": [
     {
       "name": "queryParams",
       "type": "params"

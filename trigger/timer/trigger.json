@@ -8,7 +8,7 @@
   "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/trigger/timer",
   "settings": [
   ],
-  "outputs": [
+  "output": [
     {
       "name": "params",
       "type": "params"

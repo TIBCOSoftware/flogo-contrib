@@ -13,7 +13,7 @@ Inputs and Outputs:
 
 ```json
 {
-  "inputs":[
+  "input":[
     {
       "name": "function",
       "type": "string",
@@ -32,7 +32,7 @@ Inputs and Outputs:
       "type": "number"
     }
   ],
-  "outputs": [
+  "output": [
     {
       "name": "result",
       "type": "number"
