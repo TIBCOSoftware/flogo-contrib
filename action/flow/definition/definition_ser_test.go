@@ -49,7 +49,7 @@ const defJSON = `
     }
     ],
     "links": [
-      { "id": 1, "type": 1,  "name": "", "from": "LogStart", "to": "LogResult"  }
+      { "id": 1, "type": "1",  "name": "", "from": "LogStart", "to": "LogResult"  }
     ]
   }
 `

@@ -7,13 +7,13 @@ import (
 
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/instance"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/support"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/tester"
+	"github.com/TIBCOSoftware/flogo-lib/app/resource"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/engine/runner"
 	"github.com/stretchr/testify/assert"
-	"github.com/TIBCOSoftware/flogo-lib/app/resource"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/tester"
 
 	_ "github.com/TIBCOSoftware/flogo-contrib/action/flow/test"
 )
@@ -38,7 +38,7 @@ func TestInitUnCompressedFlowFlavorError(t *testing.T) {
 	f := &ActionFactory{}
 	f.Init()
 	_, err := f.New(mockConfig)
-	assert.NotNil(t, err)
+	assert.Nil(t, err)
 }
 
 //TestInitCompressedFlowFlavorError

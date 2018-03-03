@@ -1,4 +1,4 @@
-package fggos
+package linker
 
 import (
 	"encoding/json"
@@ -146,8 +146,8 @@ func TestGosLinkExprManager_EvalLinkExpr(t *testing.T) {
 	}
 
 	def, _ := definition.NewDefinition(defRep)
-	f := GosLinkExprManagerFactory{}
-	mgr := f.NewLinkExprManager(def)
+	f := NewDefaultLinkerFactory()
+	mgr := f.NewLinkExprManager()
 
 	link1 := def.GetLink(1)
 	link2 := def.GetLink(2)
@@ -172,35 +172,35 @@ func TestGosLinkExprManager_EvalLinkExpr(t *testing.T) {
 
 	scope := data.NewSimpleScope(attrs, nil)
 
-	result, err := mgr.EvalComplexLinker(link1, scope)
+	result, err := mgr.EvalLinkExpr(link1, scope)
 	if err != nil {
 		t.Fatalf("Error evaluating expressions '%s'", err.Error())
 	}
 	fmt.Printf("Link 1 Result: %v\n", result)
 	assert.True(t, result)
 
-	result, err = mgr.EvalComplexLinker(link2, scope)
+	result, err = mgr.EvalLinkExpr(link2, scope)
 	if err != nil {
 		t.Fatalf("Error evaluating expressions '%s'", err.Error())
 	}
 	fmt.Printf("Link 2 Result: %v\n", result)
 	assert.True(t, result)
 	//
-	result, err = mgr.EvalComplexLinker(link3, scope)
+	result, err = mgr.EvalLinkExpr(link3, scope)
 	if err != nil {
 		t.Fatalf("Error evaluating expressions '%s'", err.Error())
 	}
 	fmt.Printf("Link 3 Result: %v\n", result)
 	assert.True(t, result)
 
-	result, err = mgr.EvalComplexLinker(link4, scope)
+	result, err = mgr.EvalLinkExpr(link4, scope)
 	if err != nil {
 		t.Fatalf("Error evaluating expressions '%s'", err.Error())
 	}
 	fmt.Printf("Link 4 Result: %v\n", result)
 	assert.True(t, result)
 
-	result, err = mgr.EvalComplexLinker(link5, scope)
+	result, err = mgr.EvalLinkExpr(link5, scope)
 	if err != nil {
 		t.Fatalf("Error evaluating expressions '%s'", err.Error())
 	}
@@ -208,7 +208,7 @@ func TestGosLinkExprManager_EvalLinkExpr(t *testing.T) {
 	assert.True(t, result)
 
 	scope.SetAttrValue("petId", 6)
-	result, err = mgr.EvalComplexLinker(link5, scope)
+	result, err = mgr.EvalLinkExpr(link5, scope)
 	if err != nil {
 		t.Fatalf("Error evaluating expressions '%s'", err.Error())
 	}
@@ -216,7 +216,7 @@ func TestGosLinkExprManager_EvalLinkExpr(t *testing.T) {
 	fmt.Printf("Link2 Result: %v\n", result)
 	assert.False(t, result)
 
-	result, err = mgr.EvalComplexLinker(link6, scope)
+	result, err = mgr.EvalLinkExpr(link6, scope)
 	if err != nil {
 		t.Fatalf("Error evaluating expressions '%s'", err.Error())
 	}
@@ -224,7 +224,7 @@ func TestGosLinkExprManager_EvalLinkExpr(t *testing.T) {
 	fmt.Printf("Link6 Result: %v\n", result)
 	assert.True(t, result)
 
-	result, err = mgr.EvalComplexLinker(link7, scope)
+	result, err = mgr.EvalLinkExpr(link7, scope)
 	if err != nil {
 		t.Fatalf("Error evaluating expressions '%s'", err.Error())
 	}
@@ -243,8 +243,8 @@ func TestGosLinkExprManager_EvalLinkExprOld(t *testing.T) {
 	}
 
 	def, _ := definition.NewDefinition(defRep)
-	f := GosLinkExprManagerFactory{}
-	mgr := f.NewLinkExprManager(def)
+	f := NewDefaultLinkerFactory()
+	mgr := f.NewLinkExprManager()
 
 	link1 := def.GetLink(1)
 	//link2 := def.GetLink(2)
@@ -269,35 +269,35 @@ func TestGosLinkExprManager_EvalLinkExprOld(t *testing.T) {
 
 	scope := data.NewSimpleScope(attrs, nil)
 
-	result, err := mgr.EvalComplexLinker(link1, scope)
+	result, err := mgr.EvalLinkExpr(link1, scope)
 	if err != nil {
 		t.Fatalf("Error evaluating expressions '%s'", err.Error())
 	}
 	fmt.Printf("Link 1 Result: %v\n", result)
 	assert.True(t, result)
 
-	//result, err = mgr.EvalComplexLinker(link2, scope)
+	//result, err = mgr.EvalLinkExpr(link2, scope)
 	//if err != nil {
 	//	t.Fatalf("Error evaluating expressions '%s'", err.Error())
 	//}
 	//fmt.Printf("Link 2 Result: %v\n", result)
 	//assert.True(t, result)
 
-	result, err = mgr.EvalComplexLinker(link3, scope)
+	result, err = mgr.EvalLinkExpr(link3, scope)
 	if err != nil {
 		t.Fatalf("Error evaluating expressions '%s'", err.Error())
 	}
 	fmt.Printf("Link 3 Result: %v\n", result)
 	assert.True(t, result)
 
-	result, err = mgr.EvalComplexLinker(link4, scope)
+	result, err = mgr.EvalLinkExpr(link4, scope)
 	if err != nil {
 		t.Fatalf("Error evaluating expressions '%s'", err.Error())
 	}
 	fmt.Printf("Link 4 Result: %v\n", result)
 	assert.True(t, result)
 
-	result, err = mgr.EvalComplexLinker(link5, scope)
+	result, err = mgr.EvalLinkExpr(link5, scope)
 	if err != nil {
 		t.Fatalf("Error evaluating expressions '%s'", err.Error())
 	}
@@ -305,7 +305,7 @@ func TestGosLinkExprManager_EvalLinkExprOld(t *testing.T) {
 	assert.True(t, result)
 
 	scope.SetAttrValue("petId", 6)
-	result, err = mgr.EvalComplexLinker(link5, scope)
+	result, err = mgr.EvalLinkExpr(link5, scope)
 	if err != nil {
 		t.Fatalf("Error evaluating expressions '%s'", err.Error())
 	}
@@ -313,7 +313,7 @@ func TestGosLinkExprManager_EvalLinkExprOld(t *testing.T) {
 	fmt.Printf("Link2 Result: %v\n", result)
 	assert.False(t, result)
 
-	//result, err = mgr.EvalComplexLinker(link6, scope)
+	//result, err = mgr.EvalLinkExpr(link6, scope)
 	//if err != nil {
 	//	t.Fatalf("Error evaluating expressions '%s'", err.Error())
 	//}
@@ -321,7 +321,7 @@ func TestGosLinkExprManager_EvalLinkExprOld(t *testing.T) {
 	//fmt.Printf("Link6 Result: %v\n", result)
 	//assert.True(t, result)
 
-	result, err = mgr.EvalComplexLinker(link7, scope)
+	result, err = mgr.EvalLinkExpr(link7, scope)
 	if err != nil {
 		t.Fatalf("Error evaluating expressions '%s'", err.Error())
 	}

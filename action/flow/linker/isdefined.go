@@ -1,4 +1,4 @@
-package fggos
+package linker
 
 import (
 	"github.com/TIBCOSoftware/flogo-lib/core/mapper/exprmapper/expression/function"

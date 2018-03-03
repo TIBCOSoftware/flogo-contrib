@@ -258,15 +258,15 @@ func (fa *FlowAction) Run(context context.Context, inputs map[string]*data.Attri
 		if initialState != nil {
 			inst = initialState
 			instanceID := idGenerator.NextAsString()
-			flowDef, err := manager.GetFlow(flowURI)
-			if err != nil {
-				return err
-			}
+			//flowDef, err := manager.GetFlow(flowURI)
+			//if err != nil {
+			//	return err
+			//}
 
-			if flowDef.Metadata == nil {
-				//flowDef.SetMetadata(fa.config.Metadata)
-			}
-			err = inst.Restart(instanceID, manager)
+			//if flowDef.Metadata == nil {
+			//	//flowDef.SetMetadata(fa.config.Metadata)
+			//}
+			err := inst.Restart(instanceID, manager)
 			if err != nil {
 				return err
 			}
