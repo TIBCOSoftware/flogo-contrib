@@ -4,7 +4,7 @@ import "github.com/TIBCOSoftware/flogo-lib/core/data"
 
 // LinkExprManager interface that defines a Link Expression Manager
 type LinkExprManager interface {
-
+	EvalComplexLinker(link *Link, scope data.Scope) (bool, error)
 	// EvalLinkExpr evaluate the link expression
 	EvalLinkExpr(link *Link, scope data.Scope) (bool, error)
 }
