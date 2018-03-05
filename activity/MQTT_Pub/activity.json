@@ -1,7 +1,7 @@
 {
   "name": "MQTT Publisher",
   "type": "flogo:activity",
-  "ref": "github.com/Ganitagya/flogo-components/activity/MQTT_Pub",
+  "ref": "github.com/Ganitagya/flogo-contrib/activity/MQTT_Pub",
   "version": "0.0.1",
   "title": "Publish MQTT Message",
   "description": "Pubishes message on MQTT topic",
