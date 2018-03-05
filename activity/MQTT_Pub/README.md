@@ -1,1 +1,1 @@
-github.com/Ganitagya/flogo-components/activity/MQTT_Pub
+github.com/Ganitagya/flogo-contrib/activity/MQTT_Pub
