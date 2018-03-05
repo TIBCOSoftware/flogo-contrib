@@ -2,7 +2,7 @@
   "name": "File Reader",
   "type": "flogo:activity",
   "ref": "https://github.com/Ganitagya/flogo-contrib/activity/fileReader",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "title": "File Reader",
   "description": "Reads a file line by line",
   "author": "Akash Mahapatra <amahapat@tibco.com>",
