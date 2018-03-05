@@ -48,9 +48,11 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 	defer fileHandle.Close()
 	fileScanner := bufio.NewScanner(fileHandle)
 
-	for fileScanner.Scan() {
-		fmt.Println(fileScanner.Text())
-    }	
+
+//Current implementation is only for files containing one line only
+//	for fileScanner.Scan() {
+//		fmt.Println(fileScanner.Text())
+//    }	
     
     context.SetOutput("result", fileScanner.Text())
     
