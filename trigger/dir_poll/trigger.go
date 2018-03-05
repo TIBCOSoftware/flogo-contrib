@@ -15,10 +15,10 @@ import (
 )
 
 // log is the default package logger
-var log = logger.GetLogger("trigger-tibco-mqtt")
+var log = logger.GetLogger("trigger-tibco-POL")
 
-// MqttTrigger is simple MQTT trigger
-type MqttTrigger struct {
+// POLTrigger is simple POL trigger
+type POLTrigger struct {
 		metadata *trigger.Metadata
 	runner   action.Runner
 	config   *trigger.Config
@@ -27,31 +27,31 @@ type MqttTrigger struct {
 
 //NewFactory create a new Trigger factory
 func NewFactory(md *trigger.Metadata) trigger.Factory {
-	return &MQTTFactory{metadata: md}
+	return &POLFactory{metadata: md}
 }
 
-// MQTTFactory MQTT Trigger factory
-type MQTTFactory struct {
+// POLFactory POL Trigger factory
+type POLFactory struct {
 	metadata *trigger.Metadata
 }
 
 //New Creates a new trigger instance for a given id
-func (t *MQTTFactory) New(config *trigger.Config) trigger.Trigger {
-	return &MqttTrigger{metadata: t.metadata, config: config}
+func (t *POLFactory) New(config *trigger.Config) trigger.Trigger {
+	return &POLTrigger{metadata: t.metadata, config: config}
 }
 
 // Metadata implements trigger.Trigger.Metadata
-func (t *MqttTrigger) Metadata() *trigger.Metadata {
+func (t *POLTrigger) Metadata() *trigger.Metadata {
 	return t.metadata
 }
 
 // Init implements ext.Trigger.Init
-func (t *MqttTrigger) Init(runner action.Runner) {
+func (t *POLTrigger) Init(runner action.Runner) {
 	t.runner = runner
 }
 
 // Start implements ext.Trigger.Start
-func (t *MqttTrigger) Start() error {
+func (t *POLTrigger) Start() error {
 
 	
 	w := watcher.New()
@@ -194,7 +194,7 @@ func showfiles(dirPath string, initialTime time.Time, filename string, fileLastM
 */
 
 // Stop implements ext.Trigger.Stop
-func (t *MqttTrigger) Stop() error {
+func (t *POLTrigger) Stop() error {
 	//unsubscribe from topic
 	
 	return nil

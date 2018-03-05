@@ -1,12 +1,12 @@
 {
   "name": "poller",
   "type": "flogo:trigger",
-  "ref": "github.com/Ganitagya/flogo-contrib/trigger/mqtt",
+  "ref": "github.com/Ganitagya/flogo-contrib/trigger/dir_poll",
   "version": "0.0.1",
   "title": "Tibco Directory Poller",
   "author": "Akash Mahapatra",
   "description": "Poll",
-  "homepage": "https://github.com/Ganitagya/flogo-contrib/tree/master/trigger/mqtt",
+  "homepage": "https://github.com/Ganitagya/flogo-contrib/blob/master/trigger/dir_poll/",
 "settings":[
     {
       "name": "dirName",
