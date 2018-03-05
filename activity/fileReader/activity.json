@@ -1,0 +1,21 @@
+{
+  "name": "File Reader",
+  "type": "flogo:activity",
+  "ref": "github.com/jvanderl/flogo-components/activity/mqtt",
+  "version": "0.0.1",
+  "title": "File Reader",
+  "description": "Reads a file line by line",
+  "author": "Akash Mahapatra <amahapat@tibco.com>",
+  "input":[
+   {
+      "name": "filename",
+      "type": "string"
+    }
+  ],
+  "output": [
+    {
+      "name": "result",
+      "type": "string"
+    }
+  ]
+}
