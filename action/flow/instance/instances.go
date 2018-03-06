@@ -443,7 +443,7 @@ func (inst *IndependentInstance) enterTasks(activeInst *Instance, taskEntries []
 			inst.scheduleEval(enterTaskData)
 		} else if enterResult == model.ENTER_SKIP {
 			//todo optimize skip, just keep skipping and don't schedule eval
-			inst.scheduleEval(enterTaskData)
+			//inst.scheduleEval(enterTaskData)
 		}
 	}
 }
