@@ -311,17 +311,19 @@ func createLink(def *Definition, linkRep *LinkRep, id int) (*Link, error) {
 	link.id = id
 	link.linkType = LtDependency
 
-	switch linkRep.Type {
-	case "default", "dependency", "0":
-		link.linkType = LtDependency
-	case "expression", "1":
-		link.linkType = LtExpression
-	case "label", "2":
-		link.linkType = LtLabel
-	case "error", "3":
-		link.linkType = LtError
-	default:
-		logger.Warnf("Unsupported link type '%s', using default link")
+	if len(linkRep.Type) > 0 {
+		switch linkRep.Type {
+		case "default", "dependency", "0":
+			link.linkType = LtDependency
+		case "expression", "1":
+			link.linkType = LtExpression
+		case "label", "2":
+			link.linkType = LtLabel
+		case "error", "3":
+			link.linkType = LtError
+		default:
+			logger.Warnf("Unsupported link type '%s', using default link")
+		}
 	}
 
 	link.value = linkRep.Value

@@ -82,7 +82,20 @@ func (ti *TaskInst) OutputScope() data.Scope {
 	if len(ti.task.ActivityConfig().Ref()) > 0 {
 
 		act := activity.Get(ti.task.ActivityConfig().Ref())
-		ti.outScope = NewFixedTaskScope(act.Metadata().Output, ti.task, false)
+
+		outputMetadta := act.Metadata().Output
+
+		if act.Metadata().DynamicIO {
+			//todo validate dynamic on instantiation
+			dynamic, _ := act.(activity.DynamicIO)
+			dynamicIO, _ := dynamic.IOMetadata(ti)
+			//todo handler error
+			if dynamicIO != nil {
+				outputMetadta = dynamicIO.Output
+			}
+		}
+
+		ti.outScope = NewFixedTaskScope(outputMetadta, ti.task, false)
 
 		//logger.Debugf("OutputScope: %#v", ti.outScope)
 	} else if ti.task.IsScope() {
