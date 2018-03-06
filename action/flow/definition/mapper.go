@@ -89,8 +89,7 @@ func (mf *BasicMapperFactory) GetDefaultActivityOutputMapper(task *Task) data.Ma
 	if act.Metadata().DynamicIO {
 		//todo validate dynamic on instantiation
 		dynamic, _ := act.(activity.DynamicIO)
-		dynamicIO, err := dynamic.IOMetadata(&DummyTaskCtx{task: task})
-
+		dynamicIO, _ := dynamic.IOMetadata(&DummyTaskCtx{task: task})
 		//todo handler error
 		if dynamicIO != nil {
 			return &DefaultActivityOutputMapper{attrNS: attrNS, outputMetadata: dynamicIO.Output}
