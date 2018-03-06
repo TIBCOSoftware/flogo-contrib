@@ -230,6 +230,11 @@ func createActivityConfig(task *Task, rep *ActivityConfigRep) (*ActivityConfig, 
 		}
 	}
 
+	//If outmapper still empty set to default
+	if activityCfg.outputMapper == nil {
+		activityCfg.outputMapper = GetMapperFactory().GetDefaultActivityOutputMapper(task)
+	}
+
 	if len(rep.Settings) > 0 {
 		activityCfg.settings = make(map[string]*data.Attribute, len(rep.Settings))
 
