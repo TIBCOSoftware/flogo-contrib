@@ -5,8 +5,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"bufio"
 	"fmt"
-    "os"
-   // "io"
+   	"os"
 )
 
 // log is the default package logger
@@ -44,17 +43,16 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 		return true, fmt.Errorf("Filename not set")
 	}
 
-    fileHandle, _ := os.Open(ivfilename)
+    	fileHandle, _ := os.Open(ivfilename)
 	defer fileHandle.Close()
 	fileScanner := bufio.NewScanner(fileHandle)
 
 
-//Current implementation is only for files containing one line only
-//	for fileScanner.Scan() {
-//		fmt.Println(fileScanner.Text())
-//    }	
+	for fileScanner.Scan() {
+		fmt.Println(fileScanner.Text())
+    }	
     
-    context.SetOutput("result", fileScanner.Text())
+    //context.SetOutput("result", fileScanner.Text())
     
     return true, nil
 }
