@@ -268,7 +268,7 @@ func (task *Task) FromLinks() []*Link {
 }
 
 func (task *Task) String() string {
-	return fmt.Sprintf("Task[%d]:'%s'", task.id, task.name)
+	return fmt.Sprintf("Task[%s] '%s'", task.id, task.name)
 }
 
 // IsScope returns flag indicating if the Task is a scope task (a container of attributes)
@@ -335,7 +335,7 @@ func (link *Link) ToTask() *Task {
 }
 
 func (link *Link) String() string {
-	return fmt.Sprintf("Link[%d]:'%s' - [from:%d, to:%d]", link.id, link.name, link.fromTask.id, link.toTask.id)
+	return fmt.Sprintf("Link[%d]:'%s' - [from:%s, to:%s]", link.id, link.name, link.fromTask.id, link.toTask.id)
 }
 
 type ErrorHandler struct {

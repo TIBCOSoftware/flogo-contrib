@@ -4,7 +4,6 @@ import "github.com/TIBCOSoftware/flogo-lib/core/data"
 
 // LinkExprManager interface that defines a Link Expression Manager
 type LinkExprManager interface {
-
 	// EvalLinkExpr evaluate the link expression
 	EvalLinkExpr(link *Link, scope data.Scope) (bool, error)
 }
@@ -23,7 +22,7 @@ func (e *LinkExprError) Error() string {
 }
 
 type LinkExprManagerFactory interface {
-	NewLinkExprManager(def *Definition) LinkExprManager
+	NewLinkExprManager() LinkExprManager
 }
 
 var linkExprMangerFactory LinkExprManagerFactory

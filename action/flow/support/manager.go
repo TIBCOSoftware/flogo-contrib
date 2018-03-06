@@ -11,8 +11,9 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/linker"
+
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/script/fggos"
 	"github.com/TIBCOSoftware/flogo-lib/app/resource"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/TIBCOSoftware/flogo-lib/util"
@@ -136,10 +137,10 @@ func (fm *FlowManager) materializeFlow(flowRep *definition.DefinitionRep) (*defi
 	factory := definition.GetLinkExprManagerFactory()
 
 	if factory == nil {
-		factory = &fggos.GosLinkExprManagerFactory{}
+		factory = linker.NewDefaultLinkerFactory()
 	}
 
-	def.SetLinkExprManager(factory.NewLinkExprManager(def))
+	def.SetLinkExprManager(factory.NewLinkExprManager())
 	//todo init activities
 
 	return def, nil
