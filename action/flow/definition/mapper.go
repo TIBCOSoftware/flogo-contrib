@@ -92,7 +92,7 @@ func (mf *BasicMapperFactory) GetDefaultActivityOutputMapper(task *Task) data.Ma
 		dynamicIO, err := dynamic.IOMetadata(&DummyTaskCtx{task: task})
 
 		//todo handler error
-		if err != nil {
+		if dynamicIO != nil {
 			return &DefaultActivityOutputMapper{attrNS: attrNS, outputMetadata: dynamicIO.Output}
 		}
 	}

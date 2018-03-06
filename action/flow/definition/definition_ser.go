@@ -218,23 +218,6 @@ func createActivityConfig(task *Task, rep *ActivityConfigRep) (*ActivityConfig, 
 	//todo need to fix this
 	task.activityCfg = activityCfg
 
-	// create mappers
-	if rep.Mappings != nil {
-		if rep.Mappings.Input != nil {
-			activityCfg.inputMapper = GetMapperFactory().NewActivityInputMapper(task, &data.MapperDef{Mappings: rep.Mappings.Input})
-		}
-		if rep.Mappings.Output != nil {
-			activityCfg.outputMapper = GetMapperFactory().NewActivityOutputMapper(task, &data.MapperDef{Mappings: rep.Mappings.Output})
-		} else {
-			activityCfg.outputMapper = GetMapperFactory().GetDefaultActivityOutputMapper(task)
-		}
-	}
-
-	//If outmapper still empty set to default
-	if activityCfg.outputMapper == nil {
-		activityCfg.outputMapper = GetMapperFactory().GetDefaultActivityOutputMapper(task)
-	}
-
 	if len(rep.Settings) > 0 {
 		activityCfg.settings = make(map[string]*data.Attribute, len(rep.Settings))
 
@@ -283,6 +266,23 @@ func createActivityConfig(task *Task, rep *ActivityConfigRep) (*ActivityConfig, 
 				activityCfg.outputAttrs[name], _ = data.NewAttribute(name, attr.Type(), value)
 			}
 		}
+	}
+
+	// create mappers
+	if rep.Mappings != nil {
+		if rep.Mappings.Input != nil {
+			activityCfg.inputMapper = GetMapperFactory().NewActivityInputMapper(task, &data.MapperDef{Mappings: rep.Mappings.Input})
+		}
+		if rep.Mappings.Output != nil {
+			activityCfg.outputMapper = GetMapperFactory().NewActivityOutputMapper(task, &data.MapperDef{Mappings: rep.Mappings.Output})
+		} else {
+			activityCfg.outputMapper = GetMapperFactory().GetDefaultActivityOutputMapper(task)
+		}
+	}
+
+	//If outmapper still empty set to default
+	if activityCfg.outputMapper == nil {
+		activityCfg.outputMapper = GetMapperFactory().GetDefaultActivityOutputMapper(task)
 	}
 
 	return activityCfg, nil
