@@ -16,7 +16,7 @@ import (
 // log is the default package logger
 var log = logger.GetLogger("trigger-tibco-mqtt")
 
-// POLTrigger is simple MQTT trigger
+// POLTrigger is simple POL trigger
 type POLTrigger struct {
 		metadata *trigger.Metadata
 	runner   action.Runner
@@ -26,16 +26,16 @@ type POLTrigger struct {
 
 //NewFactory create a new Trigger factory
 func NewFactory(md *trigger.Metadata) trigger.Factory {
-	return &MQTTFactory{metadata: md}
+	return &POLFactory{metadata: md}
 }
 
-// MQTTFactory MQTT Trigger factory
-type MQTTFactory struct {
+// POLFactory MQTT Trigger factory
+type POLFactory struct {
 	metadata *trigger.Metadata
 }
 
 //New Creates a new trigger instance for a given id
-func (t *MQTTFactory) New(config *trigger.Config) trigger.Trigger {
+func (t *POLFactory) New(config *trigger.Config) trigger.Trigger {
 	return &POLTrigger{metadata: t.metadata, config: config}
 }
 
