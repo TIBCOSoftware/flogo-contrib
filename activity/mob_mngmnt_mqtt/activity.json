@@ -1,10 +1,10 @@
 {
-  "name": "MQTT Publisher",
+  "name": "MQTT Publisher for streambase",
   "type": "flogo:activity",
-  "ref": "github.com/Ganitagya/flogo-contrib/activity/MQTT_noCert",
+  "ref": "github.com/Ganitagya/flogo-contrib/activity/mob_mngmnt_mqtt",
   "version": "0.0.1",
-  "title": "Publisher MQTT Message",
-  "description": "Pubishes message on MQTT topic",
+  "title": "Streambase Publisher MQTT Message",
+  "description": "Pubishes message on MQTT topic for streambase",
   "author": "Akash Mahapatra <amahapat@tibco.com>",
   "input":[
    {
