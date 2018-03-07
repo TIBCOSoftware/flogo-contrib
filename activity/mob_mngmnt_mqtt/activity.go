@@ -145,7 +145,7 @@ type coordinates struct {
 {"P6",40.7380753,-73.9908},
 {"P7",40.7372028,-73.9887052},
 {"P8",40.737272,-73.988876},
-{"P9",40.7376687,-73.9898211},
+{"P9",40.7376687,-73.9898211},	
 {"P10",40.7370198,-73.9901704},
 {"P11",40.7365396,-73.9907664},
 {"P12",40.7387268,-73.9887103},
@@ -392,12 +392,13 @@ type coordinates struct {
 
 		log.Debugf("MQTT Publisher connected, sending message")
 		token := client.Publish(ivtopic, byte(ivqos), false, buffer)
+		token.Wait()
 
 		time.Sleep(time.Millisecond * 1000)
 	}
 
 
-		token.Wait()
+		
 
 	client.Disconnect(250)
 	log.Debugf("MQTT Publisher disconnected")
