@@ -306,7 +306,7 @@ type SimpleReplyHandler struct {
 // Reply implements ReplyHandler.Reply
 func (rh *SimpleReplyHandler) Reply(code int, replyData interface{}, err error) {
 
-	dataAttr, _ := data.NewAttribute("data", data.TypeObject, replyData)
+	dataAttr, _ := data.NewAttribute("data", data.TypeAny, replyData)
 	codeAttr, _ := data.NewAttribute("code", data.TypeInteger, code)
 	resultData := map[string]*data.Attribute{
 		"data": dataAttr,
