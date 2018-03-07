@@ -4,6 +4,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/core/mapper"
+	"sync"
 )
 
 // MapperDef represents a Mapper, which is a collection of mappings
@@ -87,13 +88,15 @@ func (mf *BasicMapperFactory) GetDefaultActivityOutputMapper(task *Task) data.Ma
 	attrNS := "_A." + task.ID() + "."
 
 	if act.Metadata().DynamicIO {
-		//todo validate dynamic on instantiation
-		dynamic, _ := act.(activity.DynamicIO)
-		dynamicIO, _ := dynamic.IOMetadata(&DummyTaskCtx{task: task})
-		//todo handler error
-		if dynamicIO != nil {
-			return &DefaultActivityOutputMapper{attrNS: attrNS, outputMetadata: dynamicIO.Output}
-		}
+
+		return &DefaultActivityOutputMapper{attrNS: attrNS, task: task}
+		////todo validate dynamic on instantiation
+		//dynamic, _ := act.(activity.DynamicIO)
+		//dynamicIO, _ := dynamic.IOMetadata(&DummyTaskCtx{task: task})
+		////todo handler error
+		//if dynamicIO != nil {
+		//	return &DefaultActivityOutputMapper{attrNS: attrNS, outputMetadata: dynamicIO.Output}
+		//}
 	}
 
 	return &DefaultActivityOutputMapper{attrNS: attrNS, outputMetadata: act.Metadata().Output}
@@ -104,9 +107,33 @@ type DefaultActivityOutputMapper struct {
 	attrNS string
 	//activityMetadata *activity.Metadata
 	outputMetadata map[string]*data.Attribute
+
+	task *Task
+
+	mutex sync.Mutex
+
+
 }
 
 func (m *DefaultActivityOutputMapper) Apply(inputScope data.Scope, outputScope data.Scope) error {
+
+	m.mutex.Lock()
+	if m.outputMetadata == nil {
+		act := m.task.activityCfg.Activity
+		if act.Metadata().DynamicIO {
+			//todo validate dynamic on instantiation
+			dynamic, _ := act.(activity.DynamicIO)
+			dynamicIO, _ := dynamic.IOMetadata(&DummyTaskCtx{task: m.task})
+			//todo handler error
+			if dynamicIO != nil {
+				m.outputMetadata = dynamicIO.Output
+			} else {
+				m.outputMetadata =act.Metadata().Output
+			}
+		}
+
+	}
+	m.mutex.Unlock()
 
 	oscope := outputScope.(data.MutableScope)
 
