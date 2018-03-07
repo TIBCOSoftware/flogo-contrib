@@ -297,7 +297,7 @@ func (inst *IndependentInstance) handleTaskDone(taskBehavior model.TaskBehavior,
 			if ok {
 				//if the flow failed, set the error
 				for _, value := range containerInst.returnData {
-					host.AddWorkingData(value)
+					host.SetOutput(value.Name(), value)
 				}
 
 				inst.scheduleEval(host)

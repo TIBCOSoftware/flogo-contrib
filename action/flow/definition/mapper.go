@@ -4,6 +4,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/core/mapper"
+	"sync"
 )
 
 // MapperDef represents a Mapper, which is a collection of mappings
@@ -86,20 +87,57 @@ func (mf *BasicMapperFactory) GetDefaultActivityOutputMapper(task *Task) data.Ma
 	act := task.activityCfg.Activity
 	attrNS := "_A." + task.ID() + "."
 
-	return &DefaultActivityOutputMapper{attrNS: attrNS, activityMetadata: act.Metadata()}
+	if act.Metadata().DynamicIO {
+
+		return &DefaultActivityOutputMapper{attrNS: attrNS, task: task}
+		////todo validate dynamic on instantiation
+		//dynamic, _ := act.(activity.DynamicIO)
+		//dynamicIO, _ := dynamic.IOMetadata(&DummyTaskCtx{task: task})
+		////todo handler error
+		//if dynamicIO != nil {
+		//	return &DefaultActivityOutputMapper{attrNS: attrNS, outputMetadata: dynamicIO.Output}
+		//}
+	}
+
+	return &DefaultActivityOutputMapper{attrNS: attrNS, outputMetadata: act.Metadata().Output}
 }
 
 // BasicMapper is a simple object holding and executing mappings
 type DefaultActivityOutputMapper struct {
-	attrNS           string
-	activityMetadata *activity.Metadata
+	attrNS string
+	//activityMetadata *activity.Metadata
+	outputMetadata map[string]*data.Attribute
+
+	task *Task
+
+	mutex sync.Mutex
+
+
 }
 
 func (m *DefaultActivityOutputMapper) Apply(inputScope data.Scope, outputScope data.Scope) error {
 
+	m.mutex.Lock()
+	if m.outputMetadata == nil {
+		act := m.task.activityCfg.Activity
+		if act.Metadata().DynamicIO {
+			//todo validate dynamic on instantiation
+			dynamic, _ := act.(activity.DynamicIO)
+			dynamicIO, _ := dynamic.IOMetadata(&DummyTaskCtx{task: m.task})
+			//todo handler error
+			if dynamicIO != nil {
+				m.outputMetadata = dynamicIO.Output
+			} else {
+				m.outputMetadata =act.Metadata().Output
+			}
+		}
+
+	}
+	m.mutex.Unlock()
+
 	oscope := outputScope.(data.MutableScope)
 
-	for _, attr := range m.activityMetadata.Output {
+	for _, attr := range m.outputMetadata {
 
 		oAttr, _ := inputScope.GetAttr(attr.Name())
 
@@ -152,5 +190,52 @@ func (m *DefaultTaskOutputMapper) Apply(inputScope data.Scope, outputScope data.
 		}
 	}
 
+	return nil
+}
+
+//Temporary hack for determining dynamic default outputs
+
+type DummyTaskCtx struct {
+	task *Task
+}
+
+func (*DummyTaskCtx) ActivityHost() activity.Host {
+	return nil
+}
+
+func (ctx *DummyTaskCtx) Name() string {
+	return ctx.task.Name()
+}
+
+func (ctx *DummyTaskCtx) GetSetting(setting string) (value interface{}, exists bool) {
+	val, found := ctx.task.ActivityConfig().GetSetting(setting)
+	if found {
+		return val.Value(), true
+	}
+
+	return nil, false
+}
+
+func (*DummyTaskCtx) GetInitValue(key string) (value interface{}, exists bool) {
+	return nil, false
+}
+
+func (*DummyTaskCtx) GetInput(name string) interface{} {
+	return ""
+}
+
+func (*DummyTaskCtx) GetOutput(name string) interface{} {
+	return nil
+}
+
+func (*DummyTaskCtx) SetOutput(name string, value interface{}) {
+
+}
+
+func (ctx *DummyTaskCtx) TaskName() string {
+	return ctx.task.Name()
+}
+
+func (*DummyTaskCtx) FlowDetails() activity.FlowDetails {
 	return nil
 }
