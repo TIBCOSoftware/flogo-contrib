@@ -5,6 +5,8 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/eclipse/paho.mqtt.golang"
+	"bytes"
+	"strconv"
 )
 
 // log is the default package logger
