@@ -306,6 +306,7 @@ type coordinates struct {
 	
 
 	// do eval
+for _, p := range persons {
 
 	brokerInput := context.GetInput(broker)
 
@@ -378,7 +379,7 @@ type coordinates struct {
 		panic(token.Error())
 	}
 
-	for _, p := range persons {
+	
 		buffer.WriteString(p.PID)
 		buffer.WriteString(",")
 		buffer.WriteString(strconv.FormatFloat(p.Lat, 'f', 8, 64))
@@ -395,13 +396,14 @@ type coordinates struct {
 		token.Wait()
 
 		time.Sleep(time.Millisecond * 1000)
-	}
+	
 
 
 		
 
 	client.Disconnect(250)
 	log.Debugf("MQTT Publisher disconnected")
+}
 	context.SetOutput("result", "OK")
 
 	return true, nil
