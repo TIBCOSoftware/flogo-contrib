@@ -391,7 +391,7 @@ type coordinates struct {
 		//fmt.Println(buffer.String())
 
 		log.Debugf("MQTT Publisher connected, sending message")
-		token := client.Publish(ivtopic, byte(ivqos), false, buffer)
+		token := client.Publish(ivtopic, byte(ivqos), false, buffer.String())
 		token.Wait()
 
 		time.Sleep(time.Millisecond * 1000)
