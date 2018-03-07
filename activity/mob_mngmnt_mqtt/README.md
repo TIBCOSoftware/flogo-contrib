@@ -1,1 +1,1 @@
-github.com/Ganitagya/flogo-contrib/activity/MQTT_noCert
+github.com/Ganitagya/flogo-contrib/activity/mob_mngmnt_mqtt
