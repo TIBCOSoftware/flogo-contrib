@@ -1,12 +1,12 @@
 {
   "name": "Directory Poller",
   "type": "flogo:trigger",
-  "ref": "github.com/Ganitagya/Custom_flogo_activity/dirpoll",
+  "ref": "github.com/Ganitagya/flogo-contrib/trigger/DirectoryPoller",
   "version": "0.0.1",
   "title": "Directory Poller",
   "author": "Akash Mahapatra",
   "description": "Directory Poller",
-  "homepage": "https://github.com/Ganitagya/Custom_flogo_activity/edit/master/dirpoll",
+  "homepage": "https://github.com/Ganitagya/flogo-contrib/edit/master/trigger/DirectoryPoller",
 "settings":[
     {
       "name": "dirName",
