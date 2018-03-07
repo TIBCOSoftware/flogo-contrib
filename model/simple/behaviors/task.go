@@ -67,7 +67,7 @@ func (tb *Task) Enter(ctx model.TaskContext) (enterResult model.EnterResult) {
 func (tb *Task) Eval(ctx model.TaskContext) (evalResult model.EvalResult, err error) {
 
 	if ctx.Status() == model.TaskStatusSkipped {
-		return model.EVAL_DONE, nil //todo introduce EVAL_SKIP?
+		return model.EVAL_SKIP, nil //todo introduce EVAL_SKIP?
 	}
 
 	task := ctx.Task()
