@@ -1,0 +1,46 @@
+{
+  "name": "MQTT Publisher",
+  "type": "flogo:activity",
+  "ref": "github.com/Ganitagya/flogo-contrib/activity/MQTT_noCert",
+  "version": "0.0.1",
+  "title": "Publisher MQTT Message",
+  "description": "Pubishes message on MQTT topic",
+  "author": "Akash Mahapatra <amahapat@tibco.com>",
+  "input":[
+   {
+      "name": "broker",
+      "type": "string"
+    },
+    {
+      "name": "id",
+      "type": "string"
+    },
+    {
+      "name": "user",
+      "type": "string"
+    },
+    {
+      "name": "password",
+      "type": "string"
+    },
+    {
+      "name": "topic",
+      "type": "string"
+    },
+    {
+      "name": "qos",
+      "type": "integer",
+      "allowed" : ["0", "1", "2"]
+    },
+    {
+      "name": "message",
+      "type": "string"
+    }
+  ],
+  "output": [
+    {
+      "name": "result",
+      "type": "string"
+    }
+  ]
+}
