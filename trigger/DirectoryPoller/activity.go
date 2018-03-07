@@ -14,7 +14,7 @@ import (
 )
 
 // log is the default package logger
-var log = logger.GetLogger("trigger-tibco-mqtt")
+var log = logger.GetLogger("trigger-tibco-directory-poller")
 
 // POLTrigger is simple POL trigger
 type POLTrigger struct {
