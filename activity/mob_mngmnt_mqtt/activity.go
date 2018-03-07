@@ -17,7 +17,7 @@ const (
 	broker   = "broker"
 	topic    = "topic"
 	qos      = "qos"
-	payload  = "message"
+	//payload  = "message"
 	id       = "id"
 	user     = "user"
 	password = "password"
@@ -330,10 +330,10 @@ type coordinates struct {
 	var buffer bytes.Buffer
 
 
-	if !ok {
-		context.SetOutput("result", "PAYLOAD_NOT_SET")
-		return true, fmt.Errorf("payload not set")
-	}
+	//if !ok {
+	//	context.SetOutput("result", "PAYLOAD_NOT_SET")
+	//	return true, fmt.Errorf("payload not set")
+	//}
 
 	ivqos, ok := context.GetInput(qos).(int)
 
