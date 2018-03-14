@@ -1,7 +1,7 @@
 {
   "name": "tibco-device-vl53l0xstream",
   "type": "flogo:device:trigger",
-  "ref": "github.com/TIBCOSoftware/flogo-contrib/device/trigger/vl53l0xstream",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/device/trigger/vl53l0x_stream",
   "version": "0.0.1",
   "title": "VL53L0X Stream Trigger",
   "description": "Simple VL53L0X Stream Trigger",
