@@ -40,7 +40,7 @@ func (a *ReplyActivity) Eval(ctx activity.Context) (done bool, err error) {
 
 	log.Debugf("Code :'%d', Data: '%+v'", replyCode, replyData)
 
-	dataAttr, _ := data.NewAttribute("data", data.TypeObject, replyData)
+	dataAttr, _ := data.NewAttribute("data", data.TypeAny, replyData)
 	codeAttr, _ := data.NewAttribute("code", data.TypeInteger, replyCode)
 	reply := map[string]*data.Attribute{
 		"data": dataAttr,

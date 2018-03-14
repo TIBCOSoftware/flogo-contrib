@@ -32,7 +32,7 @@
     },
     {
       "name": "content",
-      "type": "object"
+      "type": "any"
     }
   ],
   "reply": [
@@ -42,7 +42,7 @@
     },
     {
       "name": "data",
-      "type": "object"
+      "type": "any"
     }
   ],
   "handler": {
