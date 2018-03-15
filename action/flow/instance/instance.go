@@ -108,22 +108,22 @@ func (inst *Instance) appendErrorData(err error) {
 
 	switch e := err.(type) {
 	case *definition.LinkExprError:
-		inst.AddAttr("{Error.type}", data.TypeString, "link_expr")
-		inst.AddAttr("{Error.message}", data.TypeString, err.Error())
+		inst.AddAttr("_E.type", data.TypeString, "link_expr")
+		inst.AddAttr("_E.message", data.TypeString, err.Error())
 	case *activity.Error:
-		inst.AddAttr("{Error.message}", data.TypeString, err.Error())
-		inst.AddAttr("{Error.data}", data.TypeObject, e.Data())
-		inst.AddAttr("{Error.code}", data.TypeString, e.Code())
+		inst.AddAttr("_E.message", data.TypeString, err.Error())
+		inst.AddAttr("_E.data", data.TypeObject, e.Data())
+		inst.AddAttr("_E.code", data.TypeString, e.Code())
 
 		if e.ActivityName() != "" {
-			inst.AddAttr("{Error.activity}", data.TypeString, e.ActivityName())
+			inst.AddAttr("_E.activity", data.TypeString, e.ActivityName())
 		}
 	case *ActivityEvalError:
-		inst.AddAttr("{Error.activity}", data.TypeString, e.TaskName())
-		inst.AddAttr("{Error.message}", data.TypeString, err.Error())
-		inst.AddAttr("{Error.type}", data.TypeString, e.Type())
+		inst.AddAttr("_E.activity", data.TypeString, e.TaskName())
+		inst.AddAttr("_E.message", data.TypeString, err.Error())
+		inst.AddAttr("_E.type", data.TypeString, e.Type())
 	default:
-		inst.AddAttr("{Error.message}", data.TypeString, err.Error())
+		inst.AddAttr("_E.message", data.TypeString, err.Error())
 	}
 
 	//todo add case for *dataMapperError & *activity.Error

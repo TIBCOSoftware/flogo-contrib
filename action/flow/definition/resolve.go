@@ -64,6 +64,12 @@ func (r *FlowResolver) Resolve(toResolve string, scope data.Scope) (value interf
 			return nil, fmt.Errorf("failed to resolve activity attr: '%s', not found in flow", details.Property)
 		}
 		value = attr.Value()
+	case "error":
+		attr, exists := scope.GetAttr("_E." + details.Property)
+		if !exists {
+			return nil, fmt.Errorf("failed to resolve error attr: '%s', not found in flow", details.Property)
+		}
+		value = attr.Value()
 	case "trigger":
 		attr, exists := scope.GetAttr("_T." + details.Property)
 		if !exists {
