@@ -15,7 +15,7 @@ func getTestJsonMetadata() string {
 }
 
 const testConfig string = `{
-  "id": "tibco-rest",
+  "id": "flogo-rest",
   "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/rest",
   "settings": {
     "port": "8091"
@@ -42,7 +42,7 @@ const testConfig string = `{
 //	return 0, nil, nil
 //}
 //
-//func (tr *TestRunner) RunAction(ctx context.Context, act action.Action, options map[string]interface{}) (results map[string]*data.Attribute, err error) {
+//func (tr *TestRunner) RunHandler(ctx context.Context, act action.Action, options map[string]interface{}) (results map[string]*data.Attribute, err error) {
 //	log.Debugf("Ran Action: %v", act.Config().Id)
 //	return nil, nil
 //}
@@ -52,7 +52,7 @@ const testConfig string = `{
 func TestInitOk(t *testing.T) {
 	// New  factory
 	f := &RestFactory{}
-	tgr := f.New("tibco-rest")
+	tgr := f.New("flogo-rest")
 
 	runner := &TestRunner{}
 
@@ -67,7 +67,7 @@ func TestHandlerOk(t *testing.T) {
 
 	// New  factory
 	f := &RestFactory{}
-	tgr := f.New("tibco-rest")
+	tgr := f.New("flogo-rest")
 
 	runner := &TestRunner{}
 

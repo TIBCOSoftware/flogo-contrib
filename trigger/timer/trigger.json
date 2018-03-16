@@ -1,5 +1,5 @@
 {
-  "name": "tibco-timer",
+  "name": "flogo-timer",
   "type": "flogo:trigger",
   "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/timer",
   "version": "0.0.1",
@@ -27,28 +27,23 @@
       },
       {
         "name": "notImmediate",
-        "type": "string",
-        "required" : false
+        "type": "string"
       },
       {
         "name": "startDate",
-        "type": "string",
-        "required" : false
+        "type": "string"
       },
       {
         "name": "hours",
-        "type": "string",
-        "required" : false
+        "type": "string"
       },
       {
         "name": "minutes",
-        "type": "string",
-        "required" : false
+        "type": "string"
       },
       {
         "name": "seconds",
-        "type": "string",
-        "required" : false
+        "type": "string"
       }
     ]
   }

@@ -19,28 +19,24 @@ ssl.enabled.protocols=TLSv1.2,TLSv1.1,TLSv1
 */
 import (
 	"context"
-	//"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"os/signal"
 	"syscall"
-	//"testing"
-
-	"io/ioutil"
-
 	"time"
-
-	"log"
-	"os"
+	golog "log"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 )
 
-var jsonMetadata = getJsonMetadata()
 var listentime time.Duration = 10
 
-func getJsonMetadata() string {
+var jsonTestMetadata = getTestJsonMetadata()
+
+func getTestJsonMetadata() string {
 	jsonMetadataBytes, err := ioutil.ReadFile("trigger.json")
 	if err != nil {
 		panic("No Json Metadata found for trigger.json path")
@@ -49,7 +45,7 @@ func getJsonMetadata() string {
 }
 
 const testConfig string = `{
-  "name": "tibco-kafkasub",
+  "name": "flogo-kafkasub",
   "settings": {
     "BrokerUrl": "cheetah:9092"
   },
@@ -70,7 +66,7 @@ const testConfig string = `{
 }`
 
 const testConfigMulti string = `{
-  "name": "tibco-kafkasub",
+  "name": "flogo-kafkasub",
   "settings": {
     "BrokerUrl": "cheetah:9092"
   },
@@ -119,18 +115,18 @@ type TestRunner struct {
 }
 
 func (tr *TestRunner) Execute(ctx context.Context, act action.Action, inputs map[string]*data.Attribute) (results map[string]*data.Attribute, err error) {
-	log.Printf("Ran Action: %v", act.Metadata().ID)
+	golog.Printf("Ran Action: %v", act.Metadata().ID)
 	return nil, nil
 }
 
 // Run implements action.Runner.Run
 func (tr *TestRunner) Run(context context.Context, action action.Action, uri string, options interface{}) (code int, data interface{}, err error) {
-	log.Printf("Ran Action: %v", uri)
+	golog.Printf("Ran Action: %v", uri)
 	return 0, nil, nil
 }
 
 func (tr *TestRunner) RunAction(ctx context.Context, act action.Action, options map[string]interface{}) (results map[string]*data.Attribute, err error) {
-	log.Printf("Ran Action: %v", act.Metadata().ID)
+	golog.Printf("Ran Action: %v", act.Metadata().ID)
 	return nil, nil
 }
 
@@ -139,18 +135,18 @@ func consoleHandler() {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c
-		log.Println("Received console interrupt.  Exiting.")
+		golog.Println("Received console interrupt.  Exiting.")
 		time.Sleep(time.Second * 3)
 		os.Exit(1)
 	}()
 }
 
 func runTest(config *trigger.Config, expectSucceed bool, testName string, configOnly bool) error {
-	log.Printf("Test %s starting\n", testName)
+	golog.Printf("Test %s starting\n", testName)
 	defer func() error {
 		if r := recover(); r != nil {
 			if expectSucceed {
-				log.Println("Test %s was expected to succeed but did not because: ", testName, r)
+				golog.Println("Test %s was expected to succeed but did not because: ", testName, r)
 				return fmt.Errorf("%s", r)
 			}
 		}
@@ -158,12 +154,12 @@ func runTest(config *trigger.Config, expectSucceed bool, testName string, config
 	}()
 	f := &KafkasubFactory{}
 	tgr := f.New(config)
-	log.Printf("\t%s trigger created\n", testName)
-	runner := &TestRunner{}
-	tgr.Init(runner)
-	log.Printf("\t%s trigger initialized \n", testName)
+	golog.Printf("\t%s trigger created\n", testName)
+	//runner := &TestRunner{}
+	//tgr.Init(runner)
+	golog.Printf("\t%s trigger initialized \n", testName)
 	if configOnly {
-		log.Printf("Test %s complete\n", testName)
+		golog.Printf("Test %s complete\n", testName)
 		return nil
 	}
 	defer tgr.Stop()
@@ -175,9 +171,9 @@ func runTest(config *trigger.Config, expectSucceed bool, testName string, config
 		fmt.Printf("Test was expected to fail and did with error: %s", error)
 		return nil
 	}
-	log.Printf("\t%s listening for messages for %d seconds\n", testName, listentime)
+	golog.Printf("\t%s listening for messages for %d seconds\n", testName, listentime)
 	time.Sleep(time.Second * listentime)
-	log.Printf("Test %s complete\n", testName)
+	golog.Printf("Test %s complete\n", testName)
 	return nil
 }
 
@@ -188,7 +184,7 @@ func TestInit(t *testing.T) {
 	config := trigger.Config{}
 	error := json.Unmarshal([]byte(testConfig), &config)
 	if error != nil {
-		log.Printf("Failed to unmarshal the config args:%s", error)
+		golog.Printf("Failed to unmarshal the config args:%s", error)
 		t.Fail()
 	}
 	runTest(&config, true, "TestInit", true)
@@ -201,7 +197,7 @@ func TestEndpoint(t *testing.T) {
 	config := trigger.Config{}
 	error := json.Unmarshal([]byte(testConfig), &config)
 	if error != nil {
-		log.Printf("Failed to unmarshal the config args:%s", error)
+		golog.Printf("Failed to unmarshal the config args:%s", error)
 		t.Fail()
 	}
 	runTest(&config, true, "TestEndPoint", false)
@@ -260,7 +256,7 @@ func TestFailingEndpoint(t *testing.T) {
 	config.Handlers[0].Settings["partitions"] = "21,31" //negative test!!!
 	defer func() {
 		if r := recover(); r != nil {
-			log.Println("Test TestFailingEndpoint failed as expected.")
+			golog.Println("Test TestFailingEndpoint failed as expected.")
 		}
 	}()
 	runTest(&config, false, "TestFailingEndpoint", false)

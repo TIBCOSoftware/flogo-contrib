@@ -1,5 +1,7 @@
 package coap
 
+import "io/ioutil"
+
 //"encoding/json"
 //"net/http"
 //"testing"
@@ -7,8 +9,18 @@ package coap
 //"net/http"
 //"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 
+var jsonTestMetadata = getTestJsonMetadata()
+
+func getTestJsonMetadata() string {
+	jsonMetadataBytes, err := ioutil.ReadFile("trigger.json")
+	if err != nil {
+		panic("No Json Metadata found for trigger.json path")
+	}
+	return string(jsonMetadataBytes)
+}
+
 const testConfig string = `{
-  "id": "tibco-coap",
+  "id": "flogo-coap",
   "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/coap",
   "settings": {
     "port": "5683"
