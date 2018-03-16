@@ -1,16 +1,14 @@
 package rest
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
 
-	"context"
-
 	"github.com/TIBCOSoftware/flogo-contrib/trigger/rest/cors"
-	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
@@ -22,7 +20,7 @@ const (
 )
 
 // log is the default package logger
-var log = logger.GetLogger("trigger-tibco-rest")
+var log = logger.GetLogger("trigger-flogo-rest")
 
 var validMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
 
@@ -96,10 +94,6 @@ func (t *RestTrigger) Initialize(ctx trigger.InitContext) error {
 	t.server = NewServer(addr, router)
 
 	return nil
-}
-
-func (t *RestTrigger) Init(runner action.Runner) {
-
 }
 
 func (t *RestTrigger) Start() error {

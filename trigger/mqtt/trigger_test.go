@@ -9,9 +9,9 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 )
 
-var jsonMetadata = getJsonMetadata()
+var jsonTestMetadata = getTestJsonMetadata()
 
-func getJsonMetadata() string {
+func getTestJsonMetadata() string {
 	jsonMetadataBytes, err := ioutil.ReadFile("trigger.json")
 	if err != nil {
 		panic("No Json Metadata found for trigger.json path")
@@ -20,7 +20,7 @@ func getJsonMetadata() string {
 }
 
 const testConfig string = `{
-  "name": "tibco-mqtt",
+  "name": "flogo-mqtt",
   "settings": {
     "topic": "flogo/#",
     "broker": "tcp://127.0.0.1:1883",
@@ -50,7 +50,7 @@ const testConfig string = `{
 //	return 0, nil, nil
 //}
 //
-//func (tr *TestRunner) RunAction(ctx context.Context, act action.Action, options map[string]interface{}) (results map[string]*data.Attribute, err error) {
+//func (tr *TestRunner) RunHandler(ctx context.Context, act action.Action, options map[string]interface{}) (results map[string]*data.Attribute, err error) {
 //	log.Debugf("Ran Action: %v", act.Config().Id)
 //	return nil, nil
 //}

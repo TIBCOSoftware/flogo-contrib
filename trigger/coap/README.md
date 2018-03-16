@@ -61,7 +61,7 @@ Configure the Trigger to handle a CoAP POST message with path /device/refresh
 {
   "triggers": [
     {
-      "name": "tibco-coap",
+      "name": "flogo-coap",
       "settings": {},
       "endpoints": [
         {

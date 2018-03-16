@@ -7,17 +7,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/carlescere/scheduler"
 )
 
-var log = logger.GetLogger("timer-trigger")
+var log = logger.GetLogger("trigger-flogo-timer")
 
 type TimerTrigger struct {
 	metadata *trigger.Metadata
-	runner   action.Runner
 	config   *trigger.Config
 	timers   []*scheduler.Job
 
@@ -44,22 +42,17 @@ func (t *TimerTrigger) Metadata() *trigger.Metadata {
 	return t.metadata
 }
 
-// Init implements ext.Trigger.Init
-func (t *TimerTrigger) Init(runner action.Runner) {
-	t.runner = runner
-	//log.Infof("In init, id: '%s', Metadata: '%+v', Config: '%+v'", t.config.Id, t.metadata, t.config)
-}
+// Init implements trigger.Init
+func (t *TimerTrigger) Initialize(ctx trigger.InitContext) error {
 
-func (t *TimerTrigger) Initialize(ctx trigger.InitContext) {
-	//t.runner = runner
-	//log.Infof("In init, id: '%s', Metadata: '%+v', Config: '%+v'", t.config.Id, t.metadata, t.config)
+	t.handlers = ctx.GetHandlers()
+	return nil
 }
 
 // Start implements ext.Trigger.Start
 func (t *TimerTrigger) Start() error {
 
 	log.Debug("Start")
-	//t.timers = make(map[string]*scheduler.Job)
 	handlers := t.handlers
 
 	log.Debug("Processing handlers")
@@ -124,7 +117,7 @@ func (t *TimerTrigger) scheduleOnce(endpoint *trigger.Handler) {
 		//if act != nil {
 		//	log.Debugf("Running action: %s", endpoint.ActionId)
 		//
-		//	_, err := t.runner.RunAction(context.Background(), act, nil )
+		//	_, err := t.runner.RunHandler(context.Background(), act, nil )
 		//
 		//	if err != nil {
 		//		log.Error("Error running action: ", err.Error())

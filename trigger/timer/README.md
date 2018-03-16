@@ -64,7 +64,7 @@ Configure the Trigger to run a flow immediately
 {
   "triggers": [
     {
-      "name": "tibco-timer",
+      "name": "flogo-timer",
       "settings": {
       },
       "endpoints": [
@@ -88,7 +88,7 @@ Configure the Trigger to run a flow at a certain date/time. "startDate" settings
 {
   "triggers": [
     {
-      "name": "tibco-rest",
+      "name": "flogo-rest",
       "settings": {
         "port": "8080"
       },
@@ -114,7 +114,7 @@ Configure the Trigger to run a flow repeating every hours|minutes|seconds. If "n
 {
   "triggers": [
     {
-      "name": "tibco-rest",
+      "name": "flogo-rest",
       "settings": {
         "port": "8080"
       },
@@ -141,7 +141,7 @@ Configure the Trigger to run a flow at a certain date/time and repeating every h
 {
   "triggers": [
     {
-      "name": "tibco-rest",
+      "name": "flogo-rest",
       "settings": {
         "port": "8080"
       },

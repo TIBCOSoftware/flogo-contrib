@@ -1,5 +1,5 @@
 {
-  "name": "tibco-coap",
+  "name": "flogo-coap",
   "type": "flogo:trigger",
   "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/coap",
   "version": "0.0.1",

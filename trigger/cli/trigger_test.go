@@ -4,9 +4,9 @@ import (
 	"io/ioutil"
 )
 
-var jsonMetadata = getJsonMetadata()
+var jsonTestMetadata = getTestJsonMetadata()
 
-func getJsonMetadata() string {
+func getTestJsonMetadata() string {
 	jsonMetadataBytes, err := ioutil.ReadFile("trigger.json")
 	if err != nil {
 		panic("No Json Metadata found for trigger.json path")
@@ -14,8 +14,9 @@ func getJsonMetadata() string {
 	return string(jsonMetadataBytes)
 }
 
+
 const testConfig string = `{
-  "id": "tibco-cli",
+  "id": "flogo-cli",
   "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/cli",
   "handlers": [
     {
@@ -40,7 +41,7 @@ const testConfig string = `{
 func TestInitOk(t *testing.T) {
 	// New  factory
 	f := &CliTriggerFactory{}
-	tgr := f.New("tibco-cli")
+	tgr := f.New("flogo-cli")
 
 	runner := &TestRunner{}
 
@@ -56,7 +57,7 @@ func TestHandlerOk(t *testing.T) {
 
 	// New  factory
 	f := &CliTriggerFactory{}
-	tgr := f.New("tibco-cli")
+	tgr := f.New("flogo-cli")
 
 	runner := &TestRunner{}
 

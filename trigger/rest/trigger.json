@@ -1,5 +1,5 @@
 {
-  "name": "tibco-rest",
+  "name": "flogo-rest",
   "type": "flogo:trigger",
   "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/rest",
   "version": "0.0.1",
