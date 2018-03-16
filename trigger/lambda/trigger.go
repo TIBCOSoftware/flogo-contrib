@@ -9,6 +9,9 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+
+	// Import the aws-lambda-go. Required for dep to pull on app create
+	_ "github.com/aws/aws-lambda-go/lambda"
 )
 
 // log is the default package logger
