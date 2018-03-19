@@ -2,6 +2,7 @@ package rest
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"io"
 	"io/ioutil"
@@ -31,6 +32,7 @@ const (
 	ivContent     = "content"
 	ivParams      = "params"
 	ivProxy       = "proxy"
+	ivSkipSsl     = "skipSsl"
 
 	ovResult = "result"
 	ovStatus = "status"
@@ -133,6 +135,8 @@ func (a *RESTActivity) Eval(context activity.Context) (done bool, err error) {
 		}
 	}
 
+	httpTransportSettings := &http.Transport{}
+
 	// Set the proxy server to use, if supplied
 	proxy := context.GetInput(ivProxy)
 	var client *http.Client
@@ -145,10 +149,16 @@ func (a *RESTActivity) Eval(context activity.Context) (done bool, err error) {
 		}
 
 		log.Debug("Setting proxy server:", proxyValue)
-		client = &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxyURL)}}
-	} else {
-		client = &http.Client{}
+		httpTransportSettings.Proxy = http.ProxyURL(proxyURL)
 	}
+
+	// Skip ssl validation
+	skipSsl := context.GetInput(ivSkipSsl).(bool)
+	if skipSsl {
+		httpTransportSettings.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	}
+
+	client = &http.Client{Transport: httpTransportSettings}
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 

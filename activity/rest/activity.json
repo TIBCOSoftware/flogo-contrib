@@ -36,6 +36,11 @@
       "type": "params"
     },
     {
+      "name": "skipSsl",
+      "type": "boolean",
+      "value": "false"
+    },
+    {
       "name": "content",
       "type": "any"
     }
