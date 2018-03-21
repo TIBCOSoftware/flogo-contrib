@@ -457,6 +457,33 @@ func (ti *TaskInst) FlowReturn(returnData map[string]*data.Attribute, err error)
 	}
 }
 
+func (taskInst *TaskInst) appendErrorData(err error) {
+
+	switch e := err.(type) {
+	case *definition.LinkExprError:
+		taskInst.flowInst.AddAttr("_E.type", data.TypeString, "link_expr")
+		taskInst.flowInst.AddAttr("_E.message", data.TypeString, err.Error())
+	case *activity.Error:
+		taskInst.flowInst.AddAttr("_E.message", data.TypeString, err.Error())
+		taskInst.flowInst.AddAttr("_E.data", data.TypeObject, e.Data())
+		taskInst.flowInst.AddAttr("_E.code", data.TypeString, e.Code())
+
+		if e.ActivityName() != "" {
+			taskInst.flowInst.AddAttr("_E.activity", data.TypeString, e.ActivityName())
+		} else {
+			taskInst.flowInst.AddAttr("_E.activity", data.TypeString, taskInst.Name())
+		}
+	case *ActivityEvalError:
+		taskInst.flowInst.AddAttr("_E.activity", data.TypeString, e.TaskName())
+		taskInst.flowInst.AddAttr("_E.message", data.TypeString, err.Error())
+		taskInst.flowInst.AddAttr("_E.type", data.TypeString, e.Type())
+	default:
+		taskInst.flowInst.AddAttr("_E.activity", data.TypeString, taskInst.Name())
+		taskInst.flowInst.AddAttr("_E.message", data.TypeString, err.Error())
+	}
+
+	//todo add case for *dataMapperError & *activity.Error
+}
 //// Failed marks the Activity as failed
 //func (td *TaskInst) Failed(err error) {
 //
