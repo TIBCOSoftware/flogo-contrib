@@ -80,7 +80,8 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 	conn_str := ivuser + ":" +ivpasswd + "@tcp(" + ivhost + ")/" + ivdb
 	log.Debugf(conn_str)
 
-	db, err := sql.Open("mysql", "flogo:password@tcp(localhost:3306)/testdb")
+//db, err := sql.Open("mysql", "flogo:password@tcp(localhost:3306)/testdb")
+	db, err := sql.Open("mysql", conn_str)
 	if err != nil {
 		panic(err.Error())
 	}
