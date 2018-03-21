@@ -16,6 +16,7 @@ const (
 	username = "username"
 	password = "password"
 	database = "database"
+	query	 = "query"
 )
 
 // MyActivity is a stub for your Activity implementation
@@ -71,6 +72,15 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 		return true, fmt.Errorf("DataBase not set")
 	}
 	log.Debugf("database" + ivdb)
+
+	queryInput := context.GetInput(query)
+
+	ivquery, ok := queryInput.(string)
+	if !ok {
+		context.SetOutput("result", "QUERY_NOT_SET")
+		return true, fmt.Errorf("Query not set")
+	}
+	log.Debugf("query" + ivquery)
 	
 
 	log.Debugf("All variables set")
@@ -89,6 +99,11 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 	defer db.Close()
 
 	log.Debugf("Successfully Connected to MySQL Database")
+
+	//////////////////////////////////////////////////////////
+
+	rows, _ := db.Query(ivquery)
+	fmt.Println("Check " + ivquery + "\n" + conn_str)
 
 	return true, nil
 }

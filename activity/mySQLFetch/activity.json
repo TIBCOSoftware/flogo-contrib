@@ -22,6 +22,10 @@
     {
       "name": "database",
       "type": "string"
+    },
+    {
+      "name": "query",
+      "type": "string"
     }
   ],
   "output": [
