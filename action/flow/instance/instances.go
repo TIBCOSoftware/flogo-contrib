@@ -210,7 +210,7 @@ func (inst *IndependentInstance) execTask(behavior model.TaskBehavior, taskInst 
 
 			if !taskInst.flowInst.isHandlingError {
 
-				taskInst.flowInst.appendErrorData(NewActivityEvalError(taskInst.task.Name(), "unhandled", err.Error()))
+				taskInst.appendErrorData(NewActivityEvalError(taskInst.task.Name(), "unhandled", err.Error()))
 				inst.HandleGlobalError(taskInst.flowInst, err)
 			}
 			// else what should we do?
@@ -268,7 +268,7 @@ func (inst *IndependentInstance) handleTaskDone(taskBehavior model.TaskBehavior,
 	containerInst := taskInst.flowInst
 
 	if err != nil {
-		containerInst.appendErrorData(err)
+		taskInst.appendErrorData(err)
 		inst.HandleGlobalError(containerInst, err)
 		return
 	}
@@ -343,7 +343,7 @@ func (inst *IndependentInstance) handleTaskError(taskBehavior model.TaskBehavior
 			//fail
 			inst.SetStatus(model.FlowStatusFailed)
 		} else {
-			containerInst.appendErrorData(err)
+			taskInst.appendErrorData(err)
 			inst.HandleGlobalError(containerInst, err)
 		}
 		return
