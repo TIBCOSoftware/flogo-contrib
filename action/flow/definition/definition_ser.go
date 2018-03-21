@@ -116,7 +116,7 @@ func NewDefinition(rep *DefinitionRep) (def *Definition, err error) {
 
 		for id, linkRep := range rep.Links {
 
-			link, err := createLink(linkRep, def.tasks[linkRep.FromID], def.tasks[linkRep.ToID], id)
+			link, err := createLink(def.tasks, linkRep, id)
 			if err != nil {
 				return nil, err
 			}
@@ -151,7 +151,7 @@ func NewDefinition(rep *DefinitionRep) (def *Definition, err error) {
 
 			for id, linkRep := range rep.ErrorHandler.Links {
 
-				link, err := createLink(linkRep, errorHandler.tasks[linkRep.FromID], errorHandler.tasks[linkRep.ToID], id+idOffset)
+				link, err := createLink(errorHandler.tasks, linkRep, id+idOffset)
 				if err != nil {
 					return nil, err
 				}
@@ -307,7 +307,7 @@ func resolveSettingValue(setting string, value interface{}) interface{} {
 	return value
 }
 
-func createLink(linkRep *LinkRep, source *Task, dest *Task, id int) (*Link, error) {
+func createLink(tasks map[string]*Task, linkRep *LinkRep, id int) (*Link, error) {
 
 	link := &Link{}
 	link.id = id
@@ -329,8 +329,8 @@ func createLink(linkRep *LinkRep, source *Task, dest *Task, id int) (*Link, erro
 	}
 
 	link.value = linkRep.Value
-	link.fromTask = source
-	link.toTask = dest
+	link.fromTask = tasks[linkRep.FromID]
+	link.toTask = tasks[linkRep.ToID]
 
 	if link.toTask == nil {
 		strId := strconv.Itoa(link.ID())
