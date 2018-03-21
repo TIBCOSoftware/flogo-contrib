@@ -83,7 +83,7 @@ func (inst *Instance) FindOrCreateLinkData(link *definition.Link) (linkInst *Lin
 	linkInst, ok := inst.linkInsts[link.ID()]
 	created = false
 
-	if !ok {
+	if !ok || linkInst.link != link {
 		linkInst = NewLinkInst(inst, link)
 		inst.linkInsts[link.ID()] = linkInst
 		inst.master.ChangeTracker.trackLinkData(inst.subFlowId, &LinkInstChange{ChgType: CtAdd, ID: link.ID(), LinkInst: linkInst})

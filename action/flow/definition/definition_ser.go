@@ -116,7 +116,7 @@ func NewDefinition(rep *DefinitionRep) (def *Definition, err error) {
 
 		for id, linkRep := range rep.Links {
 
-			link, err := createLink(def, linkRep, id)
+			link, err := createLink(linkRep,def.tasks[linkRep.FromID], def.tasks[linkRep.ToID], id)
 			if err != nil {
 				return nil, err
 			}
@@ -149,7 +149,7 @@ func NewDefinition(rep *DefinitionRep) (def *Definition, err error) {
 
 			for id, linkRep := range rep.ErrorHandler.Links {
 
-				link, err := createLink(def, linkRep, id)
+				link, err := createLink(linkRep, errorHandler.tasks[linkRep.FromID], errorHandler.tasks[linkRep.ToID], id)
 				if err != nil {
 					return nil, err
 				}
@@ -305,7 +305,7 @@ func resolveSettingValue(setting string, value interface{}) interface{} {
 	return value
 }
 
-func createLink(def *Definition, linkRep *LinkRep, id int) (*Link, error) {
+func createLink(linkRep *LinkRep, source *Task, dest *Task, id int) (*Link, error) {
 
 	link := &Link{}
 	link.id = id
@@ -327,8 +327,8 @@ func createLink(def *Definition, linkRep *LinkRep, id int) (*Link, error) {
 	}
 
 	link.value = linkRep.Value
-	link.fromTask = def.tasks[linkRep.FromID]
-	link.toTask = def.tasks[linkRep.ToID]
+	link.fromTask = source
+	link.toTask = dest
 
 	if link.toTask == nil {
 		strId := strconv.Itoa(link.ID())
@@ -345,8 +345,6 @@ func createLink(def *Definition, linkRep *LinkRep, id int) (*Link, error) {
 
 	// add this link as successor "toLink" to the "fromTask"
 	link.fromTask.toLinks = append(link.fromTask.toLinks, link)
-
-	def.links[link.id] = link
 
 	return link, nil
 }
