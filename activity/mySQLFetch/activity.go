@@ -77,7 +77,7 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 
 	log.Debugf("Go MYSQL Connection")
 
-	conn_str = ivuser + ":" +ivpasswd + "@tcp(" + ivhost + ")/" + ivdb
+	conn_str := ivuser + ":" +ivpasswd + "@tcp(" + ivhost + ")/" + ivdb
 	log.Debugf(conn_str)
 
 	db, err := sql.Open("mysql", "flogo:password@tcp(localhost:3306)/testdb")
