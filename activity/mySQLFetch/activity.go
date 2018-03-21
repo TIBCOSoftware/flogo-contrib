@@ -54,7 +54,7 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 	}
 	log.Debugf("username" + ivuser)
 
-	ivpasswd, ok := context.GetInput(password).(int)
+	ivpasswd, ok := context.GetInput(password).(string)
 
 	if !ok {
 		context.SetOutput("result", "passwd_NOT_SET")
