@@ -1,10 +1,9 @@
-package mob_mngmnt_mqtt
+package mySQLFetch
 
 import (
 	"fmt"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"github.com/eclipse/paho.mqtt.golang"
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
 )
