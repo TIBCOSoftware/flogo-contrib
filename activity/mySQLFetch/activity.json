@@ -1,0 +1,33 @@
+{
+  "name": "MySql Select",
+  "type": "flogo:activity",
+  "ref": "github.com/Ganitagya/flogo-contrib/activity/mob_mngmnt_mqtt",
+  "version": "0.0.1",
+  "title": "MySQL Select",
+  "description": "Reads MySQL DB",
+  "author": "Akash Mahapatra <amahapat@tibco.com>",
+  "input":[
+   {
+      "name": "host",
+      "type": "string"
+    },
+    {
+      "name": "username",
+      "type": "string"
+    },
+    {
+      "name": "password",
+      "type": "string"
+    },
+    {
+      "name": "database",
+      "type": "string"
+    }
+  ],
+  "output": [
+    {
+      "name": "result",
+      "type": "string"
+    }
+  ]
+}
