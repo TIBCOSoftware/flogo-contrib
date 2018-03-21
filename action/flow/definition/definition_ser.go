@@ -116,7 +116,7 @@ func NewDefinition(rep *DefinitionRep) (def *Definition, err error) {
 
 		for id, linkRep := range rep.Links {
 
-			link, err := createLink(linkRep,def.tasks[linkRep.FromID], def.tasks[linkRep.ToID], id)
+			link, err := createLink(linkRep, def.tasks[linkRep.FromID], def.tasks[linkRep.ToID], id)
 			if err != nil {
 				return nil, err
 			}
@@ -147,9 +147,11 @@ func NewDefinition(rep *DefinitionRep) (def *Definition, err error) {
 
 		if len(rep.ErrorHandler.Links) != 0 {
 
+			idOffset := len(rep.Links)
+
 			for id, linkRep := range rep.ErrorHandler.Links {
 
-				link, err := createLink(linkRep, errorHandler.tasks[linkRep.FromID], errorHandler.tasks[linkRep.ToID], id)
+				link, err := createLink(linkRep, errorHandler.tasks[linkRep.FromID], errorHandler.tasks[linkRep.ToID], id+idOffset)
 				if err != nil {
 					return nil, err
 				}
