@@ -70,5 +70,16 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 
 	log.Debugf("All variables set")
 
+	log.Debugf("Go MYSQL Connection")
+
+	db, err := sql.Open("mysql", "flogo:password@tcp(localhost:3306)/testdb")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	defer db.Close()
+
+	log.Debugf("Successfully Connected to MySQL Database")
+
 	return true, nil
 }
