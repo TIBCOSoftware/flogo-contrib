@@ -17,6 +17,7 @@ func NewTaskInst(inst *Instance, task *definition.Task) *TaskInst {
 
 	taskInst.flowInst = inst
 	taskInst.task = task
+	taskInst.taskID = task.ID()
 	return &taskInst
 }
 
@@ -471,14 +472,14 @@ func (taskInst *TaskInst) appendErrorData(err error) {
 		if e.ActivityName() != "" {
 			taskInst.flowInst.AddAttr("_E.activity", data.TypeString, e.ActivityName())
 		} else {
-			taskInst.flowInst.AddAttr("_E.activity", data.TypeString, taskInst.Name())
+			taskInst.flowInst.AddAttr("_E.activity", data.TypeString, taskInst.taskID)
 		}
 	case *ActivityEvalError:
 		taskInst.flowInst.AddAttr("_E.activity", data.TypeString, e.TaskName())
 		taskInst.flowInst.AddAttr("_E.message", data.TypeString, err.Error())
 		taskInst.flowInst.AddAttr("_E.type", data.TypeString, e.Type())
 	default:
-		taskInst.flowInst.AddAttr("_E.activity", data.TypeString, taskInst.Name())
+		taskInst.flowInst.AddAttr("_E.activity", data.TypeString, taskInst.taskID)
 		taskInst.flowInst.AddAttr("_E.message", data.TypeString, err.Error())
 	}
 
