@@ -1,4 +1,4 @@
-package mob_mngmnt_mqtt
+package mySQLFetch
 
 import (
 	"fmt"
