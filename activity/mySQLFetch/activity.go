@@ -43,6 +43,7 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 		context.SetOutput("result", "HOSTSET")
 		return true, fmt.Errorf("Host not set")
 	}
+	log.Debugf("Hostname" + ivhost)
 
 	userInput := context.GetInput(username)
 
@@ -51,6 +52,7 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 		context.SetOutput("result", "user_NOT_SET")
 		return true, fmt.Errorf("user not set")
 	}
+	log.Debugf("username" + ivuser)
 
 	ivpasswd, ok := context.GetInput(password).(int)
 
@@ -58,6 +60,8 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 		context.SetOutput("result", "passwd_NOT_SET")
 		return true, fmt.Errorf("passwd not set")
 	}
+	log.Debugf("password" + ivpasswd)
+	
 
 	dbInput := context.GetInput(database)
 
@@ -66,6 +70,8 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 		context.SetOutput("result", "DATABASE_NOT_SET")
 		return true, fmt.Errorf("DataBase not set")
 	}
+	log.Debugf("database" + ivdb)
+	
 
 	log.Debugf("All variables set")
 
