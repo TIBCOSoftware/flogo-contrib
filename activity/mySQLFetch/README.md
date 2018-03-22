@@ -1,13 +1,3 @@
-github.com/Ganitagya/flogo-contrib/activity/mySQLFetch
-
-
-https://github.com/Ganitagya/flogo-contrib/tree/master/activity/mySQLFetch
-
-github.com/Ganitagya/flogo-contrib/activity/mySQLFetch
-
-
-
-
 
 # MySQL Fetch
 This activity provides your flogo application the ability to make a select query and returns the table selected as a JSON string.
