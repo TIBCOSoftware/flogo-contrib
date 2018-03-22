@@ -6,6 +6,9 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
+
+	"bytes"
+	"encoding/json"
 )
 
 // log is the default package logger
@@ -104,6 +107,10 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 	log.Debugf("Successfully Connected to MySQL Database")
 
 	//////////////////////////////////////////////////////////
+	f := make(map[int]interface{})
+	var g = make(map[int]interface{})
+
+	sNo := 0
 
 	rows, _ := db.Query(ivquery)
 
