@@ -398,6 +398,8 @@ func (inst *IndependentInstance) HandleGlobalError(containerInst *Instance, err 
 
 				//inst.scheduleEval(host)
 			}
+		}  else {
+			 inst.returnError = err
 		}
 	}
 }
