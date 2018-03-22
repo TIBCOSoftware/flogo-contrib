@@ -17,6 +17,9 @@ const (
 	password = "password"
 	database = "database"
 	query	 = "query"
+
+	ovResult = "result"
+	
 )
 
 // MyActivity is a stub for your Activity implementation
@@ -85,7 +88,7 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 
 	log.Debugf("All variables set")
 
-	log.Debugf("Go MYSQL Connection")
+	log.Debugf("Go MYSQL Connection Initiated")
 
 	conn_str := ivuser + ":" +ivpasswd + "@tcp(" + ivhost + ")/" + ivdb
 	log.Debugf(conn_str)
@@ -103,7 +106,45 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 	//////////////////////////////////////////////////////////
 
 	rows, _ := db.Query(ivquery)
-	fmt.Println("Check " + ivquery + "\n" + conn_str)
 
-	return true, nil
+	cols, _ := rows.Columns()
+	for rows.Next() {
+	    sNo += 1
+	    // Create a slice of interface{}'s to represent each column,
+	    // and a second slice to contain pointers to each item in the columns slice.
+	    columns := make([]interface{}, len(cols))
+	    columnPointers := make([]interface{}, len(cols))
+	    for i, _ := range columns {
+		columnPointers[i] = &columns[i]
+	    }
+	    
+	    // Scan the result into the column pointers...
+	    if err := rows.Scan(columnPointers...); err != nil {
+			//return err
+			panic(err.Error())
+	    }
+	    // Create our map, and retrieve the value for each column from the pointers slice,
+	    // storing it in the map with the name of the column as the key.
+	    m := make(map[string]interface{})
+	    for i, colName := range cols {
+		val := columnPointers[i].(*interface{})
+		m[colName] = *val
+		m[colName] = fmt.Sprintf("%s",m[colName])
+		jsonString, _ := json.Marshal(m)
+		var resultinterface interface{}
+		
+		d := json.NewDecoder(bytes.NewReader(jsonString))
+		d.UseNumber()
+		err = d.Decode(&resultinterface)
+		f = map[int]interface{}{sNo: resultinterface}
+			    
+	    }
+		for k, v := range f {
+		    g[k] = v
+		}
+	   
+	}
+
+	context.SetOutput(ovResult, g)
+	retrn true, nil
 }
