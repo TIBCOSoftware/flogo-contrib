@@ -50,6 +50,7 @@ type TaskRep struct {
 
 // ActivityConfigRep is a serializable representation of an activity configuration
 type ActivityConfigRep struct {
+	Name        string                 `json:"name"`
 	Ref         string                 `json:"ref"`
 	Mappings    *Mappings              `json:"mappings,omitempty"`
 	Settings    map[string]interface{} `json:"settings"`
@@ -197,6 +198,10 @@ func createTask(def *Definition, rep *TaskRep) (*Task, error) {
 			def.explicitReply = true
 		}
 
+		if task.name == "" {
+			task.name = rep.ActivityCfgRep.Name
+		}
+
 		task.activityCfg = actCfg
 	}
 
@@ -216,7 +221,7 @@ func createActivityConfig(task *Task, rep *ActivityConfigRep) (*ActivityConfig, 
 
 	activityCfg := &ActivityConfig{}
 	activityCfg.Activity = act
-
+	
 	//todo need to fix this
 	task.activityCfg = activityCfg
 
