@@ -161,7 +161,9 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 	err = d.Decode(&resultinterface)
 	h := map[string]interface{}{"results": resultinterface}
 	
-	context.SetOutput(ovResult, h)
+	jsonString1, _ := json.Marshal(h)
+	//context.SetOutput(ovResult, h)
+	context.SetOutput(ovResult, jsonString1)
 
 	return true, nil
 }
