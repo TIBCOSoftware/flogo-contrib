@@ -162,8 +162,10 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 	h := map[string]interface{}{"results": resultinterface}
 	
 	jsonString1, _ := json.Marshal(h)
+	js := fmt.Sprintf("%s", jsonString1)
 	//context.SetOutput(ovResult, h)
-	context.SetOutput(ovResult, jsonString1)
+	//context.SetOutput(ovResult, jsonString1)
+	context.SetOutput(ovResult, js)
 
 	return true, nil
 }
