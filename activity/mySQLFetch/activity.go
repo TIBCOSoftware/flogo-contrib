@@ -161,11 +161,13 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 	err = d.Decode(&resultinterface)
 	h := map[string]interface{}{"results": resultinterface}
 	
-	jsonString1, _ := json.Marshal(h)
-	js := fmt.Sprintf("%v", jsonString1)
-	//context.SetOutput(ovResult, h)
+
+	context.SetOutput(ovResult, h)
+	//jsonString1, _ := json.Marshal(h)
+	//js := fmt.Sprintf("%v", jsonString1)
+	
 	//context.SetOutput(ovResult, jsonString1)
-	context.SetOutput(ovResult, js)
+	//context.SetOutput(ovResult, js)
 
 	return true, nil
 }
