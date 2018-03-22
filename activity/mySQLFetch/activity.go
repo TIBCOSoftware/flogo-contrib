@@ -136,7 +136,7 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 	    for i, colName := range cols {
 		val := columnPointers[i].(*interface{})
 		m[colName] = *val
-		m[colName] = fmt.Sprintf("%s",m[colName])
+		//m[colName] = fmt.Sprintf("%s",m[colName])
 		jsonString, _ := json.Marshal(m)
 		var resultinterface interface{}
 		
