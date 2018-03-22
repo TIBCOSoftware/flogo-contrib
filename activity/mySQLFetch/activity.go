@@ -146,5 +146,5 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 	}
 
 	context.SetOutput(ovResult, g)
-	retrn true, nil
+	return true, nil
 }
