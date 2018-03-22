@@ -152,6 +152,16 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 	   
 	}
 
-	context.SetOutput(ovResult, g)
+	//Preparing the output result
+
+	jsonString, _ := json.Marshal(g)
+	var resultinterface interface{}
+	d := json.NewDecoder(bytes.NewReader(jsonString))
+	d.UseNumber()
+	err = d.Decode(&resultinterface)
+	h := map[string]interface{}{"results": resultinterface}
+	
+	context.SetOutput(ovResult, h)
+
 	return true, nil
 }
