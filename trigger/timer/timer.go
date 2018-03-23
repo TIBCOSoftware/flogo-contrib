@@ -250,7 +250,7 @@ func getInitialStartInSeconds(endpoint *trigger.Handler) int {
     durSeconds := duration.Seconds()
     if durSeconds < 0 {
     	//Future date
-	    return int(math.Abs(duration.Seconds()))
+	    return int(math.Abs(durSeconds))
     } else {
     	// Past date
 	   return 0
