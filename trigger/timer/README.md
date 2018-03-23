@@ -8,7 +8,7 @@ flogo add trigger github.com/TIBCOSoftware/flogo-contrib/trigger/timer
 ```
 
 ## Schema
-Outputs and Endpoint:
+Outputs and Handler:
 
 ```json
 {
@@ -22,19 +22,22 @@ Outputs and Endpoint:
       "type": "object"
     }
   ],
-  "endpoint": {
+  "handler": {
     "settings": [
       {
         "name": "repeating",
-        "type": "string"
+        "type": "string",
+        "value": "false",
       },
       {
         "name": "notImmediate",
-        "type": "string"
+        "type": "string",
+        "value": "true",
       },
       {
         "name": "startDate",
-        "type": "string"
+        "type": "string",
+        "value": "2018-01-01T12:00:00Z00:00"
       },
       {
         "name": "hours",
@@ -67,7 +70,7 @@ Configure the Trigger to run a flow immediately
       "name": "flogo-timer",
       "settings": {
       },
-      "endpoints": [
+      "handlers": [
         {
           "actionType": "flow",
           "actionURI": "embedded://myflow",
@@ -92,13 +95,13 @@ Configure the Trigger to run a flow at a certain date/time. "startDate" settings
       "settings": {
         "port": "8080"
       },
-      "endpoints": [
+      "handlers": [
         {
           "actionType": "flow",
           "actionURI": "embedded://myflow",
           "settings": {
             "repeating": "false",
-            "startDate" : "05/01/2016, 12:25:01"
+            "startDate" : "2018-01-01T12:00:00Z00:00"
           }
         }
       ]
@@ -118,7 +121,7 @@ Configure the Trigger to run a flow repeating every hours|minutes|seconds. If "n
       "settings": {
         "port": "8080"
       },
-      "endpoints": [
+      "handlers": [
         {
           "actionType": "flow",
           "actionURI": "embedded://myflow",
@@ -151,7 +154,7 @@ Configure the Trigger to run a flow at a certain date/time and repeating every h
           "actionURI": "embedded://myflow",
           "settings": {
             "repeating": "true",
-            "startDate" : "05/01/2016, 12:25:01",
+            "startDate" : "2018-01-01T12:00:00Z00:00",
             "hours": "64"
           }
         }
