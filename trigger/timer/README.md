@@ -148,7 +148,7 @@ Configure the Trigger to run a flow at a certain date/time and repeating every h
       "settings": {
         "port": "8080"
       },
-      "endpoints": [
+      "handlers": [
         {
           "actionType": "flow",
           "actionURI": "embedded://myflow",
