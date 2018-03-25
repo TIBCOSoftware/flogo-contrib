@@ -247,8 +247,14 @@ func getInitialStartInSeconds(endpoint *trigger.Handler) int {
 	log.Debug("Current time: ", currentTime)
 	log.Debug("Setting start time: ", triggerDate)
 	duration := time.Since(triggerDate)
-
-	return int(math.Abs(duration.Seconds()))
+    durSeconds := duration.Seconds()
+    if durSeconds < 0 {
+    	//Future date
+	    return int(math.Abs(durSeconds))
+    } else {
+    	// Past date
+	   return 0
+	}
 }
 
 type PrintJob struct {

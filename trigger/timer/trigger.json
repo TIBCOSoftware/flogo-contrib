@@ -23,15 +23,18 @@
       {
         "name": "repeating",
         "type": "string",
+        "value": "false",
         "required" : true
       },
       {
         "name": "notImmediate",
-        "type": "string"
+        "type": "string",
+        "value": "true"
       },
       {
         "name": "startDate",
-        "type": "string"
+        "type": "string",
+        "value": "2018-01-01T12:00:00Z00:00"
       },
       {
         "name": "hours",
