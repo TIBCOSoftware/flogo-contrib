@@ -1,3 +1,7 @@
+---
+title: Log
+weight: 4615
+---
 # tibco-log
 This activity provides your flogo application with rudementary logging.
 

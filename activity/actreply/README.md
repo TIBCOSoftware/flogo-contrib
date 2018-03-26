@@ -1,3 +1,7 @@
+---
+title: Reply
+weight: 4601
+---
 # flogo-reply
 This activity provides your flogo action/flow the ability to reply to a trigger invocation and set output values.
 

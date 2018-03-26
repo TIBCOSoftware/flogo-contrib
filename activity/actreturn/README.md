@@ -1,3 +1,7 @@
+---
+title: Return
+weight: 4602
+---
 # flogo-return
 This activity provides your flogo action/flow the ability to return immediately and set output values.
 

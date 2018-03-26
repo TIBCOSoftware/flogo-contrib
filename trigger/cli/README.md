@@ -1,3 +1,7 @@
+---
+title: CLI
+weight: 4701
+---
 # tibco-cli
 This trigger provides your flogo application the ability to run as a CLI app, that is, accept input via the CLI & run once till completion and return the results to stdout.
 

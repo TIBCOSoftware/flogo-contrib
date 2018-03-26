@@ -1,3 +1,7 @@
+---
+title: Mapper
+weight: 4616
+---
 # flogo-mapper
 This activity provides your flogo application the ability to map values on to the action/flow working attribute set.
 

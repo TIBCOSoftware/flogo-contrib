@@ -1,3 +1,7 @@
+---
+title: Trigger Lambda Function
+weight: 4614
+---
 # tibco-lambda
 This activity provides native Lambda invocation capabilities to your Flogo apps. You can invoke a lambda function via ARN and provide the access key and secret for authentication.
 

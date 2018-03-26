@@ -1,3 +1,7 @@
+---
+title: CoAP
+weight: 4607
+---
 # tibco-coap
 This activity provides your flogo application the ability to send a CoAP message.
 

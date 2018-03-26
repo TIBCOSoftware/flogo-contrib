@@ -1,3 +1,7 @@
+---
+title: REST
+weight: 4618
+---
 # tibco-rest
 This activity provides your flogo application the ability to invoke a REST service.
 

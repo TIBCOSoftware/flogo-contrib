@@ -1,3 +1,7 @@
+---
+title: Subflow
+weight: 4619
+---
 # flogo-subflow
 This activity provides your flogo flow the ability to start a sub-flow.
 

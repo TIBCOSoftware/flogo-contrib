@@ -1,5 +1,9 @@
+---
+title: AWS IoT
+weight: 4605
+---
 # tibco-awsiot
-This activity provides your flogo application the ability to update a device shadow on Aws.
+This activity provides your flogo application the ability to update a device shadow on AWS.
 
 
 ## Installation

@@ -1,3 +1,7 @@
+---
+title: App
+weight: 4604
+---
 # tibco-app
 This activity provides your Flogo application the ability to use a global attributes.
 

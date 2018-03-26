@@ -1,3 +1,7 @@
+---
+title: WebSocket Message
+weight: 4621
+---
 ![gofmt status](https://img.shields.io/badge/gofmt-compliant-green.svg?style=flat-square) ![golint status](https://img.shields.io/badge/golint-compliant-green.svg?style=flat-square) ![automated test coverage](https://img.shields.io/badge/test%20coverage-1%20testcase-orange.svg?style=flat-square)
 
 # sendWSMessage
