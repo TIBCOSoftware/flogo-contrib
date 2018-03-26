@@ -1,3 +1,7 @@
+---
+title: GPIO
+weight: 4611
+---
 # tibco-gpio
 This activity provides your flogo application the ability to control raspberry pi GPIO
 

@@ -1,3 +1,7 @@
+---
+title: Aggregate
+weight: 4603
+---
 # tibco-aggregate
 This activity provides your flogo application with rudimentary aggregation.
 

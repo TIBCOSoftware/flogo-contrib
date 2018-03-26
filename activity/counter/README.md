@@ -1,3 +1,7 @@
+---
+title: Counter
+weight: 4609
+---
 # tibco-counter
 This activity provides your flogo application the ability to use a global counter.
 

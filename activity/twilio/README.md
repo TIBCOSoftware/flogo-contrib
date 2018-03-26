@@ -1,3 +1,7 @@
+---
+title: Twilio
+weight: 4620
+---
 # tibco-twilio
 This activity provides your flogo application the ability to send a SMS via Twilio.
 

@@ -1,3 +1,7 @@
+---
+title: Publish Kafka Message
+weight: 4613
+---
 # tibco-kafkapub
 This activity provides your flogo application the ability to send a Kafka message
 

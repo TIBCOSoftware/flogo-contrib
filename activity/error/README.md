@@ -1,3 +1,7 @@
+---
+title: Error
+weight: 4610
+---
 # tibco-rest
 This activity provides your flogo application the ability to cause an explicit error in the flow.
 

@@ -1,3 +1,7 @@
+---
+title: Reply (Legacy)
+weight: 4617
+---
 # tibco-reply
 This activity provides your flogo application the ability to reply to a trigger invocation.
 

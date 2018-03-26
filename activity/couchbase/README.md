@@ -1,3 +1,7 @@
+---
+title: Coachbase
+weight: 4608
+---
 # tibco-couchbase
 This activity provides your flogo application the ability to connect to a Couchbase server
 
