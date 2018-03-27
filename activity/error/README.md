@@ -2,12 +2,14 @@
 title: Error
 weight: 4610
 ---
-# tibco-rest
-This activity provides your flogo application the ability to cause an explicit error in the flow.
+# Error
+This activity allows you to cause an explicit error in the flow (throw an error).
 
 
 ## Installation
-
+### Flogo Web
+This activity comes out of the box with the Flogo Web UI
+### Flogo CLI
 ```bash
 flogo add activity github.com/TIBCOSoftware/flogo-contrib/activity/error
 ```
@@ -31,15 +33,15 @@ Inputs and Outputs:
   ]
 }
 ```
+
 ## Settings
-| Setting     | Description    |
-|:------------|:---------------|
-| message     | The error message |         
-| data        | The error data |
+| Setting     | Required | Description |
+|:------------|:---------|:------------|
+| message     | False    | The error message you want to throw |         
+| data        | False    | The error data you want to throw |
 
 ## Configuration Examples
-
-Configure a task in flow cause a simple error with a message:
+The below example throws a simple error with a message:
 
 ```json
 {

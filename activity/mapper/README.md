@@ -2,11 +2,13 @@
 title: Mapper
 weight: 4616
 ---
-# flogo-mapper
-This activity provides your flogo application the ability to map values on to the action/flow working attribute set.
+# Mapper
+This activity allows you to map values to the working attribute set of a flow.
 
 ## Installation
-
+### Flogo Web
+This activity comes out of the box with the Flogo Web UI
+### Flogo CLI
 ```bash
 flogo install github.com/TIBCOSoftware/flogo-contrib/activity/mapper
 ```
@@ -20,7 +22,12 @@ Input and Output:
     {
       "name": "mappings",
       "type": "array",
-      "required": true
+      "required": true,
+      "display": {
+        "name": "Mapper",
+        "type": "mapper",
+        "mapperOutputScope" : "action"
+      }
     }
   ],
   "output": [
@@ -28,15 +35,12 @@ Input and Output:
 }
 ```
 ## Settings
-| Setting     | Description    |
-|:------------|:---------------|
-| mappings    | The mappings to the action/flow working data |         
+| Setting     | Required | Description |
+|:------------|:---------|:------------|
+| mappings    | True     | An array of mappings that are executed when the activity runs |
 
-
-## Configuration Examples
-### Simple
-Configure a activity to set the flow attributes to literals "1" and 2.
-
+## Example
+The below example allows you to configure the activity to reply and set the output values to literals "name" (a string) and 2 (an integer).      
 ```json
 {
   "id": "mapper",
@@ -45,7 +49,7 @@ Configure a activity to set the flow attributes to literals "1" and 2.
   "name": "Mapper",
   "input": { 
   	"mappings":[
-      { "type": 2, "value": "1", "mapTo": "FlowAttr1" },
+      { "type": 2, "value": "name", "mapTo": "FlowAttr1" },
       { "type": 2, "value": 2, "mapTo": "FlowAttr2" }
     ]
   }

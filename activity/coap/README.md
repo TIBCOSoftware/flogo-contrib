@@ -2,12 +2,14 @@
 title: CoAP
 weight: 4607
 ---
-# tibco-coap
-This activity provides your flogo application the ability to send a CoAP message.
+# CoAP
+This activity allows you to send a CoAP message.
 
 
 ## Installation
-
+### Flogo Web
+This activity comes out of the box with the Flogo Web UI
+### Flogo CLI
 ```bash
 flogo add activity github.com/TIBCOSoftware/flogo-contrib/activity/coap
 ```
@@ -26,7 +28,8 @@ Inputs and Outputs:
     {
       "name": "method",
       "type": "string",
-      "required": true
+      "required": true,
+      "allowed" : ["GET", "POST", "PUT", "DELETE"]
     },
     {
       "name": "queryParams",
@@ -57,21 +60,21 @@ Inputs and Outputs:
   ]
 }
 ```
+
 ## Settings
-| Setting   | Description    |
-|:----------|:---------------|
-| method    | The CoAP method (POST,GET,PUT,DELETE)|
-| uri   | The CoAP resource URI |         
-| queryParams | The query parameters |
-| type      | Message Type (Confirmable, NonConfirmable, Acknowledgement, Reset) |
-| messageId | ID used to detect duplicates and for optional reliability |
-| options   | CoAP options |
-| payload   | The message payload |
+| Setting     | Required | Description |
+|:------------|:---------|:------------|
+| uri         | True     | The CoAP resource URI |
+| method      | True     | The CoAP method (Accepted values are POST, GET, PUT, and DELETE) |
+| queryParams | False    | The query parameters |
+| type        | False    | Message Type (Confirmable, NonConfirmable, Acknowledgement, Reset) |
+| messageId   | False    | ID used to detect duplicates and for optional reliability |
+| options     | False    | CoAP options |
+| payload     | False    | The message payload |
 
 
-## Configuration Examples
-### Simple
-Configure a task in flow to send a "hello world" message via CoAP:
+## Example
+The below example sends a "hello world" message via CoAP:
 
 ```json
 {

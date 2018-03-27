@@ -2,12 +2,13 @@
 title: Publish Kafka Message
 weight: 4613
 ---
-# tibco-kafkapub
-This activity provides your flogo application the ability to send a Kafka message
-
+# Publish Kafka Message
+This activity allows you to send a Kafka message
 
 ## Installation
-
+### Flogo Web
+This activity comes out of the box with the Flogo Web UI
+### Flogo CLI
 ```bash
 flogo install github.com/TIBCOSoftware/flogo-contrib/activity/kafkapub
 ```
@@ -17,7 +18,7 @@ Inputs and Outputs:
 
 ```json
 {
- "input":[
+  "input":[
     {
       "name": "BrokerUrls",
       "type": "string",
@@ -61,27 +62,21 @@ Inputs and Outputs:
   ]
 }
 ```
+
 ## Settings
-| Setting    | Description                                                                                                                                                                                             | Cardinality |
-|------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------|
-| BrokerUrls | The Kafka cluster to connect to                                                                                                                                                                         | Required    |
-| Token      | The Kafka topic on which to place the message                                                                                                                                                           | Required    |
-| Message    | The text message to send                                                                                                                                                                                | Required    |
-| user       | If connectiong to a SASL enabled port, the userid to use for authentication                                                                                                                             | Optional    |
-| password   | If connectiong to a SASL enabled port, the password to use for authentication                                                                                                                           | Optional    |
-| truststore | If connectiong to a TLS secured port, the directory containing the certificates representing the trust chain for the connection.  This is usually just the CACert used to sign the server's certificate | Optional    |
+| Setting     | Required | Description |
+|:------------|:---------|:------------|
+| BrokerUrls  | True     | The Kafka cluster to connect to |
+| Token       | True     | The Kafka topic on which to place the message |
+| Message     | True     | The text message to send |
+| user        | False    | If connectiong to a SASL enabled port, the userid to use for authentication |
+| password    | False    | If connectiong to a SASL enabled port, the password to use for authentication |
+| truststore  | False    | If connectiong to a TLS secured port, the directory containing the certificates representing the trust chain for the connection.  This is usually just the CACert used to sign the server's certificate |
+| partition   | False    | Documents the partition that the message was placed on |
+| offset      | False    | Documents the offset for the message                   |
 
-## Outputs
-| Value     | Description                                            |
-|-----------|--------------------------------------------------------|
-| partition | Documents the partition that the message was placed on |
-| offset    | Documents the offset for the message                   |
-
-## Configuration Examples
-### Simple
-Configure a task to send a message to the 'syslog' topic.
-
-
+## Examples
+The below example sends a message to the 'syslog' topic.
 ```json
 {
       "id": 2,
@@ -112,4 +107,3 @@ Configure a task to send a message to the 'syslog' topic.
       ]
 }
 ```
-
