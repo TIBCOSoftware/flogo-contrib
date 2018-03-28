@@ -1,5 +1,3 @@
-Fixes: # .
-
 **What kind of change does this PR introduce?** (check one with "x")
 ```
 [] Bugfix
@@ -8,6 +6,8 @@ Fixes: # .
 [] Refactoring (no functional changes, no api changes)
 [] Other... Please describe:
 ```
+
+**Fixes**: #
 
 **What is the current behavior?**
 
