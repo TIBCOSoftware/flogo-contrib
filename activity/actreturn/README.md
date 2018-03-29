@@ -4,7 +4,7 @@ weight: 4602
 ---
 
 # Return
-This activity allows you to reply to a trigger invocation immediately and map output values.
+This activity allows you to reply to a trigger invocation and map output values. After replying to the trigger, the flow ends (this will be the last actvity in your flow).
 
 ## Installation
 ### Flogo Web

@@ -4,7 +4,7 @@ weight: 4617
 ---
 
 # Reply (Legacy)
-This activity has been deprecated and will be removed in a future release. Please use `actreply` or `actreturn`
+This activity has been deprecated and will be removed in a future release. Please use [actreply](../actreply) or [actreturn](../actreturn)
 
 ## Installation
 ### Flogo Web
