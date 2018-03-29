@@ -61,17 +61,22 @@ Inputs and Outputs:
 The below example aggregates a 'temperature' attribute with a moving window of size 5:
 
 ```json
-{
-  "id": 3,
-  "type": 1,
-  "activityType": "tibco-aggregate",
-  "name": "Aggregate Temperature",
-  "attributes": [
-      { "name": "function", "value": "average" }
-      { "name": "windowSize", "value": "5" }
-  ],
-  "inputMappings": [
-    { "type": 1, "value": "temperature", "mapTo": "value" }
-  ]
-}
+"id": "aggregate_4",
+"name": "Aggregate",
+"description": "Simple Aggregator Activity",
+"activity": {
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/aggregate",
+  "input": {
+    "function": "average",
+    "windowSize": "5"
+  },
+  "mappings": {
+    "input": [
+      {
+        "type": "assign",
+        "value": "temperature",
+        "mapTo": "value"
+      }
+    ]
+  }
 ```

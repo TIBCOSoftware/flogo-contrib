@@ -58,26 +58,16 @@ Configure a task in flow to update the device shadow of 'raspberry-pi' with a re
 
 ```json
 {
-  "id": 3,
-  "type": 1,
-  "activityType": "tibco-awsiot",
-  "name": "Update Device Shadow",
-  "attributes": [
-    {
-      "name": "thingName",
-      "type": "string",
-      "value": "raspberry-pi"
-    },
-    {
-      "name": "awsEndpoint",
-      "type": "string",
-      "value": "A3CWMRYOWXFD7I.iot.us-west-2.amazonaws.com"
-    },
-    {
-      "name": "reported",
-      "type": "params",
-      "value": { "temp":"50" }
+  "id": "awsiot_1",
+  "name": "Update AWS Device Shadow",
+  "description": "Simple AWS IoT",
+  "activity": {
+    "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/awsiot",
+    "input": {
+      "thingName": "raspberry-pi",
+      "awsEndpoint": "A3CWMRYOWXFD7I.iot.us-west-2.amazonaws.com",
+      "reported": { "temp":"50" }
     }
-  ]
+  }
 }
 ```

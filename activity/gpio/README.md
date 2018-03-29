@@ -69,60 +69,28 @@ Inputs and Outputs:
 ### Get pin state
 The below example retrieves the state of pin 23:
 ```json
-  "attributes": [
-          {
-            "name": "method",
-            "value": "Read State",
-            "type": "string"
-          },
-          {
-            "name": "pinNumber",
-            "value": "23",
-            "type": "integer"
-          }
-        ]
+"input": {
+  "method": "Read State",
+  "npinNumberame": 23
+}
 ```
 
 ### Set pin state
 The below example sets the state of pin 23 to High:
 ```json
-  "attributes": [
-          {
-            "name": "method",
-            "value": "Set State",
-            "type": "string"
-          },
-          {
-            "name": "pinNumber",
-            "value": "23",
-            "type": "integer"
-          },
-          {
-            "name": "state",
-            "value": "High",
-            "type": "string"
-          }
-        ]
+"input": {
+  "method": "Set State",
+  "npinNumberame": 23,
+  "state": "High"
+}
 ```
 
 ### Change pin's direction
 The below example changes the direction of the pin to Output:
 ```json
-  "attributes": [
-          {
-            "name": "method",
-            "value": "Direction",
-            "type": "string"
-          },
-          {
-            "name": "pinNumber",
-            "value": "23",
-            "type": "integer"
-          },
-          {
-            "name": "direction",
-            "value": "Output",
-            "type": "string"
-          }
-        ]
+"input": {
+  "method": "Direction",
+  "npinNumberame": 23,
+  "direction": "Output"
+}
 ```

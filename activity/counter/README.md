@@ -52,16 +52,19 @@ Inputs and Outputs:
 ## Examples
 ### Increment
 The below example increments a 'messages' counter:
+
 ```json
 {
-  "id": 3,
-  "type": 1,
-  "activityType": "tibco-counter",
-  "name": "Increment Message Count",
-  "attributes": [
-    { "name": "counterName", "value": "messages" },
-    { "name": "increment", "value": true }
-  ]
+  "id": "counter_1",
+  "name": "Increment Counter",
+  "description": "Simple Global Counter Activity",
+  "activity": {
+    "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/counter",
+    "input": {
+      "counterName": "messages",
+      "increment": true
+    }
+  }
 }
 ```
 
@@ -70,13 +73,15 @@ The below example retrieves the last value of the 'messages' counter:
 
 ```json
 {
-  "id": 3,
-  "type": 1,
-  "activityType": "tibco-counter",
-  "name": "Get Message Count",
-  "attributes": [
-    { "name": "counterName", "value": "messages" }
-  ]
+  "id": "counter_1",
+  "name": "Increment Counter",
+  "description": "Simple Global Counter Activity",
+  "activity": {
+    "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/counter",
+    "input": {
+      "counterName": "messages"
+    }
+  }
 }
 ```
 
@@ -85,13 +90,15 @@ The below example resets the 'messages' counter:
 
 ```json
 {
-  "id": 3,
-  "type": 1,
-  "activityType": "tibco-counter",
-  "name": "Reset Message Count",
-  "attributes": [
-    { "name": "counterName", "value": "messages" }
-    { "name": "reset", "value": true }
-  ]
+  "id": "counter_1",
+  "name": "Increment Counter",
+  "description": "Simple Global Counter Activity",
+  "activity": {
+    "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/counter",
+    "input": {
+      "counterName": "messages",
+      "reset": true
+    }
+  }
 }
 ```

@@ -46,14 +46,15 @@ The below example allows you to configure the activity to reply and set the outp
 
 ```json
 {
-  "id": "reply",
-  "type": 1,
-  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/actreturn",
-  "name": "Reply",
-  "input": { 
+  "id": "actreturn_5",
+  "name": "Return",
+  "description": "Simple Return Activity",
+  "activity": {
+    "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/actreturn",
+    "input": {
   	"mappings":[
-      { "type": 2, "value": "name", "mapTo": "Output1" },
-      { "type": 2, "value": 2, "mapTo": "Output2" }
+      { "type": "literal", "value": "name", "mapTo": "Output1" },
+      { "type": "literal", "value": 2, "mapTo": "Output2" }
     ]
   }
 }

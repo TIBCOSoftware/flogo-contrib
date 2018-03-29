@@ -64,16 +64,18 @@ Add a new 'myAttr' attribute of type string with the initial value of _foo_:
 
 ```json
 {
-  "id": 3,
-  "type": 1,
-  "activityType": "tibco-app",
-  "name": "Add myAttr to application",
-  "attributes": [
-    { "name": "attribute", "value": "myAttr" },
-    { "name": "operation", "value": "ADD" },
-    { "name": "type", "value": "string" },
-    { "name": "value", "value": "foo" },    
-  ]
+  "id": "app_5",
+  "name": "Use Global Attribute",
+  "description": "Simple Global App Activity",
+  "activity": {
+    "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/app",
+    "input": {
+      "attribute": "myAttr",
+      "operation": "ADD",
+      "type": "string",
+      "value": "MyValue"
+    }
+  }
 }
 ```
 
@@ -82,14 +84,18 @@ Get the value of the 'myAttr' attribute:
 
 ```json
 {
-  "id": 3,
-  "type": 1,
-  "activityType": "tibco-app",
-  "name": "Get myAttr from Application",
-  "attributes": [
-      { "name": "attribute", "value": "myAttr" },
-      { "name": "operation", "value": "GET" },
-  ]
+  "id": "app_5",
+  "name": "Use Global Attribute",
+  "description": "Simple Global App Activity",
+  "activity": {
+    "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/app",
+    "input": {
+      "attribute": "myAttr",
+      "operation": "GET",
+      "type": "string",
+      "value": "MyValue"
+    }
+  }
 }
 ```
 
@@ -98,14 +104,16 @@ Update the value of the 'myAttr' attribute to _bar_:
 
 ```json
 {
-  "id": 3,
-  "type": 1,
-  "activityType": "tibco-app",
-  "name": "Update myAttr Application attribute",
-  "attributes": [
-    { "name": "attribute", "value": "myAttr" },
-    { "name": "operation", "value": "UDPATE" },
-    { "name": "value", "value": "bar" },    
-  ]
+  "id": "app_5",
+  "name": "Use Global Attribute",
+  "description": "Simple Global App Activity",
+  "activity": {
+    "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/app",
+    "input": {
+      "attribute": "myAttr",
+      "operation": "UPDATE",
+      "value": "MyValue"
+    }
+  }
 }
 ```

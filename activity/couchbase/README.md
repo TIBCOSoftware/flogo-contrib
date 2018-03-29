@@ -92,16 +92,25 @@ Inputs and Outputs:
 
 ## Example
 The below example is for an upsert into Couchbase
+
 ```json
-{  
-   "key":"foo",
-   "data":"bar",
-   "method":"Upsert",
-   "expiry":0,
-   "server":"couchbase://127.0.0.1",
-   "username":"Administrator",
-   "password":"password",
-   "bucket":"test",
-   "bucketPassword":""
+{
+  "id": "couchbase_1",
+  "name": "Couchbase connector",
+  "description": "Manage Couchbase documents in a specified bucket",
+  "activity": {
+    "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/couchbase",
+    "input": {
+      "key": "foo",
+      "data": "bar",
+      "method": "Upsert",
+      "expiry": 0,
+      "server": "couchbase://127.0.0.1",
+      "username": "Administrator",
+      "password": "password",
+      "bucket": "test",
+      "bucketPassword": ""
+    }
+  }
 }
 ```

@@ -45,12 +45,14 @@ The below example throws a simple error with a message:
 
 ```json
 {
-  "id": 3,
-  "type": 1,
-  "activityType": "tibco-error",
+  "id": "error_1",
   "name": "Throw Error",
-  "attributes": [
-    { "name": "message", "value": "Unexpected Threshold Value" }
-  ]
+  "description": "Simple Error Activity",
+  "activity": {
+    "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/error",
+    "input": {
+      "message": "Unexpected Threshold Value"
+    }
+  }
 }
 ```

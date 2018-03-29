@@ -78,17 +78,19 @@ The below example sends a "hello world" message via CoAP:
 
 ```json
 {
-  "id": 3,
-  "type": 1,
-  "activityType": "tibco-coap",
+  "id": "coap",
   "name": "Send CoAP Message",
-  "attributes": [
-    { "name": "method", "value": "POST" },
-    { "name": "address", "value": "coap://localhost:5683/device" },
-    { "name": "type", "value": "Confirmable" },
-    { "name": "messageId", "value": 12345 },
-    { "name": "payload", "value": "hello world" },
-    { "name": "options", "value": {"ETag":"tag", "MaxAge":2 }
-  ]
+  "description": "Simple CoAP Activity",
+  "activity": {
+    "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/coap",
+    "input": {
+      "method": "POST",
+      "address": "coap://localhost:5683/device",
+      "type": "Confirmable",
+      "messageId": 12345,
+      "payload": "hello world",
+      "options": {"ETag":"tag", "MaxAge":2 }
+    }
+  }
 }
 ```
