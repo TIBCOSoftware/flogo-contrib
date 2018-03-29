@@ -2,14 +2,17 @@
 title: Aggregate
 weight: 4603
 ---
-# tibco-aggregate
-This activity provides your flogo application with rudimentary aggregation.
+
+# Aggregate
+This activity allows you to aggregate data and calculate an average or sliding average.
 
 
 ## Installation
-
+### Flogo Web
+This activity comes out of the box with the Flogo Web UI
+### Flogo CLI
 ```bash
-flogo add activity github.com/TIBCOSoftware/flogo-contrib/activity/aggregate
+flogo install github.com/TIBCOSoftware/flogo-contrib/activity/aggregate
 ```
 
 ## Schema
@@ -21,15 +24,13 @@ Inputs and Outputs:
     {
       "name": "function",
       "type": "string",
+      "required": true,
       "allowed" : ["block_avg", "moving_avg", "timeblockavg"]
     },
     {
       "name": "windowSize",
       "type": "integer",
-    },
-    {
-      "name": "autoReset",
-      "type": "boolean"
+      "required": true
     },
     {
       "name": "value",
@@ -48,31 +49,35 @@ Inputs and Outputs:
   ]
 }
 ```
+
 ## Settings
-| Setting   | Description    |
-|:----------|:---------------|
-| function   | The aggregate fuction, currently only average is supported |
-| windowSize  | The window size of the values to aggregate |
-| autoReset | Flag indicating if the window should be reset after it reports |
-| value | The value to aggregate |
+| Setting     | Required | Description |
+|:------------|:---------|:------------|
+| function    | True     | The aggregate fuction, currently only average is supported |
+| windowSize  | True     | The window size of the values to aggregate |
+| value       | False    | The value to aggregate |
 
 
-## Configuration Examples
-
-Configure a task to aggregate a 'temperature' attribute with a moving window of size 5:
+## Example
+The below example aggregates a 'temperature' attribute with a moving window of size 5:
 
 ```json
-{
-  "id": 3,
-  "type": 1,
-  "activityType": "tibco-aggregate",
-  "name": "Aggregate Temperature",
-  "attributes": [
-      { "name": "function", "value": "average" }
-      { "name": "windowSize", "value": "5" }
-  ]
-  "inputMappings": [
-    { "type": 1, "value": "temperature", "mapTo": "value" }
-  ]
-}
+"id": "aggregate_4",
+"name": "Aggregate",
+"description": "Simple Aggregator Activity",
+"activity": {
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/aggregate",
+  "input": {
+    "function": "average",
+    "windowSize": "5"
+  },
+  "mappings": {
+    "input": [
+      {
+        "type": "assign",
+        "value": "temperature",
+        "mapTo": "value"
+      }
+    ]
+  }
 ```

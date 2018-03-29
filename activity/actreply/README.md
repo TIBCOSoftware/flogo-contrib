@@ -2,11 +2,14 @@
 title: Reply
 weight: 4601
 ---
-# flogo-reply
-This activity provides your flogo action/flow the ability to reply to a trigger invocation and set output values.
+
+# Reply
+This activity allows you to reply to a trigger invocation and map output values.
 
 ## Installation
-
+### Flogo Web
+This activity comes out of the box with the Flogo Web UI
+### Flogo CLI
 ```bash
 flogo install github.com/TIBCOSoftware/flogo-contrib/activity/actreply
 ```
@@ -20,33 +23,38 @@ Input and Output:
     {
       "name": "mappings",
       "type": "array",
-      "required": true
+      "required": true,
+      "display": {
+        "name": "Mapper",
+        "type": "mapper",
+        "mapperOutputScope" : "action.output"
+      }
     }
   ],
   "output": [
   ]
 }
 ```
+
 ## Settings
-| Setting     | Description    |
-|:------------|:---------------|
-| mappings    | The mappings to the action/flow ouputs |         
+| Setting     | Required | Description |
+|:------------|:---------|:------------|
+| mappings    | True     | An array of mappings that are executed when the activity runs |
 
-
-## Configuration Examples
-### Simple
-Configure a activity to reply and set the output values to literals "1" and 2.
+## Example
+The below example allows you to configure the activity to reply and set the output values to literals "name" (a string) and 2 (an integer).
 
 ```json
 {
   "id": "reply",
-  "type": 1,
-  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/actreply",
   "name": "Reply",
-  "input": { 
+  "description": "Simple Reply Activity",
+  "activity": {
+    "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/actreply",
+    "input": {
   	"mappings":[
-      { "type": 2, "value": "1", "mapTo": "Output1" },
-      { "type": 2, "value": 2, "mapTo": "Output2" }
+      { "type": "literal", "value": "name", "mapTo": "Output1" },
+      { "type": "literal", "value": 2, "mapTo": "Output2" }
     ]
   }
 }

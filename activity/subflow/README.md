@@ -2,21 +2,19 @@
 title: Subflow
 weight: 4619
 ---
-# flogo-subflow
-This activity provides your flogo flow the ability to start a sub-flow.
+
+# Subflow
+This activity allows you to start a subflow.
 
 ## Installation
-
+### Flogo Web
+This activity comes out of the box with the Flogo Web UI
+### Flogo CLI
 ```bash
 flogo install github.com/TIBCOSoftware/flogo-contrib/activity/subflow
 ```
 
 ## Schema
-The Input/Output schema is determined from the Input/Output metadata
-of the sub-flow that is being executed
-
-## Settings
-
 ```json
 {
   "settings":[
@@ -26,19 +24,18 @@ of the sub-flow that is being executed
       "required": true
     }
   ]
-
 }
 ```
+_The Input/Output schema is determined from the Input/Output metadata of the subflow that is being executed_
 
-| Setting     | Description    |
-|:------------|:---------------|
-| flowURI    | The URI of the flow to execute |         
+## Settings
+| Setting     | Required | Description |
+|:------------|:---------|:------------|
+| flowURI     | True     | The URI of the flow to execute |         
 
 
-## Configuration Examples
-### Simple
-Configure a activity to execute "mysubflow" and set its input values to literals "1" and "2".
-
+## Examples
+The below example executes "mysubflow" and set its input values to literals "foo" and "bar".
 ```json
 {
   "id": "RunSubFlow",
@@ -49,8 +46,8 @@ Configure a activity to execute "mysubflow" and set its input values to literals
     },
     "input": { 
   	  "mappings":[
-        { "type": "literal", "value": "1", "mapTo": "FlowIn1" },
-        { "type": "literal", "value": "2", "mapTo": "FlowIn2" }
+        { "type": "literal", "value": "foo", "mapTo": "FlowIn1" },
+        { "type": "literal", "value": "bar", "mapTo": "FlowIn2" }
       ]
     }
   }

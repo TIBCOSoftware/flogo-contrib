@@ -2,11 +2,14 @@
 title: GPIO
 weight: 4611
 ---
-# tibco-gpio
-This activity provides your flogo application the ability to control raspberry pi GPIO
+
+# GPIO
+This activity allows you to control the GPIO pins on a Raspberry Pi
 
 ## Installation
-
+### Flogo Web
+This activity comes out of the box with the Flogo Web UI
+### Flogo CLI
 ```bash
 flogo add activity github.com/TIBCOSoftware/flogo-contrib/activity/gpio
 ```
@@ -54,71 +57,41 @@ Inputs and Outputs:
 }
 ```
 ## Settings
-| Setting     | Description    |
-|:------------|:---------------|
-| method      | The method to take action for GPIO|         
-| pinNumber   | The pin number   |
-| direction   | The direction of pin number, either Input or Output |
-| state       | The state of pin number, either high or low |
-| Pull        | Pull the pin number to Up, Down and Off |
+| Setting     | Required | Description |
+|:------------|:---------|:------------|
+| method      | True     | The method to take action for specified pin (Allowed values are Direction, Set State, Read State, and Pull) |         
+| pinNumber   | True     | The pin number of the GPIO |
+| direction   | False    | Set the direction of the pin (Allowed values are Input and Output) |
+| state       | False    | Set the state of the pin (Allowed values are High and Low) |
+| Pull        | False    | Pull the pin to the specified value (Allowed values are Up, Down, and Off) |
+| result      | False    | The result of the operation |
 
-
-## Configuration Examples
+## Examples
 ### Get pin state
-Get specific pin 23's state
+The below example retrieves the state of pin 23:
 ```json
-  "attributes": [
-          {
-            "name": "method",
-            "value": "Read State",
-            "type": "string"
-          },
-          {
-            "name": "pinNumber",
-            "value": "23",
-            "type": "integer"
-          }
-        ]
+"input": {
+  "method": "Read State",
+  "npinNumberame": 23
+}
 ```
+
 ### Set pin state
-Set pin state to High
+The below example sets the state of pin 23 to High:
 ```json
-  "attributes": [
-          {
-            "name": "method",
-            "value": "Set State",
-            "type": "string"
-          },
-          {
-            "name": "pinNumber",
-            "value": "23",
-            "type": "integer"
-          },
-          {
-            "name": "state",
-            "value": "High",
-            "type": "string"
-          }
-        ]
+"input": {
+  "method": "Set State",
+  "npinNumberame": 23,
+  "state": "High"
+}
 ```
+
 ### Change pin's direction
-Change pin's direction to Output
+The below example changes the direction of the pin to Output:
 ```json
-  "attributes": [
-          {
-            "name": "method",
-            "value": "Direction",
-            "type": "string"
-          },
-          {
-            "name": "pinNumber",
-            "value": "23",
-            "type": "integer"
-          },
-          {
-            "name": "direction",
-            "value": "Output",
-            "type": "string"
-          }
-        ]
+"input": {
+  "method": "Direction",
+  "npinNumberame": 23,
+  "direction": "Output"
+}
 ```

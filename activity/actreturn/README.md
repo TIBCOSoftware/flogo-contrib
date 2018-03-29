@@ -2,13 +2,16 @@
 title: Return
 weight: 4602
 ---
-# flogo-return
-This activity provides your flogo action/flow the ability to return immediately and set output values.
+
+# Return
+This activity allows you to reply to a trigger invocation immediately and map output values.
 
 ## Installation
-
+### Flogo Web
+This activity comes out of the box with the Flogo Web UI
+### Flogo CLI
 ```bash
-flogo install github.com/TIBCOSoftware/flogo-contrib/activity/actreturn
+flogo install github.com/TIBCOSoftware/flogo-contrib/activity/actreply
 ```
 
 ## Schema
@@ -20,33 +23,39 @@ Input and Output:
     {
       "name": "mappings",
       "type": "array",
-      "required": true
+      "required": true,
+      "display": {
+        "name": "Mapper",
+        "type": "mapper",
+        "mapperOutputScope" : "action.output"
+      }
     }
   ],
   "output": [
   ]
 }
 ```
+
 ## Settings
-| Setting     | Description    |
-|:------------|:---------------|
-| mappings    | The mappings to the action/flow ouputs |         
+| Setting     | Required | Description |
+|:------------|:---------|:------------|
+| mappings    | True     | An array of mapping that are executed when the activity runs |
 
 
-## Configuration Examples
-### Simple
-Configure a activity to return and set the output values to literals "1" and 2.
+## Example
+The below example allows you to configure the activity to reply and set the output values to literals "name" (a string) and 2 (an integer).
 
 ```json
 {
-  "id": "reply",
-  "type": 1,
-  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/actreturn",
-  "name": "Reply",
-  "input": { 
+  "id": "actreturn_5",
+  "name": "Return",
+  "description": "Simple Return Activity",
+  "activity": {
+    "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/actreturn",
+    "input": {
   	"mappings":[
-      { "type": 2, "value": "1", "mapTo": "Output1" },
-      { "type": 2, "value": 2, "mapTo": "Output2" }
+      { "type": "literal", "value": "name", "mapTo": "Output1" },
+      { "type": "literal", "value": 2, "mapTo": "Output2" }
     ]
   }
 }
