@@ -55,16 +55,18 @@ Inputs and Outputs:
 The below example sends 'my text message' to '617-555-5555' via Twilio:
 ```json
 {
-  "id": 3,
-  "type": 1,
-  "activityType": "tibco-twilio",
-  "name": "Send Text Message",
-  "attributes": [
-    { "name": "accountSID", "value": "A...9" },
-    { "name": "authToken", "value": "A...9" },
-    { "name": "from", "value": "+12016901385" },
-    { "name": "to", "value": "+16175555555" },
-    { "name": "message", "value": "my text message" }
-  ]
+  "id": "twilio",
+  "name": "Send SMS Via Twilio",
+  "description": "Simple Twilio Activity",
+  "activity": {
+    "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/twilio",
+    "input": {
+      "accountSID": "A...9",
+      "authToken": "A...9",
+      "from": "+12016901385",
+      "to": "+16175555555",
+      "message": "my text message"
+    }
+  }
 }
 ```

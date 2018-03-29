@@ -40,18 +40,24 @@ Input and Output:
 | mappings    | True     | An array of mappings that are executed when the activity runs |
 
 ## Example
-The below example allows you to configure the activity to reply and set the output values to literals "name" (a string) and 2 (an integer).      
+The below example allows you to configure the activity to reply and set the output values to literals "name" (a string) and 2 (an integer).
+
 ```json
 {
-  "id": "mapper",
-  "type": 1,
-  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/mapper",
+  "id": "mapper_6",
   "name": "Mapper",
-  "input": { 
-  	"mappings":[
-      { "type": 2, "value": "name", "mapTo": "FlowAttr1" },
-      { "type": 2, "value": 2, "mapTo": "FlowAttr2" }
-    ]
+  "description": "Simple Mapper Activity",
+  "activity": {
+    "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/mapper",
+    "input": {
+      "mappings": [
+        {
+          "mapTo": "FlowAttr1",
+          "type": "assign",
+          "value": "$activity[log_3].message"
+        }
+      ]
+    }
   }
 }
 ```

@@ -88,29 +88,34 @@ The below example retrieves a pet with number '1234' from the [swagger petstore]
 
 ```json
 {
-  "id": 3,
-  "type": 1,
-  "activityType": "tibco-rest",
-  "name": "Query for pet 1234",
-  "attributes": [
-    { "name": "method", "value": "GET" },
-    { "name": "uri", "value": "http://petstore.swagger.io/v2/pet/1234" }
-  ]
+  "id": "rest_2",
+  "name": "Invoke REST Service",
+  "description": "Simple REST Activity",
+  "activity": {
+    "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/rest",
+    "input": {
+      "method": "GET",
+      "uri": "http://petstore.swagger.io/v2/pet/1234"
+    }
+  }
 }
 ```
 
 ### Using Path Params
 The below example is the same as above, itretrieves a pet with number '1234' from the [swagger petstore](http://petstore.swagger.io), but uses a URI parameter to configure the ID:
+
 ```json
 {
-  "id": 3,
-  "type": 1,
-  "activityType": "tibco-rest",
-  "name": "Query for Pet",
-  "attributes": [
-    { "name": "method", "value": "GET" },
-    { "name": "uri", "value": "http://petstore.swagger.io/v2/pet/:id" },
-    { "name": "params", "value": { "id": "1234"} }
-  ]
+  "id": "rest_2",
+  "name": "Invoke REST Service",
+  "description": "Simple REST Activity",
+  "activity": {
+    "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/rest",
+    "input": {
+      "method": "GET",
+      "uri": "http://petstore.swagger.io/v2/pet/:id",
+      "params": { "id": "1234"}
+    }
+  }
 }
 ```

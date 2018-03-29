@@ -3,7 +3,7 @@ title: Reply (Legacy)
 weight: 4617
 ---
 # Reply (Legacy)
-This activity allows you to reply to a trigger invocation and map output values. While the activity is still here, you probably want to use the `actreply`
+This activity has been deprecated and will be removed in a future release. Please use `actreply` or `actreturn`
 
 ## Installation
 ### Flogo Web

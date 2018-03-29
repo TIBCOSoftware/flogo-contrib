@@ -56,12 +56,16 @@ The below example logs a message 'test message':
 
 ```json
 {
-  "id": 3,
-  "type": 1,
-  "activityType": "tibco-log",
+  "id": "log_3",
   "name": "Log Message",
-  "attributes": [
-    { "name": "message", "value": "test message" }
-  ]
+  "description": "Simple Log Activity",
+  "activity": {
+    "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/log",
+    "input": {
+      "message": "test message",
+      "flowInfo": "false",
+      "addToFlow": "true"
+    }
+  }
 }
 ```

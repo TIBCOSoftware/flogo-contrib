@@ -72,42 +72,20 @@ Inputs and Outputs:
 ## Configuration Examples
 The below example sends a message `Hello World`
 ```json
-      {
-        "id": 2,
-        "name": "Send a message to a WebSocket server",
-        "type": 1,
-        "activityType": "sendWSMessage",
-        "attributes": [
-          {
-            "name": "Server",
-            "value": "localhost:9191",
-            "type": "string"
-          },
-          {
-            "name": "Channel",
-            "value": "/channel",
-            "type": "string"
-          },
-          {
-            "name": "Destination",
-            "value": "sample",
-            "type": "string"
-          },
-          {
-            "name": "Message",
-            "value": "Hello World",
-            "type": "string"
-          },
-          {
-            "name": "Username",
-            "value": "user",
-            "type": "string"
-          },
-          {
-            "name": "Password",
-            "value": "password",
-            "type": "string"
-          }
-        ]
-      }
+{
+  "id": "wsmessage",
+  "name": "Send WebSocket Message",
+  "description": "This activity sends a message to a WebSocket enabled servers",
+  "activity": {
+    "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/wsmessage",
+    "input": {
+      "Server": "localhost:9191",
+      "Channel": "/channel",
+      "Destination": "sample",
+      "Message": "Hello World",
+      "Username": "user",
+      "Password": "passwd"
+    }
+  }
+}
 ```
