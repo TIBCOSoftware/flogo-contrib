@@ -2,6 +2,7 @@
 title: CoAP
 weight: 4607
 ---
+
 # CoAP
 This activity allows you to send a CoAP message.
 

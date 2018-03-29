@@ -2,6 +2,7 @@
 title: Trigger Lambda Function
 weight: 4614
 ---
+
 # Trigger Lambda function
 This activity allows you to invoke an AWS Lambda function via ARN and provide the access key and secret for authentication.
 

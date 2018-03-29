@@ -2,6 +2,7 @@
 title: Aggregate
 weight: 4603
 ---
+
 # Aggregate
 This activity allows you to aggregate data and calculate an average or sliding average.
 

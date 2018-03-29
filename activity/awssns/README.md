@@ -2,6 +2,7 @@
 title: Amazon SNS
 weight: 4606
 ---
+
 # Amazon SNS
 This activity allows you to send SMS text messages using Amazon Simple Notification Services.
 

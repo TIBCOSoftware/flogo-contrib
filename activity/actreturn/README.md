@@ -2,6 +2,7 @@
 title: Return
 weight: 4602
 ---
+
 # Return
 This activity allows you to reply to a trigger invocation immediately and map output values.
 

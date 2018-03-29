@@ -2,6 +2,7 @@
 title: Publish Kafka Message
 weight: 4613
 ---
+
 # Publish Kafka Message
 This activity allows you to send a Kafka message
 

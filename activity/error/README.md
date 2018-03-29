@@ -2,6 +2,7 @@
 title: Error
 weight: 4610
 ---
+
 # Error
 This activity allows you to cause an explicit error in the flow (throw an error).
 

@@ -2,6 +2,7 @@
 title: App
 weight: 4604
 ---
+
 # App
 This activity allows you to set and use global attributes throughout your app.
 

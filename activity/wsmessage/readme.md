@@ -2,6 +2,7 @@
 title: WebSocket Message
 weight: 4621
 ---
+
 # Send WebSocket message
 This activity allows you to send a message to a WebSocket server.
 

@@ -2,6 +2,7 @@
 title: Counter
 weight: 4609
 ---
+
 # Counter
 This activity allows you to use a global counter.
 

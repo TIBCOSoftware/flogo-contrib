@@ -2,6 +2,7 @@
 title: Log
 weight: 4615
 ---
+
 # Log
 This activity allows you to write log messages.
 

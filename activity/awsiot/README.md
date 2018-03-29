@@ -2,6 +2,7 @@
 title: AWS IoT
 weight: 4605
 ---
+
 # AWS IoT
 This activity allows you to update a device shadow on AWS.
 
