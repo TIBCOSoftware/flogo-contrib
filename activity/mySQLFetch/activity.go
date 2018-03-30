@@ -112,7 +112,11 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 
 	sNo := 0
 
-	rows, _ := db.Query(ivquery)
+	rows, queryerr := db.Query(ivquery)
+	
+	if queryerr != nil {
+		panic(queryerr.Error())
+	}
 
 	cols, _ := rows.Columns()
 	for rows.Next() {
