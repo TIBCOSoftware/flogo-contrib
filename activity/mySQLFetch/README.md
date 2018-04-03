@@ -1,6 +1,6 @@
 
 # MySQL Fetch
-This activity provides your flogo application the ability to make a select query and returns the table selected as a JSON string.
+This activity provides your flogo application the ability to fire a select query to mySQL database and fetch the required data returning it as a JSON string.
 
 
 ## Installation
