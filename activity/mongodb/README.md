@@ -63,6 +63,7 @@ Inputs and Outputs:
       "type": "integer"
     }
   ]
+ }
 ```
 ## Settings
 | Setting        | Required | Description |
