@@ -60,5 +60,5 @@ New activites, triggers and models are welcome. If you would like to submit one,
 flogo-contrib is licensed under a BSD-type license. See TIBCO LICENSE.txt for license text.
 
 ### Support
-For Q&A you can post your questions on [Slack](https://tibco-cloud.slack.com/messages/flogo-general/)
+For Q&A you can post your questions on [Gitter](https://gitter.im/project-flogo/Lobby?utm_source=share-link&utm_medium=link&utm_campaign=share-link)
 
