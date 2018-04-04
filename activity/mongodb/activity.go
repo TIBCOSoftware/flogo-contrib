@@ -28,7 +28,7 @@ const (
 
 	ivKeyName  = "keyName"
 	ivKeyValue = "keyValue"
-	ivValue    = "value"
+	ivData     = "data"
 
 	ovOutput = "output"
 	ovCount = "count"
@@ -67,7 +67,7 @@ func (a *MongoDbActivity) Eval(ctx activity.Context) (done bool, err error) {
 	method, _ := ctx.GetInput(ivMethod).(string)
 	keyName, _ := ctx.GetInput(ivKeyName).(string)
 	keyValue, _ := ctx.GetInput(ivKeyValue).(string)
-	value := ctx.GetInput(ivValue)
+	value := ctx.GetInput(ivData)
 
 	//todo implement shared sessions
 	client, err := mongo.NewClient(connectionURI)
@@ -82,9 +82,16 @@ func (a *MongoDbActivity) Eval(ctx activity.Context) (done bool, err error) {
 
 	switch strings.ToUpper(method) {
 	case methodGet:
-		//result := coll.FindOne(context.Background(), bson.NewDocument(bson.EC.String(keyName, keyValue)))
-		//result.Decode()
-		//todo decode result
+		result := coll.FindOne(context.Background(), bson.NewDocument(bson.EC.String(keyName, keyValue)))
+		val := make(map[string]interface{})
+		err := result.Decode(val)
+		if err != nil {
+			return false, err
+		}
+
+		activityLog.Debugf("Get Results $#v", result)
+
+		ctx.SetOutput(ovOutput, val)
 	case methodDelete:
 		result, err := coll.DeleteMany(
 			context.Background(),
@@ -95,6 +102,9 @@ func (a *MongoDbActivity) Eval(ctx activity.Context) (done bool, err error) {
 		if err != nil {
 			return false, err
 		}
+
+		activityLog.Debugf("Delete Results $#v", result)
+
 		ctx.SetOutput(ovCount, result.DeletedCount)
 	case methodInsert:
 		result, err := coll.InsertOne(
@@ -104,6 +114,8 @@ func (a *MongoDbActivity) Eval(ctx activity.Context) (done bool, err error) {
 		if err != nil {
 			return false, err
 		}
+		activityLog.Debugf("Insert Results $#v", result)
+
 		ctx.SetOutput(ovOutput, result.InsertedID)
 	case methodReplace:
 		result, err := coll.ReplaceOne(
@@ -116,6 +128,8 @@ func (a *MongoDbActivity) Eval(ctx activity.Context) (done bool, err error) {
 		if err != nil {
 			return false, err
 		}
+
+		activityLog.Debugf("Replace Results $#v", result)
 		ctx.SetOutput(ovOutput, result.UpsertedID)
 		ctx.SetOutput(ovCount, result.ModifiedCount)
 
@@ -125,11 +139,15 @@ func (a *MongoDbActivity) Eval(ctx activity.Context) (done bool, err error) {
 			bson.NewDocument(
 				bson.EC.String(keyName, keyValue),
 			),
-			value,
+			bson.NewDocument(
+				bson.EC.Interface("$set", value),
+			),
 		)
 		if err != nil {
 			return false, err
 		}
+
+		activityLog.Debugf("Update Results $#v", result)
 		ctx.SetOutput(ovOutput, result.UpsertedID)
 		ctx.SetOutput(ovCount, result.ModifiedCount)
 	default:
