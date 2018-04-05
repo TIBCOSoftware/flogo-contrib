@@ -135,7 +135,7 @@ func getIterateValue(ctx model.TaskContext) (value interface{}, set bool) {
 	if ok {
 		if strVal[0] == '$' {
 			val, err := ctx.Resolve(strVal)
-			if err != nil {
+			if err == nil {
 				return val, true
 			}
 		}
