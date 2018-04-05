@@ -1,12 +1,12 @@
 {
-  "name": "Database_Connection",
+  "name": "SQL Database_Query",
   "type": "flogo:activity",
-  "ref": "github.com/Ganitagya/flogo-contrib/activity/Database_Connection",
+  "ref": "github.com/Ganitagya/flogo-contrib/activity/Database_Query",
   "version": "0.0.1",
-  "title": "Database_Connection ",
+  "title": "SQL Database_Query",
   "description": "Fetch data from SQL Database",
   "author": "Akash Mahapatra <amahapat@tibco.com>",
-  "homepage": "https://github.com/Ganitagya/flogo-contrib/tree/master/activity/Database_Connection",
+  "homepage": "https://github.com/Ganitagya/flogo-contrib/tree/master/activity/Database_Query",
   "inputs":[
     {
       "name": "driverName",
