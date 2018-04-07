@@ -45,9 +45,14 @@ func TestEval(t *testing.T) {
 	tc := test.NewTestActivityContext(getActivityMetadata())
 
 	//setup attr
-	tc.SetInput("driverName", "mysql")
-	tc.SetInput("datasourceName", "flogo:password@tcp(localhost:3306)/testdb")
-	tc.SetInput("query", "select * from person")
+	// tc.SetInput("driverName", "mysql")
+	// tc.SetInput("datasourceName", "flogo:password@tcp(localhost:3306)/testdb")
+	// tc.SetInput("query", "select * from person")
+
+	//setup attr for postgres
+	tc.SetInput("driverName", "postgres")
+	tc.SetInput("datasourceName", "host=localhost port=5432 user=postgres password=mysecretpassword dbname=postgres sslmode=disable")
+	tc.SetInput("query", "select * from company")
 	act.Eval(tc)
 
 	//check result attr

@@ -8,6 +8,7 @@ import (
 	"database/sql"
 
 	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 	_ "github.com/mxk/go-sqlite/sqlite3"
 
 	"bytes"
@@ -138,7 +139,14 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 		for i, colName := range cols {
 			val := columnPointers[i].(*interface{})
 			m[colName] = *val
-			m[colName] = fmt.Sprintf("%s", m[colName])
+			// m[colName] = fmt.Sprintf("%s", m[colName])
+
+			if _, ok := m[colName].([]uint8); ok {
+				m[colName] = fmt.Sprintf("%s", m[colName])
+			} else {
+				m[colName] = fmt.Sprintf("%v", m[colName])
+			}
+
 			jsonString, _ := json.Marshal(m)
 			var resultinterface interface{}
 
