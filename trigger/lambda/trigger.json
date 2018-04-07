@@ -1,7 +1,7 @@
 {
   "name": "flogo-lambda",
   "type": "flogo:trigger",
-  "shim": "plugin",
+  "shim": "gobuild",
   "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/lambda",
   "version": "0.0.1",
   "title": "Start Flow as a function in Lambda",
