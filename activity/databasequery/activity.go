@@ -1,4 +1,4 @@
-package Database_Query
+package databasequery
 
 import (
 	"fmt"
@@ -7,9 +7,9 @@ import (
 
 	"database/sql"
 
-	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/lib/pq"
-	_ "github.com/mxk/go-sqlite/sqlite3"
+	_ "github.com/go-sql-driver/mysql"   //required if mysql driver is selected
+	_ "github.com/lib/pq"                //required if postgres driver is selected
+	_ "github.com/mxk/go-sqlite/sqlite3" //required if sqlite3 driver is selected
 
 	"bytes"
 	"encoding/json"
@@ -82,8 +82,8 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 	}
 
 	// Check if it is a select query or not
-	query_check := strings.Fields(ivquery)
-	if strings.ToLower(query_check[0]) != "select" {
+	queryCheck := strings.Fields(ivquery)
+	if strings.ToLower(queryCheck[0]) != "select" {
 		context.SetOutput("result", "NOT_A_SELECT_QUERY")
 		return true, fmt.Errorf("Query not a select query")
 	}
@@ -119,12 +119,12 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 
 	cols, _ := rows.Columns()
 	for rows.Next() {
-		sNo += 1
+		sNo++
 		// Create a slice of interface{}'s to represent each column,
 		// and a second slice to contain pointers to each item in the columns slice.
 		columns := make([]interface{}, len(cols))
 		columnPointers := make([]interface{}, len(cols))
-		for i, _ := range columns {
+		for i := range columns {
 			columnPointers[i] = &columns[i]
 		}
 

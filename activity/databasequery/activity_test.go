@@ -1,4 +1,4 @@
-package Database_Query
+package databasequery
 
 import (
 	"fmt"
@@ -44,15 +44,38 @@ func TestEval(t *testing.T) {
 	act := NewActivity(getActivityMetadata())
 	tc := test.NewTestActivityContext(getActivityMetadata())
 
-	//setup attr
-	// tc.SetInput("driverName", "mysql")
-	// tc.SetInput("datasourceName", "flogo:password@tcp(localhost:3306)/testdb")
-	// tc.SetInput("query", "select * from person")
+	
+	//setup attr for mysql
+	fmt.Println("===============================")
+	fmt.Println("Unit Test ===> MySQL Connection")
+	fmt.Println("===============================")
+	fmt.Println("")
+	tc.SetInput("driverName", "mysql")
+	tc.SetInput("datasourceName", "flogo:password@tcp(localhost:3306)/testdb")
+	tc.SetInput("query", "select * from person")
 
+
+/* 	
+	//setup attr for sqlite3
+	fmt.Println("===============================")
+	fmt.Println("Unit Test ===> SQLITE3 Connection")
+	fmt.Println("===============================")
+	fmt.Println("")
+	tc.SetInput("driverName", "sqlite3")
+	tc.SetInput("datasourceName", "akashdb")
+	tc.SetInput("query", "select * from person")
+*/
+
+/* 
 	//setup attr for postgres
+	fmt.Println("===============================")
+	fmt.Println("Unit Test ===> POSTGRES Connection")
+	fmt.Println("===============================")
+	fmt.Println("")
 	tc.SetInput("driverName", "postgres")
 	tc.SetInput("datasourceName", "host=localhost port=5432 user=postgres password=mysecretpassword dbname=postgres sslmode=disable")
 	tc.SetInput("query", "select * from company")
+ */
 	act.Eval(tc)
 
 	//check result attr
