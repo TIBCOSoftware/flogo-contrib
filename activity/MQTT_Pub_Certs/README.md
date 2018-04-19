@@ -1,8 +1,3 @@
-github.com/Ganitagya/flogo-contrib/activity/MQTT_Pub
-
-
-github.com/Ganitagya/flogo-contrib/activity/MQTT_noCert
-
 
 # Publish MQTT Message
 This activity provides your flogo application the ability to publish a message on an MQTT topic.
@@ -11,11 +6,11 @@ This activity provides your flogo application the ability to publish a message o
 ## Installation
 
 ```bash
-flogo install github.com/Ganitagya/flogo-contrib/activity/MQTT_noCert
+flogo install github.com/Ganitagya/flogo-contrib/activity/MQTT_Pub_Certs/
 ```
 Link for flogo web:
 ```
-https://github.com/Ganitagya/flogo-contrib/activity/MQTT_noCert
+https://github.com/Ganitagya/flogo-contrib/activity/MQTT_Pub_Certs/
 ```
 
 ## Schema
@@ -72,6 +67,9 @@ Inputs and Outputs:
 | topic     | Topic on which the message is published |
 | qos       | MQTT Quality of Service |
 | message   | The message payload |
+
+
+Remember to store device.pem.crt,device.pem.key and root-CA.pem in the same location where you keep your build binary.
 
 
 ## Configuration Examples
