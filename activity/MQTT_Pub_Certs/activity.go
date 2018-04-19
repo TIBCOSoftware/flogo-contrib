@@ -100,25 +100,25 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 		ivPassword = ""
 	}
 
-	opts := mqtt.NewClientOptions()
-	opts.AddBroker(ivbroker)
-	opts.SetClientID(ivID)
-	opts.SetUsername(ivUser)
-	opts.SetPassword(ivPassword)
+	options := mqtt.NewClientOptions()
+	options.AddBroker(ivbroker)
+	options.SetClientID(ivID)
+	options.SetUsername(ivUser)
+	options.SetPassword(ivPassword)
 
 	// set tls config
 
-	tlsConfig := NewTLSConfig("")
-	opts.SetTLSConfig(tlsConfig)
+	tlsConfig := getTLSConfiguration("")
+	options.SetTLSConfig(tlsConfig)
 
-	client := mqtt.NewClient(opts)
+	client := mqtt.NewClient(options)
 
-	log.Debugf("MQTT Publisher connecting")
+	log.Debugf("MQTT Publisher connection initiated...")
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
 		panic(token.Error())
 	}
 
-	log.Debugf("MQTT Publisher connected, sending message")
+	log.Debugf("MQTT Publisher connection successful...")
 	token := client.Publish(ivtopic, byte(ivqos), false, ivpayload)
 	token.Wait()
 
@@ -129,16 +129,14 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 	return true, nil
 }
 
-// NewTLSConfig creates a TLS configuration for the specified 'thing'
-func NewTLSConfig(thingName string) *tls.Config {
+// getTLSConfiguration creates a TLS configuration for the specified 'thing'
+func getTLSConfiguration(thing string) *tls.Config {
 	// Import root CA
 	certpool := x509.NewCertPool()
 	pemCerts, err := ioutil.ReadFile("root-CA.pem")
 	if err == nil {
 		certpool.AppendCertsFromPEM(pemCerts)
 	}
-
-	//thingDir := "things/" + thingName + "/"
 
 	// Import client certificate/key pair for the specified 'thing'
 	cert, err := tls.LoadX509KeyPair("device.pem.crt", "device.pem.key")
