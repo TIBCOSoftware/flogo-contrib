@@ -1,0 +1,47 @@
+{
+  "name": "MySQL Fetch",
+  "type": "flogo:activity",
+  "ref": "github.com/Ganitagya/flogo-contrib/activity/mysqlfetch",
+  "version": "0.0.2",
+  "title": "MySQL Fetch",
+  "description": "Fetches data from a MySQL database",
+  "author": "Akash Mahapatra <amahapat@tibco.com>",
+  "input":[
+   {
+      "name": "host",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "username",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "password",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "database",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "preparequery",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "queryvalue",
+      "type": "string",
+      "required": true
+    }
+  ],
+  "output": [
+    {
+      "name": "result",
+      "type": "any"
+    }
+  ]
+}
