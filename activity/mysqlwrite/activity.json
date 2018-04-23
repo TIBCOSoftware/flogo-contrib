@@ -7,23 +7,16 @@
   "description": "Inserts data into a MySQL database",
   "author": "Akash Mahapatra <amahapat@tibco.com>",
   "input":[
-   {
-      "name": "host",
+    {
+      "name": "driverName",
       "type": "string",
-      "required": true
+      "required": true,
+      "allowed": [
+        "mysql"
+      ]
     },
     {
-      "name": "username",
-      "type": "string",
-      "required": true
-    },
-    {
-      "name": "password",
-      "type": "string",
-      "required": true
-    },
-    {
-      "name": "database",
+      "name": "datasourceName",
       "type": "string",
       "required": true
     },
