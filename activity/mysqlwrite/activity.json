@@ -1,10 +1,10 @@
 {
-  "name": "MySQL Fetch",
+  "name": "MySQL Insert",
   "type": "flogo:activity",
-  "ref": "github.com/Ganitagya/flogo-contrib/activity/mysqlfetch",
+  "ref": "github.com/Ganitagya/flogo-contrib/activity/mysqlwrite",
   "version": "0.0.2",
-  "title": "MySQL Fetch",
-  "description": "Fetches data from a MySQL database",
+  "title": "MySQL Insert",
+  "description": "Inserts data into a MySQL database",
   "author": "Akash Mahapatra <amahapat@tibco.com>",
   "input":[
    {
