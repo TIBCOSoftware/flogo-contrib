@@ -35,8 +35,8 @@ func getEvtType(raw json.RawMessage) (string, interface{}) {
 	var evt map[string]interface{}
 	json.Unmarshal(raw, &evt)
 
-	if _, ok := evt["RequestContext"]; ok {
-		apiGw := events.ApiGatewayProxyRequest{}
+	if _, ok := evt["requestContext"]; ok {
+		apiGw := events.APIGatewayProxyRequest{}
 		json.Unmarshal(raw, &apiGw)
 		return "apigw", apiGw
 	}
@@ -59,7 +59,7 @@ func coherceResponseObj(result map[string]interface{}, evtTyp string) (interface
 	// Check if API GW request. If so, build the correct response
 	switch evtTyp {
 	case "apigw":
-		returnObj = events.ApiGatewayProxyResponse{
+		returnObj = events.APIGatewayProxyResponse{
 			StatusCode: func() int {
 				if statusCode == 0 {
 					return 200
