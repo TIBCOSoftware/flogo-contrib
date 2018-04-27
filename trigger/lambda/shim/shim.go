@@ -28,7 +28,7 @@ func Handle(ctx context.Context, evt json.RawMessage) (interface{}, error) {
 		return nil, err
 	}
 
-	return coherceResponseObj(result, evtTyp), nil
+	return coherceResponseObj(result, evtTyp)
 }
 
 func getEvtType(raw json.RawMessage) (string, interface{}) {
@@ -44,14 +44,17 @@ func getEvtType(raw json.RawMessage) (string, interface{}) {
 	return "", nil
 }
 
-func coherceResponseObj(result map[string]interface{}, evtTyp string) interface{} {
+func coherceResponseObj(result map[string]interface{}, evtTyp string) (interface{}, error) {
 	var returnObj interface{}
 
 	responseData := result["data"]
 	statusCode := result["status"].(int)
 
 	// Marshal the response
-	responseRaw, _ := json.Marshal(responseData)
+	responseRaw, err := json.Marshal(responseData)
+	if err != nil {
+		return nil, err
+	}
 
 	// Check if API GW request. If so, build the correct response
 	switch evtTyp {
@@ -72,7 +75,7 @@ func coherceResponseObj(result map[string]interface{}, evtTyp string) interface{
 		returnObj = responseData
 	}
 
-	return returnObj
+	return returnObj, nil
 }
 
 func setupArgs(evt json.RawMessage, ctx *context.Context) error {
