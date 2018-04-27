@@ -28,7 +28,7 @@ func Handle(ctx context.Context, evt json.RawMessage) (interface{}, error) {
 		return nil, err
 	}
 
-	return coherceResponseObj(result, evtTyp)
+	return coerceResponseObj(result, evtTyp)
 }
 
 func getEvtType(raw json.RawMessage) (string, interface{}) {
@@ -44,7 +44,7 @@ func getEvtType(raw json.RawMessage) (string, interface{}) {
 	return "", nil
 }
 
-func coherceResponseObj(result map[string]interface{}, evtTyp string) (interface{}, error) {
+func coerceResponseObj(result map[string]interface{}, evtTyp string) (interface{}, error) {
 	var returnObj interface{}
 
 	responseData := result["data"]
