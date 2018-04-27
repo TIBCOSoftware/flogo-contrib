@@ -11,6 +11,10 @@ import (
 	"github.com/aws/aws-lambda-go/lambdacontext"
 )
 
+const (
+	APIGW uint = 1 + iota
+)
+
 // Handle implements the Flogo Function handler
 func Handle(ctx context.Context, evt json.RawMessage) (interface{}, error) {
 	err := setupArgs(evt, &ctx)
@@ -31,20 +35,20 @@ func Handle(ctx context.Context, evt json.RawMessage) (interface{}, error) {
 	return coerceResponseObj(result, evtTyp)
 }
 
-func getEvtType(raw json.RawMessage) (string, interface{}) {
+func getEvtType(raw json.RawMessage) (uint, interface{}) {
 	var evt map[string]interface{}
 	json.Unmarshal(raw, &evt)
 
 	if _, ok := evt["requestContext"]; ok {
 		apiGw := events.APIGatewayProxyRequest{}
 		json.Unmarshal(raw, &apiGw)
-		return "apigw", apiGw
+		return APIGW, apiGw
 	}
 
-	return "", nil
+	return 0, nil
 }
 
-func coerceResponseObj(result map[string]interface{}, evtTyp string) (interface{}, error) {
+func coerceResponseObj(result map[string]interface{}, evtTyp uint) (interface{}, error) {
 	var returnObj interface{}
 
 	responseData := result["data"]
@@ -58,7 +62,7 @@ func coerceResponseObj(result map[string]interface{}, evtTyp string) (interface{
 
 	// Check if API GW request. If so, build the correct response
 	switch evtTyp {
-	case "apigw":
+	case APIGW:
 		returnObj = events.APIGatewayProxyResponse{
 			StatusCode: func() int {
 				if statusCode == 0 {
