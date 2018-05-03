@@ -37,7 +37,9 @@ func Handle(ctx context.Context, evt json.RawMessage) (interface{}, error) {
 
 func getEvtType(raw json.RawMessage) (uint, interface{}) {
 	var evt map[string]interface{}
-	json.Unmarshal(raw, &evt)
+	if err := json.Unmarshal(raw, &evt); err != nil {
+		return 0, nil
+	}
 
 	if _, ok := evt["requestContext"]; ok {
 		apiGw := events.APIGatewayProxyRequest{}
