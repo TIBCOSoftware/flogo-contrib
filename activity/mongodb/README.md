@@ -1,3 +1,8 @@
+---
+title: MongoDB
+weight: 4622
+---
+
 # MongoDB
 This activity allows you to connect to a MongoDB server
 
