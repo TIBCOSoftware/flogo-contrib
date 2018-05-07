@@ -1,0 +1,30 @@
+{
+  "name": "odflow",
+  "type": "flogo:action",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/action/flow/ondemand",
+  "version": "0.0.1",
+  "title": "OnDemand Flow",
+  "description": "Simple OnDemand Flow Action",
+  "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/action/flow",
+  "async": true,
+
+  "input":[
+    {
+      "name": "mappings",
+      "type": "array",
+      "required": true,
+      "display": {
+        "name": "Mapper",
+        "type": "mapper",
+        "mapperOutputScope" : "action"
+      }
+    },
+    {
+      "name": "flow",
+      "type": "any",
+      "required": true
+    }
+  ],
+  "output": [
+  ]
+}
