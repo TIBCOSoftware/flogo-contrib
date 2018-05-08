@@ -45,7 +45,7 @@ const testEventJson =`
               },
               "mappings" : {
                 "input": [
-                  { "type": 2, "value": "$flow.customerId", "mapTo": "message" }
+                  { "type": 1, "value": "$flow.customerId", "mapTo": "message" }
                 ]
               }
             }
