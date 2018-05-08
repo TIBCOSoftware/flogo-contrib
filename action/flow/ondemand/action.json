@@ -10,19 +10,8 @@
 
   "input":[
     {
-      "name": "mappings",
-      "type": "array",
-      "required": true,
-      "display": {
-        "name": "Mapper",
-        "type": "mapper",
-        "mapperOutputScope" : "action"
-      }
-    },
-    {
-      "name": "flow",
-      "type": "any",
-      "required": true
+      "name": "flowPackage",
+      "type": "any"
     }
   ],
   "output": [

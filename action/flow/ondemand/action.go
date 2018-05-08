@@ -17,6 +17,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/mapper"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/TIBCOSoftware/flogo-lib/util"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow"
 )
 
 const (
@@ -45,7 +46,7 @@ type FlowAction struct {
 //	FlowCompressed json.RawMessage `json:"flowCompressed"`
 //}
 
-//var ep ExtensionProvider
+var ep flow.ExtensionProvider
 var idGenerator *util.Generator
 var record bool
 var manager *support.FlowManager
@@ -60,9 +61,9 @@ func init() {
 	action.RegisterFactory(FLOW_REF, &ActionFactory{})
 }
 
-//func SetExtensionProvider(provider ExtensionProvider) {
-//	ep = provider
-//}
+func SetExtensionProvider(provider flow.ExtensionProvider) {
+	ep = provider
+}
 
 type ActionFactory struct {
 }
@@ -72,29 +73,21 @@ func (ff *ActionFactory) Init() error {
 	//if manager != nil {
 	//	return nil
 	//}
-	//
-	//if ep == nil {
-	//	testerEnabled := os.Getenv(tester.ENV_ENABLED)
-	//	if strings.ToLower(testerEnabled) == "true" {
-	//		ep = tester.NewExtensionProvider()
-	//
-	//		sm := util.GetDefaultServiceManager()
-	//		sm.RegisterService(ep.GetFlowTester())
-	//		record = true
-	//	} else {
-	//		ep = NewDefaultExtensionProvider()
-	//		record = recordFlows()
-	//	}
-	//}
-	//
-	//definition.SetMapperFactory(ep.GetMapperFactory())
-	//definition.SetLinkExprManagerFactory(ep.GetLinkExprManagerFactory())
-	//
-	//if idGenerator == nil {
-	//	idGenerator, _ = util.NewGenerator()
-	//}
-	//
-	//model.RegisterDefault(ep.GetDefaultFlowModel())
+
+	if ep == nil {
+			ep = flow.NewDefaultExtensionProvider()
+			record = recordFlows()
+	}
+
+	definition.SetMapperFactory(ep.GetMapperFactory())
+	definition.SetLinkExprManagerFactory(ep.GetLinkExprManagerFactory())
+
+	if idGenerator == nil {
+		idGenerator, _ = util.NewGenerator()
+	}
+
+	model.RegisterDefault(ep.GetDefaultFlowModel())
+
 	//manager = support.NewFlowManager(ep.GetFlowProvider())
 	//resource.RegisterManager(support.RESTYPE_FLOW, manager)
 
@@ -171,6 +164,8 @@ func (fa *FlowAction) IOMetadata() *data.IOMetadata {
 // Run implements action.Action.Run
 func (fa *FlowAction) Run(ctx context.Context, inputs map[string]*data.Attribute, handler action.ResultHandler) error {
 
+	logger.Debug("Running OnDemand Flow Action")
+
 	//maybe ability to dynamically register flows, to improve performance
 
 	if logger.GetLogLevel() == logger.DebugLevel {
@@ -186,7 +181,7 @@ func (fa *FlowAction) Run(ctx context.Context, inputs map[string]*data.Attribute
 	}
 
 	fpAttr, exists := inputs[ivFlowPackage]
-	var flowPackage *FlowPackage
+	flowPackage := &FlowPackage{}
 
 	if exists {
 		raw := fpAttr.Value().(json.RawMessage)
@@ -201,7 +196,12 @@ func (fa *FlowAction) Run(ctx context.Context, inputs map[string]*data.Attribute
 	logger.Debugf("InputMappings: %+v", flowPackage.InputMappings)
 	logger.Debugf("OutputMappings: %+v", flowPackage.OutputMappings)
 
-	flowInputs, err := ApplyMappings(flowPackage.InputMappings, inputData, flowPackage.Flow.Metadata().Input)
+	flowDef, err := definition.NewDefinition(flowPackage.Flow)
+	if err != nil {
+		return err
+	}
+
+	flowInputs, err := ApplyMappings(flowPackage.InputMappings, inputData, flowDef.Metadata().Input)
 	if err != nil {
 		return err
 	}
@@ -209,7 +209,7 @@ func (fa *FlowAction) Run(ctx context.Context, inputs map[string]*data.Attribute
 	instanceID := idGenerator.NextAsString()
 	logger.Debug("Creating Flow Instance: ", instanceID)
 
-	inst := instance.NewIndependentInstance(instanceID, "", flowPackage.Flow)
+	inst := instance.NewIndependentInstance(instanceID, "", flowDef)
 
 	logger.Debugf("Executing Flow Instance: %s", inst.ID())
 
@@ -230,14 +230,6 @@ func (fa *FlowAction) Run(ctx context.Context, inputs map[string]*data.Attribute
 			results := map[string]*data.Attribute{
 				"id": idAttr,
 			}
-
-			//todo remove
-			//if old {
-			//	dataAttr, _ := data.NewAttribute("data", data.OBJECT, &instance.IDResponse{ID: inst.ID()})
-			//	results["data"] = dataAttr
-			//	codeAttr, _ := data.NewAttribute("code", data.INTEGER, 200)
-			//	results["code"] = codeAttr
-			//}
 
 			handler.HandleResult(results, nil)
 		}
@@ -290,9 +282,9 @@ func logInputs(attrs map[string]*data.Attribute) {
 }
 
 type FlowPackage struct {
-	InputMappings  []interface{}
-	OutputMappings []interface{}
-	Flow           *definition.Definition
+	InputMappings  []interface{} `json:"inputMappings"`
+	OutputMappings []interface{} `json:"outputMappings"`
+	Flow           *definition.DefinitionRep `json:"flow"`
 }
 
 func ApplyMappings(mappings []interface{}, inputs []*data.Attribute, metadata map[string]*data.Attribute) (map[string]*data.Attribute, error) {
