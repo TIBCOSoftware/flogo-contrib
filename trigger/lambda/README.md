@@ -24,7 +24,7 @@ Settings, Outputs:
       "type": "object"
     },
     {
-      "name": "evt",
+      "name": "event",
       "type": "string"
     }
   ]
