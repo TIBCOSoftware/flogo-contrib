@@ -15,7 +15,7 @@
       "type": "object"
     },
     {
-      "name": "evt",
+      "name": "event",
       "type": "object"
     }
   ],
