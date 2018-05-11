@@ -88,7 +88,7 @@ func Invoke() (map[string]interface{}, error) {
 
 	inputData := map[string]interface{}{
 		"context": lambdaCtx,
-		"evt":     evt,
+		"event":     evt,
 	}
 
 	results, err := handler.Handle(context.Background(), inputData)
