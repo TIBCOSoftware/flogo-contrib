@@ -464,7 +464,11 @@ func (taskInst *TaskInst) appendErrorData(err error) {
 	case *definition.LinkExprError:
 		taskInst.flowInst.AddAttr("_E.type", data.TypeString, "link_expr")
 		taskInst.flowInst.AddAttr("_E.message", data.TypeString, err.Error())
+		taskInst.flowInst.AddAttr("_E.data", data.TypeObject, nil)
+		taskInst.flowInst.AddAttr("_E.code", data.TypeString, "")
+		taskInst.flowInst.AddAttr("_E.activity", data.TypeString, taskInst.taskID)
 	case *activity.Error:
+		taskInst.flowInst.AddAttr("_E.type", data.TypeString, "activity")
 		taskInst.flowInst.AddAttr("_E.message", data.TypeString, err.Error())
 		taskInst.flowInst.AddAttr("_E.data", data.TypeObject, e.Data())
 		taskInst.flowInst.AddAttr("_E.code", data.TypeString, e.Code())
@@ -478,9 +482,14 @@ func (taskInst *TaskInst) appendErrorData(err error) {
 		taskInst.flowInst.AddAttr("_E.activity", data.TypeString, e.TaskName())
 		taskInst.flowInst.AddAttr("_E.message", data.TypeString, err.Error())
 		taskInst.flowInst.AddAttr("_E.type", data.TypeString, e.Type())
+		taskInst.flowInst.AddAttr("_E.data", data.TypeObject, nil)
+		taskInst.flowInst.AddAttr("_E.code", data.TypeString, "")
 	default:
 		taskInst.flowInst.AddAttr("_E.activity", data.TypeString, taskInst.taskID)
 		taskInst.flowInst.AddAttr("_E.message", data.TypeString, err.Error())
+		taskInst.flowInst.AddAttr("_E.type", data.TypeString, "unknown")
+		taskInst.flowInst.AddAttr("_E.data", data.TypeObject, nil)
+		taskInst.flowInst.AddAttr("_E.code", data.TypeString, "")
 	}
 
 	//todo add case for *dataMapperError & *activity.Error
