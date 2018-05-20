@@ -49,9 +49,9 @@ func TestEval(t *testing.T) {
 	fmt.Println("")
 	tc.SetInput("driverName", "mysql")
 	tc.SetInput("datasourceName", "username:password@tcp(hostserver:port)/dbName")
-	//tc.SetInput("query", "insert into user_details (mobile) values (8) ")
-	//tc.SetInput("query", "delete from user_details where mobile=8 ")
-	//tc.SetInput("query", "select * from user_details where mobile=8 ")
+	tc.SetInput("query", "insert into table_name (col1) values (value1) ")
+	//tc.SetInput("query", "delete from table_name where col1=value1 ")
+	//tc.SetInput("query", "select * from table_name where col1=value1 ")
 	act.Eval(tc)
 
 	result := tc.GetOutput("result")
