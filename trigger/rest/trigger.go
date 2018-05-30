@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/TIBCOSoftware/flogo-contrib/trigger/rest/cors"
@@ -160,11 +161,18 @@ func newActionHandler(rt *RestTrigger, handler *trigger.Handler) httprouter.Hand
 			buf := new(bytes.Buffer)
 			buf.ReadFrom(r.Body)
 			s := buf.String()
-			bodyArray := strings.Split(s, "&")
-			content := make(map[string]string, 0)
-			for _, item := range bodyArray {
-				itemArray := strings.Split(item, "=")
-				content[itemArray[0]] = itemArray[1]
+			m, err := url.ParseQuery(s)
+			content := make(map[string]interface{}, 0)
+			if err != nil {
+				log.Errorf("Error while parsing query string: %s", err.Error())
+				http.Error(w, err.Error(), http.StatusBadRequest)
+			}
+			for key, val := range m {
+				if len(val) == 1 {
+					content[key] = val[0]
+				} else {
+					content[key] = val[0]
+				}
 			}
 			triggerData["content"] = content
 		default:
