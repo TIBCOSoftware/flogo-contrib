@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -133,19 +134,6 @@ func newActionHandler(rt *RestTrigger, handler *trigger.Handler) httprouter.Hand
 			pathParams[param.Key] = param.Value
 		}
 
-		var content interface{}
-		err := json.NewDecoder(r.Body).Decode(&content)
-		if err != nil {
-			switch {
-			case err == io.EOF:
-				// empty body
-				//todo should handler say if content is expected?
-			case err != nil:
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-		}
-
 		queryValues := r.URL.Query()
 		queryParams := make(map[string]string, len(queryValues))
 		header := make(map[string]string, len(r.Header))
@@ -163,7 +151,36 @@ func newActionHandler(rt *RestTrigger, handler *trigger.Handler) httprouter.Hand
 			"pathParams":  pathParams,
 			"queryParams": queryParams,
 			"header":      header,
-			"content":     content,
+		}
+
+		// Check the HTTP Header Content-Type
+		contentType := r.Header.Get("Content-Type")
+		switch contentType {
+		case "application/x-www-form-urlencoded":
+			buf := new(bytes.Buffer)
+			buf.ReadFrom(r.Body)
+			s := buf.String()
+			bodyArray := strings.Split(s, "&")
+			content := make(map[string]string, 0)
+			for _, item := range bodyArray {
+				itemArray := strings.Split(item, "=")
+				content[itemArray[0]] = itemArray[1]
+			}
+			triggerData["content"] = content
+		default:
+			var content interface{}
+			err := json.NewDecoder(r.Body).Decode(&content)
+			if err != nil {
+				switch {
+				case err == io.EOF:
+					// empty body
+					//todo should handler say if content is expected?
+				case err != nil:
+					http.Error(w, err.Error(), http.StatusBadRequest)
+					return
+				}
+			}
+			triggerData["content"] = content
 		}
 
 		results, err := handler.Handle(context.Background(), triggerData)
