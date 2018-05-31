@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
+	"reflect"
 
 	fl "github.com/TIBCOSoftware/flogo-contrib/trigger/lambda"
 	"github.com/aws/aws-lambda-go/events"
@@ -73,7 +74,15 @@ func coerceResponseObj(result map[string]interface{}, evtTyp uint) (interface{},
 					return statusCode
 				}
 			}(),
-			Body:            string(responseRaw),
+			Body: func() string {
+				v := reflect.ValueOf(responseData)
+				switch v.Kind() {
+				case reflect.String:
+					return responseData.(string)
+				default:
+					return string(responseRaw)
+				}
+			}(),
 			IsBase64Encoded: false,
 		}
 

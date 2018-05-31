@@ -22,7 +22,7 @@
   "reply": [
     {
       "name": "data",
-      "type": "object"
+      "type": "any"
     },
     {
       "name": "status",
