@@ -73,7 +73,14 @@ func coerceResponseObj(result map[string]interface{}, evtTyp uint) (interface{},
 					return statusCode
 				}
 			}(),
-			Body:            string(responseRaw),
+			Body: func() string {
+				val, ok := responseData.(string)
+				if ok {
+					return val
+				} else {
+					return string(responseRaw)
+				}
+			}(),
 			IsBase64Encoded: false,
 		}
 
