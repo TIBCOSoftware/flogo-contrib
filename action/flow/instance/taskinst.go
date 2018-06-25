@@ -9,6 +9,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
+	"github.com/TIBCOSoftware/flogo-lib/core/mapper/exprmapper"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
@@ -189,8 +190,8 @@ func (ti *TaskInst) HasWorkingData() bool {
 }
 
 func (ti *TaskInst) Resolve(toResolve string) (value interface{}, err error) {
-
-	return definition.GetDataResolver().Resolve(toResolve, ti.flowInst)
+	//Support expression mapping
+	return exprmapper.GetMappingValue(toResolve, ti.flowInst, definition.GetDataResolver())
 }
 
 func (ti *TaskInst) AddWorkingData(attr *data.Attribute) {
@@ -494,6 +495,7 @@ func (taskInst *TaskInst) appendErrorData(err error) {
 
 	//todo add case for *dataMapperError & *activity.Error
 }
+
 //// Failed marks the Activity as failed
 //func (td *TaskInst) Failed(err error) {
 //
