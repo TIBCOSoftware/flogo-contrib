@@ -47,6 +47,10 @@ func (tb *IteratorTask) Eval(ctx model.TaskContext) (evalResult model.EvalResult
 				return model.EVAL_FAIL, err
 			}
 			itx = NewIntIterator(count)
+		case int64:
+			itx = NewIntIterator(int(t))
+		case float64:
+			itx = NewIntIterator(int(t))
 		case int:
 			count := iterateOn.(int)
 			itx = NewIntIterator(count)
