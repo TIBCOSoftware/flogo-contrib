@@ -141,12 +141,12 @@ func getIterateValue(ctx model.TaskContext) (value interface{}, set bool) {
 
 	strVal, ok := value.(string)
 	if ok {
-		if strVal[0] == '$' {
-			val, err := ctx.Resolve(strVal)
-			if err == nil {
-				return val, true
-			}
+		val, err := ctx.Resolve(strVal)
+		if err != nil {
+			log.Errorf("Get iterate value failed, due to %s", err.Error())
+			return nil, false
 		}
+		return val, true
 	}
 
 	return value, true
@@ -269,7 +269,7 @@ func NewObjectIterator(data map[string]interface{}) *ObjectIterator {
 
 type ReflectIterator struct {
 	current int
-	val reflect.Value
+	val     reflect.Value
 }
 
 func (itx *ReflectIterator) Key() interface{} {
