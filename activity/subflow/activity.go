@@ -67,15 +67,17 @@ func (a *SubFlowActivity) Eval(ctx activity.Context) (done bool, err error) {
 
 	inputs := make(map[string]*data.Attribute)
 
-	for name, attr := range ioMd.Input {
+	if ioMd != nil {
+		for name, attr := range ioMd.Input {
 
-		value := ctx.GetInput(name)
-		newAttr, err := data.NewAttribute(attr.Name(), attr.Type(), value)
-		if err != nil {
-			return false, err
+			value := ctx.GetInput(name)
+			newAttr, err := data.NewAttribute(attr.Name(), attr.Type(), value)
+			if err != nil {
+				return false, err
+			}
+
+			inputs[name] = newAttr
 		}
-
-		inputs[name] = newAttr
 	}
 
 	err = instance.StartSubFlow(ctx, flowURI, inputs)
