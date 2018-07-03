@@ -98,11 +98,11 @@ func setupArgs(evt json.RawMessage, ctx *context.Context) error {
 		return err
 	}
 
-	evtFlag := flag.Lookup("evt")
+	evtFlag := flag.Lookup("event")
 	if evtFlag == nil {
-		flag.String("evt", string(evtJSON), "Lambda Environment Arguments")
+		flag.String("event", string(evtJSON), "Lambda Environment Arguments")
 	} else {
-		flag.Set("evt", string(evtJSON))
+		flag.Set("event", string(evtJSON))
 	}
 
 	// Setup context argument

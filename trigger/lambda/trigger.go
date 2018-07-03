@@ -61,15 +61,15 @@ func Invoke() (map[string]interface{}, error) {
 	flag.Parse()
 
 	// Looking up the arguments
-	evtArg := flag.Lookup("evt")
+	evtArg := flag.Lookup("event")
 	var evt interface{}
 	// Unmarshall evt
 	if err := json.Unmarshal([]byte(evtArg.Value.String()), &evt); err != nil {
 		return nil, err
 	}
 
-	log.Debugf("Received evt: '%+v'\n", evt)
-	syslog.Printf("Received evt: '%+v'\n", evt)
+	log.Debugf("Received event: '%+v'\n", evt)
+	syslog.Printf("Received event: '%+v'\n", evt)
 
 	// Get the context
 	ctxArg := flag.Lookup("ctx")
@@ -88,7 +88,7 @@ func Invoke() (map[string]interface{}, error) {
 
 	inputData := map[string]interface{}{
 		"context": lambdaCtx,
-		"evt":     evt,
+		"event":     evt,
 	}
 
 	results, err := handler.Handle(context.Background(), inputData)
