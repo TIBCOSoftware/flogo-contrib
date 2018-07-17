@@ -5,6 +5,7 @@ import (
 
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"reflect"
 )
 
@@ -44,6 +45,7 @@ func (tb *IteratorTaskBehavior) Eval(ctx model.TaskContext) (evalResult model.Ev
 		case string:
 			count, err := data.CoerceToInteger(iterateOn)
 			if err != nil {
+				logger.Errorf("unsupported string %s for iterator", iterateOn)
 				return model.EVAL_FAIL, err
 			}
 			itx = NewIntIterator(count)
