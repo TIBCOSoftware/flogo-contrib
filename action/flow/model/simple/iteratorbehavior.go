@@ -45,7 +45,8 @@ func (tb *IteratorTaskBehavior) Eval(ctx model.TaskContext) (evalResult model.Ev
 		case string:
 			count, err := data.CoerceToInteger(iterateOn)
 			if err != nil {
-				logger.Errorf("unsupported string %s for iterator", iterateOn)
+				err = fmt.Errorf("unsupported string %s for iterator", iterateOn)
+				logger.Error(err)
 				return model.EVAL_FAIL, err
 			}
 			itx = NewIntIterator(count)
