@@ -69,7 +69,7 @@ func (tb *IteratorTaskBehavior) Eval(ctx model.TaskContext) (evalResult model.Ev
 			if rt == reflect.Array || rt == reflect.Slice {
 				itx = NewReflectIterator(val)
 			} else {
-				err = fmt.Errorf("Iterator '%s' not properly configured. '%s' is not a valid iterate value.", task.Name(), iterateOn)
+				err = fmt.Errorf("Iterator '%s' not properly configured. '%+v' is not a valid iterate value.", task.Name(), iterateOn)
 				logger.Error(err)
 				return model.EVAL_FAIL, err
 			}
