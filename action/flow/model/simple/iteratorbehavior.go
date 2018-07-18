@@ -45,7 +45,7 @@ func (tb *IteratorTaskBehavior) Eval(ctx model.TaskContext) (evalResult model.Ev
 		case string:
 			count, err := data.CoerceToInteger(iterateOn)
 			if err != nil {
-				err = fmt.Errorf("unsupported string '%s' for iterator", iterateOn)
+				err = fmt.Errorf("Iterator '%s' not properly configured. '%s' is not a valid iterate value.", task.Name(), iterateOn)
 				logger.Error(err)
 				return model.EVAL_FAIL, err
 			}
