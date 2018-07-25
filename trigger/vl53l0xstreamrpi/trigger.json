@@ -1,0 +1,23 @@
+{
+  "name": "VL53L0XTrigger",
+  "type": "flogo:trigger",
+  "ref": "github.com/philippegabert/flogo-contrib/trigger/vl53l0xstreamrpi",
+  "version": "0.0.1",
+  "title": "VL53L0X Stream Trigger for RPI",
+  "description": "Stream data from VL53L0X sensor",
+  "homepage": "https://github.com/philippegabert/flogo-contrib/tree/master/trigger/vl53l0xstreamrpi",
+  "author": "Prithvi Moses <pmoses@tibco.com>",
+  "settings":[
+    {
+      "name": "delay_ms",
+      "type": "integer",
+      "value": "500"
+    }
+  ],
+  "output": [
+    {
+      "name": "Distance",
+      "type": "number"
+    }
+  ]
+}
