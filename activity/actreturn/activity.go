@@ -1,6 +1,7 @@
 package actreturn
 
 import (
+	"fmt"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/core/mapper"
@@ -34,7 +35,18 @@ func (a *ReturnActivity) Metadata() *activity.Metadata {
 // Eval implements api.Activity.Eval - Invokes a REST Operation
 func (a *ReturnActivity) Eval(ctx activity.Context) (done bool, err error) {
 
-	mappings := ctx.GetInput(ivMappings).([]interface{})
+	actionCtx := ctx.ActivityHost()
+
+	if ctx.GetInput(ivMappings) == nil {
+		//No mapping
+		actionCtx.Return(nil, nil)
+		return true, nil
+	}
+
+	mappings, ok := ctx.GetInput(ivMappings).([]interface{})
+	if !ok {
+		return false, fmt.Errorf("invalid return mappings, mappings must be array")
+	}
 
 	log.Debugf("Mappings: %+v", mappings)
 
@@ -47,7 +59,6 @@ func (a *ReturnActivity) Eval(ctx activity.Context) (done bool, err error) {
 		return false, err
 	}
 
-	actionCtx := ctx.ActivityHost()
 	outputScope := newOutputScope(actionCtx, mapperDef)
 	inputScope := actionCtx.WorkingData() //flow data
 
