@@ -1,7 +1,6 @@
 package actreturn
 
 import (
-	"fmt"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/core/mapper"
@@ -45,7 +44,7 @@ func (a *ReturnActivity) Eval(ctx activity.Context) (done bool, err error) {
 
 	mappings, ok := ctx.GetInput(ivMappings).([]interface{})
 	if !ok {
-		return false, fmt.Errorf("invalid return mappings, mappings must be array")
+		return false, activity.NewError("invalid return mappings, mappings must be array", "", nil)
 	}
 
 	log.Debugf("Mappings: %+v", mappings)
@@ -54,9 +53,8 @@ func (a *ReturnActivity) Eval(ctx activity.Context) (done bool, err error) {
 
 	//todo move this to a action instance level initialization, need the notion of static inputs or config
 	returnMapper := mapper.NewBasicMapper(mapperDef, ctx.ActivityHost().GetResolver())
-
 	if err != nil {
-		return false, err
+		return false, activity.NewError(err.Error(), "", nil)
 	}
 
 	outputScope := newOutputScope(actionCtx, mapperDef)
@@ -65,7 +63,7 @@ func (a *ReturnActivity) Eval(ctx activity.Context) (done bool, err error) {
 	err = returnMapper.Apply(inputScope, outputScope)
 
 	if err != nil {
-		return false, err
+		return false, activity.NewError(err.Error(), "", nil)
 	}
 
 	actionCtx.Return(outputScope.GetAttrs(), nil)
