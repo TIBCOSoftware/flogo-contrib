@@ -1,4 +1,4 @@
-package flow
+package ondemand
 
 import (
 	"context"
@@ -55,7 +55,8 @@ var manager *support.FlowManager
 var maxStepCount = 1000000
 
 //todo fix this
-var metadata = &action.Metadata{ID: "github.com/TIBCOSoftware/flogo-contrib/action/flow", Async: true}
+var metadata = &action.Metadata{ID: "github.com/TIBCOSoftware/flogo-contrib/action/flow/ondemand", Async: true, Passthru: true,
+	Input: map[string]*data.Attribute{"flowPackage": data.NewZeroAttribute("flowPackage", data.TypeAny)}}
 
 func init() {
 	action.RegisterFactory(FLOW_REF, &ActionFactory{})
@@ -70,13 +71,11 @@ type ActionFactory struct {
 
 func (ff *ActionFactory) Init() error {
 
-	//if manager != nil {
-	//	return nil
-	//}
+	//metadata = action.NewMetadata(getJsonMetadata())
 
 	if ep == nil {
-			ep = flow.NewDefaultExtensionProvider()
-			record = recordFlows()
+		ep = flow.NewDefaultExtensionProvider()
+		record = recordFlows()
 	}
 
 	definition.SetMapperFactory(ep.GetMapperFactory())
@@ -87,9 +86,6 @@ func (ff *ActionFactory) Init() error {
 	}
 
 	model.RegisterDefault(ep.GetDefaultFlowModel())
-
-	//manager = support.NewFlowManager(ep.GetFlowProvider())
-	//resource.RegisterManager(support.RESTYPE_FLOW, manager)
 
 	return nil
 }
@@ -111,43 +107,16 @@ func (ff *ActionFactory) New(config *action.Config) (action.Action, error) {
 
 	flowAction := &FlowAction{}
 
+	if config.Metadata != nil {
+		flowAction.ioMetadata = config.Metadata
+	} else {
+		flowAction.ioMetadata = &data.IOMetadata{Input: metadata.Input}
+	}
+
 	//temporary hack to support dynamic process running by tester
 	if config.Data == nil {
 		return flowAction, nil
 	}
-
-	//var actionData ActionData
-	//err := json.Unmarshal(config.Data, &actionData)
-	//if err != nil {
-	//	return nil, fmt.Errorf("faild to load flow action data '%s' error '%s'", config.Id, err.Error())
-	//}
-	//
-	//if len(actionData.FlowURI) > 0 {
-	//
-	//	flowAction.flowURI = actionData.FlowURI
-	//} else {
-	//	uri, err := createResource(&actionData)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//	flowAction.flowURI = uri
-	//}
-	//
-	//if config.Metadata != nil {
-	//	flowAction.ioMetadata = config.Metadata
-	//} else {
-	//	//todo add flag to remove startup validation
-	//	def, err := manager.GetFlow(flowAction.flowURI)
-	//	if err != nil {
-	//		return nil, err
-	//	} else {
-	//		if def == nil {
-	//			return nil, errors.New("unable to resolve flow: " + flowAction.flowURI)
-	//		}
-	//	}
-	//
-	//	flowAction.ioMetadata = def.Metadata()
-	//}
 
 	return flowAction, nil
 }
@@ -181,6 +150,7 @@ func (fa *FlowAction) Run(ctx context.Context, inputs map[string]*data.Attribute
 	}
 
 	fpAttr, exists := inputs[ivFlowPackage]
+
 	flowPackage := &FlowPackage{}
 
 	if exists {
@@ -282,8 +252,8 @@ func logInputs(attrs map[string]*data.Attribute) {
 }
 
 type FlowPackage struct {
-	InputMappings  []interface{} `json:"inputMappings"`
-	OutputMappings []interface{} `json:"outputMappings"`
+	InputMappings  []interface{}             `json:"inputMappings"`
+	OutputMappings []interface{}             `json:"outputMappings"`
 	Flow           *definition.DefinitionRep `json:"flow"`
 }
 
