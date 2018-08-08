@@ -131,7 +131,7 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 			d.UseNumber()
 			err = d.Decode(&resultinterface)
 
-			rowNo := "Row"+ strconv.Itoa(123)
+			rowNo := "Row"+ strconv.Itoa(sNo)
 			//f = map[int]interface{}{sNo: resultinterface}
 			f = map[string]interface{}{rowNo: resultinterface}
 
