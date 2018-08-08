@@ -4,12 +4,22 @@
   "ref": "https://github.com/Ganitagya/flogo-contrib/activity/ReadFile",
   "version": "0.0.1",
   "title": "File Reader",
-  "description": "Reads a file line by line",
+  "description": "Reads a file",
   "author": "Akash Mahapatra <amahapat@tibco.com>",
-  "input":[
+  "inputs":[
    {
       "name": "filename",
-      "type": "string"
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "readALine",
+      "type": "boolean",
+      "value": "false"
+    },
+    {
+      "name": "lineNumber",
+      "type": "integer"
     }
   ],
   "output": [
