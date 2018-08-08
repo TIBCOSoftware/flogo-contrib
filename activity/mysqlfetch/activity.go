@@ -3,6 +3,7 @@ package mysqlfetch
 import (
 	"database/sql"
 	"fmt"
+	"strconv"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
@@ -88,8 +89,10 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 
 	defer db.Close()
 
-	f := make(map[int]interface{})
-	g := make(map[int]interface{})
+	f := make(map[string]interface{})
+	// f := make(map[int]interface{})
+	g := make(map[string]interface{})
+	// g := make(map[int]interface{})
 
 	sNo := 0
 
@@ -127,7 +130,10 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 			d := json.NewDecoder(bytes.NewReader(jsonString))
 			d.UseNumber()
 			err = d.Decode(&resultinterface)
-			f = map[int]interface{}{sNo: resultinterface}
+
+			rowNo := "Row"+ strconv.Itoa(123)
+			//f = map[int]interface{}{sNo: resultinterface}
+			f = map[string]interface{}{rowNo: resultinterface}
 
 		}
 		for k, v := range f {
