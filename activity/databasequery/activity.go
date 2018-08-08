@@ -14,6 +14,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"strings"
+	"strconv"
 )
 
 // log is the default package logger
@@ -22,7 +23,7 @@ var log = logger.GetLogger("activity-akash-Database_Query")
 const (
 	driverName     = "driverName"
 	datasourceName = "datasourceName"
-	query          = "query"
+	ivQuery        = "query"
 
 	ovResult = "result"
 )
@@ -73,7 +74,7 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 
 	////////  END - Set connection String of the driver //////////
 
-	queryInput := context.GetInput(query)
+	queryInput := context.GetInput(ivQuery)
 
 	ivquery, ok := queryInput.(string)
 	if !ok {
@@ -106,8 +107,10 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 
 	//////////////////////////////////////////////////////////
 
-	f := make(map[int]interface{})
-	var g = make(map[int]interface{})
+	f := make(map[string]interface{})
+	// f := make(map[int]interface{})
+	g := make(map[string]interface{})
+	// var g = make(map[int]interface{})
 
 	sNo := 0
 
@@ -139,13 +142,9 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 		for i, colName := range cols {
 			val := columnPointers[i].(*interface{})
 			m[colName] = *val
-			// m[colName] = fmt.Sprintf("%s", m[colName])
+			m[colName] = fmt.Sprintf("%s", m[colName])
 
-			if _, ok := m[colName].([]uint8); ok {
-				m[colName] = fmt.Sprintf("%s", m[colName])
-			} else {
-				m[colName] = fmt.Sprintf("%v", m[colName])
-			}
+		
 
 			jsonString, _ := json.Marshal(m)
 			var resultinterface interface{}
@@ -153,7 +152,9 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 			d := json.NewDecoder(bytes.NewReader(jsonString))
 			d.UseNumber()
 			err = d.Decode(&resultinterface)
-			f = map[int]interface{}{sNo: resultinterface}
+
+			rowNo := "Row"+ strconv.Itoa(sNo)
+			f = map[string]interface{}{rowNo: resultinterface}
 
 		}
 		for k, v := range f {
@@ -171,13 +172,8 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 	err = d.Decode(&resultinterface)
 	h := map[string]interface{}{"results": resultinterface}
 
-	//context.SetOutput(ovResult, h)
-	jsonString1, _ := json.Marshal(h)
-	//js := fmt.Sprintf("%v", jsonString1)
 
-	js := string(jsonString1)
-
-	context.SetOutput(ovResult, js)
+	context.SetOutput(ovResult, h)
 
 	return true, nil
 }
