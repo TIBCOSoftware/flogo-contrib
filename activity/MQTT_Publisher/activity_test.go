@@ -1,4 +1,4 @@
-package MQTT_noCert
+package MQTT_Publisher
 
 import (
 	"fmt"
