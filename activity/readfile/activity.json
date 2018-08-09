@@ -1,21 +1,16 @@
 {
   "name": "File Reader",
   "type": "flogo:activity",
-  "ref": "https://github.com/Ganitagya/flogo-contrib/activity/ReadFile",
+  "ref": "https://github.com/Ganitagya/flogo-contrib/activity/readfile",
   "version": "0.0.1",
   "title": "File Reader",
-  "description": "Reads a file",
+  "description": "Reads a line from a file",
   "author": "Akash Mahapatra <amahapat@tibco.com>",
   "inputs":[
    {
       "name": "filename",
       "type": "string",
       "required": true
-    },
-    {
-      "name": "readALine",
-      "type": "boolean",
-      "value": "false"
     },
     {
       "name": "lineNumber",

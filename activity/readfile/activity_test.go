@@ -1,4 +1,4 @@
-package ReadFile
+package readfile
 
 import (
 	"fmt"
@@ -46,6 +46,7 @@ func TestEval(t *testing.T) {
 	fmt.Println("Reading the test file ")
 
 	tc.SetInput("filename", "testfile")
+	tc.SetInput("lineNumber", 1)
 	
 
 	act.Eval(tc)

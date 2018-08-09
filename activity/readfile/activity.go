@@ -1,4 +1,4 @@
-package ReadFile
+package readfile
 
 import (
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
@@ -6,7 +6,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"strconv"
 )
 
 // log is the default package logger
@@ -14,8 +13,7 @@ var log = logger.GetLogger("Activity Akash-File Reader")
 
 const (
 	filename = "filename"
-	ivreadALine = "readALine"
-	ivlineNumber = "lineNumber"
+	lineNumber = "lineNumber"
 
 	ovresult = "result"
 	
@@ -42,8 +40,11 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 	// do eval
 
 	//filenameInput, _ := context.GetInput(filename).(string)
-	readALine, _ := toBool(context.GetInput(ivreadALine))
-	lineNumber, _ := context.GetInput(ivreadALine).(int)
+	ivlineNumber, ok := context.GetInput(lineNumber).(int)
+	if !ok {
+		context.SetOutput("result", "LINE NUMBER NOT SET")
+		return true, fmt.Errorf("line number not set")
+	}
 
 	//ivfilename, ok := filenameInput.(string)
 	ivfilename, ok := context.GetInput(filename).(string)
@@ -56,41 +57,19 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 	defer fileHandle.Close()
 	fileScanner := bufio.NewScanner(fileHandle)
 
-
-	if (readALine) {
-		
-		for fileScanner.Scan() {
-		fmt.Println(fileScanner.Text())
-    }	
-    
-
-	}
-
-	lineNumber++;
+	lastLine := 0
+	line := ""
 	
-  context.SetOutput("result", fileScanner.Text())
+	for fileScanner.Scan() {
+		lastLine++
+
+		if lastLine == ivlineNumber {
+			line = fileScanner.Text()
+			break
+		}
+	}	
+		
+  context.SetOutput("result", line)
     
   return true, nil
-}
-
-
-func toBool(val interface{}) (bool, error) {
-
-	b, ok := val.(bool)
-	if !ok {
-		s, ok := val.(string)
-
-		if !ok {
-			return false, fmt.Errorf("unable to convert to boolean")
-		}
-
-		var err error
-		b, err = strconv.ParseBool(s)
-
-		if err != nil {
-			return false, err
-		}
-	}
-
-	return b, nil
 }
