@@ -1,4 +1,4 @@
-package MQTT_Publisher
+package mqttpub
 
 import (
 	"fmt"

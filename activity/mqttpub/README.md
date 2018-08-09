@@ -1,4 +1,4 @@
-github.com/Ganitagya/flogo-contrib/activity/MQTT_Publisher
+github.com/Ganitagya/flogo-contrib/activity/mqttpub
 
 
 # Publish MQTT Message
@@ -8,11 +8,11 @@ This activity provides your flogo application the ability to publish a message o
 ## Installation
 
 ```bash
-flogo install github.com/Ganitagya/flogo-contrib/activity/MQTT_Publisher
+flogo install github.com/Ganitagya/flogo-contrib/activity/mqttpub
 ```
 Link for flogo web:
 ```
-https://github.com/Ganitagya/flogo-contrib/activity/MQTT_Publisher
+https://github.com/Ganitagya/flogo-contrib/activity/mqttpub
 ```
 
 ## Schema
