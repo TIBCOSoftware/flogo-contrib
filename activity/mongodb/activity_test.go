@@ -26,7 +26,12 @@ var coll *mongo.Collection
 
 func init() {
 	//todo implement shared sessions
-	client, err := mongo.NewClient(TEST_URI)
+	// client, err := mongo.NewClient(TEST_URI)
+
+	//To remove below  error:
+	// data not inserted topology is closed
+
+	client, err := mongo.Connect(context.Background(), TEST_URI, nil)
 	if err != nil {
 		// warn and skip tests
 	}
