@@ -3,7 +3,7 @@
   "type": "flogo:activity",
   "ref": "github.com/Ganitagya/flogo-contrib/activity/mongodb",
   "version": "0.0.1",
-  "title": "Akash - MongoDB",
+  "title": "AkashMongoDB",
   "description": "Manage MongoDB documents in a specified collection",
   "homepage": "https://github.com/Ganitagya/flogo-contrib/edit/master/activity/mongodb",
   "input": [
