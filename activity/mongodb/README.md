@@ -9,7 +9,7 @@ This activity allows you to connect to a MongoDB server
 ## Installation
 ### Flogo CLI
 ```bash
-flogo install github.com/TIBCOSoftware/flogo-contrib/activity/mongodb
+flogo install github.com/Ganitagya/flogo-contrib/activity/mongodb
 ```
 
 ## Schema
