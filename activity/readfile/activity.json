@@ -6,6 +6,7 @@
   "title": "File Reader",
   "description": "Reads a line from a file",
   "author": "Akash Mahapatra <amahapat@tibco.com>",
+  "homepage": "https://github.com/Ganitagya/flogo-contrib/edit/master/activity/readfile",
   "inputs":[
    {
       "name": "filename",
