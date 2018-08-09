@@ -1,11 +1,13 @@
 package readfile
 
 import (
-	"bufio"
+	// "bufio"
 	"fmt"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"os"
+	// "os"
+
+	"io/ioutil"
 )
 
 // log is the default package logger
@@ -52,23 +54,34 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 		return true, fmt.Errorf("Filename not set")
 	}
 
-	fileHandle, _ := os.Open(ivfilename)
-	defer fileHandle.Close()
-	fileScanner := bufio.NewScanner(fileHandle)
+	b, err := ioutil.ReadFile(ivfilename) // just pass the file name
+    if err != nil {
+        fmt.Print(err)
+    }
 
-	lastLine := 0
-	line := ""
 
-	for fileScanner.Scan() {
-		lastLine++
+		str := string(b) // convert content to a 'string'
+		ivlineNumber++
 
-		if lastLine == ivlineNumber {
-			line = fileScanner.Text()
-			break
-		}
-	}
 
-	context.SetOutput("result", line)
+	// fileHandle, _ := os.Open(ivfilename)
+	// defer fileHandle.Close()
+	// fileScanner := bufio.NewScanner(fileHandle)
+
+	// lastLine := 0
+	// line := ""
+
+	// for fileScanner.Scan() {
+	// 	lastLine++
+
+	// 	if lastLine == ivlineNumber {
+	// 		line = fileScanner.Text()
+	// 		break
+	// 	}
+	// }
+
+	context.SetOutput("result", str)
+	// context.SetOutput("result", line)
 
 	return true, nil
 }
