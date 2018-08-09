@@ -47,6 +47,10 @@ Inputs and Outputs:
       "allowed" : ["0", "1", "2"]
     },
     {
+      "name": "cleansess",
+      "type": "boolean"
+    },
+    {
       "name": "message",
       "type": "string"
     }
@@ -88,38 +92,43 @@ Configure a task in flow to publish a "hello world" message on MQTT topic called
    {
       "name": "broker",
       "type": "string",
-      eg: tcp://localhost:1883
+      "eg"  : "tcp://localhost:1883"
     },
     {
       "name": "id",
       "type": "string",
-      eg: abc
+      "eg"  : "abc"
     },
     {
       "name": "user",
       "type": "string",
-      eg: abc
+      "eg"  : "abc"
     },
     {
       "name": "password",
       "type": "string",
-      eg: abc
+      "eg"  : "abc"
     },
     {
       "name": "topic",
       "type": "string",
-      eg: any_topic
+      "eg"  : "any_topic"
     },
     {
       "name": "qos",
       "type": "integer",
       "allowed" : ["0", "1", "2"]
-      eg: 0
+      "eg"  : 0
+    },
+    {
+      "name": "cleansess",
+      "type": "boolean",
+      "eg": false
     },
     {
       "name": "message",
       "type": "string"
-      eg: Hello from Flogo
+      "eg"  : "Hello from Flogo"
     }
   ],
   "output": [

@@ -41,6 +41,19 @@ func TestEval(t *testing.T) {
 
 	act := NewActivity(getActivityMetadata())
 	tc := test.NewTestActivityContext(getActivityMetadata())
+
+
+	//setup attr for mysql
+	fmt.Println("===============================")
+	fmt.Println("Unit Test ===> MQTT Publisher")
+	fmt.Println("===============================")
+	fmt.Println("")
+	tc.SetInput("broker", "tcp://test.mosquitto.org:1883")
+	tc.SetInput("id", "flogo")
+	tc.SetInput("topic", "akash/flogo")
+	tc.SetInput("qos", 0)
+	tc.SetInput("cleansess", false)
+	tc.SetInput("message", "Hello from Go Test")
 	
 	act.Eval(tc)
 
