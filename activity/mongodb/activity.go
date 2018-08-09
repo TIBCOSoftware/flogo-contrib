@@ -71,6 +71,10 @@ func (a *MongoDbActivity) Eval(ctx activity.Context) (done bool, err error) {
 
 	//todo implement shared sessions
 	// client, err := mongo.NewClient(connectionURI)
+
+	//The above code snippet results into below error:
+	// " topology is closed "
+	// Hence the below code snippet is used
 	client, err := mongo.Connect(context.Background(), connectionURI, nil)
 	if err != nil {
 		activityLog.Errorf("Connection error: %v", err)

@@ -1,6 +1,5 @@
 ---
 title: MongoDB
-weight: 4622
 ---
 
 # MongoDB

@@ -3,8 +3,9 @@
   "type": "flogo:activity",
   "ref": "github.com/Ganitagya/flogo-contrib/activity/mongodb",
   "version": "0.0.1",
-  "title": "AkashMongoDB",
-  "description": "Manage MongoDB documents in a specified collection",
+  "title": "MongoDB",
+  "description": "Manage MongoDB documents in a specified collection- modified by Akash",
+  "author": "Akash Mahapatra <amahapat@tibco.com>",
   "homepage": "https://github.com/Ganitagya/flogo-contrib/edit/master/activity/mongodb",
   "input": [
     {

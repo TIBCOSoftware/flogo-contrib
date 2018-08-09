@@ -27,6 +27,11 @@ var coll *mongo.Collection
 func init() {
 	//todo implement shared sessions
 	// client, err := mongo.NewClient(TEST_URI)
+
+	//The above code snippet results in below error:
+	// "topology is closed"
+	//Hence the below code snippet is used
+
 	client, err := mongo.Connect(context.Background(), TEST_URI, nil)
 	if err != nil {
 		// warn and skip tests
