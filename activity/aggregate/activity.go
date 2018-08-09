@@ -68,7 +68,7 @@ func (a *AggregateActivity) Eval(ctx activity.Context) (done bool, err error) {
 		return false, err
 	}
 
-	sharedData := ctx.GetSharedData()
+	sharedData := ctx.GetSharedTempData()
 	wv, defined := sharedData["window"]
 
 	var w window.Window
@@ -120,7 +120,7 @@ func (a *AggregateActivity) PostEval(ctx activity.Context, userData interface{})
 
 func moveWindow(ctx activity.Context) bool {
 
-	sharedData := ctx.GetSharedData()
+	sharedData := ctx.GetSharedTempData()
 	wv, _ := sharedData["window"]
 
 	w, _ := wv.(window.TimeWindow)
