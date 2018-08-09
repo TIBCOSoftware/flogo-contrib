@@ -1,10 +1,10 @@
 package readfile
 
 import (
-	"github.com/TIBCOSoftware/flogo-lib/core/activity"
-	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"bufio"
 	"fmt"
+	"github.com/TIBCOSoftware/flogo-lib/core/activity"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"os"
 )
 
@@ -12,12 +12,12 @@ import (
 var log = logger.GetLogger("Activity Akash-File Reader")
 
 const (
-	filename = "filename"
+	filename   = "filename"
 	lineNumber = "lineNumber"
 
 	ovresult = "result"
-	
 )
+
 // MyActivity is a stub for your Activity implementation
 type MyActivity struct {
 	metadata *activity.Metadata
@@ -32,7 +32,6 @@ func NewActivity(metadata *activity.Metadata) activity.Activity {
 func (a *MyActivity) Metadata() *activity.Metadata {
 	return a.metadata
 }
-
 
 // Eval implements activity.Activity.Eval
 func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
@@ -53,13 +52,13 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 		return true, fmt.Errorf("Filename not set")
 	}
 
-  fileHandle, _ := os.Open(ivfilename)
+	fileHandle, _ := os.Open(ivfilename)
 	defer fileHandle.Close()
 	fileScanner := bufio.NewScanner(fileHandle)
 
 	lastLine := 0
 	line := ""
-	
+
 	for fileScanner.Scan() {
 		lastLine++
 
@@ -67,9 +66,9 @@ func (a *MyActivity) Eval(context activity.Context) (done bool, err error) {
 			line = fileScanner.Text()
 			break
 		}
-	}	
-		
-  context.SetOutput("result", line)
-    
-  return true, nil
+	}
+
+	context.SetOutput("result", line)
+
+	return true, nil
 }

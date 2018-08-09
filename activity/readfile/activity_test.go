@@ -2,8 +2,8 @@ package readfile
 
 import (
 	"fmt"
-	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/test"
+	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"io/ioutil"
 	"testing"
 )
@@ -47,7 +47,6 @@ func TestEval(t *testing.T) {
 
 	tc.SetInput("filename", "testfile")
 	tc.SetInput("lineNumber", 1)
-	
 
 	act.Eval(tc)
 
