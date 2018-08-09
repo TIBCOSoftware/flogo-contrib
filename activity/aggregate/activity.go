@@ -68,7 +68,12 @@ func (a *AggregateActivity) Eval(ctx activity.Context) (done bool, err error) {
 		return false, err
 	}
 
-	sharedData := ctx.GetSharedTempData()
+	ss,ok := activity.GetSharedTempDataSupport(ctx)
+	if !ok {
+		return false, fmt.Errorf("AggregateActivity not supported by this activity host")
+	}
+
+	sharedData := ss.GetSharedTempData()
 	wv, defined := sharedData["window"]
 
 	var w window.Window
@@ -120,7 +125,9 @@ func (a *AggregateActivity) PostEval(ctx activity.Context, userData interface{})
 
 func moveWindow(ctx activity.Context) bool {
 
-	sharedData := ctx.GetSharedTempData()
+	ss,_ := activity.GetSharedTempDataSupport(ctx)
+	sharedData := ss.GetSharedTempData()
+
 	wv, _ := sharedData["window"]
 
 	w, _ := wv.(window.TimeWindow)
