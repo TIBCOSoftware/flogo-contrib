@@ -71,6 +71,11 @@ func (a *MongoDbActivity) Eval(ctx activity.Context) (done bool, err error) {
 
 	//todo implement shared sessions
 	// client, err := mongo.NewClient(connectionURI)
+	/*
+	The above function was giving below error;
+	"data not inserted topology is closed"
+	*/
+	
 	client, err := mongo.Connect(context.Background(), connectionURI, nil)
 	if err != nil {
 		activityLog.Errorf("Connection error: %v", err)
@@ -83,6 +88,7 @@ func (a *MongoDbActivity) Eval(ctx activity.Context) (done bool, err error) {
 
 	switch strings.ToUpper(method) {
 	case methodGet:
+
 		result := coll.FindOne(context.Background(), bson.NewDocument(bson.EC.String(keyName, keyValue)))
 		val := make(map[string]interface{})
 		err := result.Decode(val)

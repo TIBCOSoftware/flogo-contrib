@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	TEST_URI  = "mongodb://13.232.188.210:27017"
+	TEST_URI  = "mongodb://localhost:27017"
 	TEST_DB   = "test"
 	TEST_COLL = "akash"
 )
@@ -27,6 +27,10 @@ var coll *mongo.Collection
 func init() {
 	//todo implement shared sessions
 	// client, err := mongo.NewClient(TEST_URI)
+
+	//To remove below  error:
+	// data not inserted topology is closed
+
 	client, err := mongo.Connect(context.Background(), TEST_URI, nil)
 	if err != nil {
 		// warn and skip tests
