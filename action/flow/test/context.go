@@ -136,6 +136,8 @@ type TestActivityContext struct {
 	metadata *activity.Metadata
 	inputs   map[string]*data.Attribute
 	outputs  map[string]*data.Attribute
+
+	shared   map[string]interface{}
 }
 
 func (c *TestActivityContext) FlowDetails() activity.FlowDetails {
@@ -249,3 +251,10 @@ func (c *TestActivityContext) GetOutput(name string) interface{} {
 	return nil
 }
 
+func (c *TestActivityContext) GetSharedTempData() map[string]interface{} {
+
+	if c.shared == nil {
+		c.shared = make(map[string]interface{})
+	}
+	return c.shared
+}

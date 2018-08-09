@@ -11,7 +11,6 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/app/resource"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
-	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/engine/runner"
 	"github.com/stretchr/testify/assert"
 
@@ -247,7 +246,8 @@ func TestFlowAction_Run_Restart(t *testing.T) {
 			attrs = append(attrs, attr)
 		}
 
-		ctx = trigger.NewContext(context.Background(), attrs)
+		//ctx = trigger.NewContext(context.Background(), attrs)
+		ctx = context.Background()
 	}
 
 	execOptions := &instance.ExecOptions{Interceptor: req.Interceptor, Patch: req.Patch}
