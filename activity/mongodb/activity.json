@@ -1,11 +1,11 @@
 {
   "name": "flogo-mongodb",
   "type": "flogo:activity",
-  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/mongodb",
+  "ref": "github.com/Ganitagya/flogo-contrib/activity/mongodb",
   "version": "0.0.1",
   "title": "MongoDB",
   "description": "Manage MongoDB documents in a specified collection",
-  "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/mongodb",
+  "homepage": "https://github.com/Ganitagya/flogo-contrib/edit/master/activity/mongodb",
   "input": [
     {
       "name": "uri",
