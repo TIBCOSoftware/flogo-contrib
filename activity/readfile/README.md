@@ -54,5 +54,33 @@ Inputs and Outputs:
 Configure a task in flow :
 
 ```json
+{
+  "name": "ReadFile",
+  "type": "flogo:app",
+  "version": "0.0.1",
+  "appModel": "1.0.0",
+  "resources": [
+    {
+      "id": "flow:test",
+      "data": {
+        "name": "Test",
+        "tasks": [
+          {
+            "id": "readfile_2",
+            "name": "File Reader",
+            "description": "Reads a line from a file",
+            "activity": {
+              "ref": "https://github.com/Ganitagya/flogo-contrib/activity/readfile",
+              "input": {
+                "filename": "testfile",
+                "lineNumber": "1"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
 
 ```
