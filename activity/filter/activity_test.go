@@ -58,8 +58,8 @@ func TestEval(t *testing.T) {
 		return
 	}
 
-	report := tc.GetOutput(ovReport).(bool)
-	result := tc.GetOutput(ovResult)
+	report := tc.GetOutput(ovValue).(bool)
+	result := tc.GetOutput(ovFiltered)
 
 	if result != 2 {
 		t.Errorf("Result is %d instead of 2", result)
@@ -86,8 +86,8 @@ func TestEval(t *testing.T) {
 		return
 	}
 
-	report = tc.GetOutput(ovReport).(bool)
-	result = tc.GetOutput(ovResult)
+	report = tc.GetOutput(ovValue).(bool)
+	result = tc.GetOutput(ovFiltered)
 
 	if result != 0 {
 		t.Errorf("Result is %d instead of 0", result)
@@ -114,8 +114,8 @@ func TestEval(t *testing.T) {
 		return
 	}
 
-	report = tc.GetOutput(ovReport).(bool)
-	result = tc.GetOutput(ovResult)
+	report = tc.GetOutput(ovValue).(bool)
+	result = tc.GetOutput(ovFiltered)
 
 	if result != 0 {
 		t.Errorf("Result is %d instead of 0", result)

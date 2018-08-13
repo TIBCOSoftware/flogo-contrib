@@ -3,8 +3,8 @@ title: Filter
 weight: 4603
 ---
 
-# Aggregate
-This activity allows you to filter data and calculate an average or sliding average.
+# Filter
+This activity allows you to filter out data in a streaming pipeline, can also be used in flows.
 
 
 ## Installation
@@ -14,35 +14,36 @@ flogo install github.com/TIBCOSoftware/flogo-contrib/activity/filter
 ```
 
 ## Schema
-Inputs and Outputs:
+Settings, Inputs and Outputs:
 
 ```json
 {
-  "input":[
+  "settings": [
     {
-      "name": "function",
+      "name": "type",
       "type": "string",
       "required": true,
-      "allowed" : ["block_avg", "moving_avg", "timeblockavg"]
+      "allowed" : ["non-zero"]
     },
     {
-      "name": "windowSize",
-      "type": "integer",
-      "required": true
-    },
+      "name": "proceedOnlyOnEmit",
+      "type": "boolean"
+    }
+  ],
+  "input":[
     {
       "name": "value",
-      "type": "number"
+      "type": "any"
     }
   ],
   "output": [
     {
-      "name": "result",
-      "type": "number"
+      "name": "filtered",
+      "type": "boolean"
     },
     {
-      "name": "report",
-      "type": "boolean"
+      "name": "value",
+      "type": "any"
     }
   ]
 }
@@ -51,31 +52,39 @@ Inputs and Outputs:
 ## Settings
 | Setting     | Required | Description |
 |:------------|:---------|:------------|
-| function    | True     | The aggregate fuction, currently only average is supported |
-| windowSize  | True     | The window size of the values to aggregate |
-| value       | False    | The value to aggregate |
+| type              | True   | The type of filter to apply [ex. non-zero]
+| proceedOnlyOnEmit | False  | Indicates that the next activity should proceed, should always be set to false when used in a flow
+
+
+## Outputs
+| Value     | Description |
+|:------------|:---------|
+| filtered    | Indicates if the value was filtered out
+| value    | The input value, it is 0 if it was filtered out
+
 
 
 ## Example
-The below example aggregates a 'temperature' attribute with a moving window of size 5:
+The example below filters out all zero 'movement' readings
 
 ```json
-"id": "aggregate_4",
-"name": "Aggregate",
-"description": "Simple Aggregator Activity",
-"activity": {
-  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/aggregate",
-  "input": {
-    "function": "average",
-    "windowSize": "5"
-  },
-  "mappings": {
-    "input": [
-      {
-        "type": "assign",
-        "value": "temperature",
-        "mapTo": "value"
-      }
-    ]
+{
+  "id": "filter1",
+  "name": "Filter",
+  "activity": {
+    "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/filter",
+    "settings": {
+      "type": "non-zero"
+    },
+    "mappings": {
+      "input": [
+        {
+          "type": "assign",
+          "value": "movement",
+          "mapTo": "value"
+        }
+      ]
+    }
   }
+}
 ```
