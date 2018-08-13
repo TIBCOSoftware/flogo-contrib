@@ -26,12 +26,12 @@
   ],
   "output": [
     {
-      "name": "result",
-      "type": "any"
+      "name": "filtered",
+      "type": "boolean"
     },
     {
-      "name": "report",
-      "type": "boolean"
+      "name": "value",
+      "type": "any"
     }
   ]
 }

@@ -15,8 +15,8 @@ const (
 
 	ivValue = "value"
 
-	ovResult = "result"
-	ovReport = "report"
+	ovFiltered = "filtered"
+	ovValue    = "value"
 )
 
 //we can generate json from this! - we could also create a "validate-able" object from this
@@ -59,12 +59,14 @@ func (a *FilterActivity) Eval(ctx activity.Context) (done bool, err error) {
 	}
 
 	in := ctx.GetInput(ivValue)
-	emit := !filter.FilterOut(in)
+
+	filteredOut := filter.FilterOut(in)
+	emit := !filteredOut
 
 	done = !(settings.ProceedOnlyOnEmit && !emit)
 
-	ctx.SetOutput(ovResult, in)
-	ctx.SetOutput(ovReport, emit)
+	ctx.SetOutput(ovFiltered, filteredOut)
+	ctx.SetOutput(ovValue, emit)
 
 	return done, nil
 }
