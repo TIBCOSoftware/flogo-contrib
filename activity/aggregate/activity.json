@@ -27,6 +27,10 @@
     {
       "name": "resolution",
       "type": "integer"
+    },
+    {
+      "name": "proceedOnlyOnEmit",
+      "type": "boolean"
     }
   ],
   "input":[
