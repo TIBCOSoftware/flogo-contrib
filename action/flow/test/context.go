@@ -6,6 +6,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 )
 
+//todo needs to move to lib
 // NewTestActivityContext creates a new TestActivityContext
 func NewTestActivityContext(metadata *activity.Metadata) *TestActivityContext {
 
