@@ -21,8 +21,8 @@ const testEventJson =`
   },
   "flogo" : {
       "inputMappings": [
-        { "type": 2, "value": "in1", "mapTo": "customerId" },
-        { "type": 2, "value": "in2", "mapTo": "orderId" }
+        { "type": "assign", "value": "$.payload.in1", "mapTo": "customerId" },
+        { "type": "assign", "value": "$.payload.in2", "mapTo": "orderId" }
       ],
       "flow": {
         "metadata" : {
@@ -45,7 +45,7 @@ const testEventJson =`
               },
               "mappings" : {
                 "input": [
-                  { "type": 1, "value": "$flow.customerId", "mapTo": "message" }
+                  { "type": "assign", "value": "$flow.customerId", "mapTo": "message" }
                 ]
               }
             }
