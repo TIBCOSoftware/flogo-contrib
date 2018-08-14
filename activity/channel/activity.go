@@ -1,11 +1,12 @@
 package channel
 
 import (
-	"github.com/TIBCOSoftware/flogo-lib/core/activity"
-	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"github.com/TIBCOSoftware/flogo-lib/core/data"
-		"github.com/TIBCOSoftware/flogo-lib/engine/channels"
 	"fmt"
+
+	"github.com/TIBCOSoftware/flogo-lib/core/activity"
+	"github.com/TIBCOSoftware/flogo-lib/core/data"
+	"github.com/TIBCOSoftware/flogo-lib/engine/channels"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
 
 // activityLogger is the default logger for the Channel Activity
@@ -55,7 +56,7 @@ func (a *ChannelActivity) Eval(ctx activity.Context) (done bool, err error) {
 
 	iName := ctx.GetInput(ivChannel)
 
-	if iName != nil  && iName != "" {
+	if iName != nil && iName != "" {
 		name = iName.(string)
 	}
 
@@ -71,7 +72,7 @@ func (a *ChannelActivity) Eval(ctx activity.Context) (done bool, err error) {
 
 	//should we allow
 	if blocking {
-		ch  <- in
+		ch <- in
 	} else {
 		select {
 		case ch <- in:

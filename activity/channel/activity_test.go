@@ -38,35 +38,17 @@ func TestCreate(t *testing.T) {
 
 func TestEval(t *testing.T) {
 
-	doneCh := make(chan bool)
-	defer close(doneCh)
-
 	act := NewActivity(getActivityMetadata())
 	tc := test.NewTestActivityContext(getActivityMetadata())
 
-	channels.Add("test")
+	channels.Add("test:5")
 	ch := channels.Get("test")
 
 	//setup attrs
 	tc.SetSetting(sChannel, "test")
 	tc.SetInput(ivValue, 2)
 
-	var done bool
-	var err error
-
-	go func() {
-		done, err = act.Eval(tc)
-		doneCh <- true
-	}()
-
-	<-doneCh // blocks until the input write routine is finished
-
-	expected := 2
-	found := <-ch // blocks until the output has contents
-
-	if found != expected {
-		t.Errorf("Expected %s, found %s", expected, found)
-	}
+	done, err := act.Eval(tc)
 
 	if !done {
 		t.Error("activity should be done")
@@ -77,30 +59,13 @@ func TestEval(t *testing.T) {
 		t.Error("activity has an error: ", err)
 		return
 	}
-}
 
-func TestProcess(t *testing.T) {
-	// GIVEN
-	input := make(chan string)
-	defer close(input)
-
-	done := make(chan bool)
-	defer close(done)
-
-	go func() {
-		input <- "hello world"
-		done <- true
-	}()
-
-	// WHEN
-	output := Process(input)
-	<-done // blocks until the input write routine is finished
-
-	// THEN
-	expected := "(hello world)"
-	found := <-output // blocks until the output has contents
+	expected := 2
+	found := <-ch
 
 	if found != expected {
 		t.Errorf("Expected %s, found %s", expected, found)
 	}
+
+	channels.Close()
 }

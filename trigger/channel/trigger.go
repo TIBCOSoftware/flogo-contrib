@@ -5,6 +5,9 @@ import (
 
 	"github.com/TIBCOSoftware/flogo-lib/core/trigger"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"context"
+	"github.com/TIBCOSoftware/flogo-lib/engine/channels"
+	"fmt"
 )
 
 // log is the default package logger
@@ -13,9 +16,9 @@ var log = logger.GetLogger("trigger-flogo-channel")
 // ChannelTrigger CHANNEL trigger struct
 type ChannelTrigger struct {
 	metadata *trigger.Metadata
-	//runner   action.Runner
 	config *trigger.Config
-	//handlers []*handler.Handler
+	cancel context.CancelFunc
+	handlers []*trigger.Handler
 }
 
 //NewFactory create a new Trigger factory
@@ -40,24 +43,71 @@ func (t *ChannelTrigger) Metadata() *trigger.Metadata {
 
 func (t *ChannelTrigger) Initialize(ctx trigger.InitContext) error {
 
-	// Init handlers
-	for _, handler := range ctx.GetHandlers() {
+	t.handlers = ctx.GetHandlers()
 
-		// setup handlers
+	// validate handlers
+	for _, handler := range t.handlers {
+
 		channel := strings.ToLower(handler.GetStringSetting("channel"))
-		log.Debugf("Registering handler for channel [%s]", channel)
+
+		ch := channels.Get(channel)
+		if ch == nil {
+			return fmt.Errorf("unknown engine channel '%s'", channel)
+		}
 	}
 
 	return nil
 }
 
 func (t *ChannelTrigger) Start() error {
-	//ignore
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	for _, handler := range t.handlers {
+
+		// setup handlers
+		channel := strings.ToLower(handler.GetStringSetting("channel"))
+		log.Debugf("Registering handler for channel [%s]", channel)
+
+		ch := channels.Get(channel)
+
+		go handleChannel(ctx, ch, handler)
+	}
+
+	t.cancel = cancel
+
 	return nil
 }
 
 // Stop implements util.Managed.Stop
 func (t *ChannelTrigger) Stop() error {
-	//ignore
+
+	t.cancel()
 	return nil
+}
+
+func handleChannel(ctx context.Context, ch chan interface{}, handler *trigger.Handler) {
+	for {
+		select {
+		case val, ok := <-ch:
+			if !ok {
+				//channel closed, so return
+				return
+			}
+
+			triggerData := map[string]interface{}{
+				"value": val,
+			}
+
+			//todo what should we do with the results?
+			_, err := handler.Handle(context.TODO(), triggerData)
+
+			if err != nil {
+				log.Error(err)
+			}
+
+		case <-ctx.Done():
+			return
+		}
+	}
 }
