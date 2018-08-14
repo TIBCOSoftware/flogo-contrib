@@ -61,12 +61,11 @@ func (a *FilterActivity) Eval(ctx activity.Context) (done bool, err error) {
 	in := ctx.GetInput(ivValue)
 
 	filteredOut := filter.FilterOut(in)
-	emit := !filteredOut
 
-	done = !(settings.ProceedOnlyOnEmit && !emit)
+	done = !(settings.ProceedOnlyOnEmit && filteredOut)
 
 	ctx.SetOutput(ovFiltered, filteredOut)
-	ctx.SetOutput(ovValue, emit)
+	ctx.SetOutput(ovValue, in)
 
 	return done, nil
 }
