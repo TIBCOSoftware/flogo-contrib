@@ -15,12 +15,12 @@ func TestAggregateBlocksAvg(t *testing.T) {
 
 	//values - 5 samples/block
 	b:=[]interface{}{5,10,15}
-	v := AggregateBlocksAvg(b, 5)
+	v := AggregateBlocksAvg(b, 0,5)
 	assert.Equal(t,2, v)
 
 	//values
 	b =[]interface{}{5,10,15}
-	v = AggregateBlocksAvg(b, 1)
+	v = AggregateBlocksAvg(b, 0,1)
 	assert.Equal(t,10, v)
 }
 

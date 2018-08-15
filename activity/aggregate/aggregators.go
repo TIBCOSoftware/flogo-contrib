@@ -55,6 +55,8 @@ func NewSlidingWindow(function string, windowSize int) (window.Window, error) {
 		return window.NewSlidingWindow(functions.AggregateBlocksMax, windowSize, 1), nil
 	case "count":
 		return window.NewSlidingWindow(functions.AggregateBlocksCount, windowSize, 1), nil
+	case "accumulate":
+		return window.NewSlidingWindow(functions.AggregateBlocksCount, windowSize, 1), nil
 	default:
 		return nil, fmt.Errorf("unsupported function: %s", function)
 	}

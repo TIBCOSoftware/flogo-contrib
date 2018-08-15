@@ -1,6 +1,6 @@
 package functions
 
-func AggregateBlocksAvg(blocks []interface{}, size int) interface{} {
+func AggregateBlocksAvg(blocks []interface{}, start int, size int) interface{} {
 
 	switch blocks[0].(type) {
 	case int:
