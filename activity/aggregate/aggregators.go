@@ -19,6 +19,8 @@ func NewTumblingWindow(function string, windowSize int) (window.Window, error) {
 		return window.NewTumblingWindow(functions.AddSampleMax, functions.AggregateSingleNoopFunc, windowSize), nil
 	case "count":
 		return window.NewTumblingWindow(functions.AddSampleCount, functions.AggregateSingleNoopFunc, windowSize), nil
+	case "accumulate":
+		return window.NewTumblingWindow(functions.AddSampleAccum, functions.AggregateSingleNoopFunc, windowSize), nil
 	default:
 		return nil, fmt.Errorf("unsupported function: %s", function)
 	}
@@ -38,6 +40,8 @@ func NewTumblingTimeWindow(function string, windowTime int, externalTimer bool) 
 		return window.NewTumblingTimeWindow(functions.AddSampleMax, functions.AggregateSingleNoopFunc, windowTime, externalTimer), nil
 	case "count":
 		return window.NewTumblingTimeWindow(functions.AddSampleCount, functions.AggregateSingleNoopFunc, windowTime, externalTimer), nil
+	case "accumulate":
+		return window.NewTumblingTimeWindow(functions.AddSampleAccum, functions.AggregateSingleNoopFunc, windowTime, externalTimer), nil
 	default:
 		return nil, fmt.Errorf("unsupported function: %s", function)
 	}
@@ -56,7 +60,7 @@ func NewSlidingWindow(function string, windowSize int) (window.Window, error) {
 	case "count":
 		return window.NewSlidingWindow(functions.AggregateBlocksCount, windowSize, 1), nil
 	case "accumulate":
-		return window.NewSlidingWindow(functions.AggregateBlocksCount, windowSize, 1), nil
+		return window.NewSlidingWindow(functions.AggregateBlocksAccumulate, windowSize, 1), nil
 	default:
 		return nil, fmt.Errorf("unsupported function: %s", function)
 	}
