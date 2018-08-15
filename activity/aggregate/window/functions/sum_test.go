@@ -16,6 +16,17 @@ func TestAddSampleSum(t *testing.T) {
 	assert.Equal(t,6, x)
 }
 
+func TestAddSampleSumFloat(t *testing.T) {
+
+	var x interface{}
+	x = AddSampleSum(x, 3)
+	x = AddSampleSum(x, 2)
+	x = AddSampleSum(x, 1)
+
+	assert.Equal(t,6, x)
+}
+
+
 func TestAggregateBlocksSum(t *testing.T) {
 
 	//values - 5 samples/block
