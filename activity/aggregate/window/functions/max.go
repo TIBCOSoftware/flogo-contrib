@@ -57,7 +57,7 @@ func AggregateBlocksMax(blocks []interface{}, start int, size int) interface{} {
 	return 0
 }
 
-func AggregateBlocksCount(blocks []interface{}, size int) interface{} {
+func AggregateBlocksCount(blocks []interface{}, start int, size int) interface{} {
 	return len(blocks)
 }
 

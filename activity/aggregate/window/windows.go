@@ -139,7 +139,7 @@ func (w *SlidingWindow) AddSample(sample interface{}) (bool, interface{}) {
 	if w.canEmit && w.numSamples >= w.resolution {
 
 		// aggregate and emit
-		val := w.aggFunc(w.blocks, 1)
+		val := w.aggFunc(w.blocks, w.currentBlock,1)
 
 		w.numSamples = 0
 		w.currentBlock++
@@ -229,7 +229,7 @@ func (w *SlidingTimeWindow) NextBlock() (bool, interface{}) {
 	if w.canEmit {
 
 		// aggregate and emit
-		val := w.aggFunc(w.blocks, w.maxSamples)
+		val := w.aggFunc(w.blocks, w.currentBlock, w.maxSamples)
 
 		w.currentBlock = w.currentBlock % w.numBlocks
 		w.blocks[w.currentBlock], _ = zero(w.blocks[w.currentBlock])
