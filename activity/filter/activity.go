@@ -4,6 +4,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
+	"fmt"
 )
 
 // activityLogger is the default logger for the Filter Activity
@@ -12,11 +13,9 @@ var activityLogger = logger.GetLogger("activity-filter")
 const (
 	sType              = "type"
 	sProceedOnlyOnEmit = "proceedOnlyOnEmit"
-
-	ivValue = "value"
-
-	ovFiltered = "filtered"
-	ovValue    = "value"
+	ivValue            = "value"
+	ovFiltered         = "filtered"
+	ovValue            = "value"
 )
 
 //we can generate json from this! - we could also create a "validate-able" object from this
@@ -29,40 +28,69 @@ func init() {
 	activityLogger.SetLogLevel(logger.InfoLevel)
 }
 
+var metadata *activity.Metadata
+
+func New(config *activity.Config) (activity.Activity, error) {
+	act := &FilterActivity{}
+
+	filterType, _ := config.Settings[sType]
+
+	if filterType == "non-zero" {
+		act.filter = &NonZeroFilter{}
+	} else {
+		return nil, fmt.Errorf("unsupported filter: '%s'", filterType)
+	}
+
+	if proceedOnlyOnEmit, ok := config.Settings[sProceedOnlyOnEmit]; ok {
+		act.proceedOnlyOnEmit = proceedOnlyOnEmit.(bool)
+	}
+
+	return act, nil
+}
+
 // FilterActivity is an Activity that is used to Filter a message to the console
 type FilterActivity struct {
-	metadata *activity.Metadata
+	filter            Filter
+	proceedOnlyOnEmit bool
 }
 
 // NewActivity creates a new AppActivity
-func NewActivity(metadata *activity.Metadata) activity.Activity {
-	return &FilterActivity{metadata: metadata}
+func NewActivity(md *activity.Metadata) activity.Activity {
+	metadata = md
+	return &FilterActivity{}
 }
 
 // Metadata returns the activity's metadata
 func (a *FilterActivity) Metadata() *activity.Metadata {
-	return a.metadata
+	return metadata
 }
 
 // Eval implements api.Activity.Eval - Filters the Message
 func (a *FilterActivity) Eval(ctx activity.Context) (done bool, err error) {
 
-	//todo move to Activity instance creation
-	settings, err := getSettings(ctx)
-	if err != nil {
-		return false, err
-	}
+	filter := a.filter
+	proceedOnlyOnEmit := a.proceedOnlyOnEmit
 
-	var filter Filter
-	if settings.Type == "non-zero" {
-		filter = &NonZeroFilter{}
+	if filter == nil {
+		//backwards compatibility support
+
+		settings, err := getSettings(ctx)
+		if err != nil {
+			return false, err
+		}
+
+		if settings.Type == "non-zero" {
+			filter = &NonZeroFilter{}
+		}
+
+		proceedOnlyOnEmit = settings.ProceedOnlyOnEmit
 	}
 
 	in := ctx.GetInput(ivValue)
 
 	filteredOut := filter.FilterOut(in)
 
-	done = !(settings.ProceedOnlyOnEmit && filteredOut)
+	done = !(proceedOnlyOnEmit && filteredOut)
 
 	ctx.SetOutput(ovFiltered, filteredOut)
 	ctx.SetOutput(ovValue, in)
