@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"fmt"
 )
 
 func TestAggregateBlocksAccumulate(t *testing.T) {
@@ -22,5 +23,23 @@ func TestAggregateBlocksAccumulate(t *testing.T) {
 
 	expected = []interface {}([]interface {}{10, 15, 5})
 	assert.Equal(t,expected, v)
+}
+
+func TestAddSampleAccum(t *testing.T) {
+
+	//values - 5 samples/block
+	b:=[]interface{}{5,10,15}
+
+	accum := AddSampleAccum(nil, b)
+
+	c:=[]interface{}{5,10,15}
+
+	accum = AddSampleAccum(accum, c)
+
+	l := accum.([]interface{})
+
+	assert.Equal(t, 2, len(l))
+
+	fmt.Printf("val: %v", l)
 }
 

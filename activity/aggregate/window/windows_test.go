@@ -38,6 +38,31 @@ func TestTumblingWindow_AddSample(t *testing.T) {
 	assert.Equal(t, 5, a)
 }
 
+func TestTumblingWindow_AddSampleAccum(t *testing.T) {
+
+	w := NewTumblingWindow(functions.AddSampleAccum, functions.AggregateSingleNoopFunc, 3)
+
+	emit, a := w.AddSample(1)
+	assert.False(t, emit)
+	emit, a = w.AddSample(2)
+	assert.False(t, emit)
+	emit, a = w.AddSample(3)
+	assert.True(t, emit)
+
+	arr := a.([]interface{})
+	assert.Equal(t, 3, len(arr))
+
+	emit, a = w.AddSample(4)
+	assert.False(t, emit)
+	emit, a = w.AddSample(5)
+	assert.False(t, emit)
+	emit, a = w.AddSample(6)
+	assert.True(t, emit)
+
+	arr = a.([]interface{})
+	assert.Equal(t, 3, len(arr))
+}
+
 func TestTumblingTimeWindowExt_AddSample(t *testing.T) {
 
 	w := NewTumblingTimeWindow(functions.AddSampleSum, functions.AggregateSingleAvg, 10, true)
@@ -66,6 +91,42 @@ func TestTumblingTimeWindowExt_AddSample(t *testing.T) {
 	assert.True(t, e)
 	assert.Equal(t, 1, v)
 }
+
+func TestTumblingTimeWindowExt_AddAccum(t *testing.T) {
+
+	w := NewTumblingTimeWindow(functions.AddSampleAccum, functions.AggregateSingleNoopFunc, 10, true)
+
+	//block AvgBlock = 3
+	w.AddSample(1)
+	w.AddSample(2)
+	w.AddSample(3)
+	w.AddSample(4)
+	w.AddSample(5)
+	e, v := w.NextBlock()
+	assert.True(t, e)
+
+	arr := v.([]interface{})
+	assert.Equal(t, 5, len(arr))
+
+	//block AvgBlock = 5
+	w.AddSample(10)
+	w.AddSample(15)
+	e, v = w.NextBlock()
+	assert.True(t, e)
+
+	arr = v.([]interface{})
+	assert.Equal(t, 2, len(arr))
+
+	//block AvgBlock = 1
+	w.AddSample(4)
+	w.AddSample(1)
+	e, v = w.NextBlock()
+	assert.True(t, e)
+
+	arr = v.([]interface{})
+	assert.Equal(t, 2, len(arr))
+}
+
 
 func TestSlidingWindow_AddSample(t *testing.T) {
 

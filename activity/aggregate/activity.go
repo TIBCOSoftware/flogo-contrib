@@ -38,25 +38,38 @@ type Settings struct {
 	Resolution        int
 }
 
+
 func init() {
 	activityLogger.SetLogLevel(logger.InfoLevel)
 }
 
+var metadata *activity.Metadata
+
+func New(config *activity.Config) (activity.Activity, error) {
+	act := &AggregateActivity{}
+
+	//todo implmenent
+
+	return act, nil
+}
+
 // AggregateActivity is an Activity that is used to Aggregate a message to the console
 type AggregateActivity struct {
-	metadata *activity.Metadata
 
+	settings 	*Settings
 	mutex *sync.RWMutex
 }
 
 // NewActivity creates a new AppActivity
-func NewActivity(metadata *activity.Metadata) activity.Activity {
-	return &AggregateActivity{metadata: metadata, mutex: &sync.RWMutex{}}
+func NewActivity(md *activity.Metadata) activity.Activity {
+	metadata = md
+	activity.RegisterFactory(md.ID, New)
+	return &AggregateActivity{mutex: &sync.RWMutex{}}
 }
 
 // Metadata returns the activity's metadata
 func (a *AggregateActivity) Metadata() *activity.Metadata {
-	return a.metadata
+	return metadata
 }
 
 // Eval implements api.Activity.Eval - Aggregates the Message
