@@ -11,7 +11,7 @@
       "name": "function",
       "type": "string",
       "required": true,
-      "allowed" : ["avg", "sum", "min", "max", "count"]
+      "allowed" : ["avg", "sum", "min", "max", "count", "accumulate"]
     },
     {
       "name": "windowType",

@@ -19,11 +19,11 @@ func TestAddSampleMax(t *testing.T) {
 func TestAggregateBlocksMax(t *testing.T) {
 
 	b:=[]interface{}{5,10,15}
-	v := AggregateBlocksMax(b, 0)
+	v := AggregateBlocksMax(b, 0,0)
 	assert.Equal(t,15, v)
 
 	b =[]interface{}{5,10,3}
-	v = AggregateBlocksMax(b, 1)
+	v = AggregateBlocksMax(b, 0,1)
 	assert.Equal(t,10, v)
 }
 

@@ -20,11 +20,11 @@ func TestAddSampleMin(t *testing.T) {
 func TestAggregateBlocksMin(t *testing.T) {
 
 	b:=[]interface{}{5,10,15}
-	v := AggregateBlocksMin(b, 0)
+	v := AggregateBlocksMin(b, 0,0)
 	assert.Equal(t,5, v)
 
 	b =[]interface{}{5,10,3}
-	v = AggregateBlocksMin(b, 1)
+	v = AggregateBlocksMin(b, 0,1)
 	assert.Equal(t,3, v)
 }
 

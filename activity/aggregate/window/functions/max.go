@@ -40,7 +40,7 @@ func AddSampleMax(a, b interface{}) interface{} {
 	panic("invalid input")
 }
 
-func AggregateBlocksMax(blocks []interface{}, size int) interface{} {
+func AggregateBlocksMax(blocks []interface{}, start int, size int) interface{} {
 
 	switch blocks[0].(type) {
 	case int:

@@ -41,7 +41,7 @@ func AddSampleMin(a, b interface{}) interface{} {
 }
 
 
-func AggregateBlocksMin(blocks []interface{}, size int) interface{} {
+func AggregateBlocksMin(blocks []interface{}, start int, size int) interface{} {
 
 	switch blocks[0].(type) {
 	case int:
