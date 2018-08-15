@@ -1,0 +1,10 @@
+{
+  "name": "activity",
+  "type": "flogo:action",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/action/activity",
+  "version": "0.0.1",
+  "title": "Simple Activity",
+  "description": "Simple Activity Action",
+  "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/action/activity",
+  "async": false
+}
