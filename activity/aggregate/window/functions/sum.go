@@ -1,5 +1,9 @@
 package functions
 
+import (
+	"github.com/TIBCOSoftware/flogo-lib/logger"
+)
+
 func AddSampleSum(a, b interface{}) interface{} {
 
 	if a == nil {
@@ -27,6 +31,7 @@ func AddSampleSum(a, b interface{}) interface{} {
 		return x
 	}
 
+	logger.Errorf("unknown")
 	panic("invalid input")
 }
 

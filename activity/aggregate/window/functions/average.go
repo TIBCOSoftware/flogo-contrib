@@ -77,15 +77,19 @@ func AggregateSingleAvg(a interface{}, count int) interface{} {
 	case float64:
 		return x / float64(count)
 	case []int:
-		for idx, value := range x {
-			x[idx] = value / count
+		ret := make([]int, len(x))
+		copy(ret, x)
+		for idx, value := range ret {
+			ret[idx] = value / count
 		}
-		return x
+		return ret
 	case []float64:
-		for idx, value := range x {
-			x[idx] = value / float64(count)
+		ret := make([]float64, len(x))
+		copy(ret, x)
+		for idx, value := range ret {
+			ret[idx] = value / float64(count)
 		}
-		return x
+		return ret
 	}
 
 	//todo handle unsupported type
