@@ -57,6 +57,7 @@ type FilterActivity struct {
 // NewActivity creates a new AppActivity
 func NewActivity(md *activity.Metadata) activity.Activity {
 	metadata = md
+	activity.RegisterFactory(md.ID, New)
 	return &FilterActivity{}
 }
 
