@@ -2,6 +2,7 @@ package inference
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/TIBCOSoftware/flogo-contrib/activity/inference/framework"
 	"github.com/TIBCOSoftware/flogo-contrib/activity/inference/framework/tf"
@@ -82,7 +83,19 @@ func (a *InferenceActivity) Eval(context activity.Context) (done bool, err error
 	log.Debug("Model execution completed with result:")
 	log.Info(output)
 
-	context.SetOutput(ovResult, output)
+	if strings.Contains(model.Metadata.Method, "tensorflow/serving/classify") {
+		var out = make(map[string]interface{})
+
+		classes := output["classes"].([][]string)[0]
+		scores := output["scores"].([][]float32)[0]
+
+		for i := 0; i < len(classes); i++ {
+			out[classes[i]] = scores[i]
+		}
+		context.SetOutput(ovResult, out)
+	} else {
+		context.SetOutput(ovResult, output)
+	}
 
 	return true, nil
 }
