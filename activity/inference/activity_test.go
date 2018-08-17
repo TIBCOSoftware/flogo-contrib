@@ -55,7 +55,7 @@ func TestEval(t *testing.T) {
 
 	//setup attrs
 	tc.SetInput("model", "/Users/mellis/Documents/IoT/models/tn_demo/Archive.zip")
-	tc.SetInput("inputName", "input")
+	tc.SetInput("inputName", "inputs")
 	tc.SetInput("framework", "Tensorflow")
 
 	var features = make(map[string]interface{})

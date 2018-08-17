@@ -46,6 +46,7 @@ func parseProtoBuf(file string, model *models.Metadata) error {
 	// Collect inputs
 	inputs := getValues(sigDef.GetInputs())
 	outputs := getValues(sigDef.GetOutputs())
+	methodName := sigDef.GetMethodName()
 
 	// Determine the feature keys
 	if model.Inputs.Features == nil {
@@ -88,6 +89,7 @@ func parseProtoBuf(file string, model *models.Metadata) error {
 
 	model.Inputs.Params = inputs
 	model.Outputs = outputs
+	model.Method = methodName
 
 	return nil
 }

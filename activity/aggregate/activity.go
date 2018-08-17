@@ -40,6 +40,7 @@ type Settings struct {
 	AdditionalSettings map[string]string
 }
 
+
 func init() {
 	activityLogger.SetLogLevel(logger.InfoLevel)
 }
