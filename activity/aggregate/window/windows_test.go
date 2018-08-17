@@ -2,14 +2,15 @@ package window
 
 import (
 	"testing"
-	"github.com/stretchr/testify/assert"
+
 	"github.com/TIBCOSoftware/flogo-contrib/activity/aggregate/window/functions"
+	"github.com/stretchr/testify/assert"
 )
 
 //note:  using interface{} 4x slower than using specific types, starting with interface{} for expediency
 func BenchmarkTumblingWindow_AddSample(b *testing.B) {
 
-	w := NewTumblingWindow(functions.AddSampleSum, functions.AggregateSingleAvg, 10)
+	w := NewTumblingWindow(functions.AddSampleSum, functions.AggregateSingleAvg, &Settings{Size: 3})
 
 	s := []int{5, 3, 2}
 	for i := 0; i < b.N; i++ {
@@ -19,7 +20,7 @@ func BenchmarkTumblingWindow_AddSample(b *testing.B) {
 
 func TestTumblingWindow_AddSample(t *testing.T) {
 
-	w := NewTumblingWindow(functions.AddSampleSum, functions.AggregateSingleAvg, 3)
+	w := NewTumblingWindow(functions.AddSampleSum, functions.AggregateSingleAvg, &Settings{Size: 3})
 
 	emit, a := w.AddSample(1)
 	assert.False(t, emit)
@@ -40,7 +41,7 @@ func TestTumblingWindow_AddSample(t *testing.T) {
 
 func TestTumblingWindow_AddSampleAccum(t *testing.T) {
 
-	w := NewTumblingWindow(functions.AddSampleAccum, functions.AggregateSingleNoopFunc, 3)
+	w := NewTumblingWindow(functions.AddSampleAccum, functions.AggregateSingleNoopFunc, &Settings{Size: 3})
 
 	emit, a := w.AddSample(1)
 	assert.False(t, emit)
@@ -65,7 +66,7 @@ func TestTumblingWindow_AddSampleAccum(t *testing.T) {
 
 func TestTumblingTimeWindowExt_AddSample(t *testing.T) {
 
-	w := NewTumblingTimeWindow(functions.AddSampleSum, functions.AggregateSingleAvg, 10, true)
+	w := NewTumblingTimeWindow(functions.AddSampleSum, functions.AggregateSingleAvg, &Settings{Size: 10, ExternalTimer: true})
 
 	//block AvgBlock = 3
 	w.AddSample(1)
@@ -94,7 +95,7 @@ func TestTumblingTimeWindowExt_AddSample(t *testing.T) {
 
 func TestTumblingTimeWindowExt_AddAccum(t *testing.T) {
 
-	w := NewTumblingTimeWindow(functions.AddSampleAccum, functions.AggregateSingleNoopFunc, 10, true)
+	w := NewTumblingTimeWindow(functions.AddSampleAccum, functions.AggregateSingleNoopFunc, &Settings{Size: 10, ExternalTimer: true})
 
 	//block AvgBlock = 3
 	w.AddSample(1)
@@ -127,10 +128,9 @@ func TestTumblingTimeWindowExt_AddAccum(t *testing.T) {
 	assert.Equal(t, 2, len(arr))
 }
 
-
 func TestSlidingWindow_AddSample(t *testing.T) {
 
-	w := NewSlidingWindow(functions.AggregateBlocksAvg, 5, 2)
+	w := NewSlidingWindow(functions.AggregateBlocksAvg, &Settings{Size: 5, Resolution: 2})
 
 	emit, a := w.AddSample(1)
 	assert.False(t, emit)
@@ -152,7 +152,7 @@ func TestSlidingWindow_AddSample(t *testing.T) {
 
 func TestSlidingTimeWindowExt_AddSample(t *testing.T) {
 
-	w := NewSlidingTimeWindow(functions.AddSampleSum, functions.AggregateBlocksAvg, 30, 10, true)
+	w := NewSlidingTimeWindow(functions.AddSampleSum, functions.AggregateBlocksAvg, &Settings{Size: 30, Resolution: 10, ExternalTimer: true})
 
 	//block AvgBlock = 3
 	w.AddSample(1)
