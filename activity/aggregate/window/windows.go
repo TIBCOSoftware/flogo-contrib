@@ -3,6 +3,8 @@ package window
 import (
 	"fmt"
 	"time"
+	"strings"
+	"strconv"
 )
 
 type Settings struct {
@@ -12,6 +14,19 @@ type Settings struct {
 
 	TotalCountModifier int
 }
+
+func (s *Settings) SetAdditionalSettings( as map[string]string) error {
+
+	for key, value := range as {
+		if strings.ToLower(key) == "totalcountmodifier" {
+			//todo should we return an error?
+			s.TotalCountModifier, _ =  strconv.Atoi(value)
+		}
+	}
+
+	return nil
+}
+
 
 ///////////////////
 // Tumbling Window
@@ -102,6 +117,12 @@ func (w *TumblingTimeWindow) NextBlock() (bool, interface{}) {
 
 	w.numSamples = 0
 	w.data, _ = zero(w.data)
+
+	if w.settings.TotalCountModifier > 0 {
+		//local, so reset max samples
+		//todo in the future use average of last N 'numSamples' to calculate max
+		w.maxSamples = 0
+	}
 
 	return true, val
 }

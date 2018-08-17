@@ -99,6 +99,8 @@ func (a *AggregateActivity) Eval(ctx activity.Context) (done bool, err error) {
 		//create the window & associated timer if necessary
 
 		windowSettings := &window.Settings{Size: settings.WindowSize, ExternalTimer: timerSupported, Resolution: settings.Resolution}
+		windowSettings.SetAdditionalSettings(settings.AdditionalSettings)
+
 		timerSupport, timerSupported := support.GetTimerSupport(ctx)
 		wType := strings.ToLower(settings.WindowType)
 
