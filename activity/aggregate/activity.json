@@ -31,6 +31,10 @@
     {
       "name": "proceedOnlyOnEmit",
       "type": "boolean"
+    },
+    {
+      "name": "additionalSettings",
+      "type": "string"
     }
   ],
   "input":[
