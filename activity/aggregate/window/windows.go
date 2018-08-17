@@ -5,19 +5,27 @@ import (
 	"time"
 )
 
+type Settings struct {
+	Size               int
+	Resolution         int
+	ExternalTimer      bool
+
+	TotalCountModifier int
+}
+
 ///////////////////
 // Tumbling Window
 
-func NewTumblingWindow(addFunc AddSampleFunc, aggFunc AggregateSingleFunc, windowSize int) Window {
+func NewTumblingWindow(addFunc AddSampleFunc, aggFunc AggregateSingleFunc, settings *Settings) Window {
 
-	return &TumblingWindow{addFunc: addFunc, aggFunc: aggFunc, windowSize: windowSize}
+	return &TumblingWindow{addFunc: addFunc, aggFunc: aggFunc, settings: settings}
 }
 
 //note:  using interface{} 4x slower than using specific types, starting with interface{} for expediency
 type TumblingWindow struct {
-	addFunc    AddSampleFunc
-	aggFunc    AggregateSingleFunc
-	windowSize int
+	addFunc  AddSampleFunc
+	aggFunc  AggregateSingleFunc
+	settings *Settings
 
 	data       interface{}
 	numSamples int
@@ -29,9 +37,9 @@ func (w *TumblingWindow) AddSample(sample interface{}) (bool, interface{}) {
 	w.data = w.addFunc(w.data, sample)
 	w.numSamples++
 
-	if w.numSamples == w.windowSize {
+	if w.numSamples == w.settings.Size {
 		// aggregate and emit
-		val := w.aggFunc(w.data, w.windowSize)
+		val := w.aggFunc(w.data, w.settings.Size)
 
 		w.numSamples = 0
 		w.data, _ = zero(w.data)
@@ -45,18 +53,17 @@ func (w *TumblingWindow) AddSample(sample interface{}) (bool, interface{}) {
 ///////////////////////
 // Tumbling Time Window
 
-func NewTumblingTimeWindow(addFunc AddSampleFunc, aggFunc AggregateSingleFunc, windowTime int, externalTimer bool) TimeWindow {
-	return &TumblingTimeWindow{addFunc: addFunc, aggFunc: aggFunc, windowTime: windowTime, externalTimer: externalTimer}
+func NewTumblingTimeWindow(addFunc AddSampleFunc, aggFunc AggregateSingleFunc, settings *Settings) TimeWindow {
+	return &TumblingTimeWindow{addFunc: addFunc, aggFunc: aggFunc, settings: settings}
 }
 
 // TumblingTimeWindow - A tumbling window based on time. Relies on external entity moving window along
 // by calling NextBlock at the appropriate time.
 //note:  using interface{} 4x slower than using specific types, starting with interface{} for expediency
 type TumblingTimeWindow struct {
-	addFunc       AddSampleFunc
-	aggFunc       AggregateSingleFunc
-	windowTime    int
-	externalTimer bool
+	addFunc  AddSampleFunc
+	aggFunc  AggregateSingleFunc
+	settings *Settings
 
 	data       interface{}
 	maxSamples int
@@ -75,12 +82,12 @@ func (w *TumblingTimeWindow) AddSample(sample interface{}) (bool, interface{}) {
 		w.maxSamples = w.numSamples
 	}
 
-	if !w.externalTimer {
+	if !w.settings.ExternalTimer {
 		currentTime := getTimeMillis()
 
 		//todo what do we do if this greatly exceeds the nextEmit time?
 		if currentTime >= w.nextEmit {
-			w.nextEmit = + w.windowTime
+			w.nextEmit = + w.settings.Size // size == time in millis
 			return w.NextBlock()
 		}
 	}
@@ -102,10 +109,10 @@ func (w *TumblingTimeWindow) NextBlock() (bool, interface{}) {
 ///////////////////
 // Sliding Window
 
-func NewSlidingWindow(aggFunc AggregateBlocksFunc, windowSize int, resolution int) Window {
+func NewSlidingWindow(aggFunc AggregateBlocksFunc, settings *Settings) Window {
 
-	w := &SlidingWindow{aggFunc: aggFunc, windowSize: windowSize, resolution: resolution}
-	w.blocks = make([]interface{}, windowSize)
+	w := &SlidingWindow{aggFunc: aggFunc, settings: settings}
+	w.blocks = make([]interface{}, settings.Size)
 
 	return w
 }
@@ -113,9 +120,8 @@ func NewSlidingWindow(aggFunc AggregateBlocksFunc, windowSize int, resolution in
 //note:  using interface{} 4x slower than using specific types, starting with interface{} for expediency
 // todo split external vs on-add timer
 type SlidingWindow struct {
-	aggFunc    AggregateBlocksFunc
-	windowSize int
-	resolution int
+	aggFunc  AggregateBlocksFunc
+	settings *Settings
 
 	blocks       []interface{}
 	numSamples   int
@@ -129,22 +135,22 @@ func (w *SlidingWindow) AddSample(sample interface{}) (bool, interface{}) {
 	w.blocks[w.currentBlock] = sample //no addSampleFunc required, just tracking all values
 
 	if !w.canEmit {
-		if w.currentBlock == w.windowSize-1 {
+		if w.currentBlock == w.settings.Size-1 {
 			w.canEmit = true
 		}
 	}
 
 	w.numSamples++
 
-	if w.canEmit && w.numSamples >= w.resolution {
+	if w.canEmit && w.numSamples >= w.settings.Resolution {
 
 		// aggregate and emit
-		val := w.aggFunc(w.blocks, w.currentBlock,1)
+		val := w.aggFunc(w.blocks, w.currentBlock, 1)
 
 		w.numSamples = 0
 		w.currentBlock++
 
-		w.currentBlock = w.currentBlock % w.windowSize
+		w.currentBlock = w.currentBlock % w.settings.Size
 
 		return true, val
 	}
@@ -157,12 +163,11 @@ func (w *SlidingWindow) AddSample(sample interface{}) (bool, interface{}) {
 //////////////////////
 // Sliding Time Window
 
-func NewSlidingTimeWindow(addFunc AddSampleFunc, aggFunc AggregateBlocksFunc, windowTime int, resolution int, externalTimer bool) TimeWindow {
+func NewSlidingTimeWindow(addFunc AddSampleFunc, aggFunc AggregateBlocksFunc, settings *Settings) TimeWindow {
 
-	numBlocks := windowTime / resolution
+	numBlocks := settings.Size / settings.Resolution
 
-	w := &SlidingTimeWindow{addFunc: addFunc, aggFunc: aggFunc, numBlocks: numBlocks, windowTime: windowTime,
-		windowResolution: resolution, externalTimer: externalTimer}
+	w := &SlidingTimeWindow{addFunc: addFunc, aggFunc: aggFunc, numBlocks: numBlocks, settings: settings}
 
 	w.blocks = make([]interface{}, numBlocks)
 
@@ -173,13 +178,11 @@ func NewSlidingTimeWindow(addFunc AddSampleFunc, aggFunc AggregateBlocksFunc, wi
 // by calling NextBlock at the appropriate time.
 // note:  using interface{} 4x slower than using specific types, starting with interface{} for expediency
 type SlidingTimeWindow struct {
-	addFunc          AddSampleFunc
-	aggFunc          AggregateBlocksFunc
-	numBlocks        int
-	windowTime       int
-	windowResolution int
-	externalTimer    bool
+	addFunc  AddSampleFunc
+	aggFunc  AggregateBlocksFunc
+	settings *Settings
 
+	numBlocks    int
 	blocks       []interface{}
 	maxSamples   int
 	numSamples   int
@@ -201,11 +204,11 @@ func (w *SlidingTimeWindow) AddSample(sample interface{}) (bool, interface{}) {
 		w.maxSamples = w.numSamples
 	}
 
-	if !w.externalTimer {
+	if !w.settings.ExternalTimer {
 		currentTime := getTimeMillis()
 
 		if currentTime > w.nextBlockTime {
-			w.nextBlockTime += w.windowResolution
+			w.nextBlockTime += w.settings.Resolution
 			return w.NextBlock()
 		}
 
