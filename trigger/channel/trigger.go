@@ -8,10 +8,13 @@ import (
 	"context"
 	"github.com/TIBCOSoftware/flogo-lib/engine/channels"
 	"fmt"
+	"github.com/TIBCOSoftware/flogo-lib/core/data"
 )
 
 // log is the default package logger
 var log = logger.GetLogger("trigger-flogo-channel")
+
+const ovData = "data"
 
 // ChannelTrigger CHANNEL trigger struct
 type ChannelTrigger struct {
@@ -95,8 +98,17 @@ func handleChannel(ctx context.Context, ch chan interface{}, handler *trigger.Ha
 				return
 			}
 
-			triggerData := map[string]interface{}{
-				"value": val,
+			triggerData := make(map[string]interface{})
+
+			if attrs, ok:=val.(map[string]*data.Attribute); ok{
+
+				vals := make(map[string]interface{})
+				for name, attr := range attrs {
+					vals[name] = attr.Value()
+				}
+				triggerData[ovData] = vals
+			} else {
+				triggerData[ovData] = val
 			}
 
 			//todo what should we do with the results?

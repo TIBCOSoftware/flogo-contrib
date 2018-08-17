@@ -10,7 +10,7 @@
   ],
   "output": [
     {
-      "name": "value",
+      "name": "data",
       "type": "any"
     }
   ],
