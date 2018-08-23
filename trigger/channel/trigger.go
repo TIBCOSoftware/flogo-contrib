@@ -52,7 +52,7 @@ func (t *ChannelTrigger) Initialize(ctx trigger.InitContext) error {
 
 		channel := strings.ToLower(handler.GetStringSetting("channel"))
 
-		ch := channels.GetChannel(channel)
+		ch := channels.Get(channel)
 		if ch == nil {
 			return fmt.Errorf("unknown engine channel '%s'", channel)
 		}

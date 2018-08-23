@@ -60,7 +60,7 @@ func (a *ChannelActivity) Eval(ctx activity.Context) (done bool, err error) {
 		name = iName.(string)
 	}
 
-	ch := channels.GetChannel(name)
+	ch := channels.Get(name)
 
 	if ch == nil {
 		return false, fmt.Errorf("channel '%s' not registered with engine", name)
