@@ -3,6 +3,7 @@ package channel
 import (
 	"io/ioutil"
 	"testing"
+	"time"
 
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/test"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
@@ -41,8 +42,8 @@ func TestEval(t *testing.T) {
 	act := NewActivity(getActivityMetadata())
 	tc := test.NewTestActivityContext(getActivityMetadata())
 
-	channels.Add("test:5")
-	ch := channels.Get("test")
+	channels.New("test", 5)
+	ch := channels.GetChannel("test")
 
 	//setup attrs
 	tc.SetSetting(sChannel, "test")
@@ -61,7 +62,15 @@ func TestEval(t *testing.T) {
 	}
 
 	expected := 2
-	found := <-ch
+	var found interface{}
+
+	ch.RegisterCallback(func(msg interface{}) {
+		found = msg
+	})
+
+	channels.Start()
+
+	time.Sleep(100*time.Millisecond)
 
 	if found != expected {
 		t.Errorf("Expected %s, found %s", expected, found)
