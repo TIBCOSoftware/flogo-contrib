@@ -60,7 +60,7 @@ func (a *ChannelActivity) Eval(ctx activity.Context) (done bool, err error) {
 		name = iName.(string)
 	}
 
-	ch := channels.Get(name)
+	ch := channels.GetChannel(name)
 
 	if ch == nil {
 		return false, fmt.Errorf("channel '%s' not registered with engine", name)
@@ -72,15 +72,9 @@ func (a *ChannelActivity) Eval(ctx activity.Context) (done bool, err error) {
 
 	//should we allow
 	if blocking {
-		ch <- in
+		ch.Publish(in)
 	} else {
-		select {
-		case ch <- in:
-			fmt.Println("sent message")
-		default:
-			//todo should we warn
-			fmt.Println("no message sent")
-		}
+		ch.PublishNoWait(in)
 	}
 
 	return true, nil
