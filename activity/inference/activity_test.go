@@ -67,7 +67,6 @@ func TestEval(t *testing.T) {
 	features["1_0"] = 0.140586
 	features["2_0"] = 0.140586
 	features["amag_0"] = 0.140586
-
 	features["0_1"] = 0.140586
 	features["1_1"] = 0.140586
 	features["2_1"] = 0.140586
@@ -112,9 +111,9 @@ func TestEval(t *testing.T) {
 
 	tc.SetInput("features", features)
 
-	done, _ := act.Eval(tc)
+	done, err := act.Eval(tc)
 	if done == false {
-		assert.Fail(t, "Invalid framework specified")
+		assert.Fail(t, fmt.Sprintf("Error raised: %s", err))
 	}
 
 	//check result attr
