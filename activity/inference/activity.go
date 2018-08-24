@@ -3,6 +3,7 @@ package inference
 import (
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/TIBCOSoftware/flogo-contrib/activity/inference/framework"
 	"github.com/TIBCOSoftware/flogo-contrib/activity/inference/framework/tf"
@@ -15,6 +16,10 @@ var _ tf.TensorflowModel
 
 // log is the default package logger
 var log = logger.GetLogger("activity-tibco-inference")
+
+// variables needed to persist model between inferences
+var tfmodelmap map[string]*model.Model
+var modelRunMutex sync.Mutex
 
 const (
 	ivModel     = "model"
@@ -45,7 +50,6 @@ func (a *InferenceActivity) Metadata() *activity.Metadata {
 
 // Eval implements api.Activity.Eval - Runs an ML model
 func (a *InferenceActivity) Eval(context activity.Context) (done bool, err error) {
-
 	modelName := context.GetInput(ivModel).(string)
 	inputName := context.GetInput(ivInputName).(string)
 	features := context.GetInput(ivFeatures)
@@ -65,7 +69,22 @@ func (a *InferenceActivity) Eval(context activity.Context) (done bool, err error
 		SigDef: context.GetInput("sigDefName").(string),
 	}
 
-	model, _ := model.Load(modelName, tfFramework, flags)
+	// if modelmap does exist make it
+	if tfmodelmap == nil {
+		tfmodelmap = make(map[string]*model.Model)
+	}
+
+	// check if this instance of tf model already exists if not load it
+	modelKey := context.ActivityHost().Name() + ":" + context.Name()
+	log.Info("ModelKey is:", modelKey)
+	if tfmodelmap[modelKey] == nil {
+		tfmodelmap[modelKey], err = model.Load(modelName, tfFramework, flags)
+		if err != nil {
+			return false, err
+		}
+	} else {
+		log.Debug("Model already loaded - skipping loading")
+	}
 
 	// Grab the input feature set and parse out the feature labels and values
 	inputSample := make(map[string]map[string]interface{})
@@ -82,9 +101,10 @@ func (a *InferenceActivity) Eval(context activity.Context) (done bool, err error
 	inputSample[inputName] = featureMap
 	log.Debug("Parsing of features completed")
 
-	model.SetInputs(inputSample)
-	output, err := model.Run(tfFramework)
-
+	modelRunMutex.Lock()
+	tfmodelmap[modelKey].SetInputs(inputSample)
+	output, err := tfmodelmap[modelKey].Run(tfFramework)
+	modelRunMutex.Unlock()
 	if err != nil {
 		return false, err
 	}
@@ -92,7 +112,7 @@ func (a *InferenceActivity) Eval(context activity.Context) (done bool, err error
 	log.Debug("Model execution completed with result:")
 	log.Info(output)
 
-	if strings.Contains(model.Metadata.Method, "tensorflow/serving/classify") {
+	if strings.Contains(tfmodelmap[modelKey].Metadata.Method, "tensorflow/serving/classify") {
 		var out = make(map[string]interface{})
 
 		classes := output["classes"].([][]string)[0]
