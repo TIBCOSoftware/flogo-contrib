@@ -1,7 +1,6 @@
 package tf
 
 import (
-	"fmt"
 	"io/ioutil"
 	"strings"
 
@@ -12,14 +11,19 @@ import (
 )
 
 // Load implements the backend framework specifics for loading a saved model
-func (a *TensorflowModel) Load(modelPath string, modelFile string, model *models.Model, flags models.ModelFlags) (err error) {
+func (a *TensorflowModel) Load(model *models.Model, flags models.ModelFlags) (err error) {
 	var meta models.Metadata
 
 	meta.Tag = flags.Tag
 	meta.SigDef = flags.SigDef
+	modelFile := flags.ModelFile
+	modelPath := flags.ModelPath
 
 	// Parse the protobuffer
-	parseProtoBuf(modelFile, &meta)
+	err = parseProtoBuf(modelFile, &meta)
+	if err != nil {
+		return err
+	}
 	model.Metadata = &meta
 
 	//Maybe add catch in case tag isn't in model
@@ -40,7 +44,7 @@ func parseProtoBuf(file string, model *models.Metadata) error {
 	var savedModel tfpb.SavedModel
 	loadErr := proto.Unmarshal(savedModelPb, &savedModel)
 	if loadErr != nil {
-		fmt.Println(loadErr)
+		return loadErr
 	}
 	metaGraphs := savedModel.GetMetaGraphs()
 
