@@ -18,9 +18,9 @@
         "required": true
     },
     {
-      "name": "features",
-      "type": "object",
-      "required": true
+        "name": "features",
+        "type": "object",
+        "required": true
     },
     {
         "name": "framework",
@@ -30,12 +30,14 @@
     {
         "name": "sigDefName",
         "type": "string",
-        "required": false
+        "required": false,
+        "value":"serving_default"
     },
     {
         "name": "tag",
         "type": "string",
-        "required": false
+        "required": false,
+        "value":"serve"
     }
   ],
   "output": [

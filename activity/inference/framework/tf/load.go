@@ -7,29 +7,23 @@ import (
 
 	models "github.com/TIBCOSoftware/flogo-contrib/activity/inference/model"
 	tfpb "github.com/TIBCOSoftware/flogo-contrib/activity/inference/tensorflow/tensorflow/core/protobuf"
-	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/golang/protobuf/proto"
 	tf "github.com/tensorflow/tensorflow/tensorflow/go"
 )
 
 // Load implements the backend framework specifics for loading a saved model
-func (a *TensorflowModel) Load(modelPath string, modelFile string, model *models.Model, context activity.Context) (err error) {
+func (a *TensorflowModel) Load(modelPath string, modelFile string, model *models.Model, flags models.ModelFlags) (err error) {
 	var meta models.Metadata
 
+	meta.Tag = flags.Tag
+	meta.SigDef = flags.SigDef
+
 	// Parse the protobuffer
-	parseProtoBuf(modelFile, &meta, context)
+	parseProtoBuf(modelFile, &meta)
 	model.Metadata = &meta
 
-	//getting the appropirate tag for the TF model
-	var tag string
-	if context.GetInput("tag") != "" {
-		tag = context.GetInput("tag").(string)
-	} else {
-		tag = "serve"
-	}
-
 	//Maybe add catch in case tag isn't in model
-	bundle, err := tf.LoadSavedModel(modelPath, []string{tag}, nil)
+	bundle, err := tf.LoadSavedModel(modelPath, []string{model.Metadata.Tag}, nil)
 	if err != nil {
 		return err
 	}
@@ -38,7 +32,7 @@ func (a *TensorflowModel) Load(modelPath string, modelFile string, model *models
 	return nil
 }
 
-func parseProtoBuf(file string, model *models.Metadata, context activity.Context) error {
+func parseProtoBuf(file string, model *models.Metadata) error {
 	savedModelPb, err := ioutil.ReadFile(file)
 	if err != nil {
 		return err
@@ -50,15 +44,8 @@ func parseProtoBuf(file string, model *models.Metadata, context activity.Context
 	}
 	metaGraphs := savedModel.GetMetaGraphs()
 
-	var sigdef string
-	if context.GetInput("sigDefName") != "" {
-		sigdef = context.GetInput("sigDefName").(string)
-	} else {
-		sigdef = "serving_default"
-	}
-
 	// Grab the default graph def
-	sigDef := metaGraphs[0].SignatureDef[sigdef]
+	sigDef := metaGraphs[0].SignatureDef[model.SigDef]
 
 	// Collect inputs
 	inputs := getValues(sigDef.GetInputs())

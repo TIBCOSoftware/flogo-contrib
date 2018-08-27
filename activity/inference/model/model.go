@@ -6,12 +6,11 @@ import (
 	"path/filepath"
 
 	"github.com/TIBCOSoftware/flogo-contrib/activity/inference/utils"
-	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 )
 
 // Framework interface used to implement specific ml framework implementations
 type Framework interface {
-	Load(modelPath string, modelFile string, model *Model, context activity.Context) (err error)
+	Load(modelPath string, modelFile string, model *Model, flags ModelFlags) (err error)
 	Run(model *Model) (out map[string]interface{}, err error)
 	FrameworkTyp() string
 }
@@ -24,8 +23,14 @@ type Model struct {
 	Inputs   map[string]map[string]interface{}
 }
 
+// ModelFlags Contains flags to add to metadata and to aid in loading
+type ModelFlags struct {
+	Tag    string
+	SigDef string
+}
+
 // Load is unzipping the file and then passing it to be read
-func Load(modelArchive string, framework Framework, context activity.Context) (*Model, error) {
+func Load(modelArchive string, framework Framework, flags ModelFlags) (*Model, error) {
 	f, _ := os.Open(modelArchive)
 	defer f.Close()
 	var outDir string
@@ -40,7 +45,7 @@ func Load(modelArchive string, framework Framework, context activity.Context) (*
 	}
 
 	var model Model
-	framework.Load(outDir, filepath.Join(outDir, "saved_model.pb"), &model, context)
+	framework.Load(outDir, filepath.Join(outDir, "saved_model.pb"), &model, flags)
 
 	return &model, nil
 }

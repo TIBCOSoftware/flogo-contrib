@@ -8,6 +8,8 @@ type Metadata struct {
 	}
 	Outputs map[string]OperationParam
 	Method  string
+	Tag     string
+	SigDef  string
 }
 
 type Feature struct {
