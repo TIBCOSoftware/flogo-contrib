@@ -18,14 +18,26 @@
         "required": true
     },
     {
-      "name": "features",
-      "type": "object",
-      "required": true
+        "name": "features",
+        "type": "object",
+        "required": true
     },
     {
         "name": "framework",
         "type": "string",
         "required": true
+    },
+    {
+        "name": "sigDefName",
+        "type": "string",
+        "required": false,
+        "value":"serving_default"
+    },
+    {
+        "name": "tag",
+        "type": "string",
+        "required": false,
+        "value":"serve"
     }
   ],
   "output": [

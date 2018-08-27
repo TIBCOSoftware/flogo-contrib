@@ -22,6 +22,9 @@ const (
 	ivFeatures  = "features"
 	ivFramework = "framework"
 
+	ivSigDef = "sigDefName"
+	ivTag    = "tag"
+
 	ovResult = "result"
 )
 
@@ -56,7 +59,13 @@ func (a *InferenceActivity) Eval(context activity.Context) (done bool, err error
 	}
 	log.Debug("Loaded Framework: " + tfFramework.FrameworkTyp())
 
-	model, _ := model.Load(modelName, tfFramework)
+	// Defining the flags to be used to load model
+	flags := model.ModelFlags{
+		Tag:    context.GetInput("tag").(string),
+		SigDef: context.GetInput("sigDefName").(string),
+	}
+
+	model, _ := model.Load(modelName, tfFramework, flags)
 
 	// Grab the input feature set and parse out the feature labels and values
 	inputSample := make(map[string]map[string]interface{})

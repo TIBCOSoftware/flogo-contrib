@@ -12,14 +12,18 @@ import (
 )
 
 // Load implements the backend framework specifics for loading a saved model
-func (a *TensorflowModel) Load(modelPath string, modelFile string, model *models.Model) (err error) {
+func (a *TensorflowModel) Load(modelPath string, modelFile string, model *models.Model, flags models.ModelFlags) (err error) {
 	var meta models.Metadata
+
+	meta.Tag = flags.Tag
+	meta.SigDef = flags.SigDef
 
 	// Parse the protobuffer
 	parseProtoBuf(modelFile, &meta)
 	model.Metadata = &meta
 
-	bundle, err := tf.LoadSavedModel(modelPath, []string{"serve"}, nil)
+	//Maybe add catch in case tag isn't in model
+	bundle, err := tf.LoadSavedModel(modelPath, []string{model.Metadata.Tag}, nil)
 	if err != nil {
 		return err
 	}
@@ -41,7 +45,7 @@ func parseProtoBuf(file string, model *models.Metadata) error {
 	metaGraphs := savedModel.GetMetaGraphs()
 
 	// Grab the default graph def
-	sigDef := metaGraphs[0].SignatureDef["serving_default"]
+	sigDef := metaGraphs[0].SignatureDef[model.SigDef]
 
 	// Collect inputs
 	inputs := getValues(sigDef.GetInputs())
