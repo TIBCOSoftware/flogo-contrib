@@ -17,7 +17,8 @@ var _ tf.TensorflowModel
 // log is the default package logger
 var log = logger.GetLogger("activity-tibco-inference")
 
-var tfmodel *model.Model
+// variables needed to persist model between inferences
+var tfmodelmap map[string]*model.Model
 var modelRunMutex sync.Mutex
 
 const (
@@ -68,8 +69,16 @@ func (a *InferenceActivity) Eval(context activity.Context) (done bool, err error
 		SigDef: context.GetInput("sigDefName").(string),
 	}
 
-	if tfmodel == nil {
-		tfmodel, err = model.Load(modelName, tfFramework, flags)
+	// if modelmap does exist make it
+	if tfmodelmap == nil {
+		tfmodelmap = make(map[string]*model.Model)
+	}
+
+	// check if this instance of tf model already exists if not load it
+	modelKey := context.ActivityHost().Name() + ":" + context.Name()
+	log.Info("ModelKey is:", modelKey)
+	if tfmodelmap[modelKey] == nil {
+		tfmodelmap[modelKey], err = model.Load(modelName, tfFramework, flags)
 		if err != nil {
 			return false, err
 		}
@@ -93,8 +102,8 @@ func (a *InferenceActivity) Eval(context activity.Context) (done bool, err error
 	log.Debug("Parsing of features completed")
 
 	modelRunMutex.Lock()
-	tfmodel.SetInputs(inputSample)
-	output, err := tfmodel.Run(tfFramework)
+	tfmodelmap[modelKey].SetInputs(inputSample)
+	output, err := tfmodelmap[modelKey].Run(tfFramework)
 	modelRunMutex.Unlock()
 	if err != nil {
 		return false, err
@@ -103,7 +112,7 @@ func (a *InferenceActivity) Eval(context activity.Context) (done bool, err error
 	log.Debug("Model execution completed with result:")
 	log.Info(output)
 
-	if strings.Contains(tfmodel.Metadata.Method, "tensorflow/serving/classify") {
+	if strings.Contains(tfmodelmap[modelKey].Metadata.Method, "tensorflow/serving/classify") {
 		var out = make(map[string]interface{})
 
 		classes := output["classes"].([][]string)[0]
