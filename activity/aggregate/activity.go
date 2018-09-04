@@ -2,10 +2,10 @@ package aggregate
 
 import (
 	"fmt"
-	"strings"
+  "strings"
 	"sync"
 	"time"
-
+  
 	"github.com/TIBCOSoftware/flogo-contrib/activity/aggregate/window"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
