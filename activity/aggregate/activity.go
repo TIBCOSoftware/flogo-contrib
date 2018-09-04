@@ -2,14 +2,15 @@ package aggregate
 
 import (
 	"fmt"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/TIBCOSoftware/flogo-contrib/activity/aggregate/window"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"github.com/flogo-oss/stream/pipeline/support"
-	"strings"
-	"sync"
-	"time"
+	"github.com/project-flogo/stream/pipeline/support"
 )
 
 // activityLogger is the default logger for the Aggregate Activity
@@ -31,9 +32,9 @@ const (
 
 //we can generate json from this! - we could also create a "validate-able" object from this
 type Settings struct {
-	Function           string `md:"required,allowed(avg,sum,min,max,count)"`
-	WindowType         string `md:"required,allowed(tumbling,sliding,timeTumbling,timeSliding)"`
-	WindowSize         int    `md:"required"`
+	Function           string `md:"function,required,allowed(avg,sum,min,max,count)"`
+	WindowType         string `md:"windowType,required,allowed(tumbling,sliding,timeTumbling,timeSliding)"`
+	WindowSize         int    `md:"windowSize,required"`
 	ProceedOnlyOnEmit  bool
 	Resolution         int
 	AdditionalSettings map[string]string
@@ -134,7 +135,7 @@ func (a *AggregateActivity) Eval(ctx activity.Context) (done bool, err error) {
 	return done, nil
 }
 
-func createWindow(ctx activity.Context, settings *Settings) (w window.Window, err error){
+func createWindow(ctx activity.Context, settings *Settings) (w window.Window, err error) {
 
 	timerSupport, timerSupported := support.GetTimerSupport(ctx)
 
