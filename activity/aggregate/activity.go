@@ -2,15 +2,14 @@ package aggregate
 
 import (
 	"fmt"
-	"strings"
-	"sync"
-	"time"
-
 	"github.com/TIBCOSoftware/flogo-contrib/activity/aggregate/window"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/flogo-oss/stream/pipeline/support"
+	"strings"
+	"sync"
+	"time"
 )
 
 // activityLogger is the default logger for the Aggregate Activity
@@ -39,7 +38,6 @@ type Settings struct {
 	Resolution         int
 	AdditionalSettings map[string]string
 }
-
 
 func init() {
 	activityLogger.SetLogLevel(logger.InfoLevel)
@@ -95,35 +93,27 @@ func (a *AggregateActivity) Eval(ctx activity.Context) (done bool, err error) {
 
 	var w window.Window
 
+	//create the window & associated timer if necessary
+
 	if !defined {
-		//create the window & associated timer if necessary
 
-		windowSettings := &window.Settings{Size: settings.WindowSize, ExternalTimer: timerSupported, Resolution: settings.Resolution}
-		windowSettings.SetAdditionalSettings(settings.AdditionalSettings)
+		a.mutex.Lock()
 
-		timerSupport, timerSupported := support.GetTimerSupport(ctx)
-		wType := strings.ToLower(settings.WindowType)
+		wv, defined = sharedData["window"]
+		if defined {
+			w = wv.(window.Window)
+		} else {
+			w, err = createWindow(ctx, settings)
 
-		switch wType {
-		case "tumbling":
-			w, err = NewTumblingWindow(settings.Function, windowSettings)
-		case "sliding":
-			w, err = NewSlidingWindow(settings.Function, windowSettings)
-		case "timetumbling":
-			w, err = NewTumblingTimeWindow(settings.Function, windowSettings)
-			if timerSupported {
-				timerSupport.CreateTimer(time.Duration(settings.WindowSize)*time.Millisecond, moveWindow, true)
+			if err != nil {
+				a.mutex.Unlock()
+				return false, err
 			}
-		case "timesliding":
-			w, err = NewSlidingTimeWindow(settings.Function, windowSettings)
-			if timerSupported {
-				timerSupport.CreateTimer(time.Duration(settings.Resolution)*time.Millisecond, moveWindow, true)
-			}
-		default:
-			return false, fmt.Errorf("unsupported window type: '%s'", settings.WindowType)
+
+			sharedData["window"] = w
 		}
 
-		sharedData["window"] = w
+		a.mutex.Unlock()
 	} else {
 		w = wv.(window.Window)
 	}
@@ -142,6 +132,37 @@ func (a *AggregateActivity) Eval(ctx activity.Context) (done bool, err error) {
 	done = !(settings.ProceedOnlyOnEmit && !emit)
 
 	return done, nil
+}
+
+func createWindow(ctx activity.Context, settings *Settings) (w window.Window, err error){
+
+	timerSupport, timerSupported := support.GetTimerSupport(ctx)
+
+	windowSettings := &window.Settings{Size: settings.WindowSize, ExternalTimer: timerSupported, Resolution: settings.Resolution}
+	windowSettings.SetAdditionalSettings(settings.AdditionalSettings)
+
+	wType := strings.ToLower(settings.WindowType)
+
+	switch wType {
+	case "tumbling":
+		w, err = NewTumblingWindow(settings.Function, windowSettings)
+	case "sliding":
+		w, err = NewSlidingWindow(settings.Function, windowSettings)
+	case "timetumbling":
+		w, err = NewTumblingTimeWindow(settings.Function, windowSettings)
+		if timerSupported {
+			timerSupport.CreateTimer(time.Duration(settings.WindowSize)*time.Millisecond, moveWindow, true)
+		}
+	case "timesliding":
+		w, err = NewSlidingTimeWindow(settings.Function, windowSettings)
+		if timerSupported {
+			timerSupport.CreateTimer(time.Duration(settings.Resolution)*time.Millisecond, moveWindow, true)
+		}
+	default:
+		return nil, fmt.Errorf("unsupported window type: '%s'", settings.WindowType)
+	}
+
+	return w, err
 }
 
 func (a *AggregateActivity) PostEval(ctx activity.Context, userData interface{}) (done bool, err error) {
