@@ -99,4 +99,8 @@
 
 [[constraint]]
   branch = "=master"
-  name = "github.com/mongodb/mongo-go-driver"
+  name = "github.com/mongodb/mongo-go-driver/mongo"
+
+[[constraint]]
+  branch = "=master"
+  name = "github.com/mongodb/mongo-go-driver/bson"
