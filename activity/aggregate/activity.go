@@ -47,7 +47,7 @@ func init() {
 var metadata *activity.Metadata
 
 func New(config *activity.Config) (activity.Activity, error) {
-	act := &AggregateActivity{}
+	act := &AggregateActivity{mutex: &sync.RWMutex{}}
 
 	//todo implement
 	//config.Settings
