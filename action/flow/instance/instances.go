@@ -206,7 +206,7 @@ func (inst *IndependentInstance) execTask(behavior model.TaskBehavior, taskInst 
 			logger.Error(err)
 
 			// todo: useful for debugging
-			logger.Infof("StackTrace: %s", debug.Stack())
+			logger.Errorf("StackTrace: %s", debug.Stack())
 
 			if !taskInst.flowInst.isHandlingError {
 
