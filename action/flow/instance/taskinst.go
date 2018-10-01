@@ -171,7 +171,6 @@ func (ti *TaskInst) GetSharedTempData() map[string]interface{} {
 	return nil
 }
 
-
 // TaskName implements activity.Context.TaskName method
 // Deprecated
 func (ti *TaskInst) TaskName() string {
@@ -198,7 +197,7 @@ func (ti *TaskInst) HasWorkingData() bool {
 
 func (ti *TaskInst) Resolve(toResolve string) (value interface{}, err error) {
 	//Support expression mapping
-	return exprmapper.GetMappingValue(toResolve, ti.flowInst, definition.GetDataResolver())
+	return exprmapper.GetExpresssionValue(toResolve, ti.flowInst, definition.GetDataResolver())
 }
 
 func (ti *TaskInst) AddWorkingData(attr *data.Attribute) {
