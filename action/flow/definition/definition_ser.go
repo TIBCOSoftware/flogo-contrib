@@ -247,7 +247,7 @@ func createActivityConfig(task *Task, rep *ActivityConfigRep) (*ActivityConfig, 
 			if attr != nil {
 				//var err error
 				//todo handle error
-				activityCfg.inputAttrs[name], _ = data.NewAttribute(name, attr.Type(), value)
+				activityCfg.inputAttrs[name], _ = data.NewAttribute(name, attr.Type(), resolveSettingValue(name, value))
 			}
 		}
 	}
