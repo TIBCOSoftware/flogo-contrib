@@ -15,12 +15,12 @@
     {
       "name": "flowInfo",
       "type": "boolean",
-      "value": "false"
+      "value": false
     },
     {
       "name": "addToFlow",
       "type": "boolean",
-      "value": "false"
+      "value": false
     }
   ],
   "output": [
