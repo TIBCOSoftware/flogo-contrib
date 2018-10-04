@@ -94,7 +94,7 @@ func (r *FlowResolver) Resolve(toResolve string, scope data.Scope) (value interf
 	}
 
 	if details.Path != "" {
-		value, err = json.ResolvePathValue(value, details.Path)
+		value, err = json.ResolvePathValue(data.GetComplexValue(value), details.Path)
 		if err != nil {
 			logger.Error(err.Error())
 			return nil, err
