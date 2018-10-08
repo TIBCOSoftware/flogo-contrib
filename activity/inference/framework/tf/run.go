@@ -21,14 +21,16 @@ func (i *TensorflowModel) Run(model *models.Model) (out map[string]interface{}, 
 		if validateOperation(v.Name, savedModel) == false {
 			return nil, fmt.Errorf("Invalid operation %s", v.Name)
 		}
-
+		fmt.Println(k, v)
 		inputOps[k] = savedModel.Graph.Operation(v.Name)
 	}
 
 	// Create output operations
 	var outputOrder []string
 	for k, o := range model.Metadata.Outputs {
+		fmt.Println(k, o.Name, savedModel.Graph.Operation(o.Name).Output(0))
 		outputOps = append(outputOps, savedModel.Graph.Operation(o.Name).Output(0))
+		// outputOps = append(outputOps, savedModel.Graph.Operation(o.Name).Output(1))
 		outputOrder = append(outputOrder, k)
 	}
 
@@ -39,10 +41,14 @@ func (i *TensorflowModel) Run(model *models.Model) (out map[string]interface{}, 
 		if err != nil {
 			return nil, err
 		}
+		fmt.Println(examplePb, inputName, inputMap)
 		inputs[inputMap.Output(0)] = examplePb
 	}
 
+	fmt.Println("BLAH", len(inputs), len(outputOps))
+	fmt.Println("hiccup", inputs, outputOps[0])
 	results, err := savedModel.Session.Run(inputs, outputOps, nil)
+	fmt.Println("blah", results)
 	if err != nil {
 		return nil, err
 	}
