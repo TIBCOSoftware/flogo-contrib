@@ -6,8 +6,8 @@
   "triggers": [
     {
       "id": "process_graph_ql_query",
-      "ref": "github.com/mellistibco/flogo-activities/triggers/graphql",
-      "name": "Process GraphQL Query",
+      "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/graphql",
+      "name": "GraphQL Query",
       "description": "Simple GraphQL Trigger",
       "settings": {
         "port": 7777,
