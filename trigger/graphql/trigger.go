@@ -35,16 +35,16 @@ type GraphQLTrigger struct {
 
 //NewFactory create a new Trigger factory
 func NewFactory(md *trigger.Metadata) trigger.Factory {
-	return &RestFactory{metadata: md}
+	return &GraphQLFactory{metadata: md}
 }
 
-// RestFactory REST Trigger factory
-type RestFactory struct {
+// GraphQLFactory REST Trigger factory
+type GraphQLFactory struct {
 	metadata *trigger.Metadata
 }
 
 //New Creates a new trigger instance for a given id
-func (t *RestFactory) New(config *trigger.Config) trigger.Trigger {
+func (t *GraphQLFactory) New(config *trigger.Config) trigger.Trigger {
 	return &GraphQLTrigger{metadata: t.metadata, config: config}
 }
 
