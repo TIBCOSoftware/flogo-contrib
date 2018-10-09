@@ -173,11 +173,11 @@ cd bin
 
 To test the application, send a `GET` request:
 
-```
-http://localhost:7777/graphql?query={user(id:"Dan"){name,id},address{street,number}}
+```bash
+curl -g 'http://localhost:7777/graphql?query={user(name:"Matt"){name,id},address{street,number}}'
 ```
 
-The following response should be returned:
+The following response will be returned:
 
 ```json
 {"data":{"address":{"number":"123","street":"Main St."},"user":{"id":"123","name":"Matt"}}}
