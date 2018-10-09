@@ -2,7 +2,6 @@ package definition
 
 import (
 	"fmt"
-	"github.com/TIBCOSoftware/flogo-lib/core/mapper/exprmapper/json"
 	"os"
 	"strings"
 
@@ -96,7 +95,7 @@ func (r *FlowResolver) Resolve(toResolve string, scope data.Scope) (value interf
 	value = data.GetComplexValue(value)
 
 	if details.Path != "" {
-		value, err = json.ResolvePathValue(value, details.Path)
+		value, err = data.PathGetValue(value, details.Path)
 		if err != nil {
 			logger.Error(err.Error())
 			return nil, err
