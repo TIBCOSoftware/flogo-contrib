@@ -267,12 +267,10 @@ func newActionHandler(rt *GraphQLTrigger) httprouter.Handle {
 		})
 
 		if len(result.Errors) > 0 {
-			log.Debugf("GraphQL Trigger Error: %#v", result.Errors)
-			http.Error(w, result.Errors[0].Error(), http.StatusBadRequest)
-			return
+			log.Errorf("GraphQL Trigger Error: %#v", result.Errors)
 		}
 
-		if result.Data != nil {
+		if result != nil {
 			w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 			w.WriteHeader(http.StatusOK)
 
