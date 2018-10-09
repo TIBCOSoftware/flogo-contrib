@@ -26,7 +26,7 @@ var log = logger.GetLogger("trigger-flogo-graphql")
 var gqlObjects map[string]*graphql.Object
 var graphQlSchema *graphql.Schema
 
-// GraphQLTrigger REST trigger struct
+// GraphQLTrigger trigger struct
 type GraphQLTrigger struct {
 	metadata *trigger.Metadata
 	server   *Server
@@ -38,7 +38,7 @@ func NewFactory(md *trigger.Metadata) trigger.Factory {
 	return &GraphQLFactory{metadata: md}
 }
 
-// GraphQLFactory REST Trigger factory
+// GraphQLFactory Trigger factory
 type GraphQLFactory struct {
 	metadata *trigger.Metadata
 }
