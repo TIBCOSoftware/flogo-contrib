@@ -10,6 +10,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/auditevent"
 )
 
 type Instance struct {
@@ -170,6 +171,7 @@ func (inst *Instance) SetStatus(status model.FlowStatus) {
 
 	inst.status = status
 	inst.master.ChangeTracker.SetStatus(inst.subFlowId, status)
+	publishFlowEvent(&FlowAuditEvent{flowName: inst.Name(), flowId:inst.ID(), parentFlowName:inst.master.Name(), parentFlowId:inst.master.ID(), status: convertFlowStatus(inst.status)})
 }
 
 // FlowDefinition returns the Flow definition associated with this context
