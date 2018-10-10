@@ -190,7 +190,9 @@ func (ti *TaskInst) Status() model.TaskStatus {
 func (ti *TaskInst) SetStatus(status model.TaskStatus) {
 	ti.status = status
 	ti.flowInst.master.ChangeTracker.trackTaskData(ti.flowInst.subFlowId, &TaskInstChange{ChgType: CtUpd, ID: ti.task.ID(), TaskInst: ti})
-	publishTaskEvent(&TaskAuditEvent{flowName:ti.flowInst.Name(), flowId:ti.flowInst.ID(), taskName:ti.task.Name(),  status: convertTaskStatus(ti.status)})
+	if len(taskEventListeners) > 0 {
+		publishTaskEvent(&TaskAuditEvent{flowName: ti.flowInst.Name(), flowId: ti.flowInst.ID(), taskName: ti.task.Name(), status: convertTaskStatus(ti.status)})
+	}
 }
 
 func (ti *TaskInst) HasWorkingData() bool {

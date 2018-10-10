@@ -16,6 +16,7 @@ const (
 	Skipped
 	Started
 	Waiting
+	Unknown
 )
 
 type FlowEventListenerFunc func(*FlowAuditEvent)
@@ -89,6 +90,7 @@ func convertFlowStatus(code model.FlowStatus) Status {
 	case model.FlowStatusFailed:
 		return Failed
 	}
+	return Unknown
 }
 
 func convertTaskStatus(code model.TaskStatus) Status {
@@ -108,8 +110,8 @@ func convertTaskStatus(code model.TaskStatus) Status {
 	case model.TaskStatusWaiting:
 		return Waiting
 	}
+	return Unknown
 }
-
 
 func RegisterFlowEventListener(fel FlowEventListenerFunc) {
 	feLock.Lock()
