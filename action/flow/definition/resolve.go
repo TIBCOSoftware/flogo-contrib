@@ -92,6 +92,8 @@ func (r *FlowResolver) Resolve(toResolve string, scope data.Scope) (value interf
 		return nil, fmt.Errorf("unsupported resolver: %s", details.ResolverName)
 	}
 
+	value = data.GetComplexValue(value)
+
 	if details.Path != "" {
 		value, err = data.PathGetValue(value, details.Path)
 		if err != nil {
