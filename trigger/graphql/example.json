@@ -92,7 +92,7 @@
             }
           },
           "settings": {
-            "type": "user"
+            "resolverFor": "user"
           }
         },
         {
@@ -119,7 +119,7 @@
             }
           },
           "settings": {
-            "type": "address"
+            "resolverFor": "address"
           }
         }
       ]
