@@ -147,7 +147,7 @@ func (te *TaskEventContext) ActivityInput() map[string]interface{} {
 // Returns output data for completed activity
 func (te *TaskEventContext) ActivityOutput() map[string]interface{} {
 	attrs := make(map[string]interface{})
-	if te.taskInstance.task.ActivityConfig().GetOutputAttrs() != nil && te.taskInstance.outScope != nil {
+	if te.Status() == Completed && te.taskInstance.task.ActivityConfig().GetOutputAttrs() != nil && te.taskInstance.outScope != nil {
 		for name := range te.taskInstance.task.ActivityConfig().GetOutputAttrs() {
 			outVal, _ := te.taskInstance.outScope.GetAttr(name)
 			attrs[name] = outVal
