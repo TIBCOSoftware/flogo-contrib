@@ -32,6 +32,8 @@ type TaskInst struct {
 	inScope  data.Scope
 	outScope data.Scope
 
+	returnError error
+
 	taskID string //needed for serialization
 }
 

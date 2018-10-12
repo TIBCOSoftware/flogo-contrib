@@ -155,6 +155,16 @@ func (ac *ActivityConfig) GetOutputAttr(attrName string) (attr *data.Attribute, 
 	return nil, false
 }
 
+// GetInputAttrs returns all input attributes
+func (ac *ActivityConfig) GetInputAttrs() map[string]*data.Attribute {
+	return ac.inputAttrs
+}
+
+// GetInputAttrs returns all output attributes
+func (ac *ActivityConfig) GetOutputAttrs() map[string]*data.Attribute {
+	return ac.outputAttrs
+}
+
 // InputMapper returns the InputMapper of the task
 func (ac *ActivityConfig) InputMapper() data.Mapper {
 	return ac.inputMapper

@@ -5,18 +5,18 @@ import (
 	"sync"
 )
 
-type Status int
+type Status string
 
 const (
-	Created   Status = iota
-	Completed
-	Cancelled
-	Failed
-	Scheduled
-	Skipped
-	Started
-	Waiting
-	Unknown
+	Created   = "Created"
+	Completed = "Completed"
+	Cancelled = "Cancelled"
+	Failed    = "Failed"
+	Scheduled = "Scheduled"
+	Skipped   = "Skipped"
+	Started   = "Started"
+	Waiting   = "Waiting"
+	Unknown   = "Created"
 )
 
 type FlowEventListenerFunc func(*FlowEventContext)
@@ -25,8 +25,7 @@ type TaskEventListenerFunc func(*TaskEventContext)
 var flowEventListeners []FlowEventListenerFunc
 var taskEventListeners []TaskEventListenerFunc
 
-var feLock = &sync.Mutex{}
-var teLock = &sync.Mutex{}
+var lock = &sync.Mutex{}
 
 // FlowEventContext provides access to flow instance execution details
 type FlowEventContext struct {
@@ -64,8 +63,9 @@ func (fe *FlowEventContext) Status() Status {
 	return convertFlowStatus(fe.flowInstance.Status())
 }
 
-// Returns flow input data
-func (fe *FlowEventContext) Input() map[string]interface{} {
+//TODO: Should we read once?
+// Returns flow runtime attributes
+func (fe *FlowEventContext) GetWorkingData() map[string]interface{} {
 	attrs := make(map[string]interface{})
 	if fe.flowInstance.attrs != nil && len(fe.flowInstance.attrs) > 0 {
 		for k, v := range fe.flowInstance.attrs {
@@ -75,10 +75,10 @@ func (fe *FlowEventContext) Input() map[string]interface{} {
 	return attrs
 }
 
-// Returns flow output data
+// Returns output data for completed flow instance
 func (fe *FlowEventContext) Output() map[string]interface{} {
 	attrs := make(map[string]interface{})
-	if fe.flowInstance.returnData != nil && len(fe.flowInstance.returnData) > 0 {
+	if fe.Status() == Completed && fe.flowInstance.returnData != nil && len(fe.flowInstance.returnData) > 0 {
 		for k, v := range fe.flowInstance.returnData {
 			attrs[k] = v.Value()
 		}
@@ -86,43 +86,79 @@ func (fe *FlowEventContext) Output() map[string]interface{} {
 	return attrs
 }
 
+// Returns error for failed flow instance
+func (fe *FlowEventContext) Error() error {
+	return fe.flowInstance.returnError
+}
+
 // TaskEventContext provides access to task instance execution details
 type TaskEventContext struct {
-	ti *TaskInst
+	taskInstance *TaskInst
 }
 
 // Returns flow name
 func (te *TaskEventContext) FlowName() string {
-	return te.ti.flowInst.Name()
+	return te.taskInstance.flowInst.Name()
 }
 
 // Returns flow ID
 func (te *TaskEventContext) FlowID() string {
-	return te.ti.flowInst.ID()
+	return te.taskInstance.flowInst.ID()
 }
 
 // Returns task name
 func (te *TaskEventContext) Name() string {
-	return te.ti.task.Name()
+	return te.taskInstance.task.Name()
+}
+
+// Returns task type
+func (te *TaskEventContext) Type() string {
+	return te.taskInstance.task.TypeID()
 }
 
 // Returns task status
 func (te *TaskEventContext) Status() Status {
-	return convertTaskStatus(te.ti.status)
+	return convertTaskStatus(te.taskInstance.status)
 }
 
-//TODO
-// Returns task input data
-func (te *TaskEventContext) Input() map[string]interface{} {
+// Returns working data of current instance. e.g. key and value of current iteration for iterator task.
+func (te *TaskEventContext) GetWorkingData() map[string]interface{} {
 	attrs := make(map[string]interface{})
+	if te.taskInstance.HasWorkingData() {
+		for name, value := range te.taskInstance.workingData {
+			attrs[name] = value.Value()
+		}
+	}
 	return attrs
 }
 
-//TODO
-// Returns task output data
-func (te *TaskEventContext) Output() map[string]interface{} {
+// Returns activity input data
+func (te *TaskEventContext) ActivityInput() map[string]interface{} {
 	attrs := make(map[string]interface{})
+	 if te.taskInstance.task.ActivityConfig().GetInputAttrs() != nil && te.taskInstance.inScope != nil {
+		 for name := range te.taskInstance.task.ActivityConfig().GetInputAttrs() {
+		 	inVal, _ := te.taskInstance.inScope.GetAttr(name)
+		 	attrs[name] = inVal
+		 }
+	 }
 	return attrs
+}
+
+// Returns output data for completed activity
+func (te *TaskEventContext) ActivityOutput() map[string]interface{} {
+	attrs := make(map[string]interface{})
+	if te.taskInstance.task.ActivityConfig().GetOutputAttrs() != nil && te.taskInstance.outScope != nil {
+		for name := range te.taskInstance.task.ActivityConfig().GetOutputAttrs() {
+			outVal, _ := te.taskInstance.outScope.GetAttr(name)
+			attrs[name] = outVal
+		}
+	}
+	return attrs
+}
+
+// Returns error for failed task
+func (te *TaskEventContext) Error() error {
+	return te.taskInstance.returnError
 }
 
 func convertFlowStatus(code model.FlowStatus) Status {
@@ -163,15 +199,15 @@ func convertTaskStatus(code model.TaskStatus) Status {
 
 // Registers listener for flow events
 func RegisterFlowEventListener(fel FlowEventListenerFunc) {
-	feLock.Lock()
-	defer feLock.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
 	flowEventListeners = append(flowEventListeners, fel)
 }
 
 // Registers listener for task events
 func RegisterTaskEventListener(tel TaskEventListenerFunc) {
-	teLock.Lock()
-	defer teLock.Unlock()
+	lock.Lock()
+	defer lock.Unlock()
 	taskEventListeners = append(taskEventListeners, tel)
 }
 
