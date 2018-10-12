@@ -1,0 +1,286 @@
+{
+  "name": "Example",
+  "type": "flogo:app",
+  "version": "0.0.1",
+  "appModel": "1.0.0",
+  "triggers": [
+    {
+      "id": "process_graph_ql_query",
+      "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/graphql",
+      "name": "GraphQL Query",
+      "description": "Simple GraphQL Trigger",
+      "settings": {
+        "port": 7777,
+        "path": "/graphql",
+        "types": [
+          {
+            "Name": "user",
+            "Fields": {
+              "id": {
+                "Type": "graphql.String"
+              },
+              "name": {
+                "Type": "graphql.String"
+              }
+            }
+          },
+          {
+            "Name": "address",
+            "Fields": {
+              "street": {
+                "Type": "graphql.String"
+              },
+              "number": {
+                "Type": "graphql.String"
+              }
+            }
+          }
+        ],
+        "schema": {
+          "Query": {
+            "Name": "Query",
+            "Fields": {
+              "user": {
+                "Type": "user",
+                "Args": {
+                  "id": {
+                    "Type": "graphql.String"
+                  },
+                  "name": {
+                    "Type": "graphql.String"
+                  }
+                }
+              },
+              "address": {
+                "Type": "address",
+                "Args": {
+                  "street": {
+                    "Type": "graphql.String"
+                  },
+                  "number": {
+                    "Type": "graphql.String"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operation": "QUERY"
+      },
+      "handlers": [
+        {
+          "action": {
+            "ref": "github.com/TIBCOSoftware/flogo-contrib/action/flow",
+            "data": {
+              "flowURI": "res://flow:query"
+            },
+            "mappings": {
+              "input": [
+                {
+                  "mapTo": "request",
+                  "type": "assign",
+                  "value": "$.args"
+                }
+              ],
+              "output": [
+                {
+                  "mapTo": "data",
+                  "type": "assign",
+                  "value": "$.resp"
+                }
+              ]
+            }
+          },
+          "settings": {
+            "resolverFor": "user"
+          }
+        },
+        {
+          "action": {
+            "ref": "github.com/TIBCOSoftware/flogo-contrib/action/flow",
+            "data": {
+              "flowURI": "res://flow:query_address"
+            },
+            "mappings": {
+              "input": [
+                {
+                  "mapTo": "request",
+                  "type": "assign",
+                  "value": "$.args"
+                }
+              ],
+              "output": [
+                {
+                  "mapTo": "data",
+                  "type": "assign",
+                  "value": "$.resp"
+                }
+              ]
+            }
+          },
+          "settings": {
+            "resolverFor": "address"
+          }
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "id": "flow:query",
+      "data": {
+        "name": "Query",
+        "metadata": {
+          "input": [
+            {
+              "name": "request",
+              "type": "object"
+            }
+          ],
+          "output": [
+            {
+              "name": "resp",
+              "type": "object"
+            },
+            {
+              "name": "status",
+              "type": "integer"
+            }
+          ]
+        },
+        "tasks": [
+          {
+            "id": "log_2",
+            "name": "Log Message",
+            "description": "Simple Log Activity",
+            "activity": {
+              "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/log",
+              "input": {
+                "flowInfo": "false",
+                "addToFlow": "false"
+              },
+              "mappings": {
+                "input": [
+                  {
+                    "type": "assign",
+                    "value": "$flow.request",
+                    "mapTo": "message"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "id": "actreturn_3",
+            "name": "Return",
+            "description": "Simple Return Activity",
+            "activity": {
+              "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/actreturn",
+              "input": {
+                "mappings": [
+                  {
+                    "mapTo": "resp",
+                    "type": "object",
+                    "value": {
+                      "name": "Matt",
+                      "id": "123"
+                    }
+                  },
+                  {
+                    "mapTo": "status",
+                    "type": "literal",
+                    "value": 200
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "links": [
+          {
+            "from": "log_2",
+            "to": "actreturn_3"
+          }
+        ]
+      }
+    },
+    {
+      "id": "flow:query_address",
+      "data": {
+        "name": "QueryAddress",
+        "metadata": {
+          "input": [
+            {
+              "name": "request",
+              "type": "object"
+            }
+          ],
+          "output": [
+            {
+              "name": "resp",
+              "type": "object"
+            },
+            {
+              "name": "status",
+              "type": "integer"
+            }
+          ]
+        },
+        "tasks": [
+          {
+            "id": "log_2",
+            "name": "Log Message",
+            "description": "Simple Log Activity",
+            "activity": {
+              "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/log",
+              "input": {
+                "flowInfo": "false",
+                "addToFlow": "false"
+              },
+              "mappings": {
+                "input": [
+                  {
+                    "type": "assign",
+                    "value": "$flow.request",
+                    "mapTo": "message"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "id": "actreturn_3",
+            "name": "Return",
+            "description": "Simple Return Activity",
+            "activity": {
+              "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/actreturn",
+              "input": {
+                "mappings": [
+                  {
+                    "mapTo": "resp",
+                    "type": "object",
+                    "value": {
+                      "street": "Main St.",
+                      "number": "123"
+                    }
+                  },
+                  {
+                    "mapTo": "status",
+                    "type": "literal",
+                    "value": 200
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "links": [
+          {
+            "from": "log_2",
+            "to": "actreturn_3"
+          }
+        ]
+      }
+    }
+  ]
+}
