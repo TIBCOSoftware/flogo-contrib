@@ -19,8 +19,8 @@ const (
 	Unknown
 )
 
-type FlowEventListenerFunc func(*FlowAuditEvent)
-type TaskEventListenerFunc func(*TaskAuditEvent)
+type FlowEventListenerFunc func(*FlowEventContext)
+type TaskEventListenerFunc func(*TaskEventContext)
 
 var flowEventListeners []FlowEventListenerFunc
 var taskEventListeners []TaskEventListenerFunc
@@ -30,50 +30,50 @@ var teLock = &sync.Mutex{}
 
 
 
-type FlowAuditEvent struct {
+type FlowEventContext struct {
 	status Status
 	flowName, flowId, parentFlowName, parentFlowId string
 }
 
-func (fe *FlowAuditEvent) GetFlowName() string {
+func (fe *FlowEventContext) GetFlowName() string {
 	return fe.flowName
 }
 
-func (fe *FlowAuditEvent) GetFlowId() string {
+func (fe *FlowEventContext) GetFlowId() string {
 	return fe.flowId
 }
 
-func (fe *FlowAuditEvent) GetParentFlowName() string {
+func (fe *FlowEventContext) GetParentFlowName() string {
 	return fe.parentFlowName
 }
 
-func (fe *FlowAuditEvent) GetParentFlowId() string {
+func (fe *FlowEventContext) GetParentFlowId() string {
 	return fe.parentFlowId
 }
 
-func (fe *FlowAuditEvent) GetStatus() Status {
+func (fe *FlowEventContext) GetStatus() Status {
 	return fe.status
 }
 
-type TaskAuditEvent struct {
+type TaskEventContext struct {
 	status Status
 	flowName, flowId, taskName string
 }
 
-func (te *TaskAuditEvent) GetFlowName() string {
+func (te *TaskEventContext) GetFlowName() string {
 	return te.flowName
 }
 
-func (te *TaskAuditEvent) GetFlowId() string {
+func (te *TaskEventContext) GetFlowId() string {
 	return te.flowId
 }
 
-func (te *TaskAuditEvent) GetTaskName() string {
+func (te *TaskEventContext) GetTaskName() string {
 	return te.taskName
 }
 
 
-func (te *TaskAuditEvent) GetStatus() Status {
+func (te *TaskEventContext) GetStatus() Status {
 	return te.status
 }
 
@@ -126,13 +126,13 @@ func RegisterTaskEventListener(tel TaskEventListenerFunc) {
 }
 
 
-func publishFlowEvent(fe *FlowAuditEvent) {
+func publishFlowEvent(fe *FlowEventContext) {
 	for _, fel := range flowEventListeners {
 		go fel(fe)
 	}
 }
 
-func publishTaskEvent(te *TaskAuditEvent) {
+func publishTaskEvent(te *TaskEventContext) {
 	for _, tel := range taskEventListeners {
 		go tel(te)
 	}
