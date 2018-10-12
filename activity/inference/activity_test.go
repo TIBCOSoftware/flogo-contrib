@@ -170,16 +170,6 @@ func TestEval(t *testing.T) {
 	// 	assert.True(t, done, fmt.Sprintf("Evaluation came back: %t", done))
 	// }
 
-	// // the below model,multilineinference_test_model_forflogo_contrib, doesn't do anything
-	// //     other than only have two inputs to make changing number of inputs easy
-	// tc.SetInput("model", "/Users/avanderg@tibco.com/working/working_python/simple_cnn/model/SimpleCNN")
-	// tc.SetInput("model", "/Users/avanderg@tibco.com/working/working_python/multilineinference_test_model_forflogo_contrib/Archive.zip")
-
-	// var features = make(map[string]interface{})
-	// features["one"] = []float64{0.23}
-	// features["two"] = []float64{2.1}
-	// features["label"] = []int{0}
-
 	//check result attr
 	fmt.Println(tc.GetOutput("result"))
 }
