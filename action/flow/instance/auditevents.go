@@ -28,53 +28,101 @@ var taskEventListeners []TaskEventListenerFunc
 var feLock = &sync.Mutex{}
 var teLock = &sync.Mutex{}
 
-
-
+// FlowEventContext provides access to flow instance execution details
 type FlowEventContext struct {
-	status Status
-	flowName, flowId, parentFlowName, parentFlowId string
+	flowInstance *Instance
 }
 
-func (fe *FlowEventContext) GetFlowName() string {
-	return fe.flowName
+// Returns flow name
+func (fe *FlowEventContext) Name() string {
+	return fe.flowInstance.Name()
 }
 
-func (fe *FlowEventContext) GetFlowId() string {
-	return fe.flowId
+// Returns flow ID
+func (fe *FlowEventContext) ID() string {
+	return fe.flowInstance.ID()
 }
 
-func (fe *FlowEventContext) GetParentFlowName() string {
-	return fe.parentFlowName
+// In case of subflow, returns parent flow name
+func (fe *FlowEventContext) ParentName() string {
+	if fe.flowInstance.master != nil {
+		return fe.flowInstance.master.Name()
+	}
+	return ""
 }
 
-func (fe *FlowEventContext) GetParentFlowId() string {
-	return fe.parentFlowId
+// In case of subflow, returns parent flow ID
+func (fe *FlowEventContext) ParentID() string {
+	if fe.flowInstance.master != nil {
+		return fe.flowInstance.master.ID()
+	}
+	return ""
 }
 
-func (fe *FlowEventContext) GetStatus() Status {
-	return fe.status
+// Returns current flow status
+func (fe *FlowEventContext) Status() Status {
+	return convertFlowStatus(fe.flowInstance.Status())
 }
 
+// Returns flow input data
+func (fe *FlowEventContext) Input() map[string]interface{} {
+	attrs := make(map[string]interface{})
+	if fe.flowInstance.attrs != nil && len(fe.flowInstance.attrs) > 0 {
+		for k, v := range fe.flowInstance.attrs {
+			attrs[k] = v.Value()
+		}
+	}
+	return attrs
+}
+
+// Returns flow output data
+func (fe *FlowEventContext) Output() map[string]interface{} {
+	attrs := make(map[string]interface{})
+	if fe.flowInstance.returnData != nil && len(fe.flowInstance.returnData) > 0 {
+		for k, v := range fe.flowInstance.returnData {
+			attrs[k] = v.Value()
+		}
+	}
+	return attrs
+}
+
+// TaskEventContext provides access to task instance execution details
 type TaskEventContext struct {
-	status Status
-	flowName, flowId, taskName string
+	ti *TaskInst
 }
 
-func (te *TaskEventContext) GetFlowName() string {
-	return te.flowName
+// Returns flow name
+func (te *TaskEventContext) FlowName() string {
+	return te.ti.flowInst.Name()
 }
 
-func (te *TaskEventContext) GetFlowId() string {
-	return te.flowId
+// Returns flow ID
+func (te *TaskEventContext) FlowID() string {
+	return te.ti.flowInst.ID()
 }
 
-func (te *TaskEventContext) GetTaskName() string {
-	return te.taskName
+// Returns task name
+func (te *TaskEventContext) Name() string {
+	return te.ti.task.Name()
 }
 
+// Returns task status
+func (te *TaskEventContext) Status() Status {
+	return convertTaskStatus(te.ti.status)
+}
 
-func (te *TaskEventContext) GetStatus() Status {
-	return te.status
+//TODO
+// Returns task input data
+func (te *TaskEventContext) Input() map[string]interface{} {
+	attrs := make(map[string]interface{})
+	return attrs
+}
+
+//TODO
+// Returns task output data
+func (te *TaskEventContext) Output() map[string]interface{} {
+	attrs := make(map[string]interface{})
+	return attrs
 }
 
 func convertFlowStatus(code model.FlowStatus) Status {
@@ -113,18 +161,19 @@ func convertTaskStatus(code model.TaskStatus) Status {
 	return Unknown
 }
 
+// Registers listener for flow events
 func RegisterFlowEventListener(fel FlowEventListenerFunc) {
 	feLock.Lock()
 	defer feLock.Unlock()
 	flowEventListeners = append(flowEventListeners, fel)
 }
 
+// Registers listener for task events
 func RegisterTaskEventListener(tel TaskEventListenerFunc) {
 	teLock.Lock()
 	defer teLock.Unlock()
 	taskEventListeners = append(taskEventListeners, tel)
 }
-
 
 func publishFlowEvent(fe *FlowEventContext) {
 	for _, fel := range flowEventListeners {
