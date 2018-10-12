@@ -2,6 +2,7 @@ package tf
 
 import (
 	"fmt"
+	"reflect"
 
 	models "github.com/TIBCOSoftware/flogo-contrib/activity/inference/model"
 	"github.com/golang/protobuf/proto"
@@ -21,34 +22,40 @@ func (i *TensorflowModel) Run(model *models.Model) (out map[string]interface{}, 
 		if validateOperation(v.Name, savedModel) == false {
 			return nil, fmt.Errorf("Invalid operation %s", v.Name)
 		}
-		fmt.Println(k, v)
 		inputOps[k] = savedModel.Graph.Operation(v.Name)
 	}
 
 	// Create output operations
 	var outputOrder []string
 	for k, o := range model.Metadata.Outputs {
-		fmt.Println(k, o.Name, savedModel.Graph.Operation(o.Name).Output(0))
 		outputOps = append(outputOps, savedModel.Graph.Operation(o.Name).Output(0))
-		// outputOps = append(outputOps, savedModel.Graph.Operation(o.Name).Output(1))
 		outputOrder = append(outputOrder, k)
 	}
 
 	// create input tensors and add to map
 	inputs := make(map[tf.Output]*tf.Tensor)
 	for inputName, inputMap := range inputOps {
-		examplePb, err := createInputExampleTensor(inputName, model)
-		if err != nil {
-			return nil, err
+		v := reflect.ValueOf(model.Inputs[inputName])
+		switch v.Kind() {
+		case reflect.Map:
+			// Need to check names against pb structure, right now just assume it
+			examplePb, err := createInputExampleTensor(model.Inputs[inputName])
+			if err != nil {
+				return nil, err
+			}
+			inputs[inputMap.Output(0)] = examplePb
+
+		case reflect.Slice:
+			data := model.Inputs[inputName]
+			inputs[inputMap.Output(0)], err = tf.NewTensor(data)
+			if err != nil {
+				return nil, err
+			}
+
 		}
-		fmt.Println(examplePb, inputName, inputMap)
-		inputs[inputMap.Output(0)] = examplePb
 	}
 
-	fmt.Println("BLAH", len(inputs), len(outputOps))
-	fmt.Println("hiccup", inputs, outputOps[0])
 	results, err := savedModel.Session.Run(inputs, outputOps, nil)
-	fmt.Println("blah", results)
 	if err != nil {
 		return nil, err
 	}
@@ -71,15 +78,36 @@ func getTensorValue(tensor *tf.Tensor) interface{} {
 	switch tensor.Value().(type) {
 	case [][]string:
 		return tensor.Value().([][]string)
+	case []string:
+		return tensor.Value().([]string)
+	case []float32:
+		return tensor.Value().([]float32)
 	case [][]float32:
 		return tensor.Value().([][]float32)
+	case []float64:
+		return tensor.Value().([]float64)
+	case [][]float64:
+		return tensor.Value().([][]float64)
+	case []int64:
+		return tensor.Value().([]int64)
+	case [][]int64:
+		return tensor.Value().([][]int64)
+	case []int32:
+		return tensor.Value().([]int32)
+	case [][]int32:
+		return tensor.Value().([][]int32)
+	case []byte:
+		return tensor.Value().([]byte)
+	case [][]byte:
+		return tensor.Value().([][]byte)
+	case []int:
+		return tensor.Value().([]int)
 	}
-
 	return nil
 }
 
-func createInputExampleTensor(inputName string, model *models.Model) (*tf.Tensor, error) {
-	pb, err := Example(model.Inputs[inputName])
+func createInputExampleTensor(featMap interface{}) (*tf.Tensor, error) {
+	pb, err := Example(featMap.(map[string]interface{}))
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create Example: %s", err)
 	}

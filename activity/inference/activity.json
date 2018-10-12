@@ -19,7 +19,7 @@
     },
     {
         "name": "features",
-        "type": "object",
+        "type": "array",
         "required": true
     },
     {
