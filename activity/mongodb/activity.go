@@ -77,6 +77,7 @@ func (a *MongoDbActivity) Eval(ctx activity.Context) (done bool, err error) {
 	*/
 	
 	client, err := mongo.Connect(context.Background(), connectionURI, nil)
+	defer client.Disconnect(context.Background())
 	if err != nil {
 		activityLog.Errorf("Connection error: %v", err)
 		return false, err
