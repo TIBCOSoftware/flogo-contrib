@@ -3,6 +3,7 @@ package instance
 import (
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
 	"sync"
+	"github.com/TIBCOSoftware/flogo-lib/app"
 )
 
 type Status string
@@ -56,6 +57,16 @@ func (fe *FlowEventContext) ParentID() string {
 		return fe.flowInstance.master.ID()
 	}
 	return ""
+}
+
+// Returns application name
+func (fe *FlowEventContext) AppName() string {
+	return app.GetName()
+}
+
+// Returns application version
+func (fe *FlowEventContext) AppVersion() string {
+	return app.GetVersion()
 }
 
 // Returns current flow status
@@ -119,6 +130,16 @@ func (te *TaskEventContext) Type() string {
 // Returns task status
 func (te *TaskEventContext) Status() Status {
 	return convertTaskStatus(te.taskInstance.status)
+}
+
+// Returns application name
+func (te *TaskEventContext) AppName() string {
+	return app.GetName()
+}
+
+// Returns application version
+func (te *TaskEventContext) AppVersion() string {
+	return app.GetVersion()
 }
 
 // Returns working data of current instance. e.g. key and value of current iteration for iterator task.
