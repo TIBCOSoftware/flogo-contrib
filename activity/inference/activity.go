@@ -82,7 +82,7 @@ func (a *InferenceActivity) Eval(context activity.Context) (done bool, err error
 		if err != nil {
 			return false, err
 		}
-
+    
 		// We should check types of features and TF expectations here
 		// We should also check shapes
 

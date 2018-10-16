@@ -182,3 +182,15 @@ func TestSlidingTimeWindowExt_AddSample(t *testing.T) {
 	assert.True(t, e)
 	assert.Equal(t, 3, v)
 }
+
+func TestZero(t *testing.T) {
+	var fa []float64
+	zero(fa)
+
+	fa2 := make([]float64,4,4)
+	fa2[0] = 5.5
+
+	zero(fa2)
+
+	zero(nil)
+}
