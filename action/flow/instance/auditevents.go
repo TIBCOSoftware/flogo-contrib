@@ -8,6 +8,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"fmt"
 	"errors"
+	"runtime/debug"
 )
 
 type Status string
@@ -24,66 +25,82 @@ const (
 	Unknown   = "Created"
 )
 
-type FlowEventListenerFunc func(*FlowEventContext)
-type TaskEventListenerFunc func(*TaskEventContext)
+type EventListenerFunc func(*EventContext) error
 
-var flowEventListeners = make(map[string]FlowEventListenerFunc)
-var taskEventListeners = make (map[string]TaskEventListenerFunc)
+var eventListeners = make(map[string]EventListenerFunc)
 
-var lock = &sync.Mutex{}
+// Buffered channel
+var eventQueue = make(chan interface{}, 100)
+var publisherRoutineStarted = false
+var shutdown = make(chan bool)
+
+var lock = &sync.RWMutex{}
 
 // Registers listener for flow events
-func RegisterFlowEventListener(name string, fel FlowEventListenerFunc) error {
+func RegisterEventListener(name string, fel EventListenerFunc) error {
 	lock.Lock()
 	defer lock.Unlock()
-	_, exists := flowEventListeners[name]
+	_, exists := eventListeners[name]
 	if exists {
-		errMsg := fmt.Sprintf("Flow event listener with name - '%s' already registered", name)
+		errMsg := fmt.Sprintf("Event listener with name - '%s' already registered", name)
 		logger.Error(errMsg)
 		return errors.New(errMsg)
 	}
-	flowEventListeners[name] = fel
+	eventListeners[name] = fel
+	startPublisherRoutine()
 	return nil
 }
 
 // Unregisters flow event listener
-func UnRegisterFlowEventListener(name string) {
+func UnRegisterEventListener(name string) {
 	lock.Lock()
 	defer lock.Unlock()
-	_, exists := flowEventListeners[name]
+	_, exists := eventListeners[name]
 	if exists {
-		delete(flowEventListeners, name)
+		delete(eventListeners, name)
+	}
+	stopPublisherRoutine()
+}
+
+func startPublisherRoutine() {
+	if publisherRoutineStarted == true {
+		return
+	}
+
+	if len(eventListeners) > 0 {
+		// start publisher routine
+		go publishEvents()
+		publisherRoutineStarted = true
 	}
 }
 
-// Registers listener for task events
-func RegisterTaskEventListener(name string, tel TaskEventListenerFunc) error {
-	lock.Lock()
-	defer lock.Unlock()
-	_, exists := taskEventListeners[name]
-	if exists {
-		errMsg := fmt.Sprintf("Task event listener with name - '%s' already registered", name)
-		logger.Error(errMsg)
-		return errors.New(errMsg)
+func stopPublisherRoutine() {
+	if publisherRoutineStarted == false {
+		return
 	}
-	taskEventListeners[name] = tel
-	return nil
-}
 
-// Unregisters task event listener
-func UnRegisterTaskEventListener(name string) {
-	lock.Lock()
-	defer lock.Unlock()
-	_, exists := taskEventListeners[name]
-	if exists {
-		delete(taskEventListeners, name)
+	if len(eventListeners) == 0 {
+		// No more listeners. Stop go routine
+		shutdown <- true
+		publisherRoutineStarted = false
 	}
 }
 
+//  EventContext is a wrapper over specific event context
+type EventContext struct {
+	// Event can be FlowEventContext or TaskEventContext
+	event interface{}
+}
+
+// Returns wrapped event
+func (ec *EventContext) GetEvent() interface{} {
+	return ec.event
+}
 
 // FlowEventContext provides access to flow instance execution details
 type FlowEventContext struct {
-	time time.Time
+	time         time.Time
+	status       Status
 	flowInstance *Instance
 }
 
@@ -130,7 +147,7 @@ func (fe *FlowEventContext) AppVersion() string {
 
 // Returns current flow status
 func (fe *FlowEventContext) Status() Status {
-	return convertFlowStatus(fe.flowInstance.Status())
+	return fe.status
 }
 
 //TODO: Should we read once?
@@ -163,7 +180,8 @@ func (fe *FlowEventContext) Error() error {
 
 // TaskEventContext provides access to task instance execution details
 type TaskEventContext struct {
-	time time.Time
+	time         time.Time
+	status       Status
 	taskInstance *TaskInst
 }
 
@@ -189,7 +207,7 @@ func (te *TaskEventContext) Type() string {
 
 // Returns task status
 func (te *TaskEventContext) Status() Status {
-	return convertTaskStatus(te.taskInstance.status)
+	return te.status
 }
 
 // Returns application name
@@ -207,7 +225,6 @@ func (te *TaskEventContext) Time() time.Time {
 	return te.time
 }
 
-
 // Returns working data of current instance. e.g. key and value of current iteration for iterator task.
 func (te *TaskEventContext) GetWorkingData() map[string]interface{} {
 	attrs := make(map[string]interface{})
@@ -222,12 +239,12 @@ func (te *TaskEventContext) GetWorkingData() map[string]interface{} {
 // Returns activity input data
 func (te *TaskEventContext) ActivityInput() map[string]interface{} {
 	attrs := make(map[string]interface{})
-	 if te.taskInstance.task.ActivityConfig().GetInputAttrs() != nil && te.taskInstance.inScope != nil {
-		 for name := range te.taskInstance.task.ActivityConfig().GetInputAttrs() {
-		 	inVal, _ := te.taskInstance.inScope.GetAttr(name)
-		 	attrs[name] = inVal
-		 }
-	 }
+	if te.taskInstance.task.ActivityConfig().GetInputAttrs() != nil && te.taskInstance.inScope != nil {
+		for name := range te.taskInstance.task.ActivityConfig().GetInputAttrs() {
+			inVal, _ := te.taskInstance.inScope.GetAttr(name)
+			attrs[name] = inVal
+		}
+	}
 	return attrs
 }
 
@@ -284,16 +301,34 @@ func convertTaskStatus(code model.TaskStatus) Status {
 	return Unknown
 }
 
-
-
-func publishFlowEvent(fe *FlowEventContext) {
-	for _, fel := range flowEventListeners {
-		go fel(fe)
+func publishEvents() {
+	for {
+		select {
+		case event := <-eventQueue:
+			lock.RLock()
+			evtContext := &EventContext{event: event}
+			publishEvent(evtContext)
+			lock.RUnlock()
+		case <-shutdown:
+			return
+		}
 	}
 }
 
-func publishTaskEvent(te *TaskEventContext) {
-	for _, tel := range taskEventListeners {
-		go tel(te)
+func publishEvent(fe *EventContext) {
+
+	for name, fel := range eventListeners {
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					logger.Errorf("Registered event handler - '%s' failed to process event due to error - '%v' ", name, r)
+					logger.Errorf("StackTrace: %s", debug.Stack())
+				}
+			}()
+			err := fel(fe)
+			if err != nil {
+				logger.Errorf("Registered event handler - '%s' failed to process event due to error - '%s' ", name, err.Error())
+			}
+		}()
 	}
 }

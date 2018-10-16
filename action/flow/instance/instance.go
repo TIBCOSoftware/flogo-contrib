@@ -172,8 +172,8 @@ func (inst *Instance) SetStatus(status model.FlowStatus) {
 	inst.status = status
 	inst.master.ChangeTracker.SetStatus(inst.subFlowId, status)
 
-	if len(flowEventListeners) > 0 {
-		publishFlowEvent(&FlowEventContext{flowInstance: inst, time : time.Now()})
+	if len(eventListeners) > 0 {
+		eventQueue <- FlowEventContext{flowInstance: inst, status: convertFlowStatus(inst.status), time : time.Now()}
 	}
 }
 

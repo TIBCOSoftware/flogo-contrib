@@ -192,8 +192,8 @@ func (ti *TaskInst) Status() model.TaskStatus {
 func (ti *TaskInst) SetStatus(status model.TaskStatus) {
 	ti.status = status
 	ti.flowInst.master.ChangeTracker.trackTaskData(ti.flowInst.subFlowId, &TaskInstChange{ChgType: CtUpd, ID: ti.task.ID(), TaskInst: ti})
-	if len(taskEventListeners) > 0 {
-		publishTaskEvent(&TaskEventContext{taskInstance: ti, time : time.Now()})
+	if len(eventListeners) > 0 {
+		eventQueue <- TaskEventContext{taskInstance: ti, status: convertTaskStatus(ti.status), time : time.Now()}
 	}
 }
 
