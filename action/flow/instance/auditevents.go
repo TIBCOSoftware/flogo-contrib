@@ -5,6 +5,9 @@ import (
 	"sync"
 	"github.com/TIBCOSoftware/flogo-lib/app"
 	"time"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"fmt"
+	"errors"
 )
 
 type Status string
@@ -24,10 +27,59 @@ const (
 type FlowEventListenerFunc func(*FlowEventContext)
 type TaskEventListenerFunc func(*TaskEventContext)
 
-var flowEventListeners []FlowEventListenerFunc
-var taskEventListeners []TaskEventListenerFunc
+var flowEventListeners = make(map[string]FlowEventListenerFunc)
+var taskEventListeners = make (map[string]TaskEventListenerFunc)
 
 var lock = &sync.Mutex{}
+
+// Registers listener for flow events
+func RegisterFlowEventListener(name string, fel FlowEventListenerFunc) error {
+	lock.Lock()
+	defer lock.Unlock()
+	_, exists := flowEventListeners[name]
+	if exists {
+		errMsg := fmt.Sprintf("Flow event listener with name - '%s' already registered", name)
+		logger.Error(errMsg)
+		return errors.New(errMsg)
+	}
+	flowEventListeners[name] = fel
+	return nil
+}
+
+// Unregisters flow event listener
+func UnRegisterFlowEventListener(name string) {
+	lock.Lock()
+	defer lock.Unlock()
+	_, exists := flowEventListeners[name]
+	if exists {
+		delete(flowEventListeners, name)
+	}
+}
+
+// Registers listener for task events
+func RegisterTaskEventListener(name string, tel TaskEventListenerFunc) error {
+	lock.Lock()
+	defer lock.Unlock()
+	_, exists := taskEventListeners[name]
+	if exists {
+		errMsg := fmt.Sprintf("Task event listener with name - '%s' already registered", name)
+		logger.Error(errMsg)
+		return errors.New(errMsg)
+	}
+	taskEventListeners[name] = tel
+	return nil
+}
+
+// Unregisters task event listener
+func UnRegisterTaskEventListener(name string) {
+	lock.Lock()
+	defer lock.Unlock()
+	_, exists := taskEventListeners[name]
+	if exists {
+		delete(taskEventListeners, name)
+	}
+}
+
 
 // FlowEventContext provides access to flow instance execution details
 type FlowEventContext struct {
@@ -232,19 +284,7 @@ func convertTaskStatus(code model.TaskStatus) Status {
 	return Unknown
 }
 
-// Registers listener for flow events
-func RegisterFlowEventListener(fel FlowEventListenerFunc) {
-	lock.Lock()
-	defer lock.Unlock()
-	flowEventListeners = append(flowEventListeners, fel)
-}
 
-// Registers listener for task events
-func RegisterTaskEventListener(tel TaskEventListenerFunc) {
-	lock.Lock()
-	defer lock.Unlock()
-	taskEventListeners = append(taskEventListeners, tel)
-}
 
 func publishFlowEvent(fe *FlowEventContext) {
 	for _, fel := range flowEventListeners {
