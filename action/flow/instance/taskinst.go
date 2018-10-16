@@ -12,6 +12,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/mapper/exprmapper"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"time"
+	"github.com/TIBCOSoftware/flogo-lib/core/events"
 )
 
 func NewTaskInst(inst *Instance, task *definition.Task) *TaskInst {
@@ -192,9 +193,9 @@ func (ti *TaskInst) Status() model.TaskStatus {
 func (ti *TaskInst) SetStatus(status model.TaskStatus) {
 	ti.status = status
 	ti.flowInst.master.ChangeTracker.trackTaskData(ti.flowInst.subFlowId, &TaskInstChange{ChgType: CtUpd, ID: ti.task.ID(), TaskInst: ti})
-	if len(eventListeners) > 0 {
-		eventQueue <- TaskEventContext{taskInstance: ti, status: convertTaskStatus(ti.status), time : time.Now()}
-	}
+
+	// publish event
+	events.PublishEvent(FLOW_EVENT_TYPE, TaskEvent{taskInstance: ti, status: convertTaskStatus(ti.status), time : time.Now()})
 }
 
 func (ti *TaskInst) HasWorkingData() bool {

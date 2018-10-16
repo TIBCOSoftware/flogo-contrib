@@ -11,6 +11,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"time"
+	"github.com/TIBCOSoftware/flogo-lib/core/events"
 )
 
 type Instance struct {
@@ -172,9 +173,7 @@ func (inst *Instance) SetStatus(status model.FlowStatus) {
 	inst.status = status
 	inst.master.ChangeTracker.SetStatus(inst.subFlowId, status)
 
-	if len(eventListeners) > 0 {
-		eventQueue <- FlowEventContext{flowInstance: inst, status: convertFlowStatus(inst.status), time : time.Now()}
-	}
+	events.PublishEvent(FLOW_EVENT_TYPE, FlowEvent{flowInstance: inst, status: convertFlowStatus(inst.status), time : time.Now()})
 }
 
 // FlowDefinition returns the Flow definition associated with this context
