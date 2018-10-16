@@ -71,10 +71,11 @@ func (a *InferenceActivity) Eval(context activity.Context) (done bool, err error
 	// if modelmap does not exist then make it
 	if tfmodelmap == nil {
 		tfmodelmap = make(map[string]*model.Model)
+		log.Info("Making map of models with keys of 'ModelKey'.")
 	}
 
 	// check if this instance of tf model already exists if not load it
-	modelKey := context.ActivityHost().Name() + ":" + context.Name()
+	modelKey := context.ActivityHost().Name() + ":" + context.Name() + context.GetInput("model").(string)
 	log.Info("ModelKey is:", modelKey)
 	if tfmodelmap[modelKey] == nil {
 		tfmodelmap[modelKey], err = model.Load(modelName, tfFramework, flags)

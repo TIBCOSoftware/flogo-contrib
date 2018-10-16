@@ -55,68 +55,27 @@ func TestEval(t *testing.T) {
 	var done bool
 	var err error
 
-	// Unit test of Estimator model
-	fmt.Println("Unit test of Estimator model")
-	tc.SetInput("model", "/Users/avanderg@tibco.com/working/working_python/box_drop_demo/Archive.zip")
+	// Unit test of Estimator Classifier model
+	fmt.Println("Unit test of Estimator Classifier model")
+	tc.SetInput("model", "Archive_estDNNClf.zip")
 	tc.SetInput("inputName", "inputs")
-	var estInputs = make(map[string]interface{})
-	estInputs["0_0"] = 0.140586
-	estInputs["1_0"] = 0.140586
-	estInputs["2_0"] = 0.140586
-	estInputs["amag_0"] = 0.140586
-	estInputs["0_1"] = 0.140586
-	estInputs["1_1"] = 0.140586
-	estInputs["2_1"] = 0.140586
-	estInputs["amag_1"] = 0.140586
-	estInputs["0_2"] = 0.140586
-	estInputs["1_2"] = 0.140586
-	estInputs["2_2"] = 0.140586
-	estInputs["amag_2"] = 0.140586
-	estInputs["0_3"] = 0.140586
-	estInputs["1_3"] = 0.140586
-	estInputs["2_3"] = 0.140586
-	estInputs["amag_3"] = 0.140586
-	estInputs["0_4"] = 0.140586
-	estInputs["1_4"] = 0.140586
-	estInputs["2_4"] = 0.140586
-	estInputs["amag_4"] = 0.140586
-	estInputs["0_5"] = 0.140586
-	estInputs["1_5"] = 0.140586
-	estInputs["2_5"] = 0.140586
-	estInputs["amag_5"] = 0.140586
-	estInputs["0_6"] = 0.140586
-	estInputs["1_6"] = 0.140586
-	estInputs["2_6"] = 0.140586
-	estInputs["amag_6"] = 0.140586
-	estInputs["0_7"] = 0.140586
-	estInputs["1_7"] = 0.140586
-	estInputs["2_7"] = 0.140586
-	estInputs["amag_7"] = 0.140586
-	estInputs["0_8"] = 0.140586
-	estInputs["1_8"] = 0.140586
-	estInputs["2_8"] = 0.140586
-	estInputs["amag_8"] = 0.140586
-	estInputs["0_9"] = 0.140586
-	estInputs["1_9"] = 0.140586
-	estInputs["2_9"] = 0.140586
-	estInputs["amag_9"] = 0.140586
-	estInputs["0_10"] = 0.140586
-	estInputs["1_10"] = 0.140586
-	estInputs["2_10"] = 0.140586
-	estInputs["amag_10"] = 0.140586
-	estInputs["word_label"] = 0
+	var estInputsA = make(map[string]interface{})
+	estInputsA["one"] = 0.140586
+	estInputsA["two"] = 0.140586
+	estInputsA["three"] = 0.140586
+	estInputsA["label"] = 0
 
-	var features []map[string]interface{}
-	features = append(features, make(map[string]interface{}))
-	features[0]["name"] = "inputs"
-	features[0]["data"] = estInputs
-	// fmt.Println(features)
+	var featuresA []map[string]interface{}
+	featuresA = append(featuresA, make(map[string]interface{}))
+	featuresA[0]["name"] = "inputs"
+	featuresA[0]["data"] = estInputsA
+	// fmt.Println(featuresA)
 
 	tc.SetInput("inputName", "inputs")
 	tc.SetInput("framework", "Tensorflow")
 	tc.SetInput("sigDefName", "serving_default")
 	tc.SetInput("tag", "serve")
-	tc.SetInput("features", features)
+	tc.SetInput("features", featuresA)
 
 	done, err = act.Eval(tc)
 	if done == false {
@@ -125,50 +84,115 @@ func TestEval(t *testing.T) {
 		assert.True(t, done, fmt.Sprintf("Evaluation came back: %t", done))
 	}
 
-	// ///???????NEED TO MAKE SURE DIFFERENT MODELS ARE LOADED////////
-	// // Unit test of Pass inputs to Outputs model
-	// fmt.Println("Unit test of Pass inputs to Outputs model")
-	// tc.SetInput("model", "/Users/avanderg@tibco.com/working/working_python/simplest_model_just_passes_inputs/model/simple_pass/")
-	// var features2 []map[string]interface{}
-	// features2 = append(features2, make(map[string]interface{}))
-	// features2[0]["name"] = "X"
-	// features2[0]["data"] = []float64{0.23, 4.5, 234.234}
-	// fmt.Println(features2)
+	// Unit test of Estimator DNN Regressor model
+	fmt.Println("Unit test of Estimator Regressor model")
+	tc.SetInput("model", "Archive_estDNNrgr.zip")
+	tc.SetInput("inputName", "inputs")
+	var estInputsB = make(map[string]interface{})
+	estInputsB["one"] = 0.140586
+	estInputsB["two"] = 0.140586
+	estInputsB["three"] = 0.140586
+	estInputsB["label"] = 0.
 
-	// tc.SetInput("inputName", "inputs")
-	// tc.SetInput("framework", "Tensorflow")
-	// tc.SetInput("sigDefName", "serving_default")
-	// tc.SetInput("tag", "serve")
-	// tc.SetInput("features", features2)
+	var featuresB []map[string]interface{}
+	featuresB = append(featuresB, make(map[string]interface{}))
+	featuresB[0]["name"] = "inputs"
+	featuresB[0]["data"] = estInputsB
+	// fmt.Println(featuresB)
 
-	// done, err = act.Eval(tc)
-	// if done == false {
-	// 	assert.Fail(t, fmt.Sprintf("Error raised: %s", err))
-	// } else {
-	// 	assert.True(t, done, fmt.Sprintf("Evaluation came back: %t", done))
-	// }
+	tc.SetInput("inputName", "inputs")
+	tc.SetInput("framework", "Tensorflow")
+	tc.SetInput("sigDefName", "serving_default")
+	tc.SetInput("tag", "serve")
+	tc.SetInput("features", featuresB)
 
-	// // Unit test of Pass inputs to Outputs model
-	// fmt.Println("Unit test of Pass inputs to Outputs model")
-	// tc.SetInput("model", "/Users/avanderg@tibco.com/sample_tf_models/simpleCNN/")
-	// var features3 []map[string]interface{}
-	// features3 = append(features3, make(map[string]interface{}))
-	// features3[0]["name"] = "X"
-	// features3[0]["data"] = [][][][]float32{{{{0.0000000856947568}}, {{0.00000331318370}}, {{0.0000858655563}}, {{0.00149167657}}, {{0.0173705094}}, {{0.135591557}}, {{0.709471493}}, {{2.48839579}}, {{5.85040827}}, {{9.22008867}}}}
-	// fmt.Println(features3)
+	done, err = act.Eval(tc)
+	if done == false {
+		assert.Fail(t, fmt.Sprintf("Error raised: %s", err))
+	} else {
+		assert.True(t, done, fmt.Sprintf("Evaluation came back: %t", done))
+	}
 
-	// tc.SetInput("inputName", "inputs")
-	// tc.SetInput("framework", "Tensorflow")
-	// tc.SetInput("sigDefName", "serving_default")
-	// tc.SetInput("tag", "serve")
-	// tc.SetInput("features", features3)
+	// Unit test of Estimator Linear Regressor model
+	fmt.Println("Unit test of Linear Regressor Estimator model")
+	tc.SetInput("model", "Archive_LinReg.zip")
+	tc.SetInput("inputName", "inputs")
+	var estInputsC = make(map[string]interface{})
+	estInputsC["one"] = 0.140586
+	estInputsC["two"] = 0.140586
+	estInputsC["three"] = 0.140586
+	estInputsC["label"] = 0.
 
-	// done, err = act.Eval(tc)
-	// if done == false {
-	// 	assert.Fail(t, fmt.Sprintf("Error raised: %s", err))
-	// } else {
-	// 	assert.True(t, done, fmt.Sprintf("Evaluation came back: %t", done))
-	// }
+	var featuresC []map[string]interface{}
+	featuresC = append(featuresC, make(map[string]interface{}))
+	featuresC[0]["name"] = "inputs"
+	featuresC[0]["data"] = estInputsC
+	// fmt.Println(featuresC)
+
+	tc.SetInput("inputName", "inputs")
+	tc.SetInput("framework", "Tensorflow")
+	tc.SetInput("sigDefName", "serving_default")
+	tc.SetInput("tag", "serve")
+	tc.SetInput("features", featuresC)
+
+	done, err = act.Eval(tc)
+	if done == false {
+		assert.Fail(t, fmt.Sprintf("Error raised: %s", err))
+	} else {
+		assert.True(t, done, fmt.Sprintf("Evaluation came back: %t", done))
+	}
+
+	// Unit test of Pairwaise Multiplication model
+	fmt.Println("Unit test of Pairwaise Multiplication model")
+	tc.SetInput("model", "Archive_pairwise_multi.zip")
+	var features2 []map[string]interface{}
+	features2 = append(features2, make(map[string]interface{}))
+	features2[0]["name"] = "X1"
+	features2[0]["data"] = [][]float32{{0.23, 4.5, -3.1}, {7.1, 3.14159, -0.00123}}
+	features2 = append(features2, make(map[string]interface{}))
+	features2[1]["name"] = "X2"
+	features2[1]["data"] = [][]float32{{4.34782608, 0.2222222222, -0.3225806451612903},
+		{0.14084507042253522, 0.31831015504887655, -813.0081300813008}}
+	fmt.Println(features2)
+
+	tc.SetInput("inputName", "inputs")
+	tc.SetInput("framework", "Tensorflow")
+	tc.SetInput("sigDefName", "serving_default")
+	tc.SetInput("tag", "serve")
+	tc.SetInput("features", features2)
+
+	done, err = act.Eval(tc)
+	if done == false {
+		assert.Fail(t, fmt.Sprintf("Error raised: %s", err))
+	} else {
+		assert.True(t, done, fmt.Sprintf("Evaluation came back: %t", done))
+	}
+
+	// Unit test ofSimple CNN model
+	fmt.Println("Unit test of simple CNN model")
+	tc.SetInput("model", "Archive_simpleCNN.zip")
+	var features3 []map[string]interface{}
+	features3 = append(features3, make(map[string]interface{}))
+	features3[0]["name"] = "X"
+	features3[0]["data"] = [][][][]float32{
+		{{{0.0000000856947568}}, {{0.00000331318370}}, {{0.0000858655563}}, {{0.00149167657}}, {{0.0173705094}}, {{0.135591557}}, {{0.709471493}}, {{2.48839579}}, {{5.85040827}}, {{9.22008867}}},
+		{{{9.22008867}}, {{5.85040827}}, {{2.48839579}}, {{00.709471493}}, {{0.135591557}}, {{0.00149167657}}, {{0.0000858655563}}, {{0.00000331318370}}, {{0.0000000856947568}}, {{0.}}},
+		{{{0.0173705094}}, {{0.135591557}}, {{0.709471493}}, {{2.48839579}}, {{5.85040827}}, {{9.22008867}}, {{5.85040827}}, {{2.48839579}}, {{0.709471493}}, {{0.135591557}}},
+	}
+	fmt.Println(features3)
+
+	tc.SetInput("inputName", "inputs")
+	tc.SetInput("framework", "Tensorflow")
+	tc.SetInput("sigDefName", "serving_default")
+	tc.SetInput("tag", "serve")
+	tc.SetInput("features", features3)
+
+	done, err = act.Eval(tc)
+	if done == false {
+		assert.Fail(t, fmt.Sprintf("Error raised: %s", err))
+	} else {
+		assert.True(t, done, fmt.Sprintf("Evaluation came back: %t", done))
+	}
 
 	//check result attr
 	fmt.Println(tc.GetOutput("result"))
