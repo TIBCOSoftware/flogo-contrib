@@ -93,6 +93,31 @@ func parseProtoBuf(file string, model *models.Metadata) error {
 
 			featureIndx++
 		}
+
+		op := node.Op
+		if strings.Contains(op, "Placeholder") {
+			var featureTyp string
+			var featureShape []int64
+			nName := node.GetName()
+
+			for attr, val := range node.GetAttr() {
+				if attr == "dtype" {
+					featureTyp = val.GetType().String()
+				} else if attr == "_output_shapes" {
+					for i := 0; i < len(val.GetList().GetShape()[0].Dim); i++ {
+						featureShape = append(featureShape, val.GetList().GetShape()[0].Dim[i].GetSize())
+					}
+
+				}
+			}
+
+			feat := models.Feature{
+				Shape: featureShape,
+				Type:  featureTyp,
+			}
+
+			model.Inputs.Features[nName] = feat
+		}
 	}
 
 	model.Inputs.Params = inputs

@@ -51,8 +51,7 @@ func (a *InferenceActivity) Metadata() *activity.Metadata {
 // Eval implements api.Activity.Eval - Runs an ML model
 func (a *InferenceActivity) Eval(context activity.Context) (done bool, err error) {
 	modelName := context.GetInput(ivModel).(string)
-	inputName := context.GetInput(ivInputName).(string)
-	features := context.GetInput(ivFeatures)
+	features := context.GetInput(ivFeatures).([]map[string]interface{})
 	fw := context.GetInput(ivFramework).(string)
 
 	tfFramework := framework.Get(fw)
@@ -69,36 +68,37 @@ func (a *InferenceActivity) Eval(context activity.Context) (done bool, err error
 		SigDef: context.GetInput("sigDefName").(string),
 	}
 
-	// if modelmap does exist make it
+	// if modelmap does not exist then make it
 	if tfmodelmap == nil {
 		tfmodelmap = make(map[string]*model.Model)
+		log.Info("Making map of models with keys of 'ModelKey'.")
 	}
 
 	// check if this instance of tf model already exists if not load it
-	modelKey := context.ActivityHost().Name() + ":" + context.Name()
+	modelKey := context.ActivityHost().Name() + ":" + context.Name() + context.GetInput("model").(string)
 	log.Info("ModelKey is:", modelKey)
 	if tfmodelmap[modelKey] == nil {
 		tfmodelmap[modelKey], err = model.Load(modelName, tfFramework, flags)
 		if err != nil {
 			return false, err
 		}
+    
+		// We should check types of features and TF expectations here
+		// We should also check shapes
+
 	} else {
 		log.Debug("Model already loaded - skipping loading")
 	}
 
-	// Grab the input feature set and parse out the feature labels and values
-	inputSample := make(map[string]map[string]interface{})
-	inputSample[inputName] = make(map[string]interface{})
-
 	log.Debug("Incoming features: ")
 	log.Debug(features)
 
-	featureMap, ok := features.(map[string]interface{})
-	if !ok {
-		return false, fmt.Errorf("Cannot parse features, should be map[string]interface{}")
+	// Grab the input feature set and parse out the feature labels and values
+	inputSample := make(map[string]interface{})
+	for _, feat := range features {
+		inputSample[feat["name"].(string)] = feat["data"]
 	}
 
-	inputSample[inputName] = featureMap
 	log.Debug("Parsing of features completed")
 
 	modelRunMutex.Lock()

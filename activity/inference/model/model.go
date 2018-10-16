@@ -21,7 +21,7 @@ type Framework interface {
 type Model struct {
 	Metadata *Metadata
 	Instance interface{}
-	Inputs   map[string]map[string]interface{}
+	Inputs   map[string]interface{}
 }
 
 // ModelFlags Contains flags to add to metadata and to aid in loading
@@ -72,15 +72,16 @@ func Load(modelArchive string, framework Framework, flags ModelFlags) (*Model, e
 	return &model, nil
 }
 
-func (m *Model) AppendInput(inputName string, feature string, in interface{}) {
-	if m.Inputs == nil {
-		m.Inputs = make(map[string]map[string]interface{})
-	}
+// This is un-used (un-needed?) and now m.Inputs is of the form of map[string]interface() with both maps and arrays so this doesn't work so well
+// func (m *Model) AppendInput(inputName string, feature string, in interface{}) {
+// 	if m.Inputs == nil {
+// 		m.Inputs = make(map[string]map[string]interface{})
+// 	}
+//
+// 	m.Inputs[inputName][feature] = in
+// }
 
-	m.Inputs[inputName][feature] = in
-}
-
-func (m *Model) SetInputs(in map[string]map[string]interface{}) {
+func (m *Model) SetInputs(in map[string]interface{}) {
 	m.Inputs = in
 }
 
@@ -92,7 +93,10 @@ func (m *Model) Run(framework Framework) (map[string]interface{}, error) {
 	// check if inputs are available. maybe validate inputs against metadata?
 
 	// run the model
-	out, _ := framework.Run(m)
+	out, err := framework.Run(m)
+	if err != nil {
+		return nil, err
+	}
 
 	return out, nil
 }

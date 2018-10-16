@@ -2,6 +2,8 @@ package tf
 
 import (
 	"fmt"
+	"reflect"
+	"strings"
 
 	models "github.com/TIBCOSoftware/flogo-contrib/activity/inference/model"
 	"github.com/golang/protobuf/proto"
@@ -21,7 +23,6 @@ func (i *TensorflowModel) Run(model *models.Model) (out map[string]interface{}, 
 		if validateOperation(v.Name, savedModel) == false {
 			return nil, fmt.Errorf("Invalid operation %s", v.Name)
 		}
-
 		inputOps[k] = savedModel.Graph.Operation(v.Name)
 	}
 
@@ -35,11 +36,30 @@ func (i *TensorflowModel) Run(model *models.Model) (out map[string]interface{}, 
 	// create input tensors and add to map
 	inputs := make(map[tf.Output]*tf.Tensor)
 	for inputName, inputMap := range inputOps {
-		examplePb, err := createInputExampleTensor(inputName, model)
-		if err != nil {
-			return nil, err
+		v := reflect.ValueOf(model.Inputs[inputName])
+		switch v.Kind() {
+		case reflect.Map:
+			// Need to check names against pb structure, right now just assume it
+			examplePb, err := createInputExampleTensor(model.Inputs[inputName])
+			if err != nil {
+				return nil, err
+			}
+			inputs[inputMap.Output(0)] = examplePb
+
+		case reflect.Slice, reflect.Array:
+			shape := model.Metadata.Inputs.Features[inputName].Shape
+			typ := model.Metadata.Inputs.Features[inputName].Type
+			data, err := checkDataTypes(model.Inputs[inputName], shape, typ, inputName)
+			if err != nil {
+				return nil, err
+			}
+
+			inputs[inputMap.Output(0)], err = tf.NewTensor(data)
+			if err != nil {
+				return nil, err
+			}
+
 		}
-		inputs[inputMap.Output(0)] = examplePb
 	}
 
 	results, err := savedModel.Session.Run(inputs, outputOps, nil)
@@ -61,19 +81,71 @@ func (i *TensorflowModel) Run(model *models.Model) (out map[string]interface{}, 
 
 }
 
+func checkDataTypes(data interface{}, shape []int64, typ string, inputName string) (outdata interface{}, err error) {
+	t := fmt.Sprintf("%T", data)
+	outdata = data
+	switch typ {
+	case "DT_FLOAT":
+		// if strings.Contains(t, "float64") {
+		// 	outdata, err = float64TensorTofloat32Tensor(data, nil)  //location of coerce functions to be deteremined
+		// 	if err != nil {
+		// 		return nil, fmt.Errorf("Data conversion for %s had error: %s", inputName, err)
+		// 	}
+		// 	fmt.Println("Coerceing FLoat to Double")
+		// } else
+		if !strings.Contains(t, "float32") {
+			return nil, fmt.Errorf("Data for %s not of the right type. should be tensor of %s (TF type) but is array of %s (go type)", inputName, typ, t)
+		}
+	case "DT_DOUBLE":
+		if !strings.Contains(t, "float64") {
+			return nil, fmt.Errorf("Data for %s not of the right type. should be tensor of %s (TF type) but is array of %s (go type)", inputName, typ, t)
+		}
+	case "DT_INT32":
+		if !strings.Contains(t, "int32") {
+			return nil, fmt.Errorf("Data for %s not of the right type. should be tensor of %s (TF type) but is array of %s (go type)", inputName, typ, t)
+		}
+	case "DT_INT64":
+		if !strings.Contains(t, "int64") {
+			return nil, fmt.Errorf("Data for %s not of the right type. should be tensor of %s (TF type) but is array of %s (go type)", inputName, typ, t)
+		}
+	}
+	return outdata, nil
+}
+
 func getTensorValue(tensor *tf.Tensor) interface{} {
 	switch tensor.Value().(type) {
 	case [][]string:
 		return tensor.Value().([][]string)
+	case []string:
+		return tensor.Value().([]string)
+	case []float32:
+		return tensor.Value().([]float32)
 	case [][]float32:
 		return tensor.Value().([][]float32)
+	case []float64:
+		return tensor.Value().([]float64)
+	case [][]float64:
+		return tensor.Value().([][]float64)
+	case []int64:
+		return tensor.Value().([]int64)
+	case [][]int64:
+		return tensor.Value().([][]int64)
+	case []int32:
+		return tensor.Value().([]int32)
+	case [][]int32:
+		return tensor.Value().([][]int32)
+	case []byte:
+		return tensor.Value().([]byte)
+	case [][]byte:
+		return tensor.Value().([][]byte)
+	case []int:
+		return tensor.Value().([]int)
 	}
-
 	return nil
 }
 
-func createInputExampleTensor(inputName string, model *models.Model) (*tf.Tensor, error) {
-	pb, err := Example(model.Inputs[inputName])
+func createInputExampleTensor(featMap interface{}) (*tf.Tensor, error) {
+	pb, err := Example(featMap.(map[string]interface{}))
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create Example: %s", err)
 	}
