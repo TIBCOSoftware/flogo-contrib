@@ -4,6 +4,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
 	"sync"
 	"github.com/TIBCOSoftware/flogo-lib/app"
+	"time"
 )
 
 type Status string
@@ -30,6 +31,7 @@ var lock = &sync.Mutex{}
 
 // FlowEventContext provides access to flow instance execution details
 type FlowEventContext struct {
+	time time.Time
 	flowInstance *Instance
 }
 
@@ -57,6 +59,11 @@ func (fe *FlowEventContext) ParentID() string {
 		return fe.flowInstance.master.ID()
 	}
 	return ""
+}
+
+// Returns event time
+func (fe *FlowEventContext) Time() time.Time {
+	return fe.time
 }
 
 // Returns application name
@@ -104,6 +111,7 @@ func (fe *FlowEventContext) Error() error {
 
 // TaskEventContext provides access to task instance execution details
 type TaskEventContext struct {
+	time time.Time
 	taskInstance *TaskInst
 }
 
@@ -141,6 +149,12 @@ func (te *TaskEventContext) AppName() string {
 func (te *TaskEventContext) AppVersion() string {
 	return app.GetVersion()
 }
+
+// Returns event time
+func (te *TaskEventContext) Time() time.Time {
+	return te.time
+}
+
 
 // Returns working data of current instance. e.g. key and value of current iteration for iterator task.
 func (te *TaskEventContext) GetWorkingData() map[string]interface{} {

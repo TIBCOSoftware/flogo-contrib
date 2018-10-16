@@ -10,6 +10,7 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"time"
 )
 
 type Instance struct {
@@ -172,7 +173,7 @@ func (inst *Instance) SetStatus(status model.FlowStatus) {
 	inst.master.ChangeTracker.SetStatus(inst.subFlowId, status)
 
 	if len(flowEventListeners) > 0 {
-		publishFlowEvent(&FlowEventContext{inst})
+		publishFlowEvent(&FlowEventContext{flowInstance: inst, time : time.Now()})
 	}
 }
 
