@@ -624,42 +624,69 @@ func postTaskEvent(taskInstance *TaskInst) {
 		}
 
 		te.taskIn = make(map[string]interface{})
-		if te.status == event.STARTED {
-			// Add working data
-			wData := taskInstance.workingData
-			if wData != nil && len(wData) > 0 {
-				for name, attVal := range wData {
-					te.taskIn[name] = attVal.Value()
-				}
-			}
+		te.taskOut = make(map[string]interface{})
 
-			// Add activity input
-			actInput := taskInstance.Task().ActivityConfig().GetInputAttrs()
-			if actInput != nil && taskInstance.InputScope() != nil && len(actInput) > 0 {
-				for name, attVal := range actInput {
-					scopedValue, ok := taskInstance.InputScope().GetAttr(name)
-					if !ok {
-						te.taskIn[name] = attVal.Name()
-					} else {
-						te.taskIn[name] = scopedValue
-					}
-				}
+		// Add working data
+		wData := taskInstance.workingData
+		if wData != nil && len(wData) > 0 {
+			for name, attVal := range wData {
+				te.taskIn[name] = attVal.Value()
 			}
 		}
 
-		te.taskOut = make(map[string]interface{})
-		if te.status == event.COMPLETED {
-			// Add activity out
-			actOut := taskInstance.Task().ActivityConfig().GetOutputAttrs()
-			if actOut != nil && taskInstance.OutputScope() != nil && len(actOut) > 0 {
-				for name, attVal := range actOut {
-					scopedValue, ok := taskInstance.OutputScope().GetAttr(name)
-					if !ok {
-						// Use default value
-						te.taskIn[name] = attVal.Name()
-					} else {
-						// Use scoped value
-						te.taskIn[name] = scopedValue
+		// Add activity input
+		if taskInstance.HasActivity() {
+			actConfig := taskInstance.Task().ActivityConfig()
+			if actConfig != nil && actConfig.Activity != nil && actConfig.Activity.Metadata() != nil {
+				metadata := actConfig.Activity.Metadata()
+				if metadata.Input != nil && len(metadata.Input) > 0 && taskInstance.InputScope() != nil {
+					for name, attVal := range actConfig.Activity.Metadata().Input {
+						scopedValue, ok := taskInstance.InputScope().GetAttr(name)
+						if !ok {
+							te.taskIn[name] = attVal.Name()
+						} else {
+							te.taskIn[name] = scopedValue
+						}
+					}
+				}
+
+				if te.status == event.COMPLETED && metadata.Output != nil && len(metadata.Output) > 0 && taskInstance.OutputScope() != nil {
+					for name, attVal := range actConfig.Activity.Metadata().Output {
+						scopedValue, ok := taskInstance.OutputScope().GetAttr(name)
+						if !ok {
+							te.taskOut[name] = attVal.Name()
+						} else {
+							te.taskOut[name] = scopedValue
+						}
+					}
+				}
+
+				if metadata.DynamicIO {
+					// Get dynamic input/outputs
+					dynamic, _ := actConfig.Activity.(activity.DynamicIO)
+					dynamicIO, _ := dynamic.IOMetadata(taskInstance)
+					if dynamicIO != nil {
+						if dynamicIO.Input != nil {
+							for name, attVal := range dynamicIO.Input {
+								scopedValue, ok := taskInstance.InputScope().GetAttr(name)
+								if !ok {
+									te.taskIn[name] = attVal.Name()
+								} else {
+									te.taskIn[name] = scopedValue
+								}
+							}
+						}
+
+						if te.status == event.COMPLETED && dynamicIO.Output != nil {
+							for name, attVal := range dynamicIO.Input {
+								scopedValue, ok := taskInstance.OutputScope().GetAttr(name)
+								if !ok {
+									te.taskOut[name] = attVal.Name()
+								} else {
+									te.taskOut[name] = scopedValue
+								}
+							}
+						}
 					}
 				}
 			}
