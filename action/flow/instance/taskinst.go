@@ -643,9 +643,9 @@ func postTaskEvent(taskInstance *TaskInst) {
 					for name, attVal := range actConfig.Activity.Metadata().Input {
 						scopedValue, ok := taskInstance.InputScope().GetAttr(name)
 						if !ok {
-							te.taskIn[name] = attVal.Name()
+							te.taskIn[name] = attVal.Value()
 						} else {
-							te.taskIn[name] = scopedValue
+							te.taskIn[name] = scopedValue.Value()
 						}
 					}
 				}
@@ -654,9 +654,9 @@ func postTaskEvent(taskInstance *TaskInst) {
 					for name, attVal := range actConfig.Activity.Metadata().Output {
 						scopedValue, ok := taskInstance.OutputScope().GetAttr(name)
 						if !ok {
-							te.taskOut[name] = attVal.Name()
+							te.taskOut[name] = attVal.Value()
 						} else {
-							te.taskOut[name] = scopedValue
+							te.taskOut[name] = scopedValue.Value()
 						}
 					}
 				}
@@ -670,9 +670,9 @@ func postTaskEvent(taskInstance *TaskInst) {
 							for name, attVal := range dynamicIO.Input {
 								scopedValue, ok := taskInstance.InputScope().GetAttr(name)
 								if !ok {
-									te.taskIn[name] = attVal.Name()
+									te.taskIn[name] = attVal.Value()
 								} else {
-									te.taskIn[name] = scopedValue
+									te.taskIn[name] = scopedValue.Value()
 								}
 							}
 						}
@@ -681,9 +681,9 @@ func postTaskEvent(taskInstance *TaskInst) {
 							for name, attVal := range dynamicIO.Input {
 								scopedValue, ok := taskInstance.OutputScope().GetAttr(name)
 								if !ok {
-									te.taskOut[name] = attVal.Name()
+									te.taskOut[name] = attVal.Value()
 								} else {
-									te.taskOut[name] = scopedValue
+									te.taskOut[name] = scopedValue.Value()
 								}
 							}
 						}
