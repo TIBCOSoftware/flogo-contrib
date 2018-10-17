@@ -11,8 +11,10 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/core/mapper/exprmapper"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/event"
+	corevent "github.com/TIBCOSoftware/flogo-lib/core/event"
+	"github.com/TIBCOSoftware/flogo-lib/app"
 	"time"
-	"github.com/TIBCOSoftware/flogo-lib/core/events"
 )
 
 func NewTaskInst(inst *Instance, task *definition.Task) *TaskInst {
@@ -195,7 +197,7 @@ func (ti *TaskInst) SetStatus(status model.TaskStatus) {
 	ti.flowInst.master.ChangeTracker.trackTaskData(ti.flowInst.subFlowId, &TaskInstChange{ChgType: CtUpd, ID: ti.task.ID(), TaskInst: ti})
 
 	// publish event
-	events.PublishEvent(FLOW_EVENT_TYPE, TaskEvent{taskInstance: ti, status: convertTaskStatus(ti.status), time : time.Now()})
+	postTaskEvent(ti)
 }
 
 func (ti *TaskInst) HasWorkingData() bool {
@@ -523,3 +525,146 @@ func (taskInst *TaskInst) appendErrorData(err error) {
 //	return ti.flowInst
 //}
 //
+
+type taskEvent struct {
+	time                           time.Time
+	err                            error
+	taskIn, taskOut                map[string]interface{}
+	status                         event.Status
+	name, typeId, flowName, flowId string
+}
+
+// Returns flow name
+func (te *taskEvent) FlowName() string {
+	return te.flowName
+}
+
+// Returns flow ID
+func (te *taskEvent) FlowID() string {
+	return te.flowId
+}
+
+// Returns task name
+func (te *taskEvent) Name() string {
+	return te.name
+}
+
+// Returns task type
+func (te *taskEvent) Type() string {
+	return te.typeId
+}
+
+// Returns task status
+func (te *taskEvent) Status() event.Status {
+	return te.status
+}
+
+// Returns application name
+func (te *taskEvent) AppName() string {
+	return app.GetName()
+}
+
+// Returns application version
+func (te *taskEvent) AppVersion() string {
+	return app.GetVersion()
+}
+
+// Returns event time
+func (te *taskEvent) Time() time.Time {
+	return te.time
+}
+
+// Returns activity input data
+func (te *taskEvent) TaskInput() map[string]interface{} {
+	return te.taskIn
+}
+
+// Returns output data for completed activity
+func (te *taskEvent) TaskOutput() map[string]interface{} {
+	return te.taskOut
+}
+
+// Returns error for failed task
+func (te *taskEvent) Error() error {
+	return te.err
+}
+
+func convertTaskStatus(code model.TaskStatus) event.Status {
+	switch code {
+	case model.TaskStatusNotStarted:
+		return event.CREATED
+	case model.TaskStatusEntered:
+		return event.SCHEDULED
+	case model.TaskStatusSkipped:
+		return event.SKIPPED
+	case model.TaskStatusReady:
+		return event.STARTED
+	case model.TaskStatusFailed:
+		return event.FAILED
+	case model.TaskStatusDone:
+		return event.COMPLETED
+	case model.TaskStatusWaiting:
+		return event.WAITING
+	}
+	return event.UNKNOWN
+}
+
+func postTaskEvent(taskInstance *TaskInst) {
+	if corevent.HasListener(event.TASK_EVENT_TYPE) {
+		te := &taskEvent{}
+		te.time = time.Now()
+		te.name = taskInstance.Task().Name()
+		te.status = convertTaskStatus(taskInstance.Status())
+		te.flowName = taskInstance.flowInst.Name()
+		te.flowId = taskInstance.flowInst.ID()
+		te.typeId = taskInstance.Task().TypeID()
+
+		if te.status == event.FAILED {
+			te.err = taskInstance.returnError
+		}
+
+		te.taskIn = make(map[string]interface{})
+		if te.status == event.STARTED {
+			// Add working data
+			wData := taskInstance.workingData
+			if wData != nil && len(wData) > 0 {
+				for name, attVal := range wData {
+					te.taskIn[name] = attVal.Value()
+				}
+			}
+
+			// Add activity input
+			actInput := taskInstance.Task().ActivityConfig().GetInputAttrs()
+			if actInput != nil && taskInstance.InputScope() != nil && len(actInput) > 0 {
+				for name, attVal := range actInput {
+					scopedValue, ok := taskInstance.InputScope().GetAttr(name)
+					if !ok {
+						te.taskIn[name] = attVal.Name()
+					} else {
+						te.taskIn[name] = scopedValue
+					}
+				}
+			}
+		}
+
+		te.taskOut = make(map[string]interface{})
+		if te.status == event.COMPLETED {
+			// Add activity out
+			actOut := taskInstance.Task().ActivityConfig().GetOutputAttrs()
+			if actOut != nil && taskInstance.OutputScope() != nil && len(actOut) > 0 {
+				for name, attVal := range actOut {
+					scopedValue, ok := taskInstance.OutputScope().GetAttr(name)
+					if !ok {
+						// Use default value
+						te.taskIn[name] = attVal.Name()
+					} else {
+						// Use scoped value
+						te.taskIn[name] = scopedValue
+					}
+				}
+			}
+		}
+		corevent.PostEvent(event.TASK_EVENT_TYPE, te)
+	}
+
+}

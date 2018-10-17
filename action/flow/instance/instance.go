@@ -3,15 +3,16 @@ package instance
 import (
 	"fmt"
 	"strconv"
-
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/event"
 	"time"
-	"github.com/TIBCOSoftware/flogo-lib/core/events"
+	"github.com/TIBCOSoftware/flogo-lib/app"
+	coreevent "github.com/TIBCOSoftware/flogo-lib/core/event"
 )
 
 type Instance struct {
@@ -130,11 +131,15 @@ func (inst *Instance) WorkingData() data.Scope {
 	return inst
 }
 
+func (inst *Instance) GetParent() *IndependentInstance {
+	return inst.master
+}
+
 func (inst *Instance) GetResolver() data.Resolver {
 	return definition.GetDataResolver()
 }
 
-func (inst *Instance) GetError() ( error) {
+func (inst *Instance) GetError() (error) {
 	return inst.returnError
 }
 
@@ -172,8 +177,7 @@ func (inst *Instance) SetStatus(status model.FlowStatus) {
 
 	inst.status = status
 	inst.master.ChangeTracker.SetStatus(inst.subFlowId, status)
-
-	events.PublishEvent(FLOW_EVENT_TYPE, FlowEvent{flowInstance: inst, status: convertFlowStatus(inst.status), time : time.Now()})
+	postFlowEvent(inst)
 }
 
 // FlowDefinition returns the Flow definition associated with this context
@@ -298,4 +302,107 @@ func (rh *SimpleReplyHandler) Reply(code int, replyData interface{}, err error) 
 	}
 
 	rh.resultHandler.HandleResult(resultData, err)
+}
+
+// FlowEvent provides access to flow instance execution details
+type flowEvent struct {
+	time                           time.Time
+	err                            error
+	output                         map[string]interface{}
+	status                         event.Status
+	name, id, parentName, parentId string
+}
+
+func (fe *flowEvent) Name() string {
+	return fe.name
+}
+
+// Returns flow ID
+func (fe *flowEvent) ID() string {
+	return fe.id
+}
+
+// In case of subflow, returns parent flow name
+func (fe *flowEvent) ParentName() string {
+	return fe.parentName
+}
+
+// In case of subflow, returns parent flow ID
+func (fe *flowEvent) ParentID() string {
+	return fe.parentId
+}
+
+// Returns event time
+func (fe *flowEvent) Time() time.Time {
+	return fe.time
+}
+
+// Returns application name
+func (fe *flowEvent) AppName() string {
+	return app.GetName()
+}
+
+// Returns application version
+func (fe *flowEvent) AppVersion() string {
+	return app.GetVersion()
+}
+
+// Returns current flow status
+func (fe *flowEvent) Status() event.Status {
+	return fe.status
+}
+
+// Returns output data for completed flow instance
+func (fe *flowEvent) Output() map[string]interface{} {
+	return fe.output
+}
+
+// Returns error for failed flow instance
+func (fe *flowEvent) Error() error {
+	return fe.err
+}
+
+func postFlowEvent(inst *Instance) {
+	if coreevent.HasListener(event.FLOW_EVENT_TYPE) {
+		fe := &flowEvent{}
+		fe.time = time.Now()
+		fe.name = inst.Name()
+		fe.id = inst.ID()
+		if inst.master != nil {
+			fe.parentName = inst.master.Name()
+			fe.parentId = inst.master.ID()
+		}
+		fe.status = convertFlowStatus(inst.Status())
+
+		if fe.status == event.FAILED {
+			fe.err = fe.Error()
+		}
+
+		if fe.status == event.COMPLETED {
+			returnData, _ := inst.GetReturnData()
+			if len(returnData) > 0 {
+				fe.output = make(map[string]interface{}, len(returnData))
+				for name, attVal := range returnData {
+					fe.output[name] = attVal.Value()
+				}
+			}
+		}
+		coreevent.PostEvent(event.FLOW_EVENT_TYPE, fe)
+	}
+}
+
+func convertFlowStatus(code model.FlowStatus) event.Status {
+	switch code {
+	case model.FlowStatusNotStarted:
+		return event.CREATED
+	case model.FlowStatusActive:
+		return event.STARTED
+	case model.FlowStatusCancelled:
+		return event.CANCELLED
+	case model.FlowStatusCompleted:
+		return event.COMPLETED
+	case model.FlowStatusFailed:
+		return event.FAILED
+	}
+	return event.UNKNOWN
 }
