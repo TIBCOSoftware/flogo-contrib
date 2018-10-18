@@ -35,6 +35,8 @@ type FlowEvent interface {
 	Time() time.Time
 	// Returns current flow status
 	FlowStatus() Status
+	// Returns input data for flow instance
+	FlowInput() map[string]interface{}
 	// Returns output data for completed flow instance
 	FlowOutput() map[string]interface{}
 	// Returns error for failed flow instance

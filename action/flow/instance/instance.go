@@ -303,7 +303,7 @@ func (rh *SimpleReplyHandler) Reply(code int, replyData interface{}, err error) 
 type flowEvent struct {
 	time                           time.Time
 	err                            error
-	output                         map[string]interface{}
+	input, output                  map[string]interface{}
 	status                         event.Status
 	name, id, parentName, parentId string
 }
@@ -342,6 +342,11 @@ func (fe *flowEvent) FlowOutput() map[string]interface{} {
 	return fe.output
 }
 
+// Returns input data for flow instance
+func (fe *flowEvent) FlowInput() map[string]interface{} {
+	return fe.input
+}
+
 // Returns error for failed flow instance
 func (fe *flowEvent) FlowError() error {
 	return fe.err
@@ -359,18 +364,28 @@ func postFlowEvent(inst *Instance) {
 		}
 		fe.status = convertFlowStatus(inst.Status())
 
-		if fe.status == event.FAILED {
-			fe.err = inst.returnError
-		}
+		fe.input = make(map[string]interface{})
+		fe.output = make(map[string]interface{})
 
-		if fe.status == event.COMPLETED {
-			returnData, _ := inst.GetReturnData()
-			if len(returnData) > 0 {
-				fe.output = make(map[string]interface{}, len(returnData))
-				for name, attVal := range returnData {
-					fe.output[name] = attVal.Value()
+		if fe.status != event.CREATED {
+			attrs := inst.attrs
+			outData, _ := inst.GetReturnData()
+			if attrs != nil && len(attrs) > 0 {
+				for name, attVal := range attrs {
+					if outData != nil && outData[name] != nil {
+						if fe.status == event.COMPLETED {
+							fe.output[name] = attVal.Value()
+						}
+						// Since same attribute map is used for input and output, filter output attributes
+						continue
+					}
+					fe.input[name] = attVal.Value()
 				}
 			}
+		}
+
+		if fe.status == event.FAILED {
+			fe.err = inst.returnError
 		}
 		coreevent.PostEvent(event.FLOW_EVENT_TYPE, fe)
 	}
