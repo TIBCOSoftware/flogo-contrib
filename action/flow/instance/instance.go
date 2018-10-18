@@ -332,7 +332,7 @@ func (fe *flowEvent) ParentFlowID() string {
 }
 
 // Returns event time
-func (fe *flowEvent) EventTime() time.Time {
+func (fe *flowEvent) Time() time.Time {
 	return fe.time
 }
 

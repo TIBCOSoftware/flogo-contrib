@@ -32,7 +32,7 @@ type FlowEvent interface {
 	// In case of subflow, returns parent flow ID
 	ParentFlowID() string
 	// Returns event time
-	EventTime() time.Time
+	Time() time.Time
 	// Returns current flow status
 	FlowStatus() Status
 	// Returns output data for completed flow instance
@@ -54,7 +54,7 @@ type TaskEvent interface {
 	// Returns task status
 	TaskStatus() Status
 	// Returns event time
-	EventTime() time.Time
+	Time() time.Time
 	// Returns task input data
 	TaskInput() map[string]interface{}
 	// Returns task output data for completed task

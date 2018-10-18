@@ -559,7 +559,7 @@ func (te *taskEvent) TaskStatus() event.Status {
 }
 
 // Returns event time
-func (te *taskEvent) EventTime() time.Time {
+func (te *taskEvent) Time() time.Time {
 	return te.time
 }
 
