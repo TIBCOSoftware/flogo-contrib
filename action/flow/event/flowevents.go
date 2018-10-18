@@ -21,56 +21,44 @@ const (
 const FLOW_EVENT_TYPE = "flowevent"
 const TASK_EVENT_TYPE = "taskevent"
 
-
 // FlowEvent provides access to flow instance execution details
 type FlowEvent interface {
 	// Returns flow name
-	Name() string
+	FlowName() string
 	// Returns flow ID
-	ID() string
+	FlowID() string
 	// In case of subflow, returns parent flow name
-	ParentName() string
+	ParentFlowName() string
 	// In case of subflow, returns parent flow ID
-	ParentID() string
+	ParentFlowID() string
 	// Returns event time
-	Time() time.Time
-	// Returns application name
-	AppName() string
-	// Returns application version
-	AppVersion() string
+	EventTime() time.Time
 	// Returns current flow status
-	Status() Status
+	FlowStatus() Status
 	// Returns output data for completed flow instance
-	Output() map[string]interface{}
+	FlowOutput() map[string]interface{}
 	// Returns error for failed flow instance
-	Error() error
+	FlowError() error
 }
-
 
 // TaskEvent provides access to task instance execution details
 type TaskEvent interface {
-
 	// Returns flow name
 	FlowName() string
 	// Returns flow ID
 	FlowID() string
 	// Returns task name
-	Name() string
+	TaskName() string
 	// Returns task type
-	Type() string
+	TaskType() string
 	// Returns task status
-	Status() Status
-	// Returns application name
-	AppName() string
-	// Returns application version
-	AppVersion() string
+	TaskStatus() Status
 	// Returns event time
-	Time() time.Time
+	EventTime() time.Time
 	// Returns task input data
 	TaskInput() map[string]interface{}
 	// Returns task output data for completed task
 	TaskOutput() map[string]interface{}
 	// Returns error for failed task
-	Error() error
+	TaskError() error
 }
-

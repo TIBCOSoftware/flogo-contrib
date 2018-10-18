@@ -13,7 +13,6 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/event"
 	corevent "github.com/TIBCOSoftware/flogo-lib/core/event"
-	"github.com/TIBCOSoftware/flogo-lib/app"
 	"time"
 )
 
@@ -545,32 +544,22 @@ func (te *taskEvent) FlowID() string {
 }
 
 // Returns task name
-func (te *taskEvent) Name() string {
+func (te *taskEvent) TaskName() string {
 	return te.name
 }
 
 // Returns task type
-func (te *taskEvent) Type() string {
+func (te *taskEvent) TaskType() string {
 	return te.typeId
 }
 
 // Returns task status
-func (te *taskEvent) Status() event.Status {
+func (te *taskEvent) TaskStatus() event.Status {
 	return te.status
 }
 
-// Returns application name
-func (te *taskEvent) AppName() string {
-	return app.GetName()
-}
-
-// Returns application version
-func (te *taskEvent) AppVersion() string {
-	return app.GetVersion()
-}
-
 // Returns event time
-func (te *taskEvent) Time() time.Time {
+func (te *taskEvent) EventTime() time.Time {
 	return te.time
 }
 
@@ -585,7 +574,7 @@ func (te *taskEvent) TaskOutput() map[string]interface{} {
 }
 
 // Returns error for failed task
-func (te *taskEvent) Error() error {
+func (te *taskEvent) TaskError() error {
 	return te.err
 }
 
@@ -634,7 +623,8 @@ func postTaskEvent(taskInstance *TaskInst) {
 			}
 		}
 
-		// Add activity input
+		// Add activity input/output
+		// TODO optimize this computation for given instance
 		if taskInstance.HasActivity() {
 			actConfig := taskInstance.Task().ActivityConfig()
 			if actConfig != nil && actConfig.Activity != nil && actConfig.Activity.Metadata() != nil {

@@ -11,7 +11,6 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/event"
 	"time"
-	"github.com/TIBCOSoftware/flogo-lib/app"
 	coreevent "github.com/TIBCOSoftware/flogo-lib/core/event"
 )
 
@@ -313,52 +312,42 @@ type flowEvent struct {
 	name, id, parentName, parentId string
 }
 
-func (fe *flowEvent) Name() string {
+func (fe *flowEvent) FlowName() string {
 	return fe.name
 }
 
 // Returns flow ID
-func (fe *flowEvent) ID() string {
+func (fe *flowEvent) FlowID() string {
 	return fe.id
 }
 
 // In case of subflow, returns parent flow name
-func (fe *flowEvent) ParentName() string {
+func (fe *flowEvent) ParentFlowName() string {
 	return fe.parentName
 }
 
 // In case of subflow, returns parent flow ID
-func (fe *flowEvent) ParentID() string {
+func (fe *flowEvent) ParentFlowID() string {
 	return fe.parentId
 }
 
 // Returns event time
-func (fe *flowEvent) Time() time.Time {
+func (fe *flowEvent) EventTime() time.Time {
 	return fe.time
 }
 
-// Returns application name
-func (fe *flowEvent) AppName() string {
-	return app.GetName()
-}
-
-// Returns application version
-func (fe *flowEvent) AppVersion() string {
-	return app.GetVersion()
-}
-
 // Returns current flow status
-func (fe *flowEvent) Status() event.Status {
+func (fe *flowEvent) FlowStatus() event.Status {
 	return fe.status
 }
 
 // Returns output data for completed flow instance
-func (fe *flowEvent) Output() map[string]interface{} {
+func (fe *flowEvent) FlowOutput() map[string]interface{} {
 	return fe.output
 }
 
 // Returns error for failed flow instance
-func (fe *flowEvent) Error() error {
+func (fe *flowEvent) FlowError() error {
 	return fe.err
 }
 
@@ -375,7 +364,7 @@ func postFlowEvent(inst *Instance) {
 		fe.status = convertFlowStatus(inst.Status())
 
 		if fe.status == event.FAILED {
-			fe.err = fe.Error()
+			fe.err = inst.returnError
 		}
 
 		if fe.status == event.COMPLETED {
