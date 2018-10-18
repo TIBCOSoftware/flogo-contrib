@@ -130,10 +130,6 @@ func (inst *Instance) WorkingData() data.Scope {
 	return inst
 }
 
-func (inst *Instance) GetParent() *IndependentInstance {
-	return inst.master
-}
-
 func (inst *Instance) GetResolver() data.Resolver {
 	return definition.GetDataResolver()
 }
