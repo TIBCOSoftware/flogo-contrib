@@ -72,6 +72,8 @@ func (a *GPIOActivity) Eval(context activity.Context) (done bool, err error) {
 	log.Debugf("Method '%s' and pin number '%d'", methodInput, ivPinNumber)
 	//Open pin
 	openErr := rpio.Open()
+	defer rpio.Close()
+
 	if openErr != nil {
 		log.Errorf("Open RPIO error: %+v", openErr.Error())
 		return true, errors.New("Open RPIO error: " + openErr.Error())
