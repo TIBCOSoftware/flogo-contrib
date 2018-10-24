@@ -55,7 +55,7 @@ func TestDNNEstimator(t *testing.T) {
 
 	// Unit test of Estimator DNN Regressor model
 	fmt.Println("Unit test of Estimator Regressor model")
-	tc.SetInput("model", "Archive_estDNNrgr.zip")
+	tc.SetInput("model", "testModels/Archive_estDNNrgr.zip")
 	tc.SetInput("inputName", "inputs")
 	var estInputsB = make(map[string]interface{})
 	estInputsB["one"] = 0.140586
@@ -100,7 +100,7 @@ func TestEstimatorLinearRegressor(t *testing.T) {
 
 	// Unit test of Estimator Linear Regressor model
 	fmt.Println("Unit test of Linear Regressor Estimator model")
-	tc.SetInput("model", "Archive_LinReg.zip")
+	tc.SetInput("model", "testModels/Archive_LinReg.zip")
 	tc.SetInput("inputName", "inputs")
 	var estInputsC = make(map[string]interface{})
 	estInputsC["one"] = 0.140586
@@ -146,7 +146,7 @@ func TestPairwaiseMul(t *testing.T) {
 
 	// Unit test of Pairwaise Multiplication model
 	fmt.Println("Unit test of Pairwaise Multiplication model")
-	tc.SetInput("model", "Archive_pairwise_multi.zip")
+	tc.SetInput("model", "testModels/Archive_pairwise_multi.zip")
 
 	var features2 []interface{}
 	ins := map[string]interface{}{
@@ -192,7 +192,7 @@ func TestCNNMOdel(t *testing.T) {
 
 	// Unit test ofSimple CNN model
 	fmt.Println("Unit test of simple CNN model")
-	tc.SetInput("model", "Archive_simpleCNN.zip")
+	tc.SetInput("model", "testModels/Archive_simpleCNN.zip")
 
 	var features3 []interface{}
 	ins := map[string]interface{}{
@@ -238,7 +238,7 @@ func TestEstimatorClassifier(t *testing.T) {
 
 	// Unit test of Estimator Classifier model
 	fmt.Println("Unit test of Estimator Classifier model")
-	tc.SetInput("model", "Archive_estDNNClf.zip")
+	tc.SetInput("model", "testModels/Archive_estDNNClf.zip")
 	tc.SetInput("inputName", "inputs")
 	var estInputsA = make(map[string]interface{})
 	estInputsA["one"] = 0.140586
