@@ -64,11 +64,10 @@ func TestDNNEstimator(t *testing.T) {
 	estInputsB["label"] = 0.
 
 	var featuresB []interface{}
-	ins := map[string]interface{}{
+	featuresB = append(featuresB, map[string]interface{}{
 		"name": "inputs",
 		"data": estInputsB,
-	}
-	featuresB = append(featuresB, ins)
+	})
 
 	tc.SetInput("inputName", "inputs")
 	tc.SetInput("framework", "Tensorflow")
@@ -109,11 +108,10 @@ func TestEstimatorLinearRegressor(t *testing.T) {
 	estInputsC["label"] = 0.
 
 	var featuresC []interface{}
-	ins := map[string]interface{}{
+	featuresC = append(featuresC, map[string]interface{}{
 		"name": "inputs",
 		"data": estInputsC,
-	}
-	featuresC = append(featuresC, ins)
+	})
 
 	tc.SetInput("inputName", "inputs")
 	tc.SetInput("framework", "Tensorflow")
@@ -149,11 +147,10 @@ func TestPairwaiseMul(t *testing.T) {
 	tc.SetInput("model", "testModels/Archive_pairwise_multi.zip")
 
 	var features2 []interface{}
-	ins := map[string]interface{}{
+	features2 = append(features2, map[string]interface{}{
 		"name": "X1",
 		"data": [][]float32{{0.23, 4.5, -3.1}, {7.1, 3.14159, -0.00123}},
-	}
-	features2 = append(features2, ins)
+	})
 	features2 = append(features2, map[string]interface{}{
 		"name": "X2",
 		"data": [][]float32{{4.34782608, 0.2222222222, -0.3225806451612903},
@@ -195,15 +192,14 @@ func TestCNNMOdel(t *testing.T) {
 	tc.SetInput("model", "testModels/Archive_simpleCNN.zip")
 
 	var features3 []interface{}
-	ins := map[string]interface{}{
+	features3 = append(features3, map[string]interface{}{
 		"name": "X",
 		"data": [][][][]float32{
 			{{{0.0000000856947568}}, {{0.00000331318370}}, {{0.0000858655563}}, {{0.00149167657}}, {{0.0173705094}}, {{0.135591557}}, {{0.709471493}}, {{2.48839579}}, {{5.85040827}}, {{9.22008867}}},
 			{{{9.22008867}}, {{5.85040827}}, {{2.48839579}}, {{00.709471493}}, {{0.135591557}}, {{0.00149167657}}, {{0.0000858655563}}, {{0.00000331318370}}, {{0.0000000856947568}}, {{0.}}},
 			{{{0.0173705094}}, {{0.135591557}}, {{0.709471493}}, {{2.48839579}}, {{5.85040827}}, {{9.22008867}}, {{5.85040827}}, {{2.48839579}}, {{0.709471493}}, {{0.135591557}}},
 		},
-	}
-	features3 = append(features3, ins)
+	})
 
 	tc.SetInput("inputName", "inputs")
 	tc.SetInput("framework", "Tensorflow")
@@ -247,11 +243,10 @@ func TestEstimatorClassifier(t *testing.T) {
 	estInputsA["label"] = 0
 
 	var featuresA []interface{}
-	ins := map[string]interface{}{
+	featuresA = append(featuresA, map[string]interface{}{
 		"name": "inputs",
 		"data": estInputsA,
-	}
-	featuresA = append(featuresA, ins)
+	})
 
 	tc.SetInput("inputName", "inputs")
 	tc.SetInput("framework", "Tensorflow")
