@@ -51,7 +51,7 @@ func (a *InferenceActivity) Metadata() *activity.Metadata {
 // Eval implements api.Activity.Eval - Runs an ML model
 func (a *InferenceActivity) Eval(context activity.Context) (done bool, err error) {
 	modelName := context.GetInput(ivModel).(string)
-	features := context.GetInput(ivFeatures).([]map[string]interface{})
+	features := context.GetInput(ivFeatures).([]interface{})
 	fw := context.GetInput(ivFramework).(string)
 
 	tfFramework := framework.Get(fw)
@@ -82,7 +82,7 @@ func (a *InferenceActivity) Eval(context activity.Context) (done bool, err error
 		if err != nil {
 			return false, err
 		}
-    
+
 		// We should check types of features and TF expectations here
 		// We should also check shapes
 
@@ -96,7 +96,8 @@ func (a *InferenceActivity) Eval(context activity.Context) (done bool, err error
 	// Grab the input feature set and parse out the feature labels and values
 	inputSample := make(map[string]interface{})
 	for _, feat := range features {
-		inputSample[feat["name"].(string)] = feat["data"]
+		featMap := feat.(map[string]interface{})
+		inputSample[featMap["name"].(string)] = featMap["data"]
 	}
 
 	log.Debug("Parsing of features completed")
