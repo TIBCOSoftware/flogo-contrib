@@ -72,7 +72,7 @@ Inputs and Outputs:
 ## Example
 
 ### Estimators
-The following example demonstrates how to invoke the inference activity, while passing in the input feature set for the tensor named `inputs`. Tensor names may vary, it is best to refer to the SavedModel metadata to identify the correct tensor name.
+The following example demonstrates how to invoke the inference activity and pass the input feature set for the tensor named `inputs`. Tensor names may vary, it is best to refer to the SavedModel metadata to identify the correct tensor name.
 
 ```json
 {
