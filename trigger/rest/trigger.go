@@ -219,10 +219,19 @@ func newActionHandler(rt *RestTrigger, handler *trigger.Handler) httprouter.Hand
 				replyCode = 200
 			}
 			w.WriteHeader(replyCode)
-			if err := json.NewEncoder(w).Encode(replyData); err != nil {
-				log.Error(err)
+			switch t := replyData.(type) {
+			case string:
+				_, err := w.Write([]byte(t))
+				if err != nil {
+					log.Error(err)
+				}
+				return
+			default:
+				if err := json.NewEncoder(w).Encode(replyData); err != nil {
+					log.Error(err)
+				}
+				return
 			}
-			return
 		}
 
 		if replyCode > 0 {
