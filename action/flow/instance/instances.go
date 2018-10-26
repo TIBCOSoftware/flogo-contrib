@@ -342,7 +342,7 @@ func (inst *IndependentInstance) handleTaskError(taskBehavior model.TaskBehavior
 	if !handled {
 		if containerInst.isHandlingError {
 			//fail
-			inst.SetStatus(model.FlowStatusFailed)
+			inst.SetStatusWithError(model.FlowStatusFailed, err)
 		} else {
 			taskInst.appendErrorData(err)
 			inst.HandleGlobalError(containerInst, err)
@@ -362,7 +362,7 @@ func (inst *IndependentInstance) HandleGlobalError(containerInst *Instance, err 
 
 	if containerInst.isHandlingError {
 		//todo: log error information
-		containerInst.SetStatus(model.FlowStatusFailed)
+		containerInst.SetStatusWithError(model.FlowStatusFailed, err)
 		return
 	}
 
@@ -382,7 +382,7 @@ func (inst *IndependentInstance) HandleGlobalError(containerInst *Instance, err 
 		inst.enterTasks(containerInst, taskEntries)
 	} else {
 
-		containerInst.SetStatus(model.FlowStatusFailed)
+		containerInst.SetStatusWithError(model.FlowStatusFailed, err)
 
 		if containerInst != inst.Instance {
 
