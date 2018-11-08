@@ -8,7 +8,12 @@ import (
 	models "github.com/TIBCOSoftware/flogo-contrib/activity/inference/model"
 	"github.com/golang/protobuf/proto"
 	tf "github.com/tensorflow/tensorflow/tensorflow/go"
+
+	"github.com/TIBCOSoftware/flogo-lib/logger"
 )
+
+// log is the default package logger
+var log = logger.GetLogger("activity-tibco-inference")
 
 // Run is used to execute a Tensorflow model with the model input data
 func (i *TensorflowModel) Run(model *models.Model) (out map[string]interface{}, err error) {
@@ -59,6 +64,27 @@ func (i *TensorflowModel) Run(model *models.Model) (out map[string]interface{}, 
 				return nil, err
 			}
 
+		case reflect.Ptr:
+			if val, ok := model.Inputs[inputName].(*tf.Tensor); ok {
+				inputs[inputMap.Output(0)] = val
+			} else {
+				if val2, ok2 := model.Inputs[inputName].(*[]byte); ok2 {
+					inputs[inputMap.Output(0)], err = tf.NewTensor(val2)
+					if err != nil {
+						return nil, err
+					}
+				} else {
+					return nil, fmt.Errorf("Interface not casting to Tensor or byte object. Is your pointer a tensor?")
+				}
+
+			}
+
+		default:
+			log.Info("Type not a Slice, Array, Map, or Pointer/Tensor, but still trying to make a tf.Tensor.")
+			inputs[inputMap.Output(0)], err = tf.NewTensor(model.Inputs[inputName])
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
