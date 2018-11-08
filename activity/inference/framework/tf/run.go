@@ -68,7 +68,15 @@ func (i *TensorflowModel) Run(model *models.Model) (out map[string]interface{}, 
 			if val, ok := model.Inputs[inputName].(*tf.Tensor); ok {
 				inputs[inputMap.Output(0)] = val
 			} else {
-				return nil, fmt.Errorf("Interface not casting to Tensor object. Is your pointer a tensor?")
+				if val2, ok2 := model.Inputs[inputName].(*[]byte); ok2 {
+					inputs[inputMap.Output(0)], err = tf.NewTensor(val2)
+					if err != nil {
+						return nil, err
+					}
+				} else {
+					return nil, fmt.Errorf("Interface not casting to Tensor or byte object. Is your pointer a tensor?")
+				}
+
 			}
 
 		default:
