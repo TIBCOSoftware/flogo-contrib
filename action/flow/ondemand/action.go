@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/instance"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
@@ -17,7 +18,6 @@ import (
 	"github.com/TIBCOSoftware/flogo-lib/core/mapper"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
 	"github.com/TIBCOSoftware/flogo-lib/util"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow"
 )
 
 const (
@@ -218,9 +218,29 @@ func (fa *FlowAction) Run(ctx context.Context, inputs map[string]*data.Attribute
 		if inst.Status() == model.FlowStatusCompleted {
 			returnData, err := inst.GetReturnData()
 
-			//apply output mapper
+			if len(flowPackage.OutputMappings) > 0 && len(returnData) > 0 {
+				var outputData []*data.Attribute
 
-			handler.HandleResult(returnData, err)
+				for _, value := range returnData {
+					outputData = append(outputData, value)
+				}
+
+				mapperDef, err := mapper.NewMapperDefFromAnyArray(flowPackage.OutputMappings)
+				if err != nil {
+					handler.HandleResult(nil, err)
+				}
+
+				tempOutMd := make(map[string]*data.Attribute)
+				for _, mapping := range mapperDef.Mappings {
+					tempOutMd[mapping.MapTo] = data.NewZeroAttribute(mapping.MapTo, data.TypeAny)
+				}
+
+				flowOutputs, err := ApplyMappings(flowPackage.OutputMappings, outputData, tempOutMd)
+				handler.HandleResult(flowOutputs, err)
+			} else {
+				handler.HandleResult(returnData, err)
+			}
+
 		} else if inst.Status() == model.FlowStatusFailed {
 			handler.HandleResult(nil, inst.GetError())
 		}
