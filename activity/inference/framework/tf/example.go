@@ -29,6 +29,13 @@ func Example(features map[string]interface{}) (*tensorflow.Example, error) {
 		case float64:
 			// For now just convert float64 to float32
 			result[k] = toFloat(float32(t))
+		case []float64:
+			// For now just convert float64 to float32
+			f := make([]float32, len(t))
+			for i, f64 := range t {
+				f[i] = float32(f64)
+			}
+			result[k] = toFloatList(f)
 		case int64:
 			result[k] = toInt64(t)
 		case []int64:

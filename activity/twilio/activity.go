@@ -47,6 +47,7 @@ func (a *TwilioActivity) Eval(context activity.Context) (done bool, err error) {
 
 	if err != nil {
 		log.Error("Error sending SMS:", err)
+		return false, err
 	}
 
 	log.Debug("Response:", resp)

@@ -33,7 +33,7 @@ func (em *linkerManager) EvalLinkExpr(link *definition.Link, scope data.Scope) (
 	}
 
 	log.Debugf("WI link expression value [%s]", value)
-	funcValue, err := exprmapper.GetMappingValue(value, scope, definition.GetDataResolver())
+	funcValue, err := exprmapper.GetExpresssionValue(value, scope, definition.GetDataResolver())
 	if err != nil {
 		log.Error("Get value from link value %+v, error %s", value, err.Error())
 		return false, fmt.Errorf("Get value from link value %+v, error %s", value, err.Error())

@@ -214,15 +214,36 @@ func newActionHandler(rt *RestTrigger, handler *trigger.Handler) httprouter.Hand
 		}
 
 		if replyData != nil {
-			w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 			if replyCode == 0 {
 				replyCode = 200
 			}
-			w.WriteHeader(replyCode)
-			if err := json.NewEncoder(w).Encode(replyData); err != nil {
-				log.Error(err)
+			switch t := replyData.(type) {
+			case string:
+				var v interface{}
+				err := json.Unmarshal([]byte(t), &v)
+				if err != nil {
+					//Not a json
+					w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
+				} else {
+					//Json
+					w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+				}
+
+				w.WriteHeader(replyCode)
+				_, err = w.Write([]byte(t))
+				if err != nil {
+					log.Error(err)
+				}
+				return
+			default:
+				w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+				w.WriteHeader(replyCode)
+
+				if err := json.NewEncoder(w).Encode(replyData); err != nil {
+					log.Error(err)
+				}
+				return
 			}
-			return
 		}
 
 		if replyCode > 0 {

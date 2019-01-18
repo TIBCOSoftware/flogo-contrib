@@ -2,6 +2,7 @@ package gpio
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
@@ -72,6 +73,8 @@ func (a *GPIOActivity) Eval(context activity.Context) (done bool, err error) {
 	log.Debugf("Method '%s' and pin number '%d'", methodInput, ivPinNumber)
 	//Open pin
 	openErr := rpio.Open()
+	defer rpio.Close()
+
 	if openErr != nil {
 		log.Errorf("Open RPIO error: %+v", openErr.Error())
 		return true, errors.New("Open RPIO error: " + openErr.Error())
@@ -128,8 +131,8 @@ func (a *GPIOActivity) Eval(context activity.Context) (done bool, err error) {
 			pin.PullOff()
 		}
 	default:
-		log.Errorf("Cannot found method %s ", ivmethod)
-		return true, errors.New("Cannot found method %s " + ivmethod)
+		log.Errorf("Cannot find method %s ", ivmethod)
+		return true, errors.New(fmt.Sprintf("Cannot find method %s", ivmethod))
 	}
 
 	context.SetOutput(result, 0)

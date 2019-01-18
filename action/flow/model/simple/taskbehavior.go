@@ -112,7 +112,9 @@ func (tb *TaskBehavior) Done(ctx model.TaskContext) (notifyFlow bool, taskEntrie
 	linkInsts := ctx.GetToLinkInstances()
 	numLinks := len(linkInsts)
 
-	ctx.SetStatus(model.TaskStatusDone)
+	if ctx.Status() != model.TaskStatusDone {
+		ctx.SetStatus(model.TaskStatusDone)
+	}
 
 	log.Debugf("Task '%s' is done", ctx.Task().ID())
 

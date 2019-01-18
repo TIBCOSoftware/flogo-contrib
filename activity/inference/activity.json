@@ -13,13 +13,8 @@
         "required": true
     },
     {
-        "name": "inputName",
-        "type": "string",
-        "required": true
-    },
-    {
         "name": "features",
-        "type": "object",
+        "type": "array",
         "required": true
     },
     {
