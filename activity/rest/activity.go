@@ -171,13 +171,13 @@ func (a *RESTActivity) Eval(context activity.Context) (done bool, err error) {
 
 	var result interface{}
 	
-	if strings.Contains(resp.Header.Get(“Content-Type”), “application/json”) {
-        	d := json.NewDecoder(bytes.NewReader(respBody))
-        	d.UseNumber()
-        	err = d.Decode(&result)
-    	} else {
-        	result = string(respBody)
-    	}
+	if strings.Contains(resp.Header.Get("Content-Type"), "application/json") {
+		d := json.NewDecoder(bytes.NewReader(respBody))
+		d.UseNumber()
+		err = d.Decode(&result)
+	} else {
+		result = string(respBody)
+	}
 
 	//json.Unmarshal(respBody, &result)
 
