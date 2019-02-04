@@ -170,10 +170,14 @@ func (a *RESTActivity) Eval(context activity.Context) (done bool, err error) {
 	respBody, _ := ioutil.ReadAll(resp.Body)
 
 	var result interface{}
-
-	d := json.NewDecoder(bytes.NewReader(respBody))
-	d.UseNumber()
-	err = d.Decode(&result)
+	
+	if strings.Contains(resp.Header.Get("Content-Type"), "application/json") {
+		d := json.NewDecoder(bytes.NewReader(respBody))
+		d.UseNumber()
+		err = d.Decode(&result)
+	} else {
+		result = string(respBody)
+	}
 
 	//json.Unmarshal(respBody, &result)
 
