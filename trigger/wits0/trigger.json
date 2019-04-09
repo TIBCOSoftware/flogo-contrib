@@ -2,7 +2,7 @@
   "name": "wits0",
   "version": "1.0.0",
   "type": "flogo:trigger",
-  "ref": "github.com/swarwick/Flogo/trigger/wits0",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/wits0",
   "description": "Read WITS0 data from a serial port and trigger output as either raw string data or parsed into JSON",
   "author": "swarwick@tibco.com",
   "settings":[

@@ -237,6 +237,8 @@ func TestParseRaw(t *testing.T) {
 	outputBuffer := serialPort.parseBuffer(data)
 	log.Debug(outputBuffer)
 }
+
+/*
 func TestConnect(t *testing.T) {
 	trg, config := createTrigger(t, testConfig)
 	initializeTrigger(t, trg, config)
@@ -248,7 +250,7 @@ func TestConnectRaw(t *testing.T) {
 	initializeTrigger(t, trg, config)
 	runTrigger(5, trg)
 }
-
+*/
 func TestBadSerialPort(t *testing.T) {
 	trg, config := createTrigger(t, testConfigBaseSerialPort)
 	initializeTrigger(t, trg, config)
