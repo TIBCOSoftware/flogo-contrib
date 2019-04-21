@@ -160,11 +160,10 @@ func (a *RESTActivity) Eval(context activity.Context) (done bool, err error) {
 
 	client = &http.Client{Transport: httpTransportSettings}
 	resp, err := client.Do(req)
-	defer resp.Body.Close()
-
 	if err != nil {
 		return false, err
 	}
+	defer resp.Body.Close()
 
 	log.Debug("response Status:", resp.Status)
 	respBody, _ := ioutil.ReadAll(resp.Body)
