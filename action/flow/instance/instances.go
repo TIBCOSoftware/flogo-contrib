@@ -107,7 +107,7 @@ func (inst *IndependentInstance) Start(startAttrs map[string]*data.Attribute) bo
 		inst.attrs = make(map[string]*data.Attribute, len(startAttrs))
 	}
 
-	for name, value := range inst.attrs {
+	for name, value := range startAttrs {
 		inst.attrs[name] = value
 	}
 
