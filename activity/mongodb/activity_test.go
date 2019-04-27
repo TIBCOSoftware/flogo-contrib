@@ -2,18 +2,21 @@ package mongodb
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"reflect"
 	"testing"
 	"time"
 
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/test"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
-	"github.com/mongodb/mongo-go-driver/bson"
-	"github.com/mongodb/mongo-go-driver/mongo"
-	"github.com/stretchr/testify/assert"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"github.com/mongodb/mongo-go-driver/bson/objectid"
+	"github.com/stretchr/testify/assert"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 const (
@@ -31,7 +34,7 @@ func init() {
 	//To remove below  error:
 	// data not inserted topology is closed
 
-	client, err := mongo.Connect(context.Background(), TEST_URI, nil)
+	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(TEST_URI))
 	if err != nil {
 		// warn and skip tests
 	}
@@ -82,8 +85,8 @@ func insert(dataVal interface{}) (interface{}, error) {
 }
 
 func delete(id interface{}) {
-	oid := id.(objectid.ObjectID)
-	_, err := coll.DeleteOne(context.Background(), bson.NewDocument(bson.EC.ObjectID("_id", oid)))
+	oid := id.(primitive.ObjectID)
+	_, err := coll.DeleteOne(context.Background(), bson.M{"_id": oid})
 	if err != nil {
 		logger.Debugf("Error Deleting [%s] : %s", id, err.Error())
 		return
@@ -133,12 +136,15 @@ func TestInsert(t *testing.T) {
 	name := randomString(5)
 	val := map[string]interface{}{"name": name, "value1": "foo", "value2": "foo2"}
 	tc.SetInput(ivData, val)
+	//tc.SetInput(ivKeyName, "key")
+	//tc.SetInput(ivKeyValue, "value")
 
 	_, insertErr := act.Eval(tc)
 	if insertErr != nil {
 		t.Error("data not inserted", insertErr)
 		t.Fail()
 	}
+	fmt.Println("Output ", reflect.TypeOf(tc.GetOutput(ovOutput)))
 
 	delete(tc.GetOutput(ovOutput))
 }
