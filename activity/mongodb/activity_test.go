@@ -144,7 +144,6 @@ func TestInsert(t *testing.T) {
 		t.Error("data not inserted", insertErr)
 		t.Fail()
 	}
-	fmt.Println("Output ", reflect.TypeOf(tc.GetOutput(ovOutput)))
 
 	delete(tc.GetOutput(ovOutput))
 }
