@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
-	"github.com/mongodb/mongo-go-driver/bson"
-	"github.com/mongodb/mongo-go-driver/mongo"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // ActivityLog is the default logger for the Log Activity
@@ -31,7 +33,7 @@ const (
 	ivData     = "data"
 
 	ovOutput = "output"
-	ovCount = "count"
+	ovCount  = "count"
 )
 
 func init() {
@@ -72,11 +74,14 @@ func (a *MongoDbActivity) Eval(ctx activity.Context) (done bool, err error) {
 	//todo implement shared sessions
 	// client, err := mongo.NewClient(connectionURI)
 	/*
-	The above function was giving below error;
-	"data not inserted topology is closed"
+		The above function was giving below error;
+		"data not inserted topology is closed"
 	*/
-	
-	client, err := mongo.Connect(context.Background(), connectionURI, nil)
+	bCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	client, err := mongo.Connect(bCtx, options.Client().ApplyURI(connectionURI))
+
+	defer cancel()
+
 	defer client.Disconnect(context.Background())
 	if err != nil {
 		activityLog.Errorf("Connection error: %v", err)
@@ -84,12 +89,11 @@ func (a *MongoDbActivity) Eval(ctx activity.Context) (done bool, err error) {
 	}
 
 	db := client.Database(dbName)
-
 	coll := db.Collection(collectionName)
 
 	switch strings.ToUpper(method) {
 	case methodGet:
-		result := coll.FindOne(context.Background(), bson.NewDocument(bson.EC.String(keyName, keyValue)))
+		result := coll.FindOne(bCtx, bson.M{keyName: keyValue})
 		val := make(map[string]interface{})
 		err := result.Decode(val)
 		if err != nil {
@@ -100,12 +104,7 @@ func (a *MongoDbActivity) Eval(ctx activity.Context) (done bool, err error) {
 
 		ctx.SetOutput(ovOutput, val)
 	case methodDelete:
-		result, err := coll.DeleteMany(
-			context.Background(),
-			bson.NewDocument(
-				bson.EC.String(keyName, keyValue),
-			),
-		)
+		result, err := coll.DeleteOne(bCtx, bson.M{keyName: keyValue}, nil)
 		if err != nil {
 			return false, err
 		}
@@ -114,24 +113,26 @@ func (a *MongoDbActivity) Eval(ctx activity.Context) (done bool, err error) {
 
 		ctx.SetOutput(ovCount, result.DeletedCount)
 	case methodInsert:
-		result, err := coll.InsertOne(
-			context.Background(),
-			value,
-		)
-		if err != nil {
-			return false, err
+		if value == nil && keyValue == "" {
+			// should we throw an error or warn?
+			activityLog.Warnf("Nothing to insert")
+			return true, nil
 		}
+
+		var result *mongo.InsertOneResult
+
+		if value != nil && keyValue == "" {
+			result, err = coll.InsertOne(bCtx, value)
+
+		} else {
+			result, err = coll.InsertOne(bCtx, bson.M{keyName: keyValue})
+		}
+
 		activityLog.Debugf("Insert Results $#v", result)
 
 		ctx.SetOutput(ovOutput, result.InsertedID)
 	case methodReplace:
-		result, err := coll.ReplaceOne(
-			context.Background(),
-			bson.NewDocument(
-				bson.EC.String(keyName, keyValue),
-			),
-			value,
-		)
+		result, err := coll.ReplaceOne(bCtx, bson.M{keyName: keyValue}, value)
 		if err != nil {
 			return false, err
 		}
@@ -141,15 +142,7 @@ func (a *MongoDbActivity) Eval(ctx activity.Context) (done bool, err error) {
 		ctx.SetOutput(ovCount, result.ModifiedCount)
 
 	case methodUpdate:
-		result, err := coll.UpdateOne(
-			context.Background(),
-			bson.NewDocument(
-				bson.EC.String(keyName, keyValue),
-			),
-			bson.NewDocument(
-				bson.EC.Interface("$set", value),
-			),
-		)
+		result, err := coll.UpdateOne(bCtx, bson.M{keyName: keyValue}, bson.M{"$set": value})
 		if err != nil {
 			return false, err
 		}
