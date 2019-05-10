@@ -125,7 +125,10 @@ func (a *MongoDbActivity) Eval(ctx activity.Context) (done bool, err error) {
 			result, err = coll.InsertOne(bCtx, value)
 
 		} else {
-			result, err = coll.InsertOne(bCtx, bson.M{keyName: keyValue})
+			result, err = coll.InsertOne(bCtx, bson.M{keyName: keyValue}
+			if err != nil {
+				return false, err
+			}
 		}
 
 		activityLog.Debugf("Insert Results $#v", result)
