@@ -97,6 +97,7 @@ func (a *MongoDbActivity) Eval(ctx activity.Context) (done bool, err error) {
 		val := make(map[string]interface{})
 		err := result.Decode(val)
 		if err != nil {
+			activityLog.Debug("Error during getting data ..", err)
 			return false, err
 		}
 
@@ -106,6 +107,7 @@ func (a *MongoDbActivity) Eval(ctx activity.Context) (done bool, err error) {
 	case methodDelete:
 		result, err := coll.DeleteOne(bCtx, bson.M{keyName: keyValue}, nil)
 		if err != nil {
+			activityLog.Debug("Error during deleting data ..", err)
 			return false, err
 		}
 
@@ -123,10 +125,15 @@ func (a *MongoDbActivity) Eval(ctx activity.Context) (done bool, err error) {
 
 		if value != nil && keyValue == "" {
 			result, err = coll.InsertOne(bCtx, value)
+			if err != nil {
+				activityLog.Debug("Error during adding data ..", err)
+				return false, err
+			}
 
 		} else {
 			result, err = coll.InsertOne(bCtx, bson.M{keyName: keyValue})
 			if err != nil {
+				activityLog.Debug("Error during adding data ..", err)
 				return false, err
 			}
 		}
@@ -137,6 +144,7 @@ func (a *MongoDbActivity) Eval(ctx activity.Context) (done bool, err error) {
 	case methodReplace:
 		result, err := coll.ReplaceOne(bCtx, bson.M{keyName: keyValue}, value)
 		if err != nil {
+			activityLog.Debug("Error during replacing data ..", err)
 			return false, err
 		}
 
