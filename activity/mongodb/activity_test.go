@@ -91,8 +91,6 @@ func delete(id interface{}) {
 	logger.Debug("Deleted", id)
 }
 
-// TestDelete
-
 // TestInsert
 func TestInsert(t *testing.T) {
 	act := NewActivity(getActivityMetadata())
@@ -118,9 +116,7 @@ func TestInsert(t *testing.T) {
 	delete(tc.GetOutput(ovOutput))
 }
 
-// TestReplace
-
-/*
+//TestDelete
 func TestDelete(t *testing.T) {
 	act := NewActivity(getActivityMetadata())
 	tc := test.NewTestActivityContext(getActivityMetadata())
@@ -148,6 +144,8 @@ func TestDelete(t *testing.T) {
 		t.Fail()
 	}
 }
+
+// TestReplace
 func TestReplace(t *testing.T) {
 	act := NewActivity(getActivityMetadata())
 	tc := test.NewTestActivityContext(getActivityMetadata())
@@ -181,7 +179,7 @@ func TestReplace(t *testing.T) {
 	delete(id)
 }
 
-// TestReplace
+// TestUpdate
 func TestUpdate(t *testing.T) {
 	act := NewActivity(getActivityMetadata())
 	tc := test.NewTestActivityContext(getActivityMetadata())
@@ -248,4 +246,3 @@ func TestGet(t *testing.T) {
 
 	delete(id)
 }
-*/
