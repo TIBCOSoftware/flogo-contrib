@@ -147,8 +147,9 @@ func (a *MongoDbActivity) Eval(ctx activity.Context) (done bool, err error) {
 			}
 
 		} else {
-			fmt.Println("Value..", keyName, keyValue)
-			result, err = coll.InsertOne(bCtx, bson.M{"name": "XYz"})
+
+			result, err = coll.InsertOne(bCtx, bson.M{keyName: keyValue})
+
 			if err != nil {
 				activityLog.Debug("Error during adding data ..", err)
 				return false, err
