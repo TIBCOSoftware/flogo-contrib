@@ -45,6 +45,14 @@
     {
       "name": "data",
       "type": "object"
+    },
+    {
+      "name": "username",
+      "type": "string"
+    },
+    {
+      "name": "password",
+      "type": "object"
     }
   ],
   "output": [

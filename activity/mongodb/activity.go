@@ -31,6 +31,8 @@ const (
 	ivKeyName  = "keyName"
 	ivKeyValue = "keyValue"
 	ivData     = "data"
+	ivUsername = "username"
+	ivPassword = "password"
 
 	ovOutput = "output"
 	ovCount  = "count"
@@ -69,6 +71,9 @@ func (a *MongoDbActivity) Eval(ctx activity.Context) (done bool, err error) {
 	method, _ := ctx.GetInput(ivMethod).(string)
 	keyName, _ := ctx.GetInput(ivKeyName).(string)
 	keyValue, _ := ctx.GetInput(ivKeyValue).(string)
+	username, _ := ctx.GetInput(ivUsername).(string)
+	password, _ := ctx.GetInput(ivPassword).(string)
+
 	value := ctx.GetInput(ivData)
 
 	//todo implement shared sessions
@@ -77,8 +82,15 @@ func (a *MongoDbActivity) Eval(ctx activity.Context) (done bool, err error) {
 		The above function was giving below error;
 		"data not inserted topology is closed"
 	*/
+
 	bCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	client, err := mongo.Connect(bCtx, options.Client().ApplyURI(connectionURI))
+	opts := options.Client()
+	opts = opts.SetAuth(options.Credential{
+		Username: username,
+		Password: password,
+	})
+
+	client, err := mongo.Connect(bCtx, opts.ApplyURI(connectionURI))
 
 	defer cancel()
 
@@ -115,6 +127,7 @@ func (a *MongoDbActivity) Eval(ctx activity.Context) (done bool, err error) {
 
 		ctx.SetOutput(ovCount, result.DeletedCount)
 	case methodInsert:
+
 		if value == nil && keyValue == "" {
 			// should we throw an error or warn?
 			activityLog.Warnf("Nothing to insert")
@@ -131,14 +144,15 @@ func (a *MongoDbActivity) Eval(ctx activity.Context) (done bool, err error) {
 			}
 
 		} else {
-			result, err = coll.InsertOne(bCtx, bson.M{keyName: keyValue})
+			fmt.Println("Value..", keyName, keyValue)
+			result, err = coll.InsertOne(bCtx, bson.M{"name": "XYz"})
 			if err != nil {
 				activityLog.Debug("Error during adding data ..", err)
 				return false, err
 			}
 		}
 
-		activityLog.Debugf("Insert Results $#v", result)
+		activityLog.Infof("Insert Results %s", result.InsertedID)
 
 		ctx.SetOutput(ovOutput, result.InsertedID)
 	case methodReplace:
