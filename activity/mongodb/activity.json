@@ -52,7 +52,7 @@
     },
     {
       "name": "password",
-      "type": "object"
+      "type": "string"
     }
   ],
   "output": [
