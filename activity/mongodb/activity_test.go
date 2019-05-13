@@ -2,17 +2,14 @@ package mongodb
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
 	"math/rand"
-	"reflect"
 	"testing"
 	"time"
 
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/test"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -20,7 +17,7 @@ import (
 )
 
 const (
-	TEST_URI  = "mongodb://localhost:27017"
+	TEST_URI  = "mongodb://localhost:27107"
 	TEST_DB   = "test"
 	TEST_COLL = "items"
 )
@@ -94,7 +91,32 @@ func delete(id interface{}) {
 	logger.Debug("Deleted", id)
 }
 
-// TestDelete
+// TestInsert
+func TestInsert(t *testing.T) {
+	act := NewActivity(getActivityMetadata())
+	tc := test.NewTestActivityContext(getActivityMetadata())
+
+	tc.SetInput("uri", TEST_URI)
+	tc.SetInput("dbName", TEST_DB)
+	tc.SetInput("collection", TEST_COLL)
+	tc.SetInput("method", `INSERT`)
+
+	//name := randomString(5)
+	//val := map[string]interface{}{"name": name, "value1": "foo", "value2": "foo2"}
+	//tc.SetInput(ivData, val)
+	tc.SetInput(ivKeyName, "key")
+	tc.SetInput(ivKeyValue, "value")
+
+	_, insertErr := act.Eval(tc)
+	if insertErr != nil {
+		t.Error("data not inserted", insertErr)
+		t.Fail()
+	}
+
+	delete(tc.GetOutput(ovOutput))
+}
+
+//TestDelete
 func TestDelete(t *testing.T) {
 	act := NewActivity(getActivityMetadata())
 	tc := test.NewTestActivityContext(getActivityMetadata())
@@ -121,31 +143,6 @@ func TestDelete(t *testing.T) {
 		t.Error("data not deleted")
 		t.Fail()
 	}
-}
-
-// TestInsert
-func TestInsert(t *testing.T) {
-	act := NewActivity(getActivityMetadata())
-	tc := test.NewTestActivityContext(getActivityMetadata())
-
-	tc.SetInput("uri", TEST_URI)
-	tc.SetInput("dbName", TEST_DB)
-	tc.SetInput("collection", TEST_COLL)
-	tc.SetInput("method", `INSERT`)
-
-	name := randomString(5)
-	val := map[string]interface{}{"name": name, "value1": "foo", "value2": "foo2"}
-	tc.SetInput(ivData, val)
-	//tc.SetInput(ivKeyName, "key")
-	//tc.SetInput(ivKeyValue, "value")
-
-	_, insertErr := act.Eval(tc)
-	if insertErr != nil {
-		t.Error("data not inserted", insertErr)
-		t.Fail()
-	}
-
-	delete(tc.GetOutput(ovOutput))
 }
 
 // TestReplace
@@ -182,7 +179,7 @@ func TestReplace(t *testing.T) {
 	delete(id)
 }
 
-// TestReplace
+// TestUpdate
 func TestUpdate(t *testing.T) {
 	act := NewActivity(getActivityMetadata())
 	tc := test.NewTestActivityContext(getActivityMetadata())
