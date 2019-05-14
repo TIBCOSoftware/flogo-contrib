@@ -86,7 +86,7 @@ func (a *MongoDbActivity) Eval(ctx activity.Context) (done bool, err error) {
 	bCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	opts := options.Client()
 
-	if username != nil && password != nil {
+	if username != "" && password != "" {
 		opts = opts.SetAuth(options.Credential{
 			Username: username,
 			Password: password,
