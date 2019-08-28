@@ -5,15 +5,16 @@ import (
 	"fmt"
 	"runtime/debug"
 
+	"time"
+
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/event"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
+	corevent "github.com/TIBCOSoftware/flogo-lib/core/event"
 	"github.com/TIBCOSoftware/flogo-lib/core/mapper/exprmapper"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/event"
-	corevent "github.com/TIBCOSoftware/flogo-lib/core/event"
-	"time"
 )
 
 func NewTaskInst(inst *Instance, task *definition.Task) *TaskInst {
@@ -632,10 +633,18 @@ func postTaskEvent(taskInstance *TaskInst) {
 				if metadata.Input != nil && len(metadata.Input) > 0 && taskInstance.InputScope() != nil {
 					for name, attVal := range actConfig.Activity.Metadata().Input {
 						scopedValue, ok := taskInstance.InputScope().GetAttr(name)
+						var val interface{}
 						if !ok {
-							te.taskIn[name] = attVal.Value()
+							val = attVal.Value()
 						} else {
-							te.taskIn[name] = scopedValue.Value()
+							val = scopedValue.Value()
+						}
+
+						switch t := val.(type) {
+						case *data.ComplexObject:
+							te.taskIn[name] = t.Value
+						default:
+							te.taskIn[name] = t
 						}
 					}
 				}
@@ -643,10 +652,18 @@ func postTaskEvent(taskInstance *TaskInst) {
 				if te.status == event.COMPLETED && metadata.Output != nil && len(metadata.Output) > 0 && taskInstance.OutputScope() != nil {
 					for name, attVal := range actConfig.Activity.Metadata().Output {
 						scopedValue, ok := taskInstance.OutputScope().GetAttr(name)
+						var val interface{}
 						if !ok {
-							te.taskOut[name] = attVal.Value()
+							val = attVal.Value()
 						} else {
-							te.taskOut[name] = scopedValue.Value()
+							val = scopedValue.Value()
+						}
+
+						switch t := val.(type) {
+						case *data.ComplexObject:
+							te.taskOut[name] = t.Value
+						default:
+							te.taskOut[name] = t
 						}
 					}
 				}
@@ -659,10 +676,18 @@ func postTaskEvent(taskInstance *TaskInst) {
 						if dynamicIO.Input != nil {
 							for name, attVal := range dynamicIO.Input {
 								scopedValue, ok := taskInstance.InputScope().GetAttr(name)
+								var val interface{}
 								if !ok {
-									te.taskIn[name] = attVal.Value()
+									val = attVal.Value()
 								} else {
-									te.taskIn[name] = scopedValue.Value()
+									val = scopedValue.Value()
+								}
+
+								switch t := val.(type) {
+								case *data.ComplexObject:
+									te.taskIn[name] = t.Value
+								default:
+									te.taskIn[name] = t
 								}
 							}
 						}
@@ -670,10 +695,18 @@ func postTaskEvent(taskInstance *TaskInst) {
 						if te.status == event.COMPLETED && dynamicIO.Output != nil {
 							for name, attVal := range dynamicIO.Input {
 								scopedValue, ok := taskInstance.OutputScope().GetAttr(name)
+								var val interface{}
 								if !ok {
-									te.taskOut[name] = attVal.Value()
+									val = attVal.Value()
 								} else {
-									te.taskOut[name] = scopedValue.Value()
+									val = scopedValue.Value()
+								}
+
+								switch t := val.(type) {
+								case *data.ComplexObject:
+									te.taskOut[name] = t.Value
+								default:
+									te.taskOut[name] = t
 								}
 							}
 						}
