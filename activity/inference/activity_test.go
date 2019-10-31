@@ -83,6 +83,50 @@ func TestDNNEstimator(t *testing.T) {
 	}
 }
 
+func TestDNNEstimatorNumpy(t *testing.T) {
+	defer func() {
+		if r := recover(); r != nil {
+			t.Failed()
+			t.Errorf("panic during execution: %v", r)
+		}
+	}()
+
+	act := NewActivity(getActivityMetadata())
+	tc := test.NewTestActivityContext(getActivityMetadata())
+
+	var done bool
+	var err error
+
+	// Unit test of Estimator DNN Regressor model
+	fmt.Println("Unit test of Estimator Regressor model")
+	tc.SetInput("model", "testModels/Archive_estDNNrgr.zip")
+	tc.SetInput("inputName", "inputs")
+	var estInputs = make(map[string]interface{})
+	estInputs["one"] = 0.140586
+	estInputs["two"] = 0.140586
+	estInputs["three"] = 0.140586
+	estInputs["label"] = 0.
+
+	var features []interface{}
+	features = append(features, map[string]interface{}{
+		"name": "inputs",
+		"data": estInputs,
+	})
+
+	tc.SetInput("inputName", "inputs")
+	tc.SetInput("framework", "Tensorflow")
+	tc.SetInput("sigDefName", "serving_default")
+	tc.SetInput("tag", "serve")
+	tc.SetInput("features", features)
+
+	done, err = act.Eval(tc)
+	if done == false {
+		assert.Fail(t, fmt.Sprintf("Error raised: %s", err))
+	} else {
+		assert.True(t, done, fmt.Sprintf("Evaluation came back: %t", done))
+	}
+}
+
 func TestEstimatorLinearRegressor(t *testing.T) {
 	defer func() {
 		if r := recover(); r != nil {
