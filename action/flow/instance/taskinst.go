@@ -6,13 +6,13 @@ import (
 	"runtime/debug"
 
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/event"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
+	corevent "github.com/TIBCOSoftware/flogo-lib/core/event"
 	"github.com/TIBCOSoftware/flogo-lib/core/mapper/exprmapper"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/event"
-	corevent "github.com/TIBCOSoftware/flogo-lib/core/event"
 	"time"
 )
 
@@ -197,6 +197,13 @@ func (ti *TaskInst) SetStatus(status model.TaskStatus) {
 
 	// publish event
 	postTaskEvent(ti)
+}
+
+// SetStatusWithError implements flow.TaskContext.SetStatusWithError
+func (ti *TaskInst) SetStatusWithError(status model.TaskStatus, err error) {
+	ti.returnError = err
+
+	ti.SetStatus(status)
 }
 
 func (ti *TaskInst) HasWorkingData() bool {

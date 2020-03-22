@@ -2,16 +2,16 @@ package instance
 
 import (
 	"fmt"
-	"strconv"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/definition"
+	"github.com/TIBCOSoftware/flogo-contrib/action/flow/event"
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/model"
 	"github.com/TIBCOSoftware/flogo-lib/core/action"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/core/data"
-	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"github.com/TIBCOSoftware/flogo-contrib/action/flow/event"
-	"time"
 	coreevent "github.com/TIBCOSoftware/flogo-lib/core/event"
+	"github.com/TIBCOSoftware/flogo-lib/logger"
+	"strconv"
+	"time"
 )
 
 type Instance struct {
@@ -134,7 +134,7 @@ func (inst *Instance) GetResolver() data.Resolver {
 	return definition.GetDataResolver()
 }
 
-func (inst *Instance) GetError() (error) {
+func (inst *Instance) GetError() error {
 	return inst.returnError
 }
 
@@ -169,10 +169,14 @@ func (inst *Instance) Status() model.FlowStatus {
 }
 
 func (inst *Instance) SetStatus(status model.FlowStatus) {
-
 	inst.status = status
 	inst.master.ChangeTracker.SetStatus(inst.subFlowId, status)
 	postFlowEvent(inst)
+}
+
+func (inst *Instance) SetStatusWithError(status model.FlowStatus, err error) {
+	inst.returnError = err
+	inst.SetStatus(status)
 }
 
 // FlowDefinition returns the Flow definition associated with this context

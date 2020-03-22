@@ -94,7 +94,7 @@ func (tb *IteratorTask) Eval(ctx model.TaskContext) (evalResult model.EvalResult
 
 		if err != nil {
 			log.Errorf("Error evaluating activity '%s'[%s] - %s", ctx.Task().Name(), ctx.Task().ActivityConfig().Ref(), err.Error())
-			ctx.SetStatus(model.TaskStatusFailed)
+			ctx.SetStatusWithError(model.TaskStatusFailed, err)
 			return model.EVAL_FAIL, err
 		}
 
@@ -122,13 +122,12 @@ func (tb *IteratorTask) PostEval(ctx model.TaskContext) (evalResult model.EvalRe
 	//what to do if eval isn't "done"?
 	if err != nil {
 		log.Errorf("Error post evaluating activity '%s'[%s] - %s", ctx.Task().Name(), ctx.Task().ActivityConfig().Ref(), err.Error())
-		ctx.SetStatus(model.TaskStatusFailed)
+		ctx.SetStatusWithError(model.TaskStatusFailed, err)
 		return model.EVAL_FAIL, err
 	}
 
 	itxAttr, _ := ctx.GetWorkingData("_iterator")
 	itx := itxAttr.Value().(Iterator)
-
 	if itx.HasNext() {
 		return model.EVAL_REPEAT, nil
 	}
