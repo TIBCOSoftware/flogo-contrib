@@ -153,10 +153,6 @@ func (t *TimerTrigger) scheduleRepeating(endpoint *trigger.Handler) {
 		fn2 := func() {
 			log.Debug("-- Starting \"Repeating\" (repeat) timer action")
 			go func() {
-				_, err := endpoint.Handle(context.Background(), nil)
-				if err != nil {
-					log.Error("Error running handler: ", err.Error())
-				}
 
 				if timerJob != nil {
 					timerJob.Quit <- true
