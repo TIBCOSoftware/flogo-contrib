@@ -77,7 +77,7 @@ func (tb *Task) Eval(ctx model.TaskContext) (evalResult model.EvalResult, err er
 
 	if err != nil {
 		log.Errorf("Error evaluating activity '%s'[%s] - %s", ctx.Task().ID(), ctx.Task().ActivityConfig().Ref(), err.Error())
-		ctx.SetStatus(model.TaskStatusFailed)
+		ctx.SetStatusWithError(model.TaskStatusFailed, err)
 		return model.EVAL_FAIL, err
 	}
 
@@ -100,7 +100,7 @@ func (tb *Task) PostEval(ctx model.TaskContext) (evalResult model.EvalResult, er
 	//what to do if eval isn't "done"?
 	if err != nil {
 		log.Errorf("Error post evaluating activity '%s'[%s] - %s", ctx.Task().ID(), ctx.Task().ActivityConfig().Ref(), err.Error())
-		ctx.SetStatus(model.TaskStatusFailed)
+		ctx.SetStatusWithError(model.TaskStatusFailed, err)
 		return model.EVAL_FAIL, err
 	}
 

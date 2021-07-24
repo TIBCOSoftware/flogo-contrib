@@ -28,6 +28,9 @@ type TaskContext interface {
 	// SetStatus sets the state of the Task instance
 	SetStatus(status TaskStatus)
 
+	// SetStatus sets the state of the Task instance
+	SetStatusWithError(status TaskStatus, err error)
+
 	// Task returns the Task associated with this context
 	Task() *definition.Task
 

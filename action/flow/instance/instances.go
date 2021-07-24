@@ -245,7 +245,7 @@ func (inst *IndependentInstance) execTask(behavior model.TaskBehavior, taskInst 
 	case model.EVAL_WAIT:
 		taskInst.SetStatus(model.TaskStatusWaiting)
 	case model.EVAL_FAIL:
-		taskInst.SetStatus(model.TaskStatusFailed)
+		taskInst.SetStatus(model.TaskStatusFailed) // should we create an error and send it to taskInst.SetStatusWithError instead ?
 	case model.EVAL_REPEAT:
 		taskInst.SetStatus(model.TaskStatusReady)
 		//task needs to iterate or retry
@@ -343,7 +343,7 @@ func (inst *IndependentInstance) handleTaskError(taskBehavior model.TaskBehavior
 	if !handled {
 		if containerInst.isHandlingError {
 			//fail
-			inst.SetStatus(model.FlowStatusFailed)
+			inst.SetStatusWithError(model.FlowStatusFailed, err)
 		} else {
 			taskInst.appendErrorData(err)
 			inst.HandleGlobalError(containerInst, err)
@@ -363,7 +363,7 @@ func (inst *IndependentInstance) HandleGlobalError(containerInst *Instance, err 
 
 	if containerInst.isHandlingError {
 		//todo: log error information
-		containerInst.SetStatus(model.FlowStatusFailed)
+		containerInst.SetStatusWithError(model.FlowStatusFailed, err)
 		return
 	}
 
@@ -383,7 +383,7 @@ func (inst *IndependentInstance) HandleGlobalError(containerInst *Instance, err 
 		inst.enterTasks(containerInst, taskEntries)
 	} else {
 
-		containerInst.SetStatus(model.FlowStatusFailed)
+		containerInst.SetStatusWithError(model.FlowStatusFailed, err)
 
 		if containerInst != inst.Instance {
 
