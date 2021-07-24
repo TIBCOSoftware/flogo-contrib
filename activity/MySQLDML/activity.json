@@ -1,0 +1,36 @@
+{
+  "name": "SQL Database_Query",
+  "type": "flogo:activity",
+  "ref": "github.com/Ganitagya/flogo-contrib/tree/master/activity/databasequery",
+  "version": "0.0.1",
+  "title": "MYSQINSERT",
+  "description": "Select,Update,Insert and delete queries to MYSQL Database",
+  "author": "Sushant Kumbhar <sushant.a.kumbhar@gmail.com>",
+  "homepage": "https://github.com/sushantkumbhar/flogo-contrib/tree/mySQLDML/activity/MySQLDML",
+  "inputs":[
+    {
+      "name": "driverName",
+      "type": "string",
+      "required": true,
+      "allowed": [
+        "mysql"
+      ]
+    },
+    {
+      "name": "datasourceName",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "query",
+      "type": "string",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "name": "result",
+      "type": "string"
+    }
+  ]
+}
