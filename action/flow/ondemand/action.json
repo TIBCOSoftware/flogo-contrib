@@ -1,0 +1,19 @@
+{
+  "name": "odflow",
+  "type": "flogo:action",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/action/flow/ondemand",
+  "version": "0.0.1",
+  "title": "OnDemand Flow",
+  "description": "Simple OnDemand Flow Action",
+  "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/action/flow",
+  "async": true,
+
+  "input":[
+    {
+      "name": "flowPackage",
+      "type": "any"
+    }
+  ],
+  "output": [
+  ]
+}

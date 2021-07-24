@@ -62,11 +62,19 @@ func Invoke() (map[string]interface{}, error) {
 
 	// Looking up the arguments
 	evtArg := flag.Lookup("evt")
-	var evt interface{}
+	var evt Event
+
 	// Unmarshall evt
 	if err := json.Unmarshal([]byte(evtArg.Value.String()), &evt); err != nil {
 		return nil, err
 	}
+
+	//var evt interface{}
+	//
+	//// Unmarshall evt
+	//if err := json.Unmarshal([]byte(evtArg.Value.String()), &evt); err != nil {
+	//	return nil, err
+	//}
 
 	log.Debugf("Received evt: '%+v'\n", evt)
 	syslog.Printf("Received evt: '%+v'\n", evt)
@@ -126,4 +134,9 @@ func (t *LambdaTrigger) Start() error {
 // Stop implements util.Managed.Stop
 func (t *LambdaTrigger) Stop() error {
 	return nil
+}
+
+type Event struct {
+	Payload interface{} `json:"payload"`
+	Flogo   json.RawMessage `json:"flogo"`
 }
