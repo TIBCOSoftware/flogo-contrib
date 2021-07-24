@@ -81,16 +81,8 @@ func (inst *IndependentInstance) startEmbedded(embedded *Instance, startAttrs ma
 	embedded.attrs = startAttrs
 
 	if embedded.master != inst {
-		errors.New("embedded instance is not from this independent instance")
+		return errors.New("embedded instance is not from this independent instance")
 	}
-
-	//if inst.attrs == nil {
-	//	inst.attrs = make(map[string]*data.Attribute)
-	//}
-	//
-	//for _, attr := range startAttrs {
-	//	inst.attrs[attr.Name()] = attr
-	//}
 
 	inst.startInstance(embedded)
 	return nil
@@ -98,14 +90,26 @@ func (inst *IndependentInstance) startEmbedded(embedded *Instance, startAttrs ma
 
 func (inst *IndependentInstance) Start(startAttrs map[string]*data.Attribute) bool {
 
-	inst.attrs = startAttrs
-	//if inst.attrs == nil {
-	//	inst.attrs = make(map[string]*data.Attribute)
-	//}
-	//
-	//for _, attr := range startAttrs {
-	//	inst.attrs[attr.Name()] = attr
-	//}
+	md := inst.flowDef.Metadata()
+
+	if md != nil && md.Input != nil {
+
+		inst.attrs = make(map[string]*data.Attribute, len(md.Input))
+
+		for name, value := range md.Input {
+			if value != nil {
+				inst.attrs[name] = data.CloneAttribute(name, value)
+			} else {
+				inst.attrs[name] = nil
+			}
+		}
+	} else {
+		inst.attrs = make(map[string]*data.Attribute, len(startAttrs))
+	}
+
+	for name, value := range startAttrs {
+		inst.attrs[name] = value
+	}
 
 	return inst.startInstance(inst.Instance)
 }
