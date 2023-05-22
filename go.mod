@@ -6,7 +6,7 @@ require (
 	github.com/Shopify/sarama v1.15.0
 	github.com/TIBCOSoftware/flogo-lib v0.5.7-0.20181018220309-e41193f633cc
 	github.com/aws/aws-lambda-go v1.6.0
-	github.com/aws/aws-sdk-go v1.12.60
+	github.com/aws/aws-sdk-go v1.34.0
 	github.com/carlescere/scheduler v0.0.0-20170109141437-ee74d2f83d82
 	github.com/dustin/go-coap v0.0.0-20170214053734-ddcc80675fa4
 	github.com/eclipse/paho.mqtt.golang v1.1.1-0.20180110145810-750c97f29374
@@ -30,9 +30,8 @@ require (
 	github.com/eapache/go-resiliency v1.0.1-0.20180101203313-ef9aaa7ea8bd // indirect
 	github.com/eapache/go-xerial-snappy v0.0.0-20160609142408-bb955e01b934 // indirect
 	github.com/eapache/queue v1.1.0 // indirect
-	github.com/go-ini/ini v1.32.0 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
-	github.com/jmespath/go-jmespath v0.0.0-20160202185014-0b12d6b521d8 // indirect
+	github.com/jmespath/go-jmespath v0.3.0 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.1 // indirect
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
@@ -42,7 +41,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20171128170426-e181e095bae9 // indirect
 	github.com/sirupsen/logrus v1.1.1 // indirect
-	github.com/smartystreets/goconvey v1.8.0 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.1 // indirect
@@ -58,6 +56,5 @@ require (
 	gopkg.in/couchbaselabs/gocbconnstr.v1 v1.0.1 // indirect
 	gopkg.in/couchbaselabs/gojcbmock.v1 v1.0.4 // indirect
 	gopkg.in/couchbaselabs/jsonx.v1 v1.0.0 // indirect
-	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
