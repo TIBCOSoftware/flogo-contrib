@@ -11,7 +11,7 @@ require (
 	github.com/dustin/go-coap v0.0.0-20170214053734-ddcc80675fa4
 	github.com/eclipse/paho.mqtt.golang v1.1.1-0.20180110145810-750c97f29374
 	github.com/golang/protobuf v0.0.0-20171113180720-1e59b77b52bf
-	github.com/gorilla/websocket v1.2.1-0.20180110141525-292fd08b2560
+	github.com/gorilla/websocket v1.4.1
 	github.com/graphql-go/graphql v0.7.6
 	github.com/julienschmidt/httprouter v1.1.1-0.20171027133709-e1b9828bc9e5
 	github.com/project-flogo/stream v0.1.0
