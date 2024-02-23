@@ -1,0 +1,80 @@
+{
+  "name": "wits0",
+  "version": "1.0.0",
+  "type": "flogo:trigger",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/trigger/wits0",
+  "description": "Read WITS0 data from a serial port and trigger output as either raw string data or parsed into JSON",
+  "author": "swarwick@tibco.com",
+  "settings":[
+  ],
+  "output": [
+    {
+      "name": "data",
+      "type": "string"
+    }
+  ],
+  "handler": {
+    "settings": [
+      {
+        "name": "SerialPort",
+        "type": "string",
+        "required" : true
+      },
+      {
+        "name": "BaudRate",
+        "type": "number",
+        "value": 9600
+      },
+      {
+        "name": "DataBits",
+        "type": "number",
+        "value": 8
+      },
+      {
+        "name": "StopBits",
+        "type": "number",
+        "value": 1
+      },
+      {
+        "name": "Parity",
+        "type": "number",
+        "value": 0
+      },
+      {
+        "name": "ReadTimeoutSeconds",
+        "type": "number",
+        "value": 1
+      },    
+      {
+        "name": "HeartBeatInterval",
+        "type": "number",
+        "value": 30
+      },
+      {
+        "name": "HeartBeatValue",
+        "type": "string",
+        "value": "&&\r\n0111-9999\r\n!!\r\n"
+      },
+      {
+        "name": "PacketHeader",
+        "type": "string",
+        "value": "&&"
+      },
+      {
+        "name": "PacketFooter",
+        "type": "string",
+        "value": "!!"
+      },
+      {
+        "name": "LineSeparator",
+        "type": "string",
+        "value": "\r\n"
+      },
+      {
+        "name": "OutputRaw",
+        "type": "boolean",
+        "value": false
+      }
+    ]
+  }
+}
